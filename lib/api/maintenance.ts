@@ -1,48 +1,36 @@
-import { getBaseUrl } from "../api-base"
 import { CreateMaintenanceRequestPayload } from "@/types/maintenance"
+import { propertyRequest, requireQueryId } from "@/lib/api/property-client"
 
-const request = async (
-    url: string,
-    accessToken: string,
-    options: RequestInit = {}
-) => {
-    const API_BASE_URL = getBaseUrl()
-    if (!API_BASE_URL) throw new Error("API base URL is not defined")
-
-    const isFormData = options.body instanceof FormData
-
-    const res = await fetch(`${API_BASE_URL}${url}`, {
-        ...options,
-        headers: {
-            Authorization: `Bearer ${accessToken}`,
-            ...(isFormData
-                ? {}
-                : {
-                    Accept: "application/json",
-                    "Content-Type": "application/json",
-                }),
-            ...options.headers,
-        },
-    })
-
-    if (!res.ok) {
-        const errData = await res.json().catch(() => ({}))
-        throw new Error(errData.message || `Request failed: ${res.status}`)
-    }
-
-    return res.json()
+function normalizeTenantId(tenantId?: number | null) {
+    if (typeof tenantId === "number" && Number.isFinite(tenantId)) return tenantId
+    return undefined
 }
 
 export const maintenanceService = {
-    getRequests: (token: string, page = 1, search = "") =>
-        request(`/api/v1/property/maintenancerequest?page=${page}&search=${search}`, token),
+    getRequests: (token: string, page = 1, search = "", tenantId?: number | null) => {
+        const resolvedTenantId = normalizeTenantId(tenantId)
+        requireQueryId("tenantId", resolvedTenantId)
 
-    createRequest: (data: CreateMaintenanceRequestPayload, token: string) => {
+        return propertyRequest("/api/v1/property/maintenancerequest", {
+            method: "GET",
+            accessToken: token,
+            query: {
+                page,
+                search: search || undefined,
+                tenant_id: resolvedTenantId,
+            },
+        })
+    },
+
+    createRequest: (data: CreateMaintenanceRequestPayload, token: string, tenantId?: number | null) => {
+        const resolvedTenantId = normalizeTenantId(tenantId)
+        requireQueryId("tenantId", resolvedTenantId)
+
         const formData = new FormData()
         formData.append("title", data.title)
         formData.append("description", data.description)
         formData.append("priority", data.priority)
-        formData.append("categoryId", data.category) // Assuming ID or value
+        formData.append("categoryId", data.category)
         formData.append("propertyId", data.propertyId.toString())
         if (data.unitId) formData.append("unitId", data.unitId.toString())
 
@@ -52,17 +40,39 @@ export const maintenanceService = {
             })
         }
 
-        return request("/api/v1/property/maintenancerequest", token, {
+        return propertyRequest("/api/v1/property/maintenancerequest", {
             method: "POST",
-            body: formData,
+            accessToken: token,
+            formData,
+            query: {
+                tenant_id: resolvedTenantId,
+            },
         })
     },
 
-    getRequest: (id: number, token: string) =>
-        request(`/api/v1/property/maintenancerequest/${id}`, token),
+    getRequest: (id: number, token: string, tenantId?: number | null) => {
+        const resolvedTenantId = normalizeTenantId(tenantId)
+        requireQueryId("tenantId", resolvedTenantId)
 
-    deleteRequest: (id: number, token: string) =>
-        request(`/api/v1/property/maintenancerequest/${id}`, token, {
+        return propertyRequest(`/api/v1/property/maintenancerequest/${id}`, {
+            method: "GET",
+            accessToken: token,
+            query: {
+                tenant_id: resolvedTenantId,
+            },
+        })
+    },
+
+    deleteRequest: (id: number, token: string, tenantId?: number | null) => {
+        const resolvedTenantId = normalizeTenantId(tenantId)
+        requireQueryId("tenantId", resolvedTenantId)
+
+        return propertyRequest(`/api/v1/property/maintenancerequest/${id}`, {
             method: "DELETE",
-        }),
+            accessToken: token,
+            query: {
+                tenant_id: resolvedTenantId,
+            },
+        })
+    },
 }

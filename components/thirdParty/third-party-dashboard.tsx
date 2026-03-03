@@ -43,8 +43,8 @@ export default function ThirdPartyDashboard() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-background">
-            <div className="max-w-3xl mx-auto p-4 sm:p-6 lg:p-8">
+        <div className="w-full">
+            <div className="max-w-3xl mx-auto p-0">
                 {isLoading ? <Loader2 className="animate-spin h-12 w-12 text-primary m-auto" /> : (
                     <>
                         <DashboardHeader
@@ -62,7 +62,7 @@ export default function ThirdPartyDashboard() {
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
                                     transition={{ duration: 0.4 }}
-                                    className="space-y-6 bg-white dark:bg-card rounded-lg shadow p-4"
+                                    className="space-y-6 rounded-xl border border-border/60 bg-card p-4 sm:p-5"
                                 >
                                     <h2 className="text-lg font-semibold mb-2">General Information</h2>
                                     <FieldRow label="Legal Name" value={profile.thirdPartyName ?? null} icon={Building2} />

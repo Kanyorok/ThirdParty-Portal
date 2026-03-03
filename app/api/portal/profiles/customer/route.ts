@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth-options"
 import { getApiUrl } from "@/lib/config"
+import { resolveSessionAccessToken } from "@/lib/auth/resolve-session-access-token"
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -10,7 +11,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const accessToken = (session as any).accessToken as string | undefined
+  const accessToken = resolveSessionAccessToken(session as any)
 
   if (!accessToken) {
     return NextResponse.json({ error: "No access token" }, { status: 401 })

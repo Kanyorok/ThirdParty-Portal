@@ -16,6 +16,7 @@ import {
   ListChecks,
   MessageSquare,
   Paperclip,
+  Save,
   Send,
   ShieldCheck,
   Trash2,
@@ -24,17 +25,10 @@ import {
 
 import { cn } from "@/lib/utils"
 import { parseSubmissionDeadline } from "@/lib/deadline"
+import { isRfqAwardedStatus, isRfqClosedStatus, isRfqSubmittedResponseStatus, normalizeRfqStatusKey } from "@/lib/rfq-status"
 import type { Currency } from "@/types/currencies"
 import { Badge } from "@/components/common/badge"
 import { Button } from "@/components/common/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/common/card"
 import { Input } from "@/components/common/input"
 import { Separator } from "@/components/common/separator"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/common/popover"
@@ -80,6 +74,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/common/dropdown-menu"
+import Loading from "@/components/common/custom-loader"
 
 type AnyRecord = Record<string, any>
 
@@ -284,22 +279,11 @@ function normalizeStatus(status?: string) {
 }
 
 function normalizeStatusKey(status?: string) {
-  return String(status ?? "")
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "_")
+  return normalizeRfqStatusKey(status)
 }
 
 function isSubmittedStatus(status?: string) {
-  const s = normalizeStatusKey(status)
-  return (
-    s === "submitted" ||
-    s === "final" ||
-    s === "approved" ||
-    s === "accepted" ||
-    s === "submitted_response" ||
-    s === "response_submitted"
-  )
+  return isRfqSubmittedResponseStatus(status)
 }
 
 type Tone = { label: string; className: string }
@@ -313,31 +297,32 @@ function badgeTone(
 
   const neutral: Tone = {
     label,
-    className: "border-slate-200/70 bg-slate-50 text-slate-600",
+    className:
+      "border-slate-300/80 bg-slate-100/70 text-slate-700 dark:border-slate-600 dark:bg-slate-800/50 dark:text-slate-200",
   }
 
   const good: Tone = {
     label,
     className:
-      "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300",
+      "border-emerald-300/80 bg-emerald-50 text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-300",
   }
 
   const warn: Tone = {
     label,
     className:
-      "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200",
+      "border-amber-300/80 bg-amber-50 text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200",
   }
 
   const danger: Tone = {
     label,
     className:
-      "border-destructive/30 bg-destructive/10 text-destructive dark:bg-destructive/20",
+      "border-destructive/40 bg-destructive/10 text-destructive",
   }
 
   const info: Tone = {
     label,
     className:
-      "border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-200",
+      "border-indigo-300/80 bg-indigo-50 text-indigo-700 dark:border-indigo-500/40 dark:bg-indigo-500/10 dark:text-indigo-200",
   }
 
   if (!s || s === "unknown") return neutral
@@ -512,45 +497,6 @@ function safeJsonPreview(value: unknown, maxChars = 1800) {
   }
 }
 
-function isClosedRfqStatus(status?: string) {
-  const s = String(status ?? "").trim().toLowerCase()
-  if (!s) return false
-
-  // Known "open" shapes in upstream systems
-  if (["pub", "published", "open", "active", "live"].includes(s)) return false
-
-  // Known "closed" / terminal shapes
-  if (
-    [
-      "clo",
-      "closed",
-      "close",
-      "cancelled",
-      "canceled",
-      "can",
-      "expired",
-      "exp",
-      "ended",
-      "end",
-      "archived",
-      "arc",
-      "completed",
-      "complete",
-      "com",
-    ].includes(s)
-  ) {
-    return true
-  }
-
-  return (
-    s.includes("close") ||
-    s.includes("cancel") ||
-    s.includes("expire") ||
-    s.includes("archive") ||
-    s.includes("complete")
-  )
-}
-
 function deadlineMeta(deadline?: string | null) {
   const parsed = parseSubmissionDeadline(deadline)
   if (!parsed.date) {
@@ -576,7 +522,7 @@ function deadlineMeta(deadline?: string | null) {
   if (hoursLeft <= 24) {
     return {
       label: hoursLeft > 1 ? `${hoursLeft}h left` : "Closing soon",
-      tone: "text-primary font-semibold",
+      tone: "text-rose-600 font-semibold",
       date: parsed.date,
       isClosed: false,
     }
@@ -586,7 +532,7 @@ function deadlineMeta(deadline?: string | null) {
   if (daysLeft <= 3) {
     return {
       label: `${daysLeft} days left`,
-      tone: "text-primary",
+      tone: "text-amber-600",
       date: parsed.date,
       isClosed: false,
     }
@@ -618,8 +564,25 @@ function toMoney(value: number, currency?: string) {
   return cur ? `${cur} ${amount}` : amount
 }
 
+const SURFACE_CARD = "space-y-3 py-0"
+const SURFACE_HEADER = "border-b border-border/50 pb-3"
+const SOFT_PANEL = "border-l-2 border-border/60 pl-3"
+const SOFT_PANEL_DASHED = "border-l-2 border-dashed border-border/60 pl-3"
+const META_TEXT = "text-muted-foreground"
+const BADGE_BASE =
+  "rounded-full border px-2.5 py-1 text-[11px] font-medium"
+const SECONDARY_BUTTON_BASE =
+  "border-border/60 !bg-transparent text-xs font-semibold text-foreground transition-colors hover:!bg-transparent hover:border-indigo-300 hover:text-indigo-700"
+const SECONDARY_BUTTON_MD = "h-9 rounded-xl px-3"
+const SECONDARY_BUTTON_SM = "h-8 rounded-lg px-3"
+const TAB_TRIGGER_CLASS =
+  "gap-2 rounded-none border-b-2 border-transparent px-0.5 pb-2 pt-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-700 dark:data-[state=active]:text-indigo-300"
+const PRIMARY_CTA_BUTTON =
+  "h-11 w-full justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-600 to-blue-600 font-semibold text-white transition-colors hover:from-indigo-700 hover:to-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+
 export function RfqQuotation() {
-  const { rfqId } = useParams<{ rfqId: string }>()
+  const params = useParams<{ rfqId?: string }>()
+  const rfqId = params?.rfqId ?? ""
   const router = useRouter()
 
   const normalizedRfqId = useMemo(() => {
@@ -631,13 +594,10 @@ export function RfqQuotation() {
     }
   }, [rfqId])
 
-  const rfqDetailPath = `/dashboard/supplier/rfqs/${encodeURIComponent(normalizedRfqId)}`
-  const rfqQuotationPath = `${rfqDetailPath}/quotation`
-
   const [payload, setPayload] = useState<RfqPayload | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState<"submitted" | null>(null)
+  const [submitting, setSubmitting] = useState<"draft" | "submitted" | null>(null)
   const [reloadSeq, setReloadSeq] = useState(0)
   const [clientLocked, setClientLocked] = useState<"submitted" | null>(null)
 
@@ -649,7 +609,7 @@ export function RfqQuotation() {
   const [currencies, setCurrencies] = useState<Currency[]>([])
   const [currenciesLoading, setCurrenciesLoading] = useState(false)
   const [durationDays, setDurationDays] = useState("30")
-  const [draftSavedAt, setDraftSavedAt] = useState<Date | null>(null)
+  const [_draftSavedAt, setDraftSavedAt] = useState<Date | null>(null)
   const [missingLineIds, setMissingLineIds] = useState<string[]>([])
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false)
   const [submitFieldErrors, setSubmitFieldErrors] = useState<Record<string, string[]>>({})
@@ -680,6 +640,7 @@ export function RfqQuotation() {
   const uploadInputRef = useRef<HTMLInputElement | null>(null)
   const tmpUploadSeq = useRef(0)
   const redirectTimeoutRef = useRef<number | null>(null)
+  const awardLockToastRef = useRef<string | null>(null)
 
   const [submissionSummary, setSubmissionSummary] = useState<SubmissionSummary | null>(null)
 
@@ -815,12 +776,44 @@ export function RfqQuotation() {
   const deadline = useMemo(() => deadlineMeta(submissionDeadline), [submissionDeadline])
   const deadlineDate = deadline.date
 
+  const rfqStatusValue = rfq?.status ?? payload?.status ?? ""
+  const invitationStatusValue =
+    rfq?.invitationStatus ??
+    rfq?.invitation_status ??
+    rfq?.InvitationStatus ??
+    payload?.invitationStatus ??
+    payload?.invitation_status ??
+    payload?.InvitationStatus ??
+    ""
+  const awardStatusValue =
+    rfq?.awardStatus ??
+    rfq?.award_status ??
+    rfq?.AwardStatus ??
+    payload?.awardStatus ??
+    payload?.award_status ??
+    payload?.AwardStatus ??
+    ""
+
+  const lockedByAwarded = [
+    rfqStatusValue,
+    invitationStatusValue,
+    awardStatusValue,
+    supplierResponse?.status,
+  ].some((value) => isRfqAwardedStatus(value))
   const lockedByDeadline = deadline.isClosed
-  const lockedByRfqStatus = isClosedRfqStatus(rfq?.status ?? payload?.status ?? "")
+  const lockedByRfqStatus = [rfqStatusValue, invitationStatusValue, awardStatusValue].some((value) =>
+    isRfqClosedStatus(value)
+  )
   const lockedByStatus =
     isSubmittedStatus(supplierResponse?.status) || clientLocked === "submitted"
-  const isLocked = lockedByDeadline || lockedByRfqStatus || lockedByStatus
-  const clarificationsLocked = lockedByDeadline || lockedByRfqStatus || lockedByStatus
+  const isLocked = lockedByAwarded || lockedByDeadline || lockedByRfqStatus || lockedByStatus
+  const clarificationsLocked =
+    lockedByAwarded || lockedByDeadline || lockedByRfqStatus || lockedByStatus
+  const lockInfoMessage = lockedByAwarded
+    ? "This RFQ has already been awarded and is no longer accepting responses."
+    : lockedByStatus
+      ? "Your quotation has already been submitted."
+      : `This RFQ is closed${lockedByDeadline ? " (deadline passed)" : ""}.`
   const submittedAtDate = submissionSummary
     ? new Date(submissionSummary.submittedAt)
     : null
@@ -828,6 +821,15 @@ export function RfqQuotation() {
     submittedAtDate && Number.isFinite(submittedAtDate.getTime())
       ? format(submittedAtDate, "PP p")
       : null
+
+  useEffect(() => {
+    if (!lockedByAwarded) return
+    const key = String(normalizedRfqId || rfqIdValue || "")
+    if (!key) return
+    if (awardLockToastRef.current === key) return
+    awardLockToastRef.current = key
+    toast.info("This RFQ has already been awarded and no further responses are allowed.")
+  }, [lockedByAwarded, normalizedRfqId, rfqIdValue])
 
   useEffect(() => {
     let cancelled = false
@@ -1189,9 +1191,98 @@ export function RfqQuotation() {
     return out
   }
 
-  const submit = async () => {
+  const buildResponsePayload = (
+    meta: ReturnType<typeof validateSubmitMeta>,
+    asDraft: boolean
+  ) => {
+    const rfqIdValue = (() => {
+      const raw = String(rfq?.id ?? rfq?.rfqId ?? rfqId).trim()
+      const n = Number(raw)
+      return Number.isFinite(n) ? n : raw
+    })()
+
+    const items = enrichedLines.map((l) => {
+      const rawLineId = String(
+        l.raw?.rfqLineId ??
+        l.raw?.rfq_line_id ??
+        l.raw?.lineId ??
+        l.raw?.line_id ??
+        l.raw?.id ??
+        l.raw?.Id ??
+        l.id
+      ).trim()
+      const parsedLineId = Number(rawLineId)
+      const rfqLineIdValue =
+        Number.isFinite(parsedLineId) && Number.isInteger(parsedLineId)
+          ? parsedLineId
+          : rawLineId || l.id
+
+      const qty = parsePositiveNumber(l.quantity) ?? 0
+      const quotedPrice = parsePositiveNumber(l.unitPrice) ?? 0
+      const totalPayable = qty * quotedPrice
+
+      return {
+        rfqLineId: rfqLineIdValue,
+        rfq_line_id: rfqLineIdValue,
+        quantity: qty,
+        qty,
+        quotedPrice,
+        quoted_price: quotedPrice,
+        totalPayable,
+        total_payable: totalPayable,
+        unitPrice: quotedPrice,
+        unit_price: quotedPrice,
+        remarks: null,
+      }
+    })
+
+    const linePayload = items.map((it) => ({
+      lineId: String((it as any).rfqLineId ?? ""),
+      rfqLineId: (it as any).rfqLineId,
+      rfq_line_id: (it as any).rfq_line_id,
+      quantity: (it as any).quantity,
+      qty: (it as any).qty,
+      unitPrice: (it as any).quotedPrice,
+      unit_price: (it as any).quoted_price,
+      quotedPrice: (it as any).quotedPrice,
+      quoted_price: (it as any).quoted_price,
+      totalPayable: (it as any).totalPayable,
+      total_payable: (it as any).total_payable,
+      remarks: null,
+    }))
+
+    return {
+      rfqId: rfqIdValue,
+      rfq_id: rfqIdValue,
+      supplierId: supplierIdValue,
+      supplier_id: supplierIdValue,
+      currency: String(meta.currency).trim().toUpperCase(),
+      durationDays: meta.duration,
+      duration_days: meta.duration,
+      isDraft: asDraft,
+      is_draft: asDraft,
+      status: asDraft ? "draft" : "submitted",
+      remarks: remarks || null,
+      submissionDate: new Date().toISOString(),
+      submission_date: new Date().toISOString(),
+      documents:
+        quoteDocuments.length > 0
+          ? quoteDocuments.map((d) => ({ id: d.id, name: d.name, source: d.source }))
+          : undefined,
+      documentIds: quoteDocuments.length > 0 ? quoteDocuments.map((d) => d.id) : undefined,
+      document_ids: quoteDocuments.length > 0 ? quoteDocuments.map((d) => d.id) : undefined,
+      items,
+      lineItems: items,
+      line_items: items,
+      lines: linePayload,
+    }
+  }
+
+  const persistResponse = async (asDraft: boolean) => {
     if (isLocked) {
-      if (lockedByStatus) {
+      if (lockedByAwarded) {
+        toast.info("This RFQ has already been awarded and no further responses are allowed.")
+      } else if (lockedByStatus) {
         toast.success("Quotation already submitted", {
           description: "A response has already been submitted for this RFQ.",
         })
@@ -1202,6 +1293,51 @@ export function RfqQuotation() {
     }
 
     clearSubmitErrors()
+
+    if (asDraft) {
+      const hasLineInput = enrichedLines.some(
+        (line) =>
+          parsePositiveNumber(line.quantity) != null || parsePositiveNumber(line.unitPrice) != null
+      )
+      const hasContent =
+        hasLineInput ||
+        Boolean(remarks.trim()) ||
+        Boolean(String(quoteCurrency || "").trim()) ||
+        Boolean(String(durationDays || "").trim())
+
+      if (!hasContent) {
+        toast.error("Nothing to save yet")
+        return
+      }
+
+      setSubmitting("draft")
+      try {
+        const savedAt = Date.now()
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(
+            draftKey,
+            JSON.stringify({
+              version: 2,
+              savedAt,
+              remarks,
+              lines: quoteLines,
+              currency: quoteCurrency,
+              durationDays,
+            })
+          )
+        }
+        setMissingLineIds([])
+        setDraftSavedAt(new Date(savedAt))
+        toast.success("Draft response saved successfully")
+      } catch (e: any) {
+        toast.error("Couldn't save draft", {
+          description: e?.message || "Please try again.",
+        })
+      } finally {
+        setSubmitting(null)
+      }
+      return
+    }
 
     const meta = validateSubmitMeta()
     if (!meta.ok) {
@@ -1228,87 +1364,7 @@ export function RfqQuotation() {
 
     setSubmitting("submitted")
     try {
-      const rfqIdValue = (() => {
-        const raw = String(rfq?.id ?? rfq?.rfqId ?? rfqId).trim()
-        const n = Number(raw)
-        return Number.isFinite(n) ? n : raw
-      })()
-
-      const items = enrichedLines.map((l) => {
-        const rawLineId = String(
-          l.raw?.rfqLineId ??
-          l.raw?.rfq_line_id ??
-          l.raw?.lineId ??
-          l.raw?.line_id ??
-          l.raw?.id ??
-          l.raw?.Id ??
-          l.id
-        ).trim()
-        const parsedLineId = Number(rawLineId)
-        const rfqLineIdValue =
-          Number.isFinite(parsedLineId) && Number.isInteger(parsedLineId)
-            ? parsedLineId
-            : rawLineId || l.id
-
-        const qty = parsePositiveNumber(l.quantity) ?? 0
-        const quotedPrice = parsePositiveNumber(l.unitPrice) ?? 0
-        const totalPayable = qty * quotedPrice
-
-        return {
-          rfqLineId: rfqLineIdValue,
-          rfq_line_id: rfqLineIdValue,
-          quantity: qty,
-          qty,
-          quotedPrice,
-          quoted_price: quotedPrice,
-          totalPayable,
-          total_payable: totalPayable,
-          unitPrice: quotedPrice,
-          unit_price: quotedPrice,
-          remarks: null,
-        }
-      })
-
-      const linePayload = items.map((it) => ({
-        lineId: String((it as any).rfqLineId ?? ""),
-        rfqLineId: (it as any).rfqLineId,
-        rfq_line_id: (it as any).rfq_line_id,
-        quantity: (it as any).quantity,
-        qty: (it as any).qty,
-        unitPrice: (it as any).quotedPrice,
-        unit_price: (it as any).quoted_price,
-        quotedPrice: (it as any).quotedPrice,
-        quoted_price: (it as any).quoted_price,
-        totalPayable: (it as any).totalPayable,
-        total_payable: (it as any).total_payable,
-        remarks: null,
-      }))
-
-      const body = {
-        rfqId: rfqIdValue,
-        rfq_id: rfqIdValue,
-        supplierId: supplierIdValue,
-        supplier_id: supplierIdValue,
-        currency: String(meta.currency).trim().toUpperCase(),
-        durationDays: meta.duration,
-        duration_days: meta.duration,
-        isDraft: false,
-        is_draft: false,
-        status: "submitted",
-        remarks: remarks || null,
-        submissionDate: new Date().toISOString(),
-        submission_date: new Date().toISOString(),
-        documents:
-          quoteDocuments.length > 0
-            ? quoteDocuments.map((d) => ({ id: d.id, name: d.name, source: d.source }))
-            : undefined,
-        documentIds: quoteDocuments.length > 0 ? quoteDocuments.map((d) => d.id) : undefined,
-        document_ids: quoteDocuments.length > 0 ? quoteDocuments.map((d) => d.id) : undefined,
-        items,
-        lineItems: items,
-        line_items: items,
-        lines: linePayload,
-      }
+      const body = buildResponsePayload(meta, false)
 
       const res = await fetch("/api/procurement/rfq-responses", {
         method: "POST",
@@ -1368,8 +1424,8 @@ export function RfqQuotation() {
       setClientLocked("submitted")
       setSubmitDialogOpen(false)
 
-      toast.success("Quotation submitted", {
-        description: "Submitted successfully. Redirecting you back to the RFQ…",
+      toast.success("Response submitted successfully", {
+        description: "Redirecting you back to the RFQ…",
       })
       try {
         window.localStorage.removeItem(draftKey)
@@ -1384,10 +1440,20 @@ export function RfqQuotation() {
     }
   }
 
+  const saveDraft = async () => {
+    await persistResponse(true)
+  }
+
+  const submit = async () => {
+    await persistResponse(false)
+  }
+
   const submitClarification = async () => {
     if (clarificationsLocked) {
       toast.error("Clarifications are closed", {
-        description: lockedByStatus
+        description: lockedByAwarded
+          ? "This RFQ has already been awarded."
+          : lockedByStatus
           ? "Your quotation is already submitted."
           : lockedByDeadline
             ? "The submission deadline has passed."
@@ -1477,14 +1543,8 @@ export function RfqQuotation() {
     }
   }
 
-  const invitationStatus = String(
-    rfq?.invitationStatus ?? rfq?.invitation_status ?? rfq?.InvitationStatus ?? ""
-  ).trim()
   const rfqNumber = String(rfq?.rfqNumber ?? rfq?.number ?? rfq?.ref ?? rfq?.rfqRef ?? "")
     .trim()
-  const headerComments = String(rfq?.comments ?? rfq?.title ?? rfq?.description ?? "").trim()
-  const supplierStatus = String(supplierResponse?.status ?? "").trim()
-  const supplierStatusLabel = supplierStatus || (lockedByStatus ? "submitted" : "")
   const currency = String(rfq?.currency ?? rfq?.Currency ?? rfq?.currencyCode ?? "").trim()
 
   const loadDmsDocs = async () => {
@@ -1712,19 +1772,6 @@ export function RfqQuotation() {
 
   const missingSet = useMemo(() => new Set(missingLineIds), [missingLineIds])
   const formattedDeadline = deadlineDate ? format(deadlineDate, "PP p") : null
-  const deadlineHours = deadlineDate ? (deadlineDate.getTime() - Date.now()) / (60 * 60 * 1000) : null
-  const deadlineProgress =
-    deadlineHours == null
-      ? 0
-      : Math.max(0, Math.min(100, Math.round(100 - (deadlineHours / 72) * 100)))
-  const deadlineBarClass =
-    deadlineHours == null
-      ? "bg-slate-300"
-      : deadlineHours <= 24
-        ? "bg-rose-500"
-        : deadlineHours <= 72
-          ? "bg-amber-500"
-          : "bg-emerald-500"
   const docsUploading = quoteDocuments.some((d) => d.uploading)
   const canSubmit =
     !isLocked &&
@@ -1739,61 +1786,6 @@ export function RfqQuotation() {
     String(quoteCurrency || "").trim() && /^[A-Z]{3}$/.test(String(quoteCurrency || "").trim().toUpperCase())
   )
 
-  const rfqStatusRaw = String(rfq?.status ?? payload?.status ?? "").trim()
-  const rfqTone = badgeTone("rfq", rfqStatusRaw)
-  const invitationTone = invitationStatus ? badgeTone("invitation", invitationStatus) : null
-  const responseTone = supplierStatusLabel ? badgeTone("response", supplierStatusLabel) : null
-  const deadlineTone = (() => {
-    if (deadline.isClosed) {
-      return {
-        label: deadline.label,
-        className: "border-slate-200/70 bg-slate-50 text-slate-600",
-      }
-    }
-    if (deadline.label.toLowerCase().includes("closing") || deadline.label.toLowerCase().includes("h left")) {
-      return {
-        label: deadline.label,
-        className:
-          "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200",
-      }
-    }
-    return {
-      label: deadline.label,
-      className:
-        "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300",
-    }
-  })()
-
-  const lockBanner = (() => {
-    if (!isLocked) return null
-    if (lockedByStatus) {
-      return {
-        title: "Submitted",
-        description:
-          "Your quotation has already been submitted for this RFQ. You can preview documents and view clarifications, but editing and re-submission are disabled.",
-        tone: "border-emerald-200 bg-emerald-50/60 dark:border-emerald-500/30 dark:bg-emerald-500/10",
-      }
-    }
-    if (lockedByDeadline) {
-      return {
-        title: "Closed",
-        description: "The submission deadline has passed. You can no longer edit or submit a quotation.",
-        tone: "border-slate-200/70 bg-slate-50",
-      }
-    }
-    if (lockedByRfqStatus) {
-      return {
-        title: "Closed",
-        description: "This RFQ is closed. Submission is disabled.",
-        tone: "border-slate-200/70 bg-slate-50",
-      }
-    }
-    return {
-      title: "Locked",
-      description: "Submission is disabled for this RFQ.",
-      tone: "border-slate-200/70 bg-slate-50",
-    }
-  })()
   const dmsSelectedCount = useMemo(
     () => Object.values(dmsPickerSelected).filter(Boolean).length,
     [dmsPickerSelected]
@@ -1801,7 +1793,9 @@ export function RfqQuotation() {
 
   const onSubmitClick = () => {
     if (isLocked) {
-      if (lockedByStatus) {
+      if (lockedByAwarded) {
+        toast.info("This RFQ has already been awarded and no further responses are allowed.")
+      } else if (lockedByStatus) {
         toast.success("Quotation already submitted", {
           description: "A response has already been submitted for this RFQ.",
         })
@@ -1834,32 +1828,38 @@ export function RfqQuotation() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-24">
-        <Loader2 className="h-6 w-6 animate-spin text-slate-600" />
-      </div>
+      <Loading
+        fullScreen={false}
+        message="Loading quotation"
+        className="min-h-[calc(100vh-14rem)] py-0 bg-transparent"
+      />
     )
   }
 
   if (error) {
     return (
       <div className="w-full py-10">
-        <Card className="bg-white rounded-2xl border border-slate-200/80 shadow-none">
-          <CardHeader className="relative border-b border-slate-200/70 px-5 py-3.5 before:absolute before:left-3 before:top-4 before:h-5 before:w-1 before:rounded-full before:bg-indigo-500/80 before:content-['']">
-            <CardTitle className="text-base font-semibold">RFQ Quotation</CardTitle>
-          </CardHeader>
-          <CardContent className="py-4 space-y-3">
-            <p className="text-sm text-slate-600">{error}</p>
+        <section className={SURFACE_CARD}>
+          <div className={SURFACE_HEADER}>
+            <h2 className="text-base font-semibold">RFQ Quotation</h2>
+          </div>
+          <div className="py-4 space-y-3">
+            <p className={`text-sm ${META_TEXT}`}>{error}</p>
             <div className="flex items-center gap-2">
-              <Button onClick={() => router.push("/dashboard/supplier/rfqs")} variant="outline" className="gap-2">
+              <Button
+                onClick={() => router.push("/dashboard/supplier/rfqs")}
+                variant="outline"
+                className={cn("gap-2", SECONDARY_BUTTON_BASE, SECONDARY_BUTTON_MD)}
+              >
                 <ArrowLeft className="h-4 w-4" />
                 Back
               </Button>
-              <Button onClick={() => setReloadSeq((s) => s + 1)} variant="default">
+              <Button onClick={() => setReloadSeq((s) => s + 1)} variant="default" className={PRIMARY_CTA_BUTTON}>
                 Retry
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       </div>
     )
   }
@@ -1867,207 +1867,181 @@ export function RfqQuotation() {
   if (!rfq) {
     return (
       <div className="w-full py-10">
-        <Card className="bg-white rounded-2xl border border-slate-200/80 shadow-none">
-          <CardHeader className="relative border-b border-slate-200/70 px-5 py-3.5 before:absolute before:left-3 before:top-4 before:h-5 before:w-1 before:rounded-full before:bg-indigo-500/80 before:content-['']">
-            <CardTitle className="text-base font-semibold">RFQ Quotation</CardTitle>
-          </CardHeader>
-          <CardContent className="py-4 space-y-3">
-            <p className="text-sm text-slate-600">RFQ not found.</p>
-            <Button onClick={() => router.push("/dashboard/supplier/rfqs")} variant="outline" className="gap-2 w-fit">
+        <section className={SURFACE_CARD}>
+          <div className={SURFACE_HEADER}>
+            <h2 className="text-base font-semibold">RFQ Quotation</h2>
+          </div>
+          <div className="py-4 space-y-3">
+            <p className={`text-sm ${META_TEXT}`}>RFQ not found.</p>
+            <Button
+              onClick={() => router.push("/dashboard/supplier/rfqs")}
+              variant="outline"
+              className={cn("w-fit gap-2", SECONDARY_BUTTON_BASE, SECONDARY_BUTTON_MD)}
+            >
               <ArrowLeft className="h-4 w-4" />
               Back
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       </div>
     )
   }
 
   return (
-    <div className="w-full space-y-6">
-      <header className="relative space-y-3 rounded-2xl border border-slate-200/80 bg-white p-4">
-        <span className="absolute left-0 top-4 h-10 w-1 rounded-full bg-indigo-500/80" />
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+    <section className="w-full space-y-5 pb-20 md:pb-0 [&_*]:shadow-none [&_*]:drop-shadow-none">
+      <header className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 text-primary">
+              <ListChecks className="h-4 w-4" />
+            </div>
+            <h1 className="text-xl font-semibold tracking-tight text-foreground">RFQ Quotation</h1>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border/60 px-3 py-1.5 text-xs font-medium text-muted-foreground">
+            <span>Total lines: {totals.totalLines}</span>
+            <span aria-hidden>-</span>
+            <span>Priced: {totals.filledCount}</span>
+          </div>
           <Button
             variant="outline"
-            className="h-8 gap-2 w-fit text-xs border-slate-200 bg-white hover:bg-white"
+            className="h-9 rounded-xl border-border/60 !bg-transparent px-3 text-xs font-semibold hover:!bg-transparent"
             onClick={() => router.push("/dashboard/supplier/rfqs")}
           >
             <ArrowLeft className="h-4 w-4" />
-            Back
+            Back to RFQs
           </Button>
-
-          <div className="text-[11px] text-slate-600 sm:text-right space-y-0.5">
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              <Badge variant="outline" className={cn("text-[10px] px-2 py-0.5", deadlineTone.className)}>
-                {deadlineTone.label}
-              </Badge>
-              <span>{formattedDeadline ? `Due ${formattedDeadline}` : "No submission deadline"}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-          <div className="flex gap-4">
-            <div className="space-y-2">
-              <div className="space-y-1">
-                <h1 className="text-xl font-semibold tracking-tight">
-                  RFQ Quotation
-                </h1>
-                <p className="text-xs text-slate-600 line-clamp-1">
-                  {rfqNumber || "RFQ"}
-                  {headerComments ? (
-                    <span className="ml-2">• {headerComments}</span>
-                  ) : null}
-                </p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-1.5">
-                <Badge variant="outline" className={cn("text-[10px] px-2 py-0.5 shrink-0", rfqTone.className)}>
-                  {rfqTone.label}
-                </Badge>
-                {invitationStatus ? (
-                  <Badge
-                    variant="outline"
-                    className={cn("text-[10px] px-2 py-0.5 shrink-0", invitationTone?.className)}
-                  >
-                    {invitationTone?.label ?? invitationStatus}
-                  </Badge>
-                ) : null}
-                {supplierStatusLabel ? (
-                  <Badge
-                    variant="outline"
-                    className={cn("text-[10px] px-2 py-0.5 shrink-0", responseTone?.className)}
-                  >
-                    Response: {responseTone?.label ?? normalizeStatus(supplierStatusLabel)}
-                  </Badge>
-                ) : null}
-                {draftSavedAt ? (
-                  <span className="inline-flex items-center rounded-full border border-slate-200/70 px-2 py-0.5 text-[10px] text-slate-600">
-                    Autosaved {format(draftSavedAt, "p")}
-                  </span>
+          {!isLocked ? (
+            <>
+              <Button
+                variant="outline"
+                onClick={saveDraft}
+                disabled={submitting !== null}
+                className="h-9 rounded-xl border-border/60 !bg-transparent px-3 text-xs font-semibold hover:!bg-transparent"
+              >
+                {submitting === "draft" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <span className="inline-flex items-center rounded-full border border-slate-200/70 px-2 py-0.5 text-[10px] text-slate-600">
-                    Autosave on
-                  </span>
+                  <Save className="h-4 w-4" />
                 )}
-                {deadlineDate ? (
-                  <div className="flex items-center gap-2 shrink-0">
-                    <div className="h-1.5 w-20 rounded-full bg-slate-200 overflow-hidden">
-                      <div
-                        className={cn("h-full rounded-full", deadlineBarClass)}
-                        style={{ width: `${deadlineProgress}%` }}
-                      />
-                    </div>
-                    <span className="text-[10px] text-slate-600">Urgency</span>
-                  </div>
-                ) : null}
-              </div>
-
-              {lockBanner ? (
-                <div
-                  className={cn(
-                    "mt-2 rounded-xl border px-3 py-2 text-xs",
-                    lockBanner.tone
-                  )}
-                >
-                  <div className="font-semibold text-foreground">{lockBanner.title}</div>
-                  <div className="mt-0.5 text-slate-600">{lockBanner.description}</div>
-                </div>
-              ) : null}
-            </div>
-          </div>
+                Save Draft
+              </Button>
+              <Button
+                onClick={onSubmitClick}
+                disabled={!canSubmit}
+                className="h-9 rounded-xl bg-primary px-3 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+              >
+                Submit Response
+                <ArrowUpRight className="ml-1.5 h-4 w-4" />
+              </Button>
+            </>
+          ) : null}
         </div>
       </header>
 
+      {lockedByAwarded ? (
+        <section className="border-l-2 border-slate-300/70 pl-3">
+          <p className="text-sm text-muted-foreground">
+            This RFQ has already been awarded and no further responses are allowed.
+          </p>
+        </section>
+      ) : null}
+
       {submissionSummary ? (
-        <Card className="rounded-2xl border border-emerald-200 bg-emerald-50/70 shadow-none">
-          <CardHeader className="relative flex flex-col gap-2 border-b border-emerald-200/70 px-5 py-3.5 before:absolute before:left-3 before:top-4 before:h-5 before:w-1 before:rounded-full before:bg-emerald-500/80 before:content-['']">
+        <section className="space-y-3 border-l-2 border-emerald-300/70 pl-3">
+          <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-emerald-600" />
-              <CardTitle className="text-base font-semibold">Quotation submitted</CardTitle>
+              <h2 className="text-base font-semibold">Quotation submitted</h2>
             </div>
-            <CardDescription className="text-sm text-slate-600">
+            <p className={`text-sm ${META_TEXT}`}>
               We captured your totals and will redirect you back to the RFQ shortly.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="px-5 py-4">
+            </p>
+          </div>
+          <div className="py-2">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1">
-                <p className="text-xs uppercase tracking-[0.16em] text-slate-600">Lines priced</p>
+                <p className={`text-xs uppercase tracking-[0.16em] ${META_TEXT}`}>Lines priced</p>
                 <p className="text-lg font-semibold tabular-nums">
                   {submissionSummary.pricedLines}/{submissionSummary.totalLines}
                 </p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs uppercase tracking-[0.16em] text-slate-600">Total payable</p>
+                <p className={`text-xs uppercase tracking-[0.16em] ${META_TEXT}`}>Total payable</p>
                 <p className="text-lg font-semibold">{toMoney(submissionSummary.totalAmount, submissionSummary.currency)}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs uppercase tracking-[0.16em] text-slate-600">Attachments</p>
+                <p className={`text-xs uppercase tracking-[0.16em] ${META_TEXT}`}>Attachments</p>
                 <p className="text-lg font-semibold tabular-nums">{submissionSummary.documents}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs uppercase tracking-[0.16em] text-slate-600">Submitted</p>
+                <p className={`text-xs uppercase tracking-[0.16em] ${META_TEXT}`}>Submitted</p>
                 <p className="text-sm font-semibold text-foreground">
                   {formattedSubmissionTimestamp ?? "Just now"}
                 </p>
               </div>
             </div>
-          </CardContent>
-          <CardFooter className="border-t border-emerald-200/70 px-5 py-3.5">
+          </div>
+          <div className="pt-2">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <Button variant="outline" size="sm" onClick={goToRfq} className="gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToRfq}
+                className={cn("gap-2", SECONDARY_BUTTON_BASE, SECONDARY_BUTTON_SM)}
+              >
                 <ArrowLeft className="h-4 w-4" />
                 Back to RFQs
               </Button>
-              <p className="text-xs text-slate-600">
+              <p className={`text-xs ${META_TEXT}`}>
                 Redirecting automatically in a few seconds…
               </p>
             </div>
-          </CardFooter>
-        </Card>
+          </div>
+        </section>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        <main className="lg:col-span-8">
+      <div className="space-y-6">
+        <main>
           <Tabs defaultValue="pricing" className="space-y-6">
-            <TabsList className="w-full h-auto flex flex-wrap sm:flex-nowrap rounded-xl border border-slate-200/80 bg-slate-100 p-1 text-slate-600">
+            <TabsList className="h-auto w-full flex-wrap justify-start gap-4 border-b border-border/50 pb-1 text-muted-foreground sm:flex-nowrap">
               <TabsTrigger
                 value="pricing"
-                className="gap-2 text-xs font-semibold text-slate-600 hover:text-slate-900 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:border-slate-200/80"
+                className={TAB_TRIGGER_CLASS}
               >
                 <ListChecks className="h-4 w-4" />
                 Pricing
               </TabsTrigger>
               <TabsTrigger
                 value="rfq-docs"
-                className="gap-2 text-xs font-semibold text-slate-600 hover:text-slate-900 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:border-slate-200/80"
+                className={TAB_TRIGGER_CLASS}
               >
                 <Paperclip className="h-4 w-4" />
                 Documents
-                <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-indigo-50 px-1.5 text-[11px] tabular-nums text-indigo-700">
+                <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-indigo-200/70 bg-indigo-50/80 px-1.5 text-[11px] tabular-nums text-indigo-700 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-200">
                   {quoteDocuments.length}
                 </span>
               </TabsTrigger>
               <TabsTrigger
                 value="clarifications"
-                className="gap-2 text-xs font-semibold text-slate-600 hover:text-slate-900 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:border-slate-200/80"
+                className={TAB_TRIGGER_CLASS}
               >
                 <MessageSquare className="h-4 w-4" />
                 Clarifications
-                <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-indigo-50 px-1.5 text-[11px] tabular-nums text-indigo-700">
+                <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-indigo-200/70 bg-indigo-50/80 px-1.5 text-[11px] tabular-nums text-indigo-700 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-200">
                   {clarifications.length}
                 </span>
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="pricing" className="space-y-6">
-              <Card className="rounded-2xl border border-slate-200/80 bg-white shadow-none py-0 gap-0">
-                <CardHeader className="relative border-b border-slate-200/70 px-5 py-3.5 before:absolute before:left-3 before:top-4 before:h-5 before:w-1 before:rounded-full before:bg-indigo-500/80 before:content-['']">
+              <section className={SURFACE_CARD}>
+                <div className={SURFACE_HEADER}>
                   <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                    <CardTitle className="text-base font-semibold">Line items</CardTitle>
-                    <div className="flex items-center gap-3 text-xs text-slate-600">
+                    <h2 className="text-base font-semibold">Line items</h2>
+                    <div className={`flex items-center gap-3 text-xs ${META_TEXT}`}>
                       <span>
                         {totals.filledCount}/{totals.totalLines} priced
                       </span>
@@ -2080,11 +2054,11 @@ export function RfqQuotation() {
                       </span>
                     </div>
                   </div>
-                </CardHeader>
+                </div>
 
-                <CardContent className="py-4 space-y-3">
+                <div className="py-4 space-y-3">
                   {submitFieldErrors.items?.[0] ? (
-                    <div className="rounded-xl border border-rose-200 bg-rose-50 p-4">
+                    <div className="border-l-2 border-rose-400 pl-3 py-1.5">
                       <div className="text-sm font-semibold text-rose-900">Submission issue</div>
                       <p className="mt-1 text-sm text-rose-900/80">
                         {submitFieldErrors.items[0]}
@@ -2093,7 +2067,7 @@ export function RfqQuotation() {
                   ) : null}
 
                   {missingLineIds.length > 0 ? (
-                    <div className="rounded-xl border border-rose-200 bg-rose-50 p-4">
+                    <div className="border-l-2 border-rose-400 pl-3 py-1.5">
                       <div className="text-sm font-semibold text-rose-900">Missing required values</div>
                       <p className="mt-1 text-sm text-rose-900/80">
                         Complete quantity and unit price for {missingLineIds.length}{" "}
@@ -2103,39 +2077,29 @@ export function RfqQuotation() {
                     </div>
                   ) : null}
 
-                  {!isLocked ? (
-                    <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-4">
-                      <div className="text-sm font-semibold text-slate-900">Quick tip</div>
-                      <div className="mt-1 text-sm text-slate-700">
-                        Enter your unit prices. Quantities are pre-filled from the RFQ (you can adjust if allowed).
-                        Totals update automatically.
-                      </div>
-                    </div>
-                  ) : null}
-
                   {enrichedLines.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-slate-200/70 bg-slate-50 p-6 text-sm text-slate-600">
+                    <div className={`${SOFT_PANEL_DASHED} p-6 text-sm ${META_TEXT}`}>
                       No RFQ line items were returned by the endpoint for this RFQ.
                     </div>
                   ) : (
                     <>
-                      <div className="hidden md:block overflow-x-auto rounded-xl border border-slate-200/70">
-                        <Table>
+                      <div className="hidden overflow-x-auto md:block">
+                        <Table className="text-[13px]">
                           <TableHeader>
-                            <TableRow className="bg-slate-50">
-                              <TableHead className="px-4 py-3 text-xs font-semibold uppercase text-slate-600">
+                            <TableRow className="border-border/50">
+                              <TableHead className={`px-3 py-2 text-[11px] font-semibold uppercase ${META_TEXT}`}>
                                 Item
                               </TableHead>
-                              <TableHead className="px-4 py-3 text-xs font-semibold uppercase text-slate-600">
+                              <TableHead className={`w-[132px] px-3 py-2 text-[11px] font-semibold uppercase ${META_TEXT}`}>
                                 Qty
                               </TableHead>
-                              <TableHead className="px-4 py-3 text-xs font-semibold uppercase text-slate-600">
+                              <TableHead className={`w-[88px] px-3 py-2 text-[11px] font-semibold uppercase ${META_TEXT}`}>
                                 Currency
                               </TableHead>
-                              <TableHead className="px-4 py-3 text-xs font-semibold uppercase text-slate-600">
+                              <TableHead className={`w-[156px] px-3 py-2 text-[11px] font-semibold uppercase ${META_TEXT}`}>
                                 Unit price
                               </TableHead>
-                              <TableHead className="px-4 py-3 text-xs font-semibold uppercase text-slate-600">
+                              <TableHead className={`w-[150px] px-3 py-2 text-[11px] font-semibold uppercase ${META_TEXT}`}>
                                 Total
                               </TableHead>
                             </TableRow>
@@ -2151,20 +2115,23 @@ export function RfqQuotation() {
                               return (
                                 <TableRow
                                   key={l.id}
-                                  className={cn("align-top", isMissing && "bg-destructive/5")}
+                                  className={cn(
+                                    "align-middle border-border/40 transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-900/30",
+                                    isMissing && "bg-destructive/10 hover:bg-destructive/10"
+                                  )}
                                 >
-                                  <TableCell className="px-4 py-4">
+                                  <TableCell className="px-3 py-2.5">
                                     <div className="space-y-1">
-                                      <div className="text-sm font-medium">{l.label}</div>
+                                      <div className="text-[13px] font-medium leading-snug">{l.label}</div>
                                       {l.uom ? (
-                                        <div className="text-[11px] text-slate-600">
+                                        <div className={`text-[11px] ${META_TEXT}`}>
                                           UoM: {l.uom}
                                         </div>
                                       ) : null}
                                     </div>
                                   </TableCell>
 
-                                  <TableCell className="px-4 py-4 w-[140px]">
+                                  <TableCell className="w-[132px] px-3 py-2.5">
                                     <Input
                                       value={l.quantity}
                                       disabled={isLocked}
@@ -2174,23 +2141,23 @@ export function RfqQuotation() {
                                       }
                                       placeholder="0"
                                       className={cn(
-                                        "h-9 text-sm",
+                                        "h-8 text-xs",
                                         isMissing &&
                                         "border-destructive focus-visible:ring-destructive"
                                       )}
                                     />
                                   </TableCell>
 
-                                  <TableCell className="px-4 py-4 w-[90px]">
+                                  <TableCell className="w-[88px] px-3 py-2.5">
                                     <div className={cn(
-                                      "h-9 inline-flex items-center text-sm tabular-nums",
-                                      currencyOk ? "text-foreground" : "text-slate-600"
+                                      "h-8 inline-flex items-center text-xs tabular-nums tracking-wide",
+                                      currencyOk ? "text-foreground" : META_TEXT
                                     )}>
                                       {(quoteCurrency || currency || "—").toUpperCase()}
                                     </div>
                                   </TableCell>
 
-                                  <TableCell className="px-4 py-4 w-[160px]">
+                                  <TableCell className="w-[156px] px-3 py-2.5">
                                     <Input
                                       value={l.unitPrice}
                                       disabled={isLocked}
@@ -2200,15 +2167,15 @@ export function RfqQuotation() {
                                       }
                                       placeholder="0.00"
                                       className={cn(
-                                        "h-9 text-sm",
+                                        "h-8 text-xs",
                                         isMissing &&
                                         "border-destructive focus-visible:ring-destructive"
                                       )}
                                     />
                                   </TableCell>
 
-                                  <TableCell className="px-4 py-4 w-[150px]">
-                                    <div className="text-sm font-semibold tabular-nums">
+                                  <TableCell className="w-[150px] px-3 py-2.5">
+                                    <div className="text-[13px] font-semibold tabular-nums">
                                       {lineTotal == null
                                         ? "—"
                                         : toMoney(lineTotal, currency)}
@@ -2222,7 +2189,7 @@ export function RfqQuotation() {
                         </Table>
                       </div>
 
-                      <div className="md:hidden space-y-4">
+                      <div className="space-y-2.5 md:hidden">
                         {enrichedLines.map((l, idx) => {
                           const qty = parsePositiveNumber(l.quantity)
                           const price = parsePositiveNumber(l.unitPrice)
@@ -2234,14 +2201,14 @@ export function RfqQuotation() {
                             <div
                               key={l.id}
                               className={cn(
-                                "rounded-xl border border-slate-200/70 bg-white p-4 space-y-3",
+                                "border-b border-border/50 px-0 py-3 space-y-2.5",
                                 isMissing && "border-destructive/50"
                               )}
                             >
                               <div className="flex items-start justify-between gap-4">
                                 <div className="space-y-1">
-                                  <div className="text-sm font-semibold">{l.label}</div>
-                                  <div className="text-xs text-slate-600">
+                                  <div className="text-[13px] font-semibold leading-snug">{l.label}</div>
+                                  <div className={`text-xs ${META_TEXT}`}>
                                     Line {idx + 1}
                                     {l.uom ? ` • UoM: ${l.uom}` : ""}
                                   </div>
@@ -2251,9 +2218,9 @@ export function RfqQuotation() {
                                 </div>
                               </div>
 
-                              <div className="grid grid-cols-2 gap-3">
+                              <div className="grid grid-cols-2 gap-2.5">
                                 <div className="space-y-1">
-                                  <div className="text-xs font-medium text-slate-600">
+                                  <div className={`text-xs font-medium ${META_TEXT}`}>
                                     Quantity
                                   </div>
                                   <Input
@@ -2265,14 +2232,14 @@ export function RfqQuotation() {
                                     }
                                     placeholder="0"
                                     className={cn(
-                                      "h-10 text-sm",
+                                      "h-9 text-sm",
                                       isMissing &&
                                       "border-destructive focus-visible:ring-destructive"
                                     )}
                                   />
                                 </div>
                                 <div className="space-y-1">
-                                  <div className="text-xs font-medium text-slate-600">
+                                  <div className={`text-xs font-medium ${META_TEXT}`}>
                                     <span className="inline-flex items-center gap-2">
                                       <span className="uppercase tracking-widest">
                                         {(quoteCurrency || currency || "—").toUpperCase()}
@@ -2289,7 +2256,7 @@ export function RfqQuotation() {
                                     }
                                     placeholder="0.00"
                                     className={cn(
-                                      "h-10 text-sm",
+                                      "h-9 text-sm",
                                       isMissing &&
                                       "border-destructive focus-visible:ring-destructive"
                                     )}
@@ -2303,42 +2270,243 @@ export function RfqQuotation() {
                       </div>
                     </>
                   )}
-                </CardContent>
-              </Card>
 
-              <Card className="rounded-2xl border border-slate-200/80 bg-white shadow-none py-0 gap-0">
-                <CardHeader className="relative border-b border-slate-200/70 px-5 py-3.5 before:absolute before:left-3 before:top-4 before:h-5 before:w-1 before:rounded-full before:bg-indigo-500/80 before:content-['']">
-                  <CardTitle className="text-base font-semibold">Remarks (Optional)</CardTitle>
-                </CardHeader>
-                <CardContent className="py-4 space-y-3">
-                  <Textarea
-                    value={remarks}
-                    disabled={isLocked}
-                    onChange={(e) => setRemarks(e.target.value)}
-                    placeholder="Add notes for the buyer…"
-                    className="min-h-[110px]"
-                  />
-                </CardContent>
-              </Card>
+                  <Separator className="my-1" />
+
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div className="space-y-1">
+                      <div className={`text-xs font-medium ${META_TEXT}`}>
+                        Validity (days)
+                      </div>
+                      <Input
+                        value={durationDays}
+                        disabled={isLocked}
+                        inputMode="numeric"
+                        onChange={(e) => {
+                          const next = e.target.value.replace(/[^\d]/g, "").slice(0, 4)
+                          setDurationDays(next)
+                          setSubmitFieldErrors((prev) => {
+                            if (!prev.durationDays) return prev
+                            const { durationDays: _d, ...rest } = prev
+                            return rest
+                          })
+                        }}
+                        placeholder="30"
+                        className={cn(
+                          "h-10 text-sm",
+                          submitFieldErrors.durationDays &&
+                          "border-destructive focus-visible:ring-destructive"
+                        )}
+                      />
+                      {submitFieldErrors.durationDays?.[0] ? (
+                        <div className="text-xs text-destructive">
+                          {submitFieldErrors.durationDays[0]}
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className={`text-xs font-medium ${META_TEXT}`}>Currency</div>
+                      <Popover open={currencyOpen} onOpenChange={setCurrencyOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            disabled={isLocked}
+                            className={cn(
+                              "h-10 w-full justify-between text-sm font-normal",
+                              submitFieldErrors.currency &&
+                              "border-destructive focus-visible:ring-destructive"
+                            )}
+                          >
+                            <span className="truncate">
+                              {quoteCurrency ? (
+                                <span className="inline-flex items-center gap-2">
+                                  <span className="font-semibold tracking-widest">
+                                    {quoteCurrency.toUpperCase()}
+                                  </span>
+                                  {selectedCurrency?.name ? (
+                                    <span className={`${META_TEXT} truncate`}>
+                                      {selectedCurrency.name}
+                                    </span>
+                                  ) : null}
+                                </span>
+                              ) : (
+                                <span className={META_TEXT}>
+                                  {currenciesLoading ? "Loading..." : "Select currency"}
+                                </span>
+                              )}
+                            </span>
+                            <ChevronsUpDown className="h-4 w-4 opacity-60" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[320px] border-slate-200/70 bg-background p-0 shadow-none" align="start">
+                          <Command>
+                            <CommandInput placeholder="Search currency..." />
+                            <CommandList>
+                              <CommandEmpty>No currencies found.</CommandEmpty>
+                              {currencies.map((c) => {
+                                const isSelected =
+                                  quoteCurrency &&
+                                  c.code &&
+                                  c.code.toLowerCase() === quoteCurrency.toLowerCase()
+                                const label = `${c.code}${c.symbol ? ` (${c.symbol})` : ""} - ${c.name}`
+                                return (
+                                  <CommandItem
+                                    key={`${c.id}:${c.code}`}
+                                    value={`${c.code} ${c.name} ${c.symbol ?? ""}`}
+                                    onSelect={() => {
+                                      setCurrencyTouched(true)
+                                      setQuoteCurrency(String(c.code || "").toUpperCase())
+                                      setCurrencyOpen(false)
+                                      setSubmitFieldErrors((prev) => {
+                                        if (!prev.currency) return prev
+                                        const { currency: _c, ...rest } = prev
+                                        return rest
+                                      })
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "h-4 w-4",
+                                        isSelected ? "opacity-100" : "opacity-0"
+                                      )}
+                                    />
+                                    <span className="truncate">{label}</span>
+                                  </CommandItem>
+                                )
+                              })}
+                            </CommandList>
+                          </Command>
+                          <div className="border-t border-slate-200/70 p-2">
+                            <Input
+                              value={quoteCurrency}
+                              disabled={isLocked}
+                              onChange={(e) => {
+                                setCurrencyTouched(true)
+                                const next = e.target.value.toUpperCase().slice(0, 3)
+                                setQuoteCurrency(next)
+                                setSubmitFieldErrors((prev) => {
+                                  if (!prev.currency) return prev
+                                  const { currency: _c, ...rest } = prev
+                                  return rest
+                                })
+                              }}
+                              placeholder="Or type code (e.g. USD)"
+                              className="h-9 text-sm tracking-widest"
+                            />
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                      {submitFieldErrors.currency?.[0] ? (
+                        <div className="text-xs text-destructive">
+                          {submitFieldErrors.currency[0]}
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className="py-2">
+                    <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+                      <div className="space-y-1">
+                        <div className={META_TEXT}>Total payable</div>
+                        <div className="text-base font-semibold text-foreground tabular-nums">
+                          {toMoney(totals.grandTotal, quoteCurrency || currency)}
+                        </div>
+                      </div>
+                      <div className="space-y-1 text-right">
+                        <div className={META_TEXT}>Deadline</div>
+                        <div className={cn("font-semibold", deadline.tone)}>
+                          {formattedDeadline ?? "—"}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {!isLocked ? (
+                    <div className="space-y-2">
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        <Button
+                          variant="outline"
+                          disabled={submitting !== null}
+                          onClick={saveDraft}
+                          className={cn(
+                            "h-11 w-full justify-center gap-2 rounded-lg font-semibold",
+                            SECONDARY_BUTTON_BASE
+                          )}
+                        >
+                          {submitting === "draft" ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Save className="h-4 w-4" />
+                          )}
+                          Save Draft
+                        </Button>
+                        <Button
+                          disabled={!canSubmit}
+                          onClick={onSubmitClick}
+                          className={PRIMARY_CTA_BUTTON}
+                        >
+                          {submitting === "submitted" ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <ArrowUpRight className="h-4 w-4" />
+                          )}
+                          Submit Response
+                        </Button>
+                      </div>
+                      <div className={`text-xs ${META_TEXT}`}>
+                        {!submitMeta.ok
+                          ? "Add currency and validity to enable submission."
+                          : docsUploading
+                            ? "Uploading documents… please wait."
+                            : !canSubmit
+                              ? "Complete all line items to enable submission."
+                              : "Ready to submit your final quote."}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Button
+                        variant="outline"
+                        className={cn("h-11 w-full justify-center gap-2 rounded-xl font-semibold", SECONDARY_BUTTON_BASE)}
+                        onClick={() => router.push("/dashboard/supplier/rfqs")}
+                      >
+                        <ArrowLeft className="h-4 w-4" />
+                        Back to RFQs
+                      </Button>
+                      <div className={`${SOFT_PANEL_DASHED} p-3 text-sm ${META_TEXT}`}>
+                        {lockInfoMessage}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </section>
             </TabsContent>
 
             <TabsContent value="rfq-docs" className="space-y-6">
-              <Card className="rounded-2xl border border-slate-200/80 bg-white shadow-none py-0 gap-0">
-                <CardHeader className="relative border-b border-slate-200/70 px-5 py-3.5 before:absolute before:left-3 before:top-4 before:h-5 before:w-1 before:rounded-full before:bg-indigo-500/80 before:content-['']">
+              <section className={SURFACE_CARD}>
+                <div className={SURFACE_HEADER}>
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
-                      <Paperclip className="h-4 w-4 text-slate-600" />
-                      <CardTitle className="text-base font-semibold">Documents (Optional)</CardTitle>
+                      <Paperclip className={`h-4 w-4 ${META_TEXT}`} />
+                      <h2 className="text-base font-semibold">Documents (Optional)</h2>
                     </div>
-                    <Badge variant="outline" className="text-xs tabular-nums">
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        BADGE_BASE,
+                        "bg-indigo-50/80 px-2 py-0.5 text-[10px] text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-200"
+                      )}
+                    >
                       {quoteDocuments.length}
                     </Badge>
                   </div>
-                  <CardDescription>
+                  <p className={`text-sm ${META_TEXT}`}>
                     Attach supporting documents if any.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="py-4 space-y-3">
+                  </p>
+                </div>
+                <div className="py-4 space-y-3">
                   <input
                     ref={uploadInputRef}
                     type="file"
@@ -2356,6 +2524,7 @@ export function RfqQuotation() {
                       size="sm"
                       disabled={isLocked}
                       onClick={openDmsPicker}
+                      className={cn("font-semibold", SECONDARY_BUTTON_BASE, SECONDARY_BUTTON_SM)}
                     >
                       Attach from DMS
                     </Button>
@@ -2364,7 +2533,7 @@ export function RfqQuotation() {
                       size="sm"
                       disabled={isLocked}
                       onClick={() => uploadInputRef.current?.click()}
-                      className="gap-2"
+                      className={cn("gap-2 font-semibold", SECONDARY_BUTTON_BASE, SECONDARY_BUTTON_SM)}
                     >
                       <Upload className="h-4 w-4" />
                       Upload file
@@ -2372,7 +2541,7 @@ export function RfqQuotation() {
                   </div>
 
                   {quoteDocuments.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-slate-200/70 bg-slate-50 p-4 text-sm text-slate-600">
+                    <div className={`${SOFT_PANEL_DASHED} p-4 text-sm ${META_TEXT}`}>
                       No documents attached.
                     </div>
                   ) : (
@@ -2390,19 +2559,19 @@ export function RfqQuotation() {
                         return (
                           <div
                             key={idKey}
-                            className="flex items-start justify-between gap-3 rounded-xl border border-slate-200/70 bg-white p-4"
+                            className="flex items-start justify-between gap-3 border-b border-border/50 py-3"
                           >
                             <div className="min-w-0 space-y-1">
                               <div className="text-sm font-medium text-foreground truncate">
                                 {d.name}
                               </div>
-                              <div className="text-xs text-slate-600">
+                              <div className={`text-xs ${META_TEXT}`}>
                                 {d.source === "upload" ? "Uploaded" : "From DMS"}
                                 {d.repository ? ` • ${d.repository}` : ""}
                                 {d.version != null ? ` • v${String(d.version)}` : ""}
                               </div>
                               {d.uploading ? (
-                                <div className="text-xs text-slate-600 inline-flex items-center gap-2">
+                                <div className={`text-xs ${META_TEXT} inline-flex items-center gap-2`}>
                                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                                   Uploading…
                                 </div>
@@ -2436,165 +2605,171 @@ export function RfqQuotation() {
                   <div className="text-xs text-slate-600">
                     Documents are optional. You can submit without attaching anything.
                   </div>
-                </CardContent>
-              </Card>
+                  <Separator className="my-1" />
 
-              <Card className="rounded-2xl border border-slate-200/80 bg-white shadow-none py-0 gap-0">
-                <CardHeader className="relative border-b border-slate-200/70 px-5 py-3.5 before:absolute before:left-3 before:top-4 before:h-5 before:w-1 before:rounded-full before:bg-indigo-500/80 before:content-['']">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <Paperclip className="h-4 w-4 text-slate-600" />
-                      <CardTitle className="text-base font-semibold">Reference documents</CardTitle>
-                    </div>
-                    <Badge variant="outline" className="text-xs tabular-nums">
-                      {attachments.length > 0 ? attachments.length : dmsDocs.length}
-                    </Badge>
-                  </div>
-                  <CardDescription>
-                    View buyer-shared RFQ documents (payload or DMS) for reference.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="py-4 space-y-3">
-                  {attachments.length === 0 ? (
-                    <div className="space-y-3">
-                      <div className="rounded-xl border border-dashed border-slate-200/70 bg-slate-50 p-6 text-sm text-slate-600">
-                        No reference documents were included in the RFQ payload.
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-sm font-semibold text-foreground">
+                        Reference documents
                       </div>
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="text-xs text-slate-600">
-                          If the RFQ documents are stored in DMS, view them here.
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={dmsDocsLoading}
-                          onClick={loadDmsDocs}
-                          className="gap-2"
-                        >
-                          {dmsDocsLoading ? (
-                            <span className="inline-flex items-center gap-2">
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                              Loading…
-                            </span>
-                          ) : (
-                            "View DMS docs"
-                          )}
-                        </Button>
-                      </div>
-                      {dmsDocsError ? (
-                        <div className="text-xs text-destructive">{dmsDocsError}</div>
-                      ) : null}
-                      {dmsDocs.length > 0 ? (
-                        <div className="space-y-2">
-                          {dmsDocs.slice(0, 10).map((d, idx) => {
-                            const docId = d?.id ?? d?.Id ?? d?.documentId ?? d?.document_id ?? idx
-                            const name = String(d?.name ?? d?.title ?? `Document ${idx + 1}`).trim()
-                            const previewUrl =
-                              typeof d?.previewUrl === "string" && d.previewUrl.trim()
-                                ? d.previewUrl.trim()
-                                : `/api/dms/preview?id=${encodeURIComponent(String(docId))}&documentId=${encodeURIComponent(String(docId))}&document_id=${encodeURIComponent(String(docId))}`
-                            return (
-                              <div
-                                key={`${docId}-${name}`}
-                                className="flex items-start justify-between gap-4 rounded-xl border border-slate-200/70 bg-white p-4"
-                              >
-                                <div className="min-w-0 space-y-1">
-                                  <div className="text-sm font-medium text-foreground truncate">
-                                    {name}
-                                  </div>
-                                  <div className="text-xs text-slate-600">
-                                    {String(d?.repository ?? d?.visibility ?? "").trim() || "DMS"}
-                                    {d?.version != null ? ` • v${String(d.version)}` : ""}
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-2 shrink-0">
-                                  <AttachmentActionsMenu
-                                    previewUrl={previewUrl}
-                                    onVerify={() => verifyAttachment(String(docId), name)}
-                                  />
-                                </div>
-                              </div>
-                            )
-                          })}
-                        </div>
-                      ) : null}
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          BADGE_BASE,
+                          "bg-slate-100/80 px-2 py-0.5 text-[10px] text-slate-700 dark:bg-slate-800/50 dark:text-slate-200"
+                        )}
+                      >
+                        {attachments.length > 0 ? attachments.length : dmsDocs.length}
+                      </Badge>
                     </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {attachments.slice(0, 10).map((a, idx) => {
-                        const name = getAttachmentName(a, idx)
-                        const docId = getAttachmentDocumentId(a)
-                        const url = getAttachmentUrl(a)
-                        const previewHref = url
-                          ? url
-                          : docId != null
-                            ? `/api/dms/preview?id=${encodeURIComponent(String(docId))}&documentId=${encodeURIComponent(String(docId))}&document_id=${encodeURIComponent(String(docId))}`
-                            : null
-                        const meta = String(
-                          a?.type ?? a?.mimeType ?? a?.mime_type ?? a?.category ?? a?.Category ?? ""
-                        ).trim()
-                        const verified = docId != null && String(docId) in verifiedByDocId
 
-                        return (
-                          <div
-                            key={`${idx}-${name}`}
-                            className="flex items-start justify-between gap-4 rounded-xl border border-slate-200/70 bg-white p-4"
-                          >
-                            <div className="min-w-0 space-y-1">
-                              <div className="text-sm font-medium text-foreground truncate">
-                                {name}
-                              </div>
-                              {meta ? (
-                                <div className="text-xs text-slate-600">{meta}</div>
-                              ) : null}
-                              {verified ? (
-                                <div className="text-xs text-emerald-700">Verified</div>
-                              ) : null}
-                              {!previewHref ? (
-                                <div className="text-xs text-slate-600">
-                                  Preview not available.
-                                </div>
-                              ) : null}
-                            </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                              <AttachmentActionsMenu
-                                previewUrl={previewHref}
-                                onVerify={
-                                  docId != null ? () => verifyAttachment(docId, name) : null
-                                }
-                              />
-                            </div>
+                    {attachments.length === 0 ? (
+                      <div className="space-y-3">
+                        <div className={`${SOFT_PANEL_DASHED} p-4 text-sm ${META_TEXT}`}>
+                          No reference documents available in this RFQ.
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <div className={`text-xs ${META_TEXT}`}>
+                            Load from DMS if documents were shared there.
                           </div>
-                        )
-                      })}
-                      {attachments.length > 10 ? (
-                        <div className="text-xs text-slate-600">
-                          Showing first 10 attachments.
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={dmsDocsLoading}
+                            onClick={loadDmsDocs}
+                            className={cn("gap-2", SECONDARY_BUTTON_BASE, SECONDARY_BUTTON_SM)}
+                          >
+                            {dmsDocsLoading ? (
+                              <span className="inline-flex items-center gap-2">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Loading…
+                              </span>
+                            ) : (
+                              "Load DMS docs"
+                            )}
+                          </Button>
                         </div>
-                      ) : null}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                        {dmsDocsError ? (
+                          <div className="text-xs text-destructive">{dmsDocsError}</div>
+                        ) : null}
+                        {dmsDocs.length > 0 ? (
+                          <div className="space-y-2">
+                            {dmsDocs.slice(0, 10).map((d, idx) => {
+                              const docId = d?.id ?? d?.Id ?? d?.documentId ?? d?.document_id ?? idx
+                              const name = String(d?.name ?? d?.title ?? `Document ${idx + 1}`).trim()
+                              const previewUrl =
+                                typeof d?.previewUrl === "string" && d.previewUrl.trim()
+                                  ? d.previewUrl.trim()
+                                  : `/api/dms/preview?id=${encodeURIComponent(String(docId))}&documentId=${encodeURIComponent(String(docId))}&document_id=${encodeURIComponent(String(docId))}`
+                              return (
+                                <div
+                                  key={`${docId}-${name}`}
+                                  className="flex items-start justify-between gap-4 border-b border-border/50 py-3"
+                                >
+                                  <div className="min-w-0 space-y-1">
+                                    <div className="text-sm font-medium text-foreground truncate">
+                                      {name}
+                                    </div>
+                                    <div className={`text-xs ${META_TEXT}`}>
+                                      {String(d?.repository ?? d?.visibility ?? "").trim() || "DMS"}
+                                      {d?.version != null ? ` • v${String(d.version)}` : ""}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    <AttachmentActionsMenu
+                                      previewUrl={previewUrl}
+                                      onVerify={() => verifyAttachment(String(docId), name)}
+                                    />
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {attachments.slice(0, 10).map((a, idx) => {
+                          const name = getAttachmentName(a, idx)
+                          const docId = getAttachmentDocumentId(a)
+                          const url = getAttachmentUrl(a)
+                          const previewHref = url
+                            ? url
+                            : docId != null
+                              ? `/api/dms/preview?id=${encodeURIComponent(String(docId))}&documentId=${encodeURIComponent(String(docId))}&document_id=${encodeURIComponent(String(docId))}`
+                              : null
+                          const meta = String(
+                            a?.type ?? a?.mimeType ?? a?.mime_type ?? a?.category ?? a?.Category ?? ""
+                          ).trim()
+                          const verified = docId != null && String(docId) in verifiedByDocId
+
+                          return (
+                            <div
+                              key={`${idx}-${name}`}
+                              className="flex items-start justify-between gap-4 border-b border-border/50 py-3"
+                            >
+                              <div className="min-w-0 space-y-1">
+                                <div className="text-sm font-medium text-foreground truncate">
+                                  {name}
+                                </div>
+                                {meta ? (
+                                  <div className={`text-xs ${META_TEXT}`}>{meta}</div>
+                                ) : null}
+                                {verified ? (
+                                  <div className="text-xs text-emerald-700">Verified</div>
+                                ) : null}
+                                {!previewHref ? (
+                                  <div className={`text-xs ${META_TEXT}`}>
+                                    Preview not available.
+                                  </div>
+                                ) : null}
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <AttachmentActionsMenu
+                                  previewUrl={previewHref}
+                                  onVerify={
+                                    docId != null ? () => verifyAttachment(docId, name) : null
+                                  }
+                                />
+                              </div>
+                            </div>
+                          )
+                        })}
+                        {attachments.length > 10 ? (
+                          <div className="text-xs text-slate-600">
+                            Showing first 10 attachments.
+                          </div>
+                        ) : null}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </section>
             </TabsContent>
 
             <TabsContent value="clarifications" className="space-y-6">
 
-              <Card className="rounded-2xl border border-slate-200/80 bg-white shadow-none py-0 gap-0">
-                <CardHeader className="relative border-b border-slate-200/70 px-5 py-3.5 before:absolute before:left-3 before:top-4 before:h-5 before:w-1 before:rounded-full before:bg-indigo-500/80 before:content-['']">
+              <section className={SURFACE_CARD}>
+                <div className={SURFACE_HEADER}>
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
-                      <MessageSquare className="h-4 w-4 text-slate-600" />
-                      <CardTitle className="text-base font-semibold">Clarifications</CardTitle>
+                      <MessageSquare className={`h-4 w-4 ${META_TEXT}`} />
+                      <h2 className="text-base font-semibold">Clarifications</h2>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs tabular-nums">
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          BADGE_BASE,
+                          "bg-indigo-50/80 px-2 py-0.5 text-[10px] text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-200"
+                        )}
+                      >
                         {clarifications.length}
                       </Badge>
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-8"
+                        className={cn("font-semibold", SECONDARY_BUTTON_BASE, SECONDARY_BUTTON_SM)}
                         disabled={clarificationsLoading}
                         onClick={refreshClarifications}
                       >
@@ -2609,11 +2784,11 @@ export function RfqQuotation() {
                       </Button>
                     </div>
                   </div>
-                  <CardDescription>Ask questions and view buyer responses.</CardDescription>
-                </CardHeader>
-                <CardContent className="py-4 space-y-3">
+                  <p className={`text-sm ${META_TEXT}`}>Ask questions and view buyer responses.</p>
+                </div>
+                <div className="py-4 space-y-3">
                   {!clarificationsLocked ? (
-                    <div className="rounded-xl border border-slate-200/70 bg-slate-50 p-4 space-y-3">
+                    <div className={`${SOFT_PANEL} p-4 space-y-3`}>
                       <div className="text-sm font-semibold">Ask a clarification (Optional)</div>
                       <Textarea
                         value={clarificationDraft}
@@ -2623,12 +2798,12 @@ export function RfqQuotation() {
                         className="min-h-[96px]"
                       />
                       <div className="flex items-center justify-between gap-3">
-                        <div className="text-xs text-slate-600">
+                        <div className={`text-xs ${META_TEXT}`}>
                           Keep it short and specific for a faster response.
                         </div>
                         <Button
                           size="sm"
-                          className="gap-2"
+                          className="gap-2 rounded-lg bg-gradient-to-r from-indigo-600 to-blue-600 font-semibold text-white hover:from-indigo-700 hover:to-blue-700"
                           onClick={submitClarification}
                           disabled={askingClarification || !clarificationDraft.trim()}
                         >
@@ -2642,7 +2817,7 @@ export function RfqQuotation() {
                       </div>
                     </div>
                   ) : (
-                    <div className="rounded-xl border border-dashed border-slate-200/70 bg-slate-50 p-4 text-sm text-slate-600">
+                    <div className={`${SOFT_PANEL_DASHED} p-4 text-sm ${META_TEXT}`}>
                       Clarifications are locked for this RFQ.
                     </div>
                   )}
@@ -2652,7 +2827,7 @@ export function RfqQuotation() {
                   ) : null}
 
                   {clarifications.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-slate-200/70 bg-slate-50 p-6 text-sm text-slate-600">
+                    <div className={`${SOFT_PANEL_DASHED} p-6 text-sm ${META_TEXT}`}>
                       No clarifications yet.
                     </div>
                   ) : (
@@ -2675,7 +2850,7 @@ export function RfqQuotation() {
                         return (
                           <div
                             key={idx}
-                            className="rounded-xl border border-slate-200/70 bg-white p-4 space-y-2"
+                            className="border-b border-border/50 py-3 space-y-2"
                           >
                             <div className="flex items-start justify-between gap-3">
                               <div className="min-w-0 space-y-1">
@@ -2683,21 +2858,21 @@ export function RfqQuotation() {
                                   {message}
                                 </div>
                                 {created ? (
-                                  <div className="text-xs text-slate-600">
+                                  <div className={`text-xs ${META_TEXT}`}>
                                     {String(created)}
                                   </div>
                                 ) : null}
                               </div>
                               <Badge
                                 variant="outline"
-                                className={cn("text-xs shrink-0", tone.className)}
+                                className={cn(BADGE_BASE, "shrink-0 px-2 py-0.5", tone.className)}
                               >
                                 {tone.label}
                               </Badge>
                             </div>
                             {answer ? (
-                              <div className="rounded-lg border border-slate-200/70 bg-slate-50 p-3">
-                                <div className="text-xs font-semibold text-slate-600">
+                              <div className={`${SOFT_PANEL} p-3`}>
+                                <div className={`text-xs font-semibold ${META_TEXT}`}>
                                   Buyer response
                                 </div>
                                 <div className="mt-1 text-sm text-foreground whitespace-pre-line">
@@ -2705,7 +2880,7 @@ export function RfqQuotation() {
                                 </div>
                               </div>
                             ) : (
-                              <div className="text-xs text-slate-600">
+                              <div className={`text-xs ${META_TEXT}`}>
                                 Awaiting buyer response.
                               </div>
                             )}
@@ -2719,249 +2894,58 @@ export function RfqQuotation() {
                       ) : null}
                     </div>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+              </section>
             </TabsContent>
           </Tabs>
         </main>
-
-        <aside className="space-y-5 lg:col-span-4 lg:sticky lg:top-24 h-fit">
-          <Card className="rounded-2xl border border-slate-200/80 bg-white shadow-none py-0 gap-0">
-            <CardHeader className="relative border-b border-slate-200/70 px-5 py-3.5 before:absolute before:left-3 before:top-4 before:h-5 before:w-1 before:rounded-full before:bg-indigo-500/80 before:content-['']">
-              <CardTitle className="text-base font-semibold">Summary</CardTitle>
-              <CardDescription>
-                Review totals and submit when ready.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="py-4 space-y-3">
-              <div className="space-y-1">
-                <div className="text-xs font-medium text-slate-600">
-                  Validity (days)
-                </div>
-                <Input
-                  value={durationDays}
-                  disabled={isLocked}
-                  inputMode="numeric"
-                  onChange={(e) => {
-                    const next = e.target.value.replace(/[^\d]/g, "").slice(0, 4)
-                    setDurationDays(next)
-                    setSubmitFieldErrors((prev) => {
-                      if (!prev.durationDays) return prev
-                      const { durationDays: _d, ...rest } = prev
-                      return rest
-                    })
-                  }}
-                  placeholder="30"
-                  className={cn(
-                    "h-10 text-sm",
-                    submitFieldErrors.durationDays &&
-                    "border-destructive focus-visible:ring-destructive"
-                  )}
-                />
-                {submitFieldErrors.durationDays?.[0] ? (
-                  <div className="text-xs text-destructive">
-                    {submitFieldErrors.durationDays[0]}
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="space-y-1">
-                <div className="text-xs font-medium text-slate-600">Currency</div>
-                <Popover open={currencyOpen} onOpenChange={setCurrencyOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={isLocked}
-                      className={cn(
-                        "h-10 w-full justify-between text-sm font-normal",
-                        submitFieldErrors.currency &&
-                        "border-destructive focus-visible:ring-destructive"
-                      )}
-                    >
-                      <span className="truncate">
-                        {quoteCurrency ? (
-                          <span className="inline-flex items-center gap-2">
-                            <span className="font-semibold tracking-widest">
-                              {quoteCurrency.toUpperCase()}
-                            </span>
-                            {selectedCurrency?.name ? (
-                              <span className="text-slate-600 truncate">
-                                {selectedCurrency.name}
-                              </span>
-                            ) : null}
-                          </span>
-                        ) : (
-                          <span className="text-slate-600">
-                            {currenciesLoading ? "Loading..." : "Select currency"}
-                          </span>
-                        )}
-                      </span>
-                      <ChevronsUpDown className="h-4 w-4 opacity-60" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[320px] p-0" align="start">
-                    <Command>
-                      <CommandInput placeholder="Search currency..." />
-                      <CommandList>
-                        <CommandEmpty>No currencies found.</CommandEmpty>
-                        {currencies.map((c) => {
-                          const isSelected =
-                            quoteCurrency &&
-                            c.code &&
-                            c.code.toLowerCase() === quoteCurrency.toLowerCase()
-                          const label = `${c.code}${c.symbol ? ` (${c.symbol})` : ""} - ${c.name}`
-                          return (
-                            <CommandItem
-                              key={`${c.id}:${c.code}`}
-                              value={`${c.code} ${c.name} ${c.symbol ?? ""}`}
-                              onSelect={() => {
-                                setCurrencyTouched(true)
-                                setQuoteCurrency(String(c.code || "").toUpperCase())
-                                setCurrencyOpen(false)
-                                setSubmitFieldErrors((prev) => {
-                                  if (!prev.currency) return prev
-                                  const { currency: _c, ...rest } = prev
-                                  return rest
-                                })
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "h-4 w-4",
-                                  isSelected ? "opacity-100" : "opacity-0"
-                                )}
-                              />
-                              <span className="truncate">{label}</span>
-                            </CommandItem>
-                          )
-                        })}
-                      </CommandList>
-                    </Command>
-                    <div className="border-t border-slate-200/70 p-2">
-                      <Input
-                        value={quoteCurrency}
-                        disabled={isLocked}
-                        onChange={(e) => {
-                          setCurrencyTouched(true)
-                          const next = e.target.value.toUpperCase().slice(0, 3)
-                          setQuoteCurrency(next)
-                          setSubmitFieldErrors((prev) => {
-                            if (!prev.currency) return prev
-                            const { currency: _c, ...rest } = prev
-                            return rest
-                          })
-                        }}
-                        placeholder="Or type code (e.g. USD)"
-                        className="h-9 text-sm tracking-widest"
-                      />
-                    </div>
-                  </PopoverContent>
-                </Popover>
-                {submitFieldErrors.currency?.[0] ? (
-                  <div className="text-xs text-destructive">
-                    {submitFieldErrors.currency[0]}
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-600">Total Payable</span>
-                <span className="font-semibold tabular-nums">
-                  {toMoney(totals.grandTotal, quoteCurrency || currency)}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-600">Quotation Deadline</span>
-                <span className={cn("font-medium", deadline.tone)}>
-                  {formattedDeadline ?? "—"}
-                </span>
-              </div>
-
-              <Separator />
-
-              {!isLocked ? (
-                <div className="space-y-3">
-                  <Button
-                    disabled={!canSubmit}
-                    onClick={onSubmitClick}
-                    className="w-full justify-center gap-2 h-11 font-semibold"
-                  >
-                    {submitting === "submitted" ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <ArrowUpRight className="h-4 w-4" />
-                    )}
-                    Submit quotation
-                  </Button>
-
-                  <div className="text-xs text-slate-600">
-                    {!submitMeta.ok
-                      ? "Add currency and validity to enable submission."
-                      : docsUploading
-                        ? "Uploading documents… please wait."
-                        : !canSubmit
-                          ? "Complete all line items to enable submission."
-                          : "Submitting sends your final prices to the buyer."}
-                  </div>
-                </div>
-              ) : (
-                <Button
-                  variant="outline"
-                  className="w-full justify-center gap-2 h-11 font-semibold"
-                  onClick={() => router.push("/dashboard/supplier/rfqs")}
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Back to RFQs
-                </Button>
-              )}
-
-              {isLocked ? (
-                <div className="rounded-xl border border-dashed border-slate-200/70 bg-slate-50 p-4 text-sm text-slate-600">
-                  {lockedByStatus
-                    ? "Your quotation has already been submitted. You can no longer edit or re-submit."
-                    : `This RFQ is closed${lockedByDeadline ? " (deadline passed)" : ""}. You can no longer submit or edit a quotation.`}
-                </div>
-              ) : null}
-            </CardContent>
-          </Card>
-        </aside>
       </div>
 
-      <div className="md:hidden h-20" aria-hidden="true" />
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200/70 bg-white/95 backdrop-blur">
-        <div className="w-full px-4 py-3 flex items-center gap-3">
-          {isLocked ? (
-            <Button
-              variant="outline"
-              onClick={() => router.push("/dashboard/supplier/rfqs")}
-              className="flex-1 gap-2 h-11 font-semibold"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to RFQs
-            </Button>
-          ) : (
-            <Button
-              disabled={!canSubmit}
-              onClick={onSubmitClick}
-              className="flex-1 gap-2 h-11 font-semibold"
-            >
-              {submitting === "submitted" ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <ArrowUpRight className="h-4 w-4" />
-              )}
-              Submit
-            </Button>
-          )}
+      {!isLocked ? (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-background/95 px-3 py-2 backdrop-blur md:hidden">
+          <div className="mx-auto max-w-md space-y-1.5">
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                disabled={submitting !== null}
+                onClick={saveDraft}
+                className={cn("h-10 rounded-lg font-semibold", SECONDARY_BUTTON_BASE)}
+              >
+                {submitting === "draft" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                Draft
+              </Button>
+              <Button
+                disabled={!canSubmit}
+                onClick={onSubmitClick}
+                className={cn(PRIMARY_CTA_BUTTON, "h-10 rounded-lg")}
+              >
+                {submitting === "submitted" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ArrowUpRight className="h-4 w-4" />
+                )}
+                Submit
+              </Button>
+            </div>
+            <p className={`text-center text-[11px] ${META_TEXT}`}>
+              {!submitMeta.ok
+                ? "Add currency and validity to enable submission."
+                : !canSubmit
+                  ? "Complete all line items to enable submission."
+                  : "Ready to submit your final quote."}
+            </p>
+          </div>
         </div>
-      </div>
+      ) : null}
 
       <AlertDialog open={submitDialogOpen} onOpenChange={setSubmitDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="border-slate-200/70 bg-background shadow-none">
           <AlertDialogHeader>
-            <AlertDialogTitle>Submit quotation?</AlertDialogTitle>
+            <AlertDialogTitle>Submit response?</AlertDialogTitle>
             <AlertDialogDescription>
               Submitting sends your final prices to the buyer. You may not be able to edit after submission.
             </AlertDialogDescription>
@@ -2984,7 +2968,7 @@ export function RfqQuotation() {
                   Submitting…
                 </span>
               ) : (
-                "Submit"
+                "Submit Response"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -3002,7 +2986,7 @@ export function RfqQuotation() {
           }
         }}
       >
-        <DialogContent className="sm:max-w-3xl">
+        <DialogContent className="border-slate-200/70 bg-background shadow-none sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle>Add documents from DMS</DialogTitle>
           </DialogHeader>
@@ -3036,7 +3020,7 @@ export function RfqQuotation() {
             ) : null}
 
             {dmsPickerResults.length === 0 && !dmsPickerLoading ? (
-              <div className="rounded-xl border border-dashed border-slate-200/70 bg-slate-50 p-6 text-sm text-slate-600">
+              <div className="rounded-xl border border-dashed border-slate-200/70 bg-transparent p-6 text-sm text-slate-600">
                 No documents found. Try a different keyword (e.g. RFQ number).
               </div>
             ) : null}
@@ -3058,7 +3042,7 @@ export function RfqQuotation() {
                   return (
                     <div
                       key={key}
-                      className="flex items-start justify-between gap-3 rounded-xl border border-slate-200/70 bg-white p-4"
+                      className="flex items-start justify-between gap-3 border-b border-border/50 py-3"
                     >
                       <div className="flex items-start gap-3 min-w-0 flex-1">
                         <Checkbox
@@ -3118,7 +3102,7 @@ export function RfqQuotation() {
           }
         }}
       >
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="border-slate-200/70 bg-background shadow-none sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Document verification</DialogTitle>
           </DialogHeader>
@@ -3131,19 +3115,19 @@ export function RfqQuotation() {
             ) : null}
 
             {attachmentVerifyLoading ? (
-              <div className="rounded-xl border border-slate-200/70 bg-slate-50 p-4 text-sm text-slate-600">
+              <div className="rounded-xl border border-slate-200/70 bg-transparent p-4 text-sm text-slate-600">
                 <span className="inline-flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Verifying…
                 </span>
               </div>
             ) : attachmentVerifyError ? (
-              <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
+              <div className="rounded-xl border border-destructive/30 p-4 text-sm">
                 <div className="font-semibold text-destructive">Verification failed</div>
                 <div className="mt-1 text-slate-600">{attachmentVerifyError}</div>
               </div>
             ) : attachmentVerifyData ? (
-              <div className="rounded-xl border border-slate-200/70 bg-slate-50 p-4">
+              <div className="rounded-xl border border-slate-200/70 bg-transparent p-4">
                 <pre className="text-xs overflow-auto max-h-[360px] whitespace-pre-wrap">
                   {safeJsonPreview(attachmentVerifyData)}
                 </pre>
@@ -3162,6 +3146,6 @@ export function RfqQuotation() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </section>
   )
 }

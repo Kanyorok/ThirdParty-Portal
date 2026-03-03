@@ -1,346 +1,441 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useSearchParams } from "next/navigation"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/common/sheet"
+import { useState } from "react"
 import { Badge } from "@/components/common/badge"
 import { Button } from "@/components/common/button"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/common/sheet"
 import { motion } from "framer-motion"
 import {
-    RotateCw,
-    XOctagon,
-    Building2,
-    Wallet,
-    ArrowUpRight,
-    MapPin,
-    ChevronRight,
-    Layers,
-    Calendar
+  ArrowUpRight,
+  Building2,
+  Calendar,
+  ChevronRight,
+  Clock3,
+  Landmark,
+  MapPin,
+  RotateCw,
+  Wallet,
+  XOctagon,
 } from "lucide-react"
 import { LeaseRenewalForm } from "@/components/dashboard/property/lease-renewal-form"
 import { LeaseTerminationForm } from "@/components/dashboard/property/lease-termination-form"
 import { cn } from "@/lib/utils"
-import { useLeaseStore } from "@/store/use-lease-store"
-import { PaginationProvider, usePagination } from "@/components/providers/pagination-provider"
-import Loading from "@/components/common/custom-loader"
+import type { Lease } from "@/lib/api/leases"
+import type { PaginatedResponse } from "@/types/property"
 
-export function LeasesList({ tenantId, initialData: _initialData }: { tenantId?: number; initialData?: unknown }) {
-    const searchParams = useSearchParams()
-    const page = Number(searchParams.get("page")) || 1
-
-    const { leases, meta, isLoading, fetchLeases } = useLeaseStore()
-    const [selectedLease, setSelectedLease] = useState<any>(null)
-    const [actionType, setActionType] = useState<"renew" | "terminate" | null>(null)
-
-    useEffect(() => {
-        fetchLeases(page, tenantId)
-    }, [page, tenantId, fetchLeases])
-
-    if (isLoading && leases.length === 0) {
-        return (
-            <div className="flex flex-col items-center justify-center py-32">
-                <div className="relative">
-                    <div className="h-12 w-12 border-4 border-primary/15 border-t-primary rounded-full animate-spin" />
-                </div>
-                <Loading />
-            </div>
-        )
-    }
-
-    if (leases.length === 0) {
-        return (
-            <div className="flex flex-col items-center justify-center py-24 px-6 rounded-2xl border border-dashed border-border bg-muted/20">
-                <div className="h-20 w-20 rounded-2xl bg-background border border-border flex items-center justify-center mb-6">
-                    <Building2 className="h-9 w-9 text-muted-foreground/30" strokeWidth={1.5} />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground mb-1.5">No leases yet</h3>
-                <p className="text-sm text-muted-foreground max-w-[320px] text-center leading-relaxed">
-                    Lease agreements will appear here once they're finalized and activated.
-                </p>
-            </div>
-        )
-    }
-
-    return (
-        <div className="w-full space-y-6">
-            <div className="md:hidden rounded-xl border border-border/60 overflow-hidden bg-background">
-                <div className="divide-y divide-border/60">
-                    {leases.map((lease: any) => (
-                        <motion.button
-                            key={lease.id}
-                            type="button"
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.18, ease: "easeOut" }}
-                            onClick={() => setSelectedLease(lease)}
-                            className="w-full px-4 py-4 text-left hover:bg-accent/30 transition-colors"
-                        >
-                            <div className="flex items-start justify-between gap-4">
-                                <div className="min-w-0">
-                                    <div className="flex items-center gap-2">
-                                        <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                                        <p className="text-sm font-semibold text-foreground truncate">{lease.leaseNumber}</p>
-                                    </div>
-                                    <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
-                                        <MapPin className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
-                                        <span className="truncate">{lease.property?.name}</span>
-                                    </div>
-                                    <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                                        <span className="rounded-md border border-border/60 bg-muted/30 px-2 py-1">
-                                            {lease.unit?.code}
-                                        </span>
-                                        <span className="truncate">{lease.block?.name} • {lease.floor?.label}</span>
-                                    </div>
-                                </div>
-                                <div className="shrink-0 text-right space-y-2">
-                                    <Badge
-                                        className={cn(
-                                            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium border",
-                                            lease.isActive
-                                                ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20"
-                                                : "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20"
-                                        )}
-                                    >
-                                        <span className={cn("h-1.5 w-1.5 rounded-full", lease.isActive ? "bg-emerald-500" : "bg-amber-500")} />
-                                        {lease.isActive ? "Active" : "Pending"}
-                                    </Badge>
-                                    <div className="text-sm font-semibold text-foreground tabular-nums">
-                                        {lease.financials?.currency || "KES"} {lease.financials?.monthlyRent?.toLocaleString()}
-                                    </div>
-                                    <div className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                                        <Calendar className="h-3.5 w-3.5" strokeWidth={2} />
-                                        <span className="truncate">{lease.dates?.start} – {lease.dates?.end}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.button>
-                    ))}
-                </div>
-            </div>
-
-            <div className="hidden md:block rounded-xl border border-border/60 bg-background overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="border-b border-border/60 bg-muted/30">
-                                <th className="px-6 py-4 text-xs font-semibold text-slate-700 tracking-wide">Lease</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-slate-700 tracking-wide">Unit</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-slate-700 tracking-wide">Rent</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-slate-700 tracking-wide text-center">Status</th>
-                                <th className="px-6 py-4 text-right text-xs font-semibold text-slate-700 tracking-wide">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {leases.map((lease: any) => (
-                                <tr key={lease.id} className="group hover:bg-blue-50/30 transition-all duration-200">
-                                    <td className="px-6 py-5">
-                                        <div className="space-y-2">
-                                            <div className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-                                                <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-                                                {lease.leaseNumber}
-                                            </div>
-                                            <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium">
-                                                <MapPin className="h-3.5 w-3.5 text-blue-500" strokeWidth={2} />
-                                                {lease.property?.name}
-                                            </div>
-                                            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-mono">
-                                                <Calendar className="h-3 w-3" strokeWidth={2} />
-                                                {lease.dates?.start} – {lease.dates?.end}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-5">
-                                        <div className="flex items-center gap-3.5">
-                                            <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100/50 border border-blue-200/60 flex items-center justify-center">
-                                                <Layers className="h-5 w-5 text-blue-600" strokeWidth={2} />
-                                            </div>
-                                            <div>
-                                                <div className="font-semibold text-sm text-slate-900 tracking-tight">
-                                                    {lease.unit?.code}
-                                                </div>
-                                                <div className="text-xs text-slate-600 mt-0.5">
-                                                    {lease.block?.name} · {lease.floor?.label}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-5">
-                                        <div className="space-y-1.5">
-                                            <div className="flex items-baseline gap-1">
-                                                <span className="text-xs font-medium text-slate-600">
-                                                    {lease.financials?.currency || 'KES'}
-                                                </span>
-                                                <span className="text-base font-semibold text-slate-900 tabular-nums">
-                                                    {lease.financials?.monthlyRent?.toLocaleString()}
-                                                </span>
-                                            </div>
-                                            <div className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded-lg">
-                                                <span className="text-slate-500">Due Day:</span>
-                                                <span className="font-semibold">{lease.dates?.dueDay}</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-5 text-center">
-                                        <Badge
-                                            className={cn(
-                                                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-all",
-                                                lease.isActive
-                                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                                    : "bg-amber-50 text-amber-700 border-amber-200"
-                                            )}
-                                        >
-                                            <div className={cn(
-                                                "h-1.5 w-1.5 rounded-full",
-                                                lease.isActive ? "bg-emerald-500" : "bg-amber-500"
-                                            )} />
-                                            {lease.isActive ? "Active" : "Pending"}
-                                        </Badge>
-                                    </td>
-                                    <td className="px-6 py-5 text-right">
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => setSelectedLease(lease)}
-                                            className="h-9 px-4 text-xs font-medium hover:bg-blue-500 hover:text-white rounded-lg border border-slate-200 hover:border-blue-500 transition-all"
-                                        >
-                                            Manage
-                                            <ChevronRight className="ml-1.5 h-4 w-4" strokeWidth={2} />
-                                        </Button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            {meta && (
-                <PaginationProvider meta={meta}>
-                    <LeasePaginationUI />
-                </PaginationProvider>
-            )}
-
-            <Sheet open={!!selectedLease} onOpenChange={() => { setSelectedLease(null); setActionType(null) }}>
-                <SheetContent className="sm:max-w-[480px] bg-white border-l border-slate-200 p-0 flex flex-col">
-                    <div className="px-8 py-8 bg-gradient-to-br from-blue-50/40 to-white border-b border-slate-200">
-                        <SheetHeader>
-                            <div className="inline-flex h-12 w-12 rounded-xl bg-blue-500 items-center justify-center mb-4">
-                                {actionType === 'terminate'
-                                    ? <XOctagon className="h-5 w-5 text-white" strokeWidth={2} />
-                                    : <RotateCw className="h-5 w-5 text-white" strokeWidth={2} />
-                                }
-                            </div>
-                            <SheetTitle className="text-2xl font-semibold tracking-tight text-slate-900">
-                                {actionType === "renew" ? "Renew Lease" : actionType === "terminate" ? "Terminate Lease" : "Lease Management"}
-                            </SheetTitle>
-                            <SheetDescription className="text-sm text-slate-600 font-medium mt-1.5">
-                                {selectedLease?.leaseNumber} · {selectedLease?.unit?.code}
-                            </SheetDescription>
-                        </SheetHeader>
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto px-8 py-6">
-                        {!actionType ? (
-                            <div className="space-y-6">
-                                <div className="space-y-3">
-                                    <ActionCard
-                                        icon={<RotateCw className="h-5 w-5 text-blue-600" strokeWidth={2} />}
-                                        title="Renew Agreement"
-                                        desc="Extend term and update conditions"
-                                        onClick={() => setActionType("renew")}
-                                        color="blue"
-                                    />
-                                    <ActionCard
-                                        icon={<XOctagon className="h-5 w-5 text-rose-600" strokeWidth={2} />}
-                                        title="Terminate Lease"
-                                        desc="Submit termination notice"
-                                        onClick={() => setActionType("terminate")}
-                                        color="rose"
-                                    />
-                                </div>
-
-                                <div className="p-5 rounded-xl border border-blue-200 bg-blue-50/50">
-                                    <div className="flex items-center gap-3.5">
-                                        <div className="h-10 w-10 rounded-lg bg-white border border-blue-200 flex items-center justify-center shrink-0">
-                                            <Wallet className="h-5 w-5 text-blue-600" strokeWidth={2} />
-                                        </div>
-                                        <div>
-                                            <div className="text-xs font-medium text-slate-600 mb-1">Current Monthly Rent</div>
-                                            <div className="text-xl font-semibold text-slate-900 tabular-nums">
-                                                {selectedLease?.financials?.currency || 'KES'} {selectedLease?.financials?.monthlyRent?.toLocaleString()}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : actionType === "renew" ? (
-                            <LeaseRenewalForm lease={selectedLease} onCancel={() => setActionType(null)} />
-                        ) : (
-                            <LeaseTerminationForm lease={selectedLease} onCancel={() => setActionType(null)} />
-                        )}
-                    </div>
-                </SheetContent>
-            </Sheet>
-        </div>
-    )
+type LeasesListProps = {
+  initialData?: PaginatedResponse<Lease>
 }
 
-function ActionCard({ icon, title, desc, onClick, color }: any) {
-    const colorStyles: any = {
-        blue: "hover:border-blue-300 hover:bg-blue-50/30",
-        rose: "hover:border-rose-300 hover:bg-rose-50/30"
-    }
+function displayText(value: unknown, fallback = "-") {
+  if (value === null || value === undefined) return fallback
+  const text = String(value).trim()
+  return text.length > 0 ? text : fallback
+}
 
+function formatAmount(value: unknown) {
+  const num = Number(value ?? 0)
+  if (!Number.isFinite(num)) return "0"
+  return num.toLocaleString()
+}
+
+function formatDate(value: string | null | undefined) {
+  if (!value) return "-"
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return String(value)
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(parsed)
+}
+
+function formatDateTime(value: string | null | undefined) {
+  if (!value) return "-"
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return String(value)
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(parsed)
+}
+
+function resolveStatusLabel(lease: Lease) {
+  if (lease.status?.trim()) return lease.status
+  return lease.isActive ? "active" : "inactive"
+}
+
+function leaseStatusTone(lease: Lease) {
+  const normalized = resolveStatusLabel(lease).toLowerCase()
+  if (normalized.includes("inactive")) return "border-slate-200 text-slate-700 bg-slate-50"
+  if (normalized.includes("active")) return "border-emerald-200 text-emerald-700 bg-emerald-50"
+  if (normalized.includes("pending")) return "border-amber-200 text-amber-700 bg-amber-50"
+  if (normalized.includes("expired") || normalized.includes("terminated")) {
+    return "border-rose-200 text-rose-700 bg-rose-50"
+  }
+  return "border-slate-200 text-slate-700 bg-slate-50"
+}
+
+function rowAccent(lease: Lease) {
+  const normalized = resolveStatusLabel(lease).toLowerCase()
+  if (normalized.includes("inactive")) return "border-l-slate-300"
+  if (normalized.includes("active")) return "border-l-emerald-400"
+  if (normalized.includes("pending")) return "border-l-amber-400"
+  if (normalized.includes("expired") || normalized.includes("terminated")) {
+    return "border-l-rose-400"
+  }
+  return "border-l-slate-300"
+}
+
+function frequencyTone(frequency: string) {
+  const normalized = frequency.toLowerCase()
+  if (normalized.includes("month")) return "border-blue-200 text-blue-700 bg-blue-50"
+  if (normalized.includes("week")) return "border-emerald-200 text-emerald-700 bg-emerald-50"
+  if (normalized.includes("year") || normalized.includes("ann")) return "border-violet-200 text-violet-700 bg-violet-50"
+  if (normalized.includes("day")) return "border-amber-200 text-amber-700 bg-amber-50"
+  return "border-slate-200 text-slate-700 bg-slate-50"
+}
+
+function resolvePeriodLabel(lease: Lease) {
+  return `${formatDate(lease.dates?.start)} - ${formatDate(lease.dates?.end)}`
+}
+
+function resolveMonthlyRentLabel(lease: Lease) {
+  return `${displayText(lease.financials?.currency, "KES")} ${formatAmount(lease.financials?.monthlyRent)}`
+}
+
+function DetailRow({ label, value }: { label: string; value: unknown }) {
+  return (
+    <div className="border-b border-slate-200/80 pb-2">
+      <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+        {label}
+      </div>
+      <div className="mt-1 text-sm font-medium text-slate-900 break-words">
+        {displayText(value)}
+      </div>
+    </div>
+  )
+}
+
+function HeaderMetric({
+  label,
+  value,
+  className,
+}: {
+  label: string
+  value: string
+  className?: string
+}) {
+  return (
+    <div className={cn("rounded-xl border border-slate-200 bg-white px-3 py-2.5", className)}>
+      <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+        {label}
+      </div>
+      <div className="mt-1 text-sm font-semibold text-slate-900 leading-tight">
+        {value}
+      </div>
+    </div>
+  )
+}
+
+export function LeasesList({ initialData }: LeasesListProps) {
+  const leases = Array.isArray(initialData?.data) ? initialData.data : []
+  const [selectedLease, setSelectedLease] = useState<Lease | null>(null)
+  const [actionType, setActionType] = useState<"renew" | "terminate" | null>(null)
+
+  if (leases.length === 0) {
     return (
-        <button
-            onClick={onClick}
+      <div className="flex flex-col items-center justify-center py-24 px-6 rounded-2xl border border-dashed border-border/60">
+        <div className="h-16 w-16 rounded-2xl border border-border/70 flex items-center justify-center mb-5">
+          <Building2 className="h-8 w-8 text-muted-foreground/40" strokeWidth={1.5} />
+        </div>
+        <h3 className="text-lg font-semibold text-foreground mb-1">No leases found</h3>
+        <p className="text-sm text-muted-foreground text-center max-w-sm">
+          Your active lease records will appear here once available.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="w-full space-y-3">
+      <div className="hidden lg:grid grid-cols-[minmax(0,2fr)_minmax(0,1.4fr)_minmax(0,0.9fr)_minmax(0,1fr)_auto] items-center gap-4 px-4 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+        <span>Property & Unit</span>
+        <span>Lease Period</span>
+        <span>Frequency</span>
+        <span>Monthly Rent</span>
+        <span className="justify-self-end">Action</span>
+      </div>
+
+      {leases.map((lease, index) => {
+        const propertyName = displayText(lease.property?.name, "Property")
+        const unitCode = displayText(lease.unit?.code, "Unit")
+        const periodLabel = resolvePeriodLabel(lease)
+        const paymentFrequency = displayText(lease.paymentFrequency, "Not specified")
+        const monthlyRent = resolveMonthlyRentLabel(lease)
+        const location = [lease.block?.name, lease.floor?.label].filter(Boolean).join(" • ")
+        const statusLabel = resolveStatusLabel(lease)
+
+        return (
+          <motion.div
+            key={`${lease.id}-${index}`}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
             className={cn(
-                "group w-full flex items-center justify-between p-5 rounded-xl border border-slate-200 transition-all text-left bg-white",
-                colorStyles[color]
+              "grid gap-3 rounded-2xl border border-slate-200 border-l-4 px-4 py-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1.4fr)_minmax(0,0.9fr)_minmax(0,1fr)_auto] lg:items-center",
+              rowAccent(lease)
             )}
-        >
-            <div className="flex items-center gap-4">
-                <div className="h-11 w-11 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-200 group-hover:bg-white transition-colors">
-                    {icon}
-                </div>
-                <div>
-                    <div className="font-semibold text-sm text-slate-900">{title}</div>
-                    <div className="text-xs text-slate-600 font-medium mt-0.5">{desc}</div>
-                </div>
+          >
+            <button
+              type="button"
+              onClick={() => setSelectedLease(lease)}
+              className="min-w-0 text-left"
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="truncate text-[15px] font-semibold text-slate-900">{propertyName}</p>
+                <Badge className={cn("h-6 rounded-full border px-2.5 text-[11px] font-semibold", leaseStatusTone(lease))}>
+                  {displayText(statusLabel)}
+                </Badge>
+              </div>
+
+              <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-600">
+                <MapPin className="h-3.5 w-3.5" />
+                <span className="font-medium text-slate-800">{unitCode}</span>
+                {location ? (
+                  <>
+                    <span aria-hidden>-</span>
+                    <span>{location}</span>
+                  </>
+                ) : null}
+              </div>
+
+              <p className="mt-1 text-xs text-slate-500">Lease {displayText(lease.leaseNumber)}</p>
+            </button>
+
+            <div className="text-sm">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 lg:hidden">
+                Lease Period
+              </p>
+              <div className="mt-0.5 flex items-center gap-1.5 text-slate-700">
+                <Calendar className="h-3.5 w-3.5 text-slate-500" />
+                <span className="font-medium">{periodLabel}</span>
+              </div>
+              <p className="mt-1 text-xs text-slate-500">Due day {displayText(lease.dates?.dueDay)}</p>
             </div>
-            <ArrowUpRight className="h-5 w-5 text-slate-400 group-hover:text-slate-900 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" strokeWidth={2} />
-        </button>
-    )
+
+            <div className="text-sm">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 lg:hidden">
+                Frequency
+              </p>
+              <Badge className={cn("h-7 rounded-full border px-3 text-xs font-semibold", frequencyTone(paymentFrequency))}>
+                {paymentFrequency}
+              </Badge>
+            </div>
+
+            <div className="text-sm">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 lg:hidden">
+                Monthly Rent
+              </p>
+              <p className="mt-0.5 text-base font-semibold text-slate-900">{monthlyRent}</p>
+              <p className="mt-1 text-xs text-slate-500">
+                Deposit {displayText(lease.financials?.currency, "KES")} {formatAmount(lease.financials?.deposit)}
+              </p>
+            </div>
+
+            <div className="lg:justify-self-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedLease(lease)}
+                className="h-9 rounded-full border-slate-300 bg-transparent px-4 text-xs font-semibold hover:bg-slate-50"
+              >
+                View details
+                <ChevronRight className="ml-1 h-4 w-4" />
+              </Button>
+            </div>
+          </motion.div>
+        )
+      })}
+
+      <Sheet
+        open={Boolean(selectedLease)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedLease(null)
+            setActionType(null)
+          }
+        }}
+      >
+        <SheetContent className="sm:max-w-[760px] bg-white border-l border-slate-200 p-0 flex flex-col">
+          {!selectedLease ? null : (
+            <>
+              <div className="border-b border-slate-200 px-8 py-7 bg-gradient-to-b from-sky-50/70 via-blue-50/30 to-white">
+                <SheetHeader className="space-y-4 text-left">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <SheetTitle className="text-2xl font-semibold tracking-tight text-slate-900">
+                        {displayText(selectedLease.property?.name)}
+                      </SheetTitle>
+                      <SheetDescription className="mt-1.5 text-sm font-medium text-slate-600">
+                        {displayText(selectedLease.unit?.code)} · {displayText(selectedLease.leaseNumber)}
+                      </SheetDescription>
+                    </div>
+                    <Badge className={cn("h-7 rounded-full border px-3 text-xs font-semibold", leaseStatusTone(selectedLease))}>
+                      {displayText(resolveStatusLabel(selectedLease))}
+                    </Badge>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+                    <HeaderMetric
+                      label="Payment Frequency"
+                      value={displayText(selectedLease.paymentFrequency, "Not specified")}
+                      className={frequencyTone(displayText(selectedLease.paymentFrequency, ""))}
+                    />
+                    <HeaderMetric label="Lease Period" value={resolvePeriodLabel(selectedLease)} />
+                    <HeaderMetric label="Monthly Rent" value={resolveMonthlyRentLabel(selectedLease)} />
+                  </div>
+                </SheetHeader>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-8 py-6">
+                {!actionType ? (
+                  <div className="space-y-8">
+                    <section className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <ArrowUpRight className="h-4 w-4 text-blue-600" />
+                        <h4 className="text-xs font-semibold uppercase tracking-wide text-blue-700">Lease Actions</h4>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <ActionRow
+                          icon={<RotateCw className="h-5 w-5 text-blue-600" strokeWidth={2} />}
+                          title="Renew agreement"
+                          desc="Extend contract term and update terms if approved."
+                          onClick={() => setActionType("renew")}
+                        />
+                        <ActionRow
+                          icon={<XOctagon className="h-5 w-5 text-rose-600" strokeWidth={2} />}
+                          title="Terminate lease"
+                          desc="Submit your intent to vacate with notice details."
+                          onClick={() => setActionType("terminate")}
+                        />
+                      </div>
+                    </section>
+
+                    <section className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Clock3 className="h-4 w-4 text-blue-600" />
+                        <h4 className="text-xs font-semibold uppercase tracking-wide text-blue-700">Lease Timeline</h4>
+                      </div>
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <DetailRow label="Start date" value={formatDate(selectedLease.dates?.start)} />
+                        <DetailRow label="End date" value={formatDate(selectedLease.dates?.end)} />
+                        <DetailRow label="Due day" value={selectedLease.dates?.dueDay} />
+                        <DetailRow label="Payment frequency" value={selectedLease.paymentFrequency} />
+                      </div>
+                    </section>
+
+                    <section className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-blue-600" />
+                        <h4 className="text-xs font-semibold uppercase tracking-wide text-blue-700">Property Allocation</h4>
+                      </div>
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <DetailRow label="Property" value={selectedLease.property?.name} />
+                        <DetailRow label="Block" value={selectedLease.block?.name} />
+                        <DetailRow label="Floor" value={selectedLease.floor?.label} />
+                        <DetailRow label="Unit" value={selectedLease.unit?.code} />
+                        <DetailRow label="Unit size" value={selectedLease.unit?.size} />
+                        <DetailRow label="Tenant" value={selectedLease.tenant?.name} />
+                      </div>
+                    </section>
+
+                    <section className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Wallet className="h-4 w-4 text-blue-600" />
+                        <h4 className="text-xs font-semibold uppercase tracking-wide text-blue-700">Financial Summary</h4>
+                      </div>
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <DetailRow label="Currency" value={selectedLease.financials?.currency} />
+                        <DetailRow label="Monthly rent" value={resolveMonthlyRentLabel(selectedLease)} />
+                        <DetailRow
+                          label="Deposit"
+                          value={`${displayText(selectedLease.financials?.currency, "KES")} ${formatAmount(selectedLease.financials?.deposit)}`}
+                        />
+                        <DetailRow
+                          label="Service charge"
+                          value={`${displayText(selectedLease.financials?.currency, "KES")} ${formatAmount(selectedLease.financials?.serviceCharge)}`}
+                        />
+                        <DetailRow
+                          label="Parking fee"
+                          value={`${displayText(selectedLease.financials?.currency, "KES")} ${formatAmount(selectedLease.financials?.parkingFee)}`}
+                        />
+                        <DetailRow
+                          label="Other charges"
+                          value={`${displayText(selectedLease.financials?.currency, "KES")} ${formatAmount(selectedLease.financials?.otherCharges)}`}
+                        />
+                      </div>
+                    </section>
+
+                    <section className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Landmark className="h-4 w-4 text-blue-600" />
+                        <h4 className="text-xs font-semibold uppercase tracking-wide text-blue-700">Audit Details</h4>
+                      </div>
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <DetailRow label="Created by" value={selectedLease.createdBy} />
+                        <DetailRow label="Created on" value={formatDateTime(selectedLease.createdOn)} />
+                        <DetailRow label="Approval" value={selectedLease.approval} />
+                        <DetailRow label="Status" value={resolveStatusLabel(selectedLease)} />
+                      </div>
+                    </section>
+                  </div>
+                ) : actionType === "renew" ? (
+                  <LeaseRenewalForm lease={selectedLease} onCancel={() => setActionType(null)} />
+                ) : (
+                  <LeaseTerminationForm lease={selectedLease} onCancel={() => setActionType(null)} />
+                )}
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
+    </div>
+  )
 }
 
-function LeasePaginationUI() {
-    const { currentPage, lastPage, onPageChange, isPending } = usePagination()
-
-    return (
-        <div className="flex items-center justify-between px-4 py-3 rounded-xl border border-slate-200 bg-white">
-            <span className="text-xs font-medium text-slate-600">
-                Page <span className="font-semibold text-slate-900">{currentPage}</span> of <span className="font-semibold text-slate-900">{lastPage}</span>
-            </span>
-            <div className="flex gap-2">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onPageChange(currentPage - 1)}
-                    disabled={currentPage === 1 || isPending}
-                    className="h-9 w-9 p-0 rounded-lg border-slate-200 hover:bg-blue-50 hover:border-blue-300 disabled:opacity-50"
-                >
-                    <ChevronRight className="h-4 w-4 rotate-180" strokeWidth={2} />
-                </Button>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onPageChange(currentPage + 1)}
-                    disabled={currentPage === lastPage || isPending}
-                    className="h-9 w-9 p-0 rounded-lg border-slate-200 hover:bg-blue-50 hover:border-blue-300 disabled:opacity-50"
-                >
-                    <ChevronRight className="h-4 w-4" strokeWidth={2} />
-                </Button>
-            </div>
+function ActionRow({
+  icon,
+  title,
+  desc,
+  onClick,
+}: {
+  icon: React.ReactNode
+  title: string
+  desc: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="group w-full rounded-xl border border-slate-200 px-4 py-3 text-left transition-colors hover:border-slate-300 hover:bg-slate-50"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white">
+            {icon}
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-slate-900">{title}</div>
+            <div className="mt-0.5 text-xs text-slate-600">{desc}</div>
+          </div>
         </div>
-    )
+        <ArrowUpRight className="h-4 w-4 text-slate-400 transition-colors group-hover:text-slate-900" strokeWidth={2} />
+      </div>
+    </button>
+  )
 }

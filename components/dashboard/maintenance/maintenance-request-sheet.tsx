@@ -23,16 +23,24 @@ import { Textarea } from "@/components/common/textarea"
 import { toast } from "sonner"
 import { Loader2, Plus, UploadCloud, Wrench } from "lucide-react"
 import { MAINTENANCE_CATEGORIES, PRIORITY_LEVELS, CreateMaintenanceRequestPayload } from "@/types/maintenance"
+import { useSession } from "next-auth/react"
+import { resolveSessionAccessToken } from "@/lib/auth/resolve-session-access-token"
+import { maintenanceService } from "@/lib/api/maintenance"
 
 export function MaintenanceRequestSheet({
     children,
+    accessToken,
+    tenantId,
     onSuccess
 }: {
     children?: React.ReactNode
+    accessToken?: string
+    tenantId?: number | null
     onSuccess?: () => void
 }) {
     const [open, setOpen] = useState(false)
     const [isPending, startTransition] = useTransition()
+    const { data: session } = useSession()
 
     const properties = [
         { id: 1, name: "Sunset Apartments - Unit 101" },
@@ -54,13 +62,25 @@ export function MaintenanceRequestSheet({
 
         startTransition(async () => {
             try {
-                await new Promise(resolve => setTimeout(resolve, 1000))
+                const resolvedAccessToken = accessToken || resolveSessionAccessToken(session as any)
+                if (!resolvedAccessToken) {
+                    throw new Error("You must be logged in to submit a request")
+                }
+                if (typeof tenantId !== "number" || !Number.isFinite(tenantId)) {
+                    throw new Error("Tenant profile mapping missing. Please contact support.")
+                }
+
+                await maintenanceService.createRequest(
+                    formData as CreateMaintenanceRequestPayload,
+                    resolvedAccessToken,
+                    tenantId
+                )
                 toast.success("Maintenance request submitted successfully")
                 setOpen(false)
                 setFormData({ priority: "Medium", category: "Plumbing" })
                 onSuccess?.()
-            } catch {
-                toast.error("Failed to submit request")
+            } catch (error) {
+                toast.error(error instanceof Error ? error.message : "Failed to submit request")
             }
         })
     }

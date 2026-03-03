@@ -2,6 +2,112 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import type { NextAuthOptions, Session } from "next-auth"
 import type { JWT } from "next-auth/jwt"
 
+function asFiniteNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value
+  if (typeof value === "string" && value.trim() && Number.isFinite(Number(value))) {
+    return Number(value)
+  }
+  return null
+}
+
+function pickTenantIdFromNode(node: any): number | null {
+  if (!node || typeof node !== "object") return null
+
+  for (const key of [
+    "tenantMaintenanceId",
+    "tenant_maintenance_id",
+    "tenant_maintenanceId",
+    "tenantMaintenanceID",
+    "tenantId",
+    "tenant_id",
+    "tenantID",
+    "TenantID",
+  ]) {
+    const resolved = asFiniteNumber(node[key])
+    if (resolved != null) return resolved
+  }
+
+  return null
+}
+
+function extractTenantIdFromPayload(payload: unknown, depth = 0): number | null {
+  if (depth > 5 || payload == null) return null
+
+  if (Array.isArray(payload)) {
+    for (const item of payload) {
+      const resolved = extractTenantIdFromPayload(item, depth + 1)
+      if (resolved != null) return resolved
+    }
+    return null
+  }
+
+  if (typeof payload !== "object") return null
+
+  const node = payload as Record<string, unknown>
+  const explicit = pickTenantIdFromNode(node)
+  if (explicit != null) return explicit
+
+  for (const nested of [
+    node.data,
+    node.profile,
+    node.tenant,
+    node.tenantProfile,
+    node.tenant_profile,
+    node.profiles,
+    node.items,
+    node.rows,
+  ]) {
+    const resolved = extractTenantIdFromPayload(nested, depth + 1)
+    if (resolved != null) return resolved
+  }
+
+  return null
+}
+
+async function resolveTenantMaintenanceId(userPayload: any, accessToken: string): Promise<number | null> {
+  const directCandidates = [
+    userPayload,
+    userPayload?.tenant,
+    userPayload?.profile?.tenant_data,
+    userPayload?.thirdParty?.tenant,
+  ]
+
+  for (const node of directCandidates) {
+    const resolved = pickTenantIdFromNode(node)
+    if (resolved != null) return resolved
+  }
+
+  const apiBase = process.env.NEXT_PUBLIC_API_URL
+  if (!apiBase || !(userPayload?.isTenant ?? userPayload?.is_tenant)) return null
+
+  const endpoints = [
+    "/api/v1/profile/tenant",
+    "/api/v1/portal/profiles",
+  ]
+
+  for (const endpoint of endpoints) {
+    try {
+      const response = await fetch(`${apiBase}${endpoint}`, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        cache: "no-store",
+      })
+
+      if (!response.ok) continue
+      const payload = await response.json().catch(() => null)
+      const resolved = extractTenantIdFromPayload(payload)
+      if (resolved != null) return resolved
+    } catch {
+      // Best-effort enrichment only.
+    }
+  }
+
+  return null
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -41,6 +147,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         const u = data.user
+        const resolvedTenantId = await resolveTenantMaintenanceId(u, String(data.token))
         const resolvedImageUrl =
           u.image?.src ??
           u.imageUrl ??
@@ -52,6 +159,9 @@ export const authOptions: NextAuthOptions = {
           id: String(u.id),
           user_id: u.id,
           userId: u.userId ?? u.id,
+          tenant_id: resolvedTenantId,
+          tenantId: resolvedTenantId,
+          tenantMaintenanceId: resolvedTenantId,
           third_party_id: u.thirdPartyId ? Number(u.thirdPartyId) : null,
           first_name: u.firstName,
           last_name: u.lastName,
@@ -85,6 +195,8 @@ export const authOptions: NextAuthOptions = {
                 u.thirdParty.thirdPartyDetails.physicalAddress,
               supplier_data: u.supplier || null,
               tenant_data: u.tenant || null,
+              tenant_id: resolvedTenantId,
+              tenantId: resolvedTenantId,
               customer_data: u.customer || null,
               image_url: resolvedImageUrl,
             }
@@ -115,6 +227,12 @@ export const authOptions: NextAuthOptions = {
           id: String(token.user_id || token.id),
           user_id: token.user_id,
           userId: token.userId ?? token.user_id,
+          tenant_id: (token as any).tenant_id,
+          tenantId: (token as any).tenantId ?? (token as any).tenant_id,
+          tenantMaintenanceId:
+            (token as any).tenantMaintenanceId ??
+            (token as any).tenantId ??
+            (token as any).tenant_id,
           third_party_id: token.third_party_id,
           thirdPartyId: token.third_party_id,
           first_name: token.first_name,

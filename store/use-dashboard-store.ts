@@ -71,6 +71,8 @@ export type DashboardSummary = {
         completedPreq?: number
         directInvites?: number
         tendersAvailable?: number
+        openTenders?: number
+        totalTenders?: number
         rfqsInvited?: number
         myBids?: number
         submittedBids?: number

@@ -9,8 +9,8 @@ interface LeaseState {
     links: PaginatedResponse<Lease>['links'] | null;
     isLoading: boolean;
     error: string | null;
-    fetchLeases: (page?: number, tenantId?: number) => Promise<void>;
-    fetchLeaseDetails: (tenantId: number, leaseId: number) => Promise<void>;
+    fetchLeases: (page?: number, tenantId?: number | null, accessToken?: string) => Promise<void>;
+    fetchLeaseDetails: (tenantId: number | null | undefined, leaseId: number, accessToken?: string) => Promise<void>;
     reset: () => void;
 }
 
@@ -26,10 +26,10 @@ const initialState = {
 export const useLeaseStore = create<LeaseState>((set) => ({
     ...initialState,
 
-    fetchLeases: async (page = 1, tenantId = 9) => {
+    fetchLeases: async (page = 1, tenantId, accessToken) => {
         set({ isLoading: true, error: null })
         try {
-            const response = await getLeases(page, "", tenantId)
+            const response = await getLeases(page, "", tenantId, accessToken)
             set({
                 leases: response.data,
                 meta: response.meta,
@@ -44,12 +44,12 @@ export const useLeaseStore = create<LeaseState>((set) => ({
         }
     },
 
-    fetchLeaseDetails: async (tenantId, leaseId) => {
+    fetchLeaseDetails: async (tenantId, leaseId, accessToken) => {
         set({ isLoading: true, error: null })
         try {
-            const response = await getLeaseDetails(tenantId, leaseId)
+            const response = await getLeaseDetails(tenantId, leaseId, accessToken)
             set({
-                selectedLease: response.data[0] || null,
+                selectedLease: response || null,
                 isLoading: false
             })
         } catch (err: any) {

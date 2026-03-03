@@ -1,4 +1,16 @@
 import { PaginatedResponse } from "@/types/property"
+import {
+    normalizePaginatedResponse,
+    propertyRequest,
+    requireQueryId,
+} from "@/lib/api/property-client"
+import { normalizeAccessToken } from "@/lib/auth/normalize-access-token"
+import { getBaseUrl } from "@/lib/api-base"
+
+function normalizeTenantId(tenantId?: number | null) {
+    if (typeof tenantId === "number" && Number.isFinite(tenantId)) return tenantId
+    return undefined
+}
 
 export interface Invoice {
     id: number;
@@ -28,57 +40,90 @@ export interface Invoice {
     notes?: string;
 }
 
-export async function getInvoices(page: number = 1, tenantId: number = 9, search: string = ""): Promise<PaginatedResponse<Invoice>> {
-    const baseUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/property/invoices/tenant`;
-    const params = new URLSearchParams({
-        page: page.toString(),
-        tenant_id: tenantId.toString()
-    });
+export async function getInvoices(
+    page: number = 1,
+    tenantId?: number | null,
+    search: string = "",
+    accessToken?: string
+): Promise<PaginatedResponse<Invoice>> {
+    const resolvedTenantId = normalizeTenantId(tenantId)
+    requireQueryId("tenantId", resolvedTenantId)
 
-    if (search) params.set("search", search);
-
-    const res = await fetch(`${baseUrl}?${params.toString()}`, {
-        method: 'GET',
-        next: {
-            tags: ['invoices'],
-            revalidate: 30
+    const payload = await propertyRequest<unknown>("/api/v1/property/invoices/tenant", {
+        method: "GET",
+        accessToken,
+        query: {
+            page,
+            tenant_id: resolvedTenantId,
+            search: search || undefined,
         },
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-        },
-    });
+    })
 
-    if (!res.ok) {
-        throw new Error(`Invoices fetch failed: ${res.status}`);
-    }
-
-    return res.json();
+    return normalizePaginatedResponse<Invoice>(payload)
 }
 
-export async function getInvoiceDetails(invoiceId: number, tenantId: number = 9): Promise<{ data: Invoice }> {
-    const baseUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/property/invoices/tenant/show`;
-    const params = new URLSearchParams({
-        tenant_id: tenantId.toString(),
-        invoice_id: invoiceId.toString()
-    });
+export async function getInvoiceDetails(
+    invoiceId: number,
+    tenantId?: number | null,
+    accessToken?: string
+): Promise<{ data: Invoice }> {
+    requireQueryId("invoiceId", invoiceId)
+    const resolvedTenantId = normalizeTenantId(tenantId)
+    requireQueryId("tenantId", resolvedTenantId)
 
-    const res = await fetch(`${baseUrl}?${params.toString()}`, {
-        method: 'GET',
-        next: { tags: [`invoice-${invoiceId}`] },
+    return propertyRequest<{ data: Invoice }>("/api/v1/property/invoices/tenant/show", {
+        method: "GET",
+        accessToken,
+        query: {
+            tenant_id: resolvedTenantId,
+            invoice_id: invoiceId, // Controller requires invoice_id
+        },
+    })
+}
+
+export async function downloadInvoicePdf(id: number, accessToken?: string): Promise<void> {
+    const token = normalizeAccessToken(accessToken)
+    if (!token) {
+        throw new Error("Access token is required for property endpoints");
+    }
+    if (typeof window === "undefined") {
+        throw new Error("Invoice download is only available in the browser");
+    }
+
+    const baseUrl = getBaseUrl()
+    if (!baseUrl) throw new Error("API base URL is not defined")
+    const url = `${baseUrl}/api/v1/property/invoices/download/${id}`;
+    const res = await fetch(url, {
+        method: "GET",
         headers: {
-            'Accept': 'application/json',
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+    })
+
+    if (!res.ok) {
+        const message = await res.text().catch(() => "")
+        throw new Error(message || `Invoice download failed: ${res.status}`)
+    }
+
+    const contentType = res.headers.get("content-type") || ""
+    if (contentType.includes("application/json")) {
+        const payload = await res.json().catch(() => null)
+        const downloadUrl =
+            payload?.url ??
+            payload?.data?.url ??
+            payload?.downloadUrl ??
+            payload?.data?.downloadUrl ??
+            null
+        if (!downloadUrl) {
+            throw new Error("Invoice download link was not returned")
         }
-    });
-
-    if (!res.ok) {
-        throw new Error(`Invoice detail fetch failed: ${res.status}`);
+        window.open(String(downloadUrl), "_blank")
+        return
     }
 
-    return res.json();
-}
-
-export async function downloadInvoicePdf(id: number): Promise<void> {
-    const url = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/property/invoices/download/${id}`;
-    window.open(url, '_blank');
+    const blob = await res.blob()
+    const blobUrl = window.URL.createObjectURL(blob)
+    window.open(blobUrl, "_blank")
+    window.setTimeout(() => window.URL.revokeObjectURL(blobUrl), 30_000)
 }

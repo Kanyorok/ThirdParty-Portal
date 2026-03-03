@@ -37,8 +37,8 @@ type GroupedItems = { group: string; items: NavItem[] }
 
 const SEARCH_SHORTCUT = { key: "j" } as const
 const SEARCH_CONFIG = {
-    placeholder: "Search pages, actions, or documents…",
-    emptyMessage: "No matching results.",
+    placeholder: "Search pages, tickets, tenders, or actions...",
+    emptyMessage: "No results found.",
     debounceMs: 150,
     recentLimit: 6,
     queryHistoryLimit: 5,
@@ -51,13 +51,13 @@ function SearchSkeleton() {
     return (
         <div className="space-y-4 p-2">
             <div className="space-y-2">
-                <div className="h-3 w-24 rounded bg-primary/10 mx-2 mb-3" />
+                <div className="mx-2 mb-3 h-3 w-24 rounded bg-muted/60" />
                 {[...Array(3)].map((_, i) => (
-                    <div key={i} className="flex items-center gap-3 rounded-lg p-2.5 bg-muted/20 border border-transparent">
-                        <div className="size-8 shrink-0 rounded-md bg-muted/40 animate-pulse" />
+                    <div key={i} className="flex items-center gap-3 rounded-lg border border-border/50 bg-card p-2.5">
+                        <div className="size-8 shrink-0 animate-pulse rounded-md bg-muted/60" />
                         <div className="flex flex-col gap-2 flex-1 min-w-0">
-                            <div className="h-2.5 w-1/3 rounded bg-muted/60 animate-pulse" />
-                            <div className="h-2 w-2/3 rounded bg-muted/30 animate-pulse" />
+                            <div className="h-2.5 w-1/3 animate-pulse rounded bg-muted/60" />
+                            <div className="h-2 w-2/3 animate-pulse rounded bg-muted/60" />
                         </div>
                     </div>
                 ))}
@@ -126,14 +126,14 @@ export const SearchButton = memo(({ onClick, className }: { onClick?: () => void
     <Button
         variant="outline"
         className={cn(
-            "h-10 w-full justify-start gap-3 rounded-xl border-border/50 bg-background/50 px-3 text-muted-foreground shadow-none transition-colors hover:bg-accent/50 hover:text-foreground sm:w-72",
+            "h-10 w-full justify-start gap-3 rounded-full border-border/70 bg-card px-3 text-muted-foreground shadow-none transition-colors hover:bg-accent/60 hover:text-foreground sm:w-[22rem]",
             className
         )}
         onClick={onClick}
     >
         <Search className="size-3.5" />
-        <span className="text-[13px] font-medium tracking-tight">Search</span>
-        <kbd className="ml-auto hidden items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground sm:inline-flex">
+        <span className="text-[13px] font-medium tracking-tight">Search dashboard</span>
+        <kbd className="ml-auto hidden items-center gap-1 rounded-full border border-border/60 bg-muted/50 px-2 py-0.5 text-[11px] font-semibold text-muted-foreground sm:inline-flex">
             {typeof navigator !== "undefined" && /mac|iphone|ipad|ipod/i.test(navigator.platform) ? "⌘ J" : "Ctrl J"}
         </kbd>
     </Button>
@@ -228,28 +228,28 @@ export const SearchDialog = memo(() => {
             <SearchButton onClick={() => setOpen(true)} />
 
             <CommandDialog open={open} onOpenChange={setOpen}>
-                <div className="overflow-hidden bg-background">
-                    <div className="flex items-center border-b border-border/40 px-4">
-                        <Search className="mr-3 size-4 text-muted-foreground/50" />
+                <div className="overflow-hidden rounded-2xl border border-border/70 bg-popover">
+                    <div className="flex items-center border-b border-border/70 px-4">
+                        <Search className="mr-3 size-4 text-muted-foreground/80" />
                         <CommandInput
                             placeholder={SEARCH_CONFIG.placeholder}
                             value={rawQuery}
                             onValueChange={setRawQuery}
-                            className="h-12 w-full bg-transparent text-[11px] font-bold uppercase tracking-wide placeholder:text-muted-foreground/40 focus:outline-none"
+                            className="h-12 w-full bg-transparent text-sm font-medium tracking-tight placeholder:text-muted-foreground/70 focus:outline-none"
                         />
                         {(isPending || remoteLoading) && <Spinner className="size-3" />}
                     </div>
 
                     <CommandList className="max-h-[400px] p-2">
-                        <CommandEmpty className="py-6 text-center text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                        <CommandEmpty className="py-8 text-center text-sm text-muted-foreground">
                             {SEARCH_CONFIG.emptyMessage}
                         </CommandEmpty>
 
                         {isError && (
-                            <div className="mx-2 mb-4 flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2.5">
+                            <div className="mx-2 mb-3 flex items-center gap-2 rounded-lg border border-destructive/25 bg-destructive/10 px-3 py-2.5">
                                 <AlertCircle className="size-3.5 text-destructive" />
-                                <span className="text-[9px] font-black uppercase tracking-widest text-destructive/80">
-                                    System Sync Interrupted — Some records may be missing
+                                <span className="text-xs font-medium text-destructive">
+                                    Search is temporarily degraded. Some results may be missing.
                                 </span>
                             </div>
                         )}
@@ -257,8 +257,8 @@ export const SearchDialog = memo(() => {
                         {!rawQuery && recentQueries.length > 0 && (
                             <div className="mb-4 px-2 pt-2">
                                 <div className="mb-2 flex items-center justify-between">
-                                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Recent Searches</span>
-                                    <Button variant="ghost" size="sm" onClick={clearQueries} className="h-6 px-2 text-[9px] font-black uppercase text-destructive hover:bg-destructive/10">
+                                    <span className="text-[11px] font-semibold text-muted-foreground">Recent searches</span>
+                                    <Button variant="ghost" size="sm" onClick={clearQueries} className="h-7 rounded-full px-2.5 text-[11px] font-semibold text-destructive hover:bg-destructive/10">
                                         <Eraser className="mr-1 size-3" /> Clear
                                     </Button>
                                 </div>
@@ -267,7 +267,7 @@ export const SearchDialog = memo(() => {
                                         <button
                                             key={q}
                                             onClick={() => setRawQuery(q)}
-                                            className="flex items-center gap-1.5 rounded-md border border-border/40 bg-muted/30 px-2 py-1 text-[10px] font-bold transition-colors hover:bg-muted"
+                                            className="flex items-center gap-1.5 rounded-full border border-border/70 bg-card px-2.5 py-1 text-[11px] font-medium text-foreground/90 transition-colors hover:bg-accent/60"
                                         >
                                             <Clock className="size-3 text-muted-foreground" />
                                             {q}
@@ -286,21 +286,21 @@ export const SearchDialog = memo(() => {
 
                             {!remoteLoading && remoteResults && remoteResults.length > 0 && (
                                 <motion.div key="remote" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                                    <CommandGroup heading={<span className="text-[9px] font-black uppercase tracking-[0.2em] text-primary/70">Database Records</span>}>
+                                    <CommandGroup heading={<span className="px-2 text-[11px] font-semibold text-muted-foreground">Database</span>}>
                                         {remoteResults.map((r) => (
                                             <CommandItem
                                                 key={`${r.type}-${r.id}`}
                                                 onSelect={() => r.href && onSelect(r.href)}
-                                                className="group flex cursor-pointer items-center gap-3 rounded-lg p-2.5 aria-selected:bg-accent"
+                                                className="group flex cursor-pointer items-center gap-3 rounded-lg p-2.5 aria-selected:bg-accent/60"
                                             >
-                                                <div className="flex size-8 items-center justify-center rounded-md bg-muted transition-colors group-aria-selected:bg-background">
-                                                    <File className="size-3.5 text-muted-foreground group-aria-selected:text-primary" />
+                                                <div className="flex size-8 items-center justify-center rounded-md border border-border/70 bg-card transition-colors">
+                                                    <File className="size-3.5 text-muted-foreground group-aria-selected:text-foreground" />
                                                 </div>
                                                 <div className="flex flex-col min-w-0">
-                                                    <span className="text-[11px] font-black uppercase tracking-tight text-foreground">
+                                                    <span className="text-sm font-semibold tracking-tight text-foreground">
                                                         <Highlight text={r.title} query={rawQuery} />
                                                     </span>
-                                                    {r.description && <span className="truncate text-[10px] font-bold text-muted-foreground/60 tracking-tighter">{r.description}</span>}
+                                                    {r.description && <span className="truncate text-xs text-muted-foreground">{r.description}</span>}
                                                 </div>
                                             </CommandItem>
                                         ))}
@@ -315,23 +315,23 @@ export const SearchDialog = memo(() => {
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: idx * 0.05 }}
                                 >
-                                    <CommandGroup heading={<span className="text-[9px] font-black uppercase tracking-[0.2em] text-primary/70">{group}</span>} className="mb-2">
+                                    <CommandGroup heading={<span className="px-2 text-[11px] font-semibold text-muted-foreground">{group}</span>} className="mb-2">
                                         {items.map((item) => (
                                             <CommandItem
                                                 key={item.href}
                                                 onSelect={() => onSelect(item.href)}
-                                                className="group flex cursor-pointer items-center gap-3 rounded-lg p-2.5 aria-selected:bg-accent"
+                                                className="group flex cursor-pointer items-center gap-3 rounded-lg p-2.5 aria-selected:bg-accent/60"
                                             >
-                                                <div className="flex size-8 items-center justify-center rounded-md bg-muted transition-colors group-aria-selected:bg-background">
-                                                    {item.icon ? <item.icon className="size-3.5 text-muted-foreground group-aria-selected:text-primary" /> : <File className="size-3.5" />}
+                                                <div className="flex size-8 items-center justify-center rounded-md border border-border/70 bg-card transition-colors">
+                                                    {item.icon ? <item.icon className="size-3.5 text-muted-foreground group-aria-selected:text-foreground" /> : <File className="size-3.5 text-muted-foreground" />}
                                                 </div>
                                                 <div className="flex flex-col min-w-0">
-                                                    <span className="text-[11px] font-black uppercase tracking-tight text-foreground">
+                                                    <span className="text-sm font-semibold tracking-tight text-foreground">
                                                         <Highlight text={item.label} query={rawQuery} />
                                                     </span>
-                                                    {item.description && <span className="truncate text-[10px] font-bold text-muted-foreground/60 tracking-tighter">{item.description}</span>}
+                                                    {item.description && <span className="truncate text-xs text-muted-foreground">{item.description}</span>}
                                                 </div>
-                                                <kbd className="ml-auto hidden text-[9px] font-black text-muted-foreground/30 group-aria-selected:block">ENTER ↵</kbd>
+                                                <kbd className="ml-auto hidden rounded-full border border-border/60 bg-card px-2 py-0.5 text-[10px] font-semibold text-muted-foreground group-aria-selected:block">Enter</kbd>
                                             </CommandItem>
                                         ))}
                                     </CommandGroup>
@@ -340,13 +340,13 @@ export const SearchDialog = memo(() => {
                         </AnimatePresence>
                     </CommandList>
 
-                    <div className="flex items-center justify-between border-t border-border/40 bg-muted/20 px-4 py-2 text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">
+                    <div className="flex items-center justify-between border-t border-border/70 bg-muted/35 px-4 py-2 text-[10px] font-medium text-muted-foreground">
                         <div className="flex gap-4">
-                            <span className="flex items-center gap-1"><kbd className="rounded bg-muted px-1 py-0.5">↑↓</kbd> Navigate</span>
-                            <span className="flex items-center gap-1"><kbd className="rounded bg-muted px-1 py-0.5">↵</kbd> Select</span>
+                            <span className="flex items-center gap-1"><kbd className="rounded-full border border-border/60 bg-card px-1.5 py-0.5">↑↓</kbd> Navigate</span>
+                            <span className="flex items-center gap-1"><kbd className="rounded-full border border-border/60 bg-card px-1.5 py-0.5">↵</kbd> Open</span>
                         </div>
                         <div className="flex items-center gap-1">
-                            <Sparkles className="size-3" /> Quick Action System
+                            <Sparkles className="size-3" /> Smart search
                         </div>
                     </div>
                 </div>

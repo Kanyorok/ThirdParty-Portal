@@ -55,6 +55,7 @@ export const sidebarItems: readonly NavSection[] = [
         allowedProfiles: ["Tenant"],
         items: [
             withProfiles({ title: "Rentable Properties", url: "/dashboard/tenant/properties", icon: LandPlot, description: "Units, availability & listings" }, ["Tenant"]),
+            withProfiles({ title: "My Interests", url: "/dashboard/tenant/interests", icon: ClipboardList, description: "Track submitted property interests" }, ["Tenant"]),
             withProfiles({ title: "Leases", url: "/dashboard/tenant/leases", icon: BookOpen, description: "Lease terms & renewals" }, ["Tenant"]),
             withProfiles({ title: "Invoices", url: "/dashboard/tenant/invoices", icon: Receipt, description: "Billing history & payments" }, ["Tenant"]),
             withProfiles({ title: "Maintenance", url: "/dashboard/tenant/maintenance", icon: Construction, description: "Requests & work orders" }, ["Tenant"])

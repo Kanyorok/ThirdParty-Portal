@@ -322,7 +322,11 @@ export default function SummaryCharts({ profile }: SummaryChartsProps) {
     () => Object.values(tenderBreakdown || {}).reduce((a, b) => a + b, 0),
     [tenderBreakdown]
   )
-  const tenderCardTotal = summary?.summary?.tendersAvailable ?? tenderTotal
+  const tenderCardTotal =
+    summary?.summary?.openTenders ??
+    summary?.summary?.tendersAvailable ??
+    tenderBreakdown?.open ??
+    tenderTotal
   const bidBreakdown = summary?.breakdowns?.bids as BidBreakdown | undefined
   const bidTotal = useMemo(
     () => Object.values(bidBreakdown || {}).reduce((a, b) => a + b, 0),

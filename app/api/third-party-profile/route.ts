@@ -89,21 +89,53 @@ export async function DELETE(_request: NextRequest) {
     }
 
     try {
-        const res = await fetch(`${getBaseApiUrl()}/api/third-party-profile`, {
-            method: "DELETE",
-            headers: {
+        const requestBody = await _request.json().catch(() => null)
+        const normalizedPassword =
+            requestBody?.current_password ??
+            requestBody?.password ??
+            requestBody?.confirm_password ??
+            requestBody?.confirmPassword ??
+            null
+        const payload =
+            normalizedPassword && typeof normalizedPassword === "string"
+                ? {
+                    current_password: normalizedPassword,
+                    password: normalizedPassword,
+                    confirm_password: normalizedPassword,
+                }
+                : null
+
+        const executeDelete = async (includeBody: boolean) => {
+            const headers: Record<string, string> = {
                 Accept: "application/json",
                 Authorization: `Bearer ${accessToken}`,
-            },
-        })
-        const body = await parseBody(res)
+            }
+            const init: RequestInit = {
+                method: "DELETE",
+                headers,
+            }
 
-        if (!res.ok) {
-            return NextResponse.json(body ?? { message: "Action failed." }, { status: res.status })
+            if (includeBody && payload) {
+                headers["Content-Type"] = "application/json"
+                init.body = JSON.stringify(payload)
+            }
+
+            const res = await fetch(`${getBaseApiUrl()}/api/third-party-profile`, init)
+            const body = await parseBody(res)
+            return { res, body }
         }
 
-        if (body && typeof body === "object") {
-            return NextResponse.json(body, { status: res.status })
+        let result = await executeDelete(Boolean(payload))
+        if (!result.res.ok && payload && [400, 404, 405, 415, 422].includes(result.res.status)) {
+            result = await executeDelete(false)
+        }
+
+        if (!result.res.ok) {
+            return NextResponse.json(result.body ?? { message: "Action failed." }, { status: result.res.status })
+        }
+
+        if (result.body && typeof result.body === "object") {
+            return NextResponse.json(result.body, { status: result.res.status })
         }
         return NextResponse.json({ message: "Profile suspended successfully.", status: "suspended" }, { status: 200 })
     } catch (error) {

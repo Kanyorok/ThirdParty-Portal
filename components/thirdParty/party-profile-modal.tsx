@@ -48,9 +48,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onOpenChange
                     <FormField control={form.control} name="phone" render={({ field }) => <FormItem><FormLabel>Phone</FormLabel><FormControl><Input {...field} placeholder="+254..." /></FormControl><FormMessage /></FormItem>} />
                     <FormField control={form.control} name="website" render={({ field }) => <FormItem><FormLabel>Website</FormLabel><FormControl><Input {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>} />
 
-                    <div className="sticky bottom-0 bg-white dark:bg-background pt-4 pb-2 border-t flex justify-end gap-3 z-10">
-                        <Button type="button" variant="outline" onClick={() => { onOpenChange(false); form.reset() }}><X className="h-4 w-4 mr-2" /> Cancel</Button>
-                        <Button type="submit"><Save className="h-4 w-4 mr-2" /> {isEditing ? "Save Changes" : "Create Profile"}</Button>
+                    <div className="sticky bottom-0 bg-background pt-4 pb-2 border-t border-border/60 flex justify-end gap-3 z-10">
+                        <Button type="button" size="lg" variant="outline" onClick={() => { onOpenChange(false); form.reset() }}><X className="h-4 w-4 mr-2" /> Cancel</Button>
+                        <Button type="submit" size="lg"><Save className="h-4 w-4 mr-2" /> {isEditing ? "Save Changes" : "Create Profile"}</Button>
                     </div>
                 </form>
             </Form>

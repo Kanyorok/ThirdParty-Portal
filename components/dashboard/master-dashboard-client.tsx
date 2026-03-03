@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { motion } from "framer-motion"
-import { Info } from "lucide-react"
+import { SlidersHorizontal } from "lucide-react"
 import { useShallow } from "zustand/react/shallow"
 
 import { useProfileStore, type ProfileType } from "@/store/use-profile-store"
@@ -16,10 +16,6 @@ import { ErrorState } from "@/components/dashboard/error-state"
 import { RequestSummaryCards } from "@/components/request"
 import SummaryCharts from "@/components/dashboard/summary-charts"
 import { PriorityActions } from "@/components/dashboard/priority-actions"
-import {
-  Card,
-  CardContent,
-} from "@/components/common/card"
 import { Button } from "@/components/common/button"
 import {
   Dialog,
@@ -180,7 +176,7 @@ export function MasterDashboardClient({
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="w-full space-y-3"
+      className="w-full space-y-4"
     >
       <motion.div variants={itemVariants}>
         <WelcomeHeader
@@ -192,26 +188,20 @@ export function MasterDashboardClient({
       </motion.div>
 
       <motion.div variants={itemVariants}>
-        <div className="rounded-2xl border border-border/60 px-4 py-2.5">
-          <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-semibold tracking-tight text-foreground">
-                Dashboard focus
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-muted/10 px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground">
-                <Info className="h-3.5 w-3.5" />
-                Layout saves per profile
-              </div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-muted/20 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
-                {visibleWidgetsCount} visible
-              </div>
-              <Button size="sm" onClick={() => setIsWidgetDialogOpen(true)}>
-                Add widget
-              </Button>
-            </div>
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border/70 bg-card px-3.5 py-2.5">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-muted/45 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden />
+            {visibleWidgetsCount} widgets active
           </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 rounded-full border-border/70 bg-card px-3 text-xs font-semibold text-foreground hover:bg-accent/60"
+            onClick={() => setIsWidgetDialogOpen(true)}
+          >
+            <SlidersHorizontal className="mr-1.5 h-3.5 w-3.5" />
+            Customize home
+          </Button>
         </div>
       </motion.div>
 
@@ -223,60 +213,51 @@ export function MasterDashboardClient({
 
       {widgetPreferences.overview && (
         <motion.section variants={itemVariants}>
-          <Card className="rounded-3xl border border-border/50 bg-transparent shadow-none">
-            <CardContent className="py-3">
-              <RequestSummaryCards />
-            </CardContent>
-          </Card>
+          <RequestSummaryCards />
         </motion.section>
       )}
 
       {widgetPreferences.activity && (
         <motion.section variants={itemVariants}>
-          <Card className="rounded-3xl border border-border/50 bg-transparent shadow-none">
-            <CardContent className="py-3">
-              <SummaryCharts profile={renderProfile} />
-            </CardContent>
-          </Card>
+          <SummaryCharts profile={renderProfile} />
         </motion.section>
       )}
 
       {visibleWidgetsCount === 0 && (
         <motion.section variants={itemVariants}>
-          <Card className="rounded-3xl border border-dashed border-border/60 bg-transparent shadow-none">
-            <CardContent className="flex flex-col items-center gap-3 py-8 text-center">
-              <p className="text-sm text-muted-foreground">
-                No widgets yet. Add insights to tailor your dashboard.
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsWidgetDialogOpen(true)}
-              >
-                Choose widgets
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="rounded-2xl border border-dashed border-border/70 bg-muted/30 px-6 py-9 text-center">
+            <p className="text-sm text-muted-foreground">
+              No widgets enabled yet. Turn on the sections you want to track.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-3 h-9 rounded-full border-border/70 bg-card px-4 text-xs font-semibold text-foreground hover:bg-accent/60"
+              onClick={() => setIsWidgetDialogOpen(true)}
+            >
+              Configure widgets
+            </Button>
+          </div>
         </motion.section>
       )}
 
       <Dialog open={isWidgetDialogOpen} onOpenChange={setIsWidgetDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Customize dashboard</DialogTitle>
+        <DialogContent className="sm:max-w-md rounded-2xl border border-border/70 bg-popover p-0 shadow-none">
+          <DialogHeader className="border-b border-border/70 px-5 py-4">
+            <DialogTitle className="text-lg font-semibold text-foreground">Customize dashboard</DialogTitle>
             <DialogDescription>
               Toggle widgets to focus on what drives results.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-2.5">
+          <div className="space-y-2.5 px-5 py-4">
             {DASHBOARD_WIDGETS.map(widget => {
               const inputId = `widget-${widget.key}`
 
               return (
                 <div
                   key={widget.key}
-                  className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2"
+                  className="flex items-center justify-between rounded-lg border border-border/70 px-3 py-2"
                 >
                   <div className="space-y-0.5 pr-4">
                     <Label htmlFor={inputId} className="font-medium">
@@ -298,17 +279,19 @@ export function MasterDashboardClient({
                   />
                 </div>
               )
-            })}
+          })}
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="border-t border-border/70 px-5 py-4">
             <Button
               variant="outline"
+              className="rounded-full border-border/70 bg-card text-xs font-semibold text-foreground hover:bg-accent/60"
               onClick={() => setWidgetPreferences(DEFAULT_WIDGET_PREFERENCES)}
             >
               Reset layout
             </Button>
             <Button
+              className="rounded-full border border-primary bg-primary text-xs font-semibold text-primary-foreground hover:bg-primary/90"
               onClick={() => setIsWidgetDialogOpen(false)}
             >
               Save changes

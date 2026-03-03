@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useCallback, useMemo, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useState } from "react"
 import {
     Building2, Search, Inbox, Maximize2, Sparkles,
     MapPin, ArrowUpRight, LayoutGrid, ChevronDown, X
@@ -11,7 +11,17 @@ import { Button } from "@/components/common/button"
 import { Badge } from "@/components/common/badge"
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/common/sheet"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/common/accordion"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/common/dialog"
+import { useSession } from "next-auth/react"
+import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import { resolveSessionAccessToken } from "@/lib/auth/resolve-session-access-token"
+import {
+    createLeaseInterest,
+    getLeaseInterestById,
+    getPaymentFrequencyCodeDetails,
+    type CodeDetail,
+} from "@/lib/api/lease-interests"
 
 export function RentablePropertiesList({
     initialData,
@@ -139,6 +149,16 @@ export function RentablePropertiesList({
     )
 }
 
+type UnitChoice = {
+    blockId: number
+    blockName: string
+    floorId: number
+    floorLabel: string
+    unitId: number
+    unitCode: string
+    availabilityLabel: string
+}
+
 function PropertyCard({ property, locationName }: { property: Property, locationName: string }) {
     const stats = useMemo(() => {
         let totalUnits = 0, vacantUnits = 0;
@@ -203,11 +223,172 @@ function PropertyCard({ property, locationName }: { property: Property, location
 }
 
 function PropertyDetailsSheet({ property, locationName, children }: { property: Property, locationName: string, children: React.ReactNode }) {
+    const { data: session } = useSession()
+    const accessToken = resolveSessionAccessToken(session as any) || null
+
     const totalVacant = property.blocks?.reduce((acc, b) =>
         acc + b.floors.reduce((fAcc, f) =>
             fAcc + f.units.filter(u => u.availabilityLabel === "Vacant").length, 0
         ), 0
     );
+
+    const unitChoices = useMemo<UnitChoice[]>(
+        () =>
+            (property.blocks || []).flatMap((block) =>
+                (block.floors || []).flatMap((floor) =>
+                    (floor.units || []).map((unit) => ({
+                        blockId: block.id,
+                        blockName: block.blockName,
+                        floorId: floor.id,
+                        floorLabel: floor.floorLabel,
+                        unitId: unit.id,
+                        unitCode: unit.unitCode,
+                        availabilityLabel: unit.availabilityLabel,
+                    }))
+                )
+            ),
+        [property.blocks]
+    )
+
+    const selectableUnits = useMemo(() => {
+        const vacant = unitChoices.filter((unit) =>
+            String(unit.availabilityLabel || "").toLowerCase().includes("vacant")
+        )
+        return vacant.length > 0 ? vacant : unitChoices
+    }, [unitChoices])
+
+    const [isInterestDialogOpen, setIsInterestDialogOpen] = useState(false)
+    const [selectedUnitId, setSelectedUnitId] = useState("")
+    const [startDate, setStartDate] = useState("")
+    const [endDate, setEndDate] = useState("")
+    const [additionalInformation, setAdditionalInformation] = useState("")
+    const [paymentFrequencyOptions, setPaymentFrequencyOptions] = useState<CodeDetail[]>([])
+    const [paymentFrequencyId, setPaymentFrequencyId] = useState("")
+    const [isLoadingPaymentFrequency, setIsLoadingPaymentFrequency] = useState(false)
+    const [isSubmittingInterest, setIsSubmittingInterest] = useState(false)
+
+    const selectedUnit = useMemo(
+        () => selectableUnits.find((unit) => String(unit.unitId) === selectedUnitId) || null,
+        [selectableUnits, selectedUnitId]
+    )
+
+    const resetInterestForm = useCallback(() => {
+        setSelectedUnitId(selectableUnits[0] ? String(selectableUnits[0].unitId) : "")
+        setStartDate("")
+        setEndDate("")
+        setAdditionalInformation("")
+        setPaymentFrequencyId((current) =>
+            current || (paymentFrequencyOptions[0] ? String(paymentFrequencyOptions[0].id) : "")
+        )
+    }, [paymentFrequencyOptions, selectableUnits])
+
+    useEffect(() => {
+        if (!isInterestDialogOpen) return
+        if (!selectedUnitId && selectableUnits[0]) {
+            setSelectedUnitId(String(selectableUnits[0].unitId))
+        }
+    }, [isInterestDialogOpen, selectableUnits, selectedUnitId])
+
+    useEffect(() => {
+        if (!isInterestDialogOpen) return
+        if (!accessToken) return
+        if (paymentFrequencyOptions.length > 0) return
+
+        let active = true
+        setIsLoadingPaymentFrequency(true)
+
+        getPaymentFrequencyCodeDetails(accessToken)
+            .then((options) => {
+                if (!active) return
+                setPaymentFrequencyOptions(options)
+                if (!paymentFrequencyId && options[0]) {
+                    setPaymentFrequencyId(String(options[0].id))
+                }
+            })
+            .catch((error) => {
+                if (!active) return
+                toast.error(error instanceof Error ? error.message : "Failed to load payment frequency options")
+            })
+            .finally(() => {
+                if (!active) return
+                setIsLoadingPaymentFrequency(false)
+            })
+
+        return () => {
+            active = false
+        }
+    }, [accessToken, isInterestDialogOpen, paymentFrequencyId, paymentFrequencyOptions.length])
+
+    const openInterestDialog = () => {
+        if (!accessToken) {
+            toast.error("Session expired. Sign in again to continue.")
+            return
+        }
+        setIsInterestDialogOpen(true)
+    }
+
+    const submitInterest = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault()
+
+        if (!accessToken) {
+            toast.error("Session expired. Sign in again to continue.")
+            return
+        }
+        if (!selectedUnit) {
+            toast.error("Select a unit to continue.")
+            return
+        }
+        if (!startDate || !endDate) {
+            toast.error("Start and end dates are required.")
+            return
+        }
+        if (new Date(startDate).getTime() > new Date(endDate).getTime()) {
+            toast.error("Interested end date must be after start date.")
+            return
+        }
+        if (!paymentFrequencyId) {
+            toast.error("Select payment frequency.")
+            return
+        }
+
+        setIsSubmittingInterest(true)
+        try {
+            const payload = {
+                property_id: property.id,
+                block_id: selectedUnit.blockId,
+                floor_id: selectedUnit.floorId,
+                unit_id: selectedUnit.unitId,
+                interested_start_date: startDate,
+                interested_end_date: endDate,
+                payment_frequency: Number(paymentFrequencyId),
+                additional_information: additionalInformation.trim() || undefined,
+            }
+
+            const created = await createLeaseInterest(payload, accessToken)
+            const createdId = Number((created as any)?.data?.id ?? (created as any)?.data?.Id ?? NaN)
+            let verificationFailed = false
+
+            try {
+                if (Number.isFinite(createdId) && createdId > 0) {
+                    await getLeaseInterestById(createdId, accessToken)
+                }
+            } catch {
+                verificationFailed = true
+            }
+
+            if (verificationFailed) {
+                toast.success("Lease interest submitted. Verification endpoint did not respond.")
+            } else {
+                toast.success((created as any)?.message || "Property interest created successfully")
+            }
+            setIsInterestDialogOpen(false)
+            resetInterestForm()
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Failed to submit lease interest.")
+        } finally {
+            setIsSubmittingInterest(false)
+        }
+    }
 
     return (
         <Sheet>
@@ -329,6 +510,7 @@ function PropertyDetailsSheet({ property, locationName, children }: { property: 
                         </Button>
                         <Button
                             disabled={totalVacant === 0}
+                            onClick={openInterestDialog}
                             className={cn(
                                 "flex-[2] h-11 rounded-xl text-xs font-medium transition-colors shadow-none focus-visible:ring-4 focus-visible:ring-blue-50",
                                 totalVacant === 0
@@ -336,11 +518,122 @@ function PropertyDetailsSheet({ property, locationName, children }: { property: 
                                     : "bg-blue-500 hover:bg-blue-600 text-white",
                             )}
                         >
-                            {totalVacant === 0 ? "No Units Available" : `Request Viewing (${totalVacant} Available)`}
+                            {totalVacant === 0 ? "No Units Available" : `Show Interest (${totalVacant} Available)`}
                         </Button>
                     </footer>
                 </div>
             </SheetContent>
+
+            <Dialog
+                open={isInterestDialogOpen}
+                onOpenChange={(nextOpen) => {
+                    setIsInterestDialogOpen(nextOpen)
+                    if (!nextOpen) resetInterestForm()
+                }}
+            >
+                <DialogContent className="sm:max-w-[640px] border border-slate-200 bg-white shadow-none">
+                    <DialogHeader>
+                        <DialogTitle className="text-lg font-semibold tracking-tight text-slate-900">
+                            Show Interest In This Property
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    <form className="space-y-4" onSubmit={submitInterest}>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-slate-700">Unit</label>
+                                <select
+                                    value={selectedUnitId}
+                                    onChange={(e) => setSelectedUnitId(e.target.value)}
+                                    className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-300"
+                                    required
+                                >
+                                    <option value="" disabled>
+                                        Select unit
+                                    </option>
+                                    {selectableUnits.map((unit) => (
+                                        <option key={unit.unitId} value={unit.unitId}>
+                                            {unit.blockName} · {unit.floorLabel} · {unit.unitCode}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-slate-700">Payment Frequency</label>
+                                <select
+                                    value={paymentFrequencyId}
+                                    onChange={(e) => setPaymentFrequencyId(e.target.value)}
+                                    className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-300 disabled:bg-slate-100"
+                                    disabled={isLoadingPaymentFrequency}
+                                    required
+                                >
+                                    <option value="" disabled>
+                                        {isLoadingPaymentFrequency ? "Loading frequencies..." : "Select payment frequency"}
+                                    </option>
+                                    {paymentFrequencyOptions.map((option) => (
+                                        <option key={option.id} value={option.id}>
+                                            {option.label || option.name || option.code || `Option ${option.id}`}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-slate-700">Interested Start Date</label>
+                                <input
+                                    type="date"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                    className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-300"
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-slate-700">Interested End Date</label>
+                                <input
+                                    type="date"
+                                    value={endDate}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                    className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-300"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-semibold text-slate-700">Additional Information</label>
+                            <textarea
+                                value={additionalInformation}
+                                onChange={(e) => setAdditionalInformation(e.target.value)}
+                                placeholder="I want this unit for 12 months"
+                                className="min-h-[88px] w-full rounded-lg border border-slate-200 bg-white p-3 text-sm outline-none focus:border-blue-300"
+                            />
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2 pt-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="h-10 rounded-lg border-slate-200 bg-white text-xs font-semibold"
+                                onClick={() => setIsInterestDialogOpen(false)}
+                                disabled={isSubmittingInterest}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                className="h-10 rounded-lg bg-blue-600 px-4 text-xs font-semibold text-white hover:bg-blue-700"
+                                disabled={isSubmittingInterest || !accessToken}
+                            >
+                                {isSubmittingInterest ? "Submitting..." : "Submit Interest"}
+                            </Button>
+                        </div>
+                    </form>
+                </DialogContent>
+            </Dialog>
         </Sheet>
     )
 }

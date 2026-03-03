@@ -108,7 +108,7 @@ export default function LogoDialog({ open, onOpenChange, logoUrl, onLogoUrlChang
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[460px] max-h-[85vh] overflow-y-auto bg-popover rounded-2xl border border-border/60 shadow-none">
+      <DialogContent className="sm:max-w-[460px] max-h-[85vh] overflow-y-auto rounded-2xl border border-border/60">
         <DialogHeader>
           <DialogTitle className="text-base">Update company logo</DialogTitle>
           <DialogDescription>Max size 5MB. Recommended: square logo (PNG/SVG).</DialogDescription>
@@ -142,24 +142,18 @@ export default function LogoDialog({ open, onOpenChange, logoUrl, onLogoUrlChang
           />
 
           <div className="flex flex-col sm:flex-row gap-2">
-            <label
-              htmlFor="company-logo-upload"
-              className={cn(
-                "inline-flex h-11 items-center justify-center rounded-xl border border-border/60 bg-background px-4 text-xs font-medium text-foreground transition-colors",
-                "hover:bg-muted hover:border-border",
-                isPending && "pointer-events-none opacity-60",
-              )}
-            >
-              <ImageUp className="mr-2 h-4 w-4 text-primary" />
-              {selectedLogo ? "Change selected" : "Choose file"}
-            </label>
-
+            <Button asChild type="button" variant="outline" className={cn("h-11 text-xs font-medium", isPending && "pointer-events-none opacity-60")}>
+              <label htmlFor="company-logo-upload">
+                <ImageUp className="mr-2 h-4 w-4 text-primary" />
+                {selectedLogo ? "Change selected" : "Choose file"}
+              </label>
+            </Button>
           </div>
         </div>
 
         <DialogFooter>
           <DialogClose asChild>
-            <Button type="button" variant="outline" disabled={isPending} className="h-11 rounded-xl text-xs font-medium shadow-none">
+            <Button type="button" variant="outline" size="lg" disabled={isPending} className="text-xs font-medium">
               Cancel
             </Button>
           </DialogClose>
@@ -167,7 +161,8 @@ export default function LogoDialog({ open, onOpenChange, logoUrl, onLogoUrlChang
             type="button"
             onClick={uploadLogo}
             disabled={isPending || !selectedLogo}
-            className="h-11 rounded-xl text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+            size="lg"
+            className="text-xs font-medium"
           >
             {isPending ? <Spinner className="mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
             Save

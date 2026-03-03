@@ -1,13 +1,31 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
-import { AlertCircle, Calendar, CheckCircle2, Layers, XCircle } from "lucide-react"
+import { AlertCircle, Calendar, CheckCircle2, Layers, RotateCcw, XCircle } from "lucide-react"
 
 import Loading from "@/components/common/custom-loader"
+import { Button } from "@/components/common/button"
 import { getTenantProfile } from "@/lib/api/profile-management"
 
 type TenantProfilePanelProps = {
   enabled: boolean
+}
+
+function formatDateValue(value: unknown) {
+  if (value == null) return "—"
+  const raw = String(value).trim()
+  if (!raw) return "—"
+
+  const parsed = new Date(raw.replace(" ", "T"))
+  if (Number.isNaN(parsed.getTime())) return raw
+
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(parsed)
 }
 
 export default function TenantProfilePanel({ enabled }: TenantProfilePanelProps) {
@@ -20,13 +38,17 @@ export default function TenantProfilePanel({ enabled }: TenantProfilePanelProps)
 
   if (!enabled) {
     return (
-      <section className="border border-border/60 bg-background">
-        <div className="px-5 py-4 border-b border-border/60">
-          <h2 className="text-base font-semibold text-foreground">Tenant profile</h2>
-          <p className="text-sm text-muted-foreground">Not enabled for this account.</p>
+      <section className="overflow-hidden rounded-2xl border border-border/60 bg-background">
+        <div className="border-b border-border/60 bg-gradient-to-r from-background via-muted/25 to-background px-5 py-5 sm:px-6">
+          <h2 className="text-lg font-semibold tracking-tight text-foreground">Tenant profile</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            This account has no tenant profile enabled yet.
+          </p>
         </div>
-        <div className="px-5 py-5">
-          <div className="text-sm text-muted-foreground">Enable Tenant to access properties, leases, and maintenance.</div>
+        <div className="px-5 py-6 sm:px-6">
+          <div className="rounded-xl border border-border/60 bg-muted/25 px-4 py-3 text-sm text-muted-foreground">
+            Enable Tenant to access properties, leases, invoices, and maintenance workflows.
+          </div>
         </div>
       </section>
     )
@@ -42,99 +64,90 @@ export default function TenantProfilePanel({ enabled }: TenantProfilePanelProps)
 
   if (isError) {
     return (
-      <section className="border border-destructive/20 bg-background">
-        <div className="px-5 py-4 border-b border-destructive/20">
-          <h2 className="text-base font-semibold text-destructive">Tenant profile</h2>
-          <p className="text-sm text-muted-foreground">We couldn’t load tenant details.</p>
+      <section className="overflow-hidden rounded-2xl border border-destructive/20 bg-background">
+        <div className="border-b border-destructive/20 bg-destructive/[0.05] px-5 py-5 sm:px-6">
+          <h2 className="text-lg font-semibold tracking-tight text-destructive">Tenant profile</h2>
+          <p className="mt-1 text-sm text-muted-foreground">We couldn’t load tenant details.</p>
         </div>
-        <div className="px-5 py-5 space-y-3">
-          <div className="flex items-start gap-3 text-sm text-muted-foreground">
+        <div className="space-y-4 px-5 py-6 sm:px-6">
+          <div className="flex items-start gap-3 rounded-xl border border-destructive/20 bg-destructive/[0.05] px-4 py-3 text-sm text-muted-foreground">
             <AlertCircle className="h-4 w-4 mt-0.5 text-destructive shrink-0" />
             <span>{(error as any)?.message || "Please try again."}</span>
           </div>
-          <button
-            type="button"
-            onClick={() => refetch()}
-            className="h-10 px-4 rounded-xl text-xs font-semibold border border-border/60 hover:bg-muted/40"
-            disabled={isFetching}
-          >
+          <Button type="button" variant="outline" size="sm" className="text-xs font-semibold" onClick={() => refetch()} disabled={isFetching}>
+            <RotateCcw className="mr-1.5 h-4 w-4" />
             Retry
-          </button>
+          </Button>
         </div>
       </section>
     )
   }
 
   const tenant = data?.data
-  const isActive = typeof tenant?.isActive === "boolean" ? tenant.isActive : null
+  const isActive =
+    typeof tenant?.isActive === "boolean"
+      ? tenant.isActive
+      : typeof tenant?.isActive === "boolean"
+        ? tenant.isActive
+        : null
+  const statusLabel = isActive === null ? "Not set" : isActive ? "Active" : "Inactive"
+  const statusClassName =
+    isActive === null
+      ? "border-border bg-background text-muted-foreground"
+      : isActive
+        ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+        : "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+
+  const classification = tenant?.typeName ?? tenant?.tenantType ?? "—"
+  const tenantType = tenant?.tenantType ?? "—"
+  const typeName = tenant?.typeName ?? "—"
+  const remarks = tenant?.remarks ?? "No remarks"
+  const createdOn = formatDateValue(tenant?.createdOn ?? tenant?.createdOn)
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <section className="border border-border/60 bg-background">
-          <div className="px-4 py-3 border-b border-border/60">
-            <h3 className="text-sm font-semibold text-foreground">Classification</h3>
-            <p className="text-xs text-muted-foreground">Tenant type.</p>
-          </div>
-          <div className="px-4 py-4 flex items-center gap-2 text-sm font-semibold text-foreground">
-            <Layers className="h-4 w-4 text-primary" />
-            {tenant?.typeName ?? tenant?.tenantType ?? "—"}
-          </div>
-        </section>
+      <section className="overflow-hidden rounded-2xl border border-border/60 bg-background">
+        <div className="border-b border-border/60 bg-gradient-to-r from-background via-muted/25 to-background px-5 py-5 sm:px-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="space-y-1.5">
+              <h2 className="text-lg font-semibold tracking-tight text-foreground">Tenant profile</h2>
+            </div>
 
-        <section className="border border-border/60 bg-background">
-          <div className="px-4 py-3 border-b border-border/60">
-            <h3 className="text-sm font-semibold text-foreground">Account status</h3>
-            <p className="text-xs text-muted-foreground">Whether tenant account is active.</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={["inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider", statusClassName].join(" ")}>
+                {isActive === null ? null : isActive ? <CheckCircle2 className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
+                {statusLabel}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <Layers className="h-3.5 w-3.5" />
+                {classification}
+              </span>
+            </div>
           </div>
-          <div className="px-4 py-4 flex items-center gap-2 text-sm font-semibold text-foreground">
-            {isActive === null ? (
-              "—"
-            ) : isActive ? (
-              <>
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                Active
-              </>
-            ) : (
-              <>
-                <XCircle className="h-4 w-4 text-amber-600" />
-                Inactive
-              </>
-            )}
-          </div>
-        </section>
-
-        <section className="border border-border/60 bg-background">
-          <div className="px-4 py-3 border-b border-border/60">
-            <h3 className="text-sm font-semibold text-foreground">Onboarded</h3>
-            <p className="text-xs text-muted-foreground">Tenant profile created date.</p>
-          </div>
-          <div className="px-4 py-4 flex items-center gap-2 text-sm font-semibold text-foreground">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            {tenant?.createdOn ?? "—"}
-          </div>
-        </section>
-      </div>
-
-      <section className="border border-border/60 bg-background">
-        <div className="px-5 py-4 border-b border-border/60">
-          <h2 className="text-base font-semibold text-foreground">Tenant details</h2>
-          <p className="text-sm text-muted-foreground">Extra details linked to this tenant profile.</p>
         </div>
-        <div className="px-5 py-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Tenant type</div>
-              <div className="text-sm font-semibold text-foreground">{tenant?.tenantType ?? "—"}</div>
+
+        <div className="grid grid-cols-1 gap-4 px-5 py-5 sm:grid-cols-2 xl:grid-cols-3 sm:px-6">
+          <div className="rounded-xl border border-border/60 bg-muted/25 px-4 py-3">
+            <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Tenant type</div>
+            <div className="mt-1 text-sm font-semibold text-foreground">{tenantType}</div>
+          </div>
+          <div className="rounded-xl border border-border/60 bg-muted/25 px-4 py-3">
+            <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Type name</div>
+            <div className="mt-1 text-sm font-semibold text-foreground">{typeName}</div>
+          </div>
+          <div className="rounded-xl border border-border/60 bg-muted/25 px-4 py-3 sm:col-span-2 xl:col-span-1">
+            <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Onboarded</div>
+            <div className="mt-1 inline-flex items-center gap-2 text-sm font-semibold text-foreground">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              {createdOn}
             </div>
-            <div className="space-y-1">
-              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Type name</div>
-              <div className="text-sm font-semibold text-foreground">{tenant?.typeName ?? "—"}</div>
-            </div>
-            <div className="space-y-1 md:col-span-2">
-              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Remarks</div>
-              <div className="text-sm text-muted-foreground">{tenant?.remarks ?? "—"}</div>
-            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-border/60 px-5 py-5 sm:px-6">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Remarks</div>
+          <div className="mt-2 rounded-xl border border-border/60 bg-muted/25 px-4 py-3 text-sm text-muted-foreground">
+            {remarks}
           </div>
         </div>
       </section>

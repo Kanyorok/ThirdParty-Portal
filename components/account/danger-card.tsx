@@ -1,12 +1,12 @@
 "use client"
 
-import { useTransition } from "react"
+import { useState, type MouseEvent } from "react"
+import { signOut, useSession } from "next-auth/react"
 import { motion, Variants } from "framer-motion"
 import { apiService } from "@/lib/api/profile"
-import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/common/card"
-import { Separator } from "@/components/common/separator"
 import { Button } from "@/components/common/button"
-import { Spinner } from "@/components/common/spinner"
+import { Input } from "@/components/common/input"
+import { Label } from "@/components/common/label"
 import {
     AlertDialog,
     AlertDialogTrigger,
@@ -18,7 +18,7 @@ import {
     AlertDialogCancel,
     AlertDialogAction
 } from "@/components/common/alert-dialog"
-import { AlertTriangle, Info, Trash2 } from "lucide-react"
+import { AlertTriangle, Eye, EyeOff, Info, Loader2, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 const containerVariants: Variants = {
@@ -31,98 +31,175 @@ const itemVariants: Variants = {
     show: { opacity: 1, x: 0, transition: { duration: 0.3, ease: "easeOut" } }
 }
 
-export default function DangerZoneCard({ accessToken }: { accessToken: string }) {
-    const [isPending, startTransition] = useTransition()
+export default function DangerZoneCard({ accessToken }: { accessToken?: string }) {
+    const { data: session } = useSession()
+    const [dialogOpen, setDialogOpen] = useState(false)
+    const [confirmPassword, setConfirmPassword] = useState("")
+    const [passwordError, setPasswordError] = useState<string | null>(null)
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [showPassword, setShowPassword] = useState(false)
 
-    const handleSuspend = () => {
-        startTransition(() => {
-            toast.promise(apiService.suspendAccount(accessToken), {
-                loading: "Suspending account...",
-                success: () => {
-                    return "Account suspended successfully."
-                },
-                error: (err: any) => {
-                    return err.message || "Suspension failed."
-                }
-            })
-        })
+    const resolvedAccessToken =
+        accessToken || ((session as any)?.accessToken as string | undefined)
+
+    const resetFormState = () => {
+        setConfirmPassword("")
+        setPasswordError(null)
+        setIsSubmitting(false)
+        setShowPassword(false)
+    }
+
+    const handleOpenChange = (open: boolean) => {
+        setDialogOpen(open)
+        if (!open) {
+            resetFormState()
+        }
+    }
+
+    const handleDeleteAccount = async (event: MouseEvent<HTMLButtonElement>) => {
+        event.preventDefault()
+        if (isSubmitting) return
+
+        const password = confirmPassword.trim()
+        if (!password) {
+            setPasswordError("Confirm with Password is required.")
+            return
+        }
+
+        if (!resolvedAccessToken) {
+            toast.error("Authentication required. Please sign in again.")
+            return
+        }
+
+        setPasswordError(null)
+        setIsSubmitting(true)
+        try {
+            const response = await apiService.deleteAccount(password, resolvedAccessToken)
+            toast.success(response?.message || "Account deleted successfully.")
+            setDialogOpen(false)
+            resetFormState()
+            await signOut({ callbackUrl: "/signin", redirect: true })
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Delete account failed."
+            setPasswordError(message)
+            toast.error(message)
+        } finally {
+            setIsSubmitting(false)
+        }
     }
 
     return (
         <motion.div variants={containerVariants} initial="hidden" animate="show">
-            <Card className="relative overflow-hidden border border-destructive/50 shadow-none">
+            <div className="min-h-[360px] w-full rounded-3xl border border-border/70 bg-gradient-to-b from-background to-muted/35 px-5 py-9 sm:px-8 sm:py-11">
+                <motion.div variants={itemVariants} initial="hidden" animate="show" className="flex min-h-[280px] w-full flex-col items-center justify-center space-y-7 text-center">
+                    <div className="space-y-3">
 
-                <CardHeader className="p-4 sm:p-6">
-                    <CardTitle className="flex items-center gap-3 text-xl font-bold text-destructive">
-                        <AlertTriangle className="h-5 w-5" />
-                        Danger Zone
-                    </CardTitle>
-                    <CardDescription className="text-sm text-muted-foreground/80 pt-1">
-                        Actions in this area are irreversible. Handle with caution.
-                    </CardDescription>
-                </CardHeader>
-
-                <Separator className="bg-destructive/20" />
-
-                <CardContent className="p-4 sm:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <motion.div variants={itemVariants} initial="hidden" animate="show" className="flex-1">
-                        <h3 className="text-base font-semibold text-foreground">
-                            Suspend Account
-                        </h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                            Temporarily suspend your account and revoke current access tokens.
+                        <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">Attrition</h2>
+                        <p className="mx-auto max-w-3xl text-sm sm:text-base text-muted-foreground">
+                            You are about to permanently delete this user account. This action cannot be reversed.
                         </p>
-                    </motion.div>
+                    </div>
 
-                    <AlertDialog>
+                    {!resolvedAccessToken ? (
+                        <p className="mx-auto max-w-xl text-sm text-destructive">
+                            Authentication required. Please sign in again before deleting your account.
+                        </p>
+                    ) : null}
+
+                    <AlertDialog open={dialogOpen} onOpenChange={handleOpenChange}>
                         <AlertDialogTrigger asChild>
-                            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }} className="flex-shrink-0">
-                                <Button variant="destructive" className="flex items-center gap-2">
+                            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex justify-center">
+                                <Button
+                                    variant="destructive"
+                                    className="h-12 min-w-[300px] rounded-full bg-[#E31B23] px-8 text-base font-semibold text-white shadow-none hover:bg-[#CF171E] hover:shadow-none"
+                                >
                                     <Trash2 className="h-4 w-4" />
-                                    Suspend Account
+                                    Delete User Account
                                 </Button>
                             </motion.div>
                         </AlertDialogTrigger>
 
-                        <AlertDialogContent className="max-w-md">
-                            <AlertDialogHeader>
-                                <AlertDialogTitle className="text-2xl font-bold text-destructive flex items-center gap-2">
-                                    <AlertTriangle className="h-6 w-6" />
-                                    Are you absolutely sure?
+                        <AlertDialogContent className="max-w-lg overflow-hidden border-border/70 p-0 shadow-none">
+                            <AlertDialogHeader className="border-b border-border/60 bg-muted/35 px-6 py-5">
+                                <AlertDialogTitle className="flex items-center gap-2 text-xl font-semibold text-foreground">
+                                    <AlertTriangle className="h-5 w-5 text-destructive" />
+                                    Confirm Attrition
                                 </AlertDialogTitle>
-                                <AlertDialogDescription className="text-base text-muted-foreground space-y-3 pt-2">
-                                    <p>
-                                        This will suspend your account and revoke access tokens until it is re-enabled by an administrator.
-                                    </p>
-                                    <div className="flex items-center gap-2 p-3 rounded-md bg-destructive/10 border border-destructive/30 text-destructive text-sm font-medium">
-                                        <Info className="h-4 w-4 flex-shrink-0" />
-                                        You can sign in again after your account is reactivated.
-                                    </div>
+                                <AlertDialogDescription className="pt-1 text-sm text-muted-foreground">
+                                    This action is irreversible and will immediately revoke portal access.
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
 
-                            <AlertDialogFooter className="mt-4">
+                            <div className="space-y-4 px-6 py-5">
+                                <div className="flex items-start gap-2 rounded-xl border border-destructive/20 bg-destructive/[0.08] p-3 text-sm text-destructive">
+                                    <Info className="mt-0.5 h-4 w-4 shrink-0" />
+                                    Enter your password to continue.
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="danger-confirm-password" className="text-sm font-medium text-foreground">
+                                        Confirm with Password <span className="text-destructive">*</span>
+                                    </Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="danger-confirm-password"
+                                            type={showPassword ? "text" : "password"}
+                                            value={confirmPassword}
+                                            required
+                                            onChange={(event) => {
+                                                setConfirmPassword(event.target.value)
+                                                if (passwordError) setPasswordError(null)
+                                            }}
+                                            onBlur={() => {
+                                                if (!confirmPassword.trim()) {
+                                                    setPasswordError("Confirm with Password is required.")
+                                                }
+                                            }}
+                                            aria-required="true"
+                                            aria-invalid={Boolean(passwordError)}
+                                            placeholder="Enter your password"
+                                            className={`pr-12 ${passwordError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                                        />
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="absolute right-1 top-1 h-8 w-8 rounded-lg text-muted-foreground shadow-none hover:text-foreground hover:shadow-none"
+                                            onClick={() => setShowPassword((prev) => !prev)}
+                                            aria-label={showPassword ? "Hide password" : "Show password"}
+                                        >
+                                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                        </Button>
+                                    </div>
+                                    {passwordError ? (
+                                        <p className="text-xs text-destructive">{passwordError}</p>
+                                    ) : null}
+                                </div>
+                            </div>
+
+                            <AlertDialogFooter className="border-t border-border/60 px-6 py-4 sm:justify-between">
                                 <AlertDialogCancel asChild>
-                                    <Button variant="outline" disabled={isPending}>
+                                    <Button variant="outline" disabled={isSubmitting} className="shadow-none hover:shadow-none">
                                         Cancel
                                     </Button>
                                 </AlertDialogCancel>
 
                                 <AlertDialogAction
-                                    onClick={handleSuspend}
-                                    disabled={isPending}
-                                    className="bg-destructive hover:bg-destructive/90 flex items-center gap-2"
+                                    onClick={handleDeleteAccount}
+                                    disabled={isSubmitting || !confirmPassword.trim()}
+                                    className="bg-[#E31B23] shadow-none hover:bg-[#CF171E] hover:shadow-none"
                                 >
-                                    {isPending && (
-                                        <Spinner className="h-4 w-4 animate-spin" />
-                                    )}
-                                    Suspend Account
+                                    {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                                    Delete User Account
                                 </AlertDialogAction>
                             </AlertDialogFooter>
                         </AlertDialogContent>
                     </AlertDialog>
-                </CardContent>
-            </Card>
+
+                    <p className="text-xs text-muted-foreground">
+                        You will be signed out immediately after successful deletion.
+                    </p>
+                </motion.div>
+            </div>
         </motion.div>
     )
 }

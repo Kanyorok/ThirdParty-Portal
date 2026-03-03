@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { AlertCircle, CheckCircle2, ShieldCheck, X } from "lucide-react"
+import { AlertCircle, CheckCircle2, Eye, EyeOff, ShieldCheck, X } from "lucide-react"
 import { toast } from "sonner"
 
 import { Alert, AlertDescription } from "@/components/common/alert"
@@ -33,7 +33,6 @@ type LocalErrors = {
   confirmNewPassword?: string
 }
 
-const inputClassName = "h-11 rounded-xl bg-background px-4 shadow-none focus-visible:ring-2 focus-visible:ring-ring/40"
 const PASSWORD_MESSAGE_MAP: Record<string, string> = {
   "auth.password_changed_ok": "Password changed successfully.",
 }
@@ -65,6 +64,9 @@ export default function ChangePasswordCard() {
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmNewPassword, setConfirmNewPassword] = useState("")
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [localErrors, setLocalErrors] = useState<LocalErrors>({})
   const [successMessage, setSuccessMessage] = useState("")
 
@@ -73,6 +75,9 @@ export default function ChangePasswordCard() {
       setCurrentPassword("")
       setNewPassword("")
       setConfirmNewPassword("")
+      setShowCurrentPassword(false)
+      setShowNewPassword(false)
+      setShowConfirmPassword(false)
       setLocalErrors({})
       setIsSubmitting(false)
     }
@@ -176,12 +181,12 @@ export default function ChangePasswordCard() {
 
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
           <DialogTrigger asChild>
-            <Button variant="outline" className="h-11 rounded-xl text-xs font-medium shadow-none">
+            <Button variant="outline" size="sm" className="text-xs font-medium">
               Change password
             </Button>
           </DialogTrigger>
 
-          <DialogContent className="sm:max-w-[440px] max-h-[85vh] overflow-y-auto bg-popover border-border/60 shadow-none">
+          <DialogContent className="sm:max-w-[440px] max-h-[85vh] overflow-y-auto bg-popover border-border/60">
             <DialogHeader>
               <DialogTitle>Change Password</DialogTitle>
               <DialogDescription>
@@ -199,37 +204,67 @@ export default function ChangePasswordCard() {
             <div className="grid gap-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="currentPassword">Current password</Label>
-                <Input
-                  id="currentPassword"
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className={inputClassName}
-                />
+                <div className="relative">
+                  <Input
+                    id="currentPassword"
+                    type={showCurrentPassword ? "text" : "password"}
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label={showCurrentPassword ? "Hide current password" : "Show current password"}
+                  >
+                    {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
                 {localErrors.currentPassword ? <p className="text-xs text-destructive">{localErrors.currentPassword}</p> : null}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="newPassword">New password</Label>
-                <Input
-                  id="newPassword"
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className={inputClassName}
-                />
+                <div className="relative">
+                  <Input
+                    id="newPassword"
+                    type={showNewPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label={showNewPassword ? "Hide new password" : "Show new password"}
+                  >
+                    {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
                 {localErrors.newPassword ? <p className="text-xs text-destructive">{localErrors.newPassword}</p> : null}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="confirmNewPassword">Confirm new password</Label>
-                <Input
-                  id="confirmNewPassword"
-                  type="password"
-                  value={confirmNewPassword}
-                  onChange={(e) => setConfirmNewPassword(e.target.value)}
-                  className={inputClassName}
-                />
+                <div className="relative">
+                  <Input
+                    id="confirmNewPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
                 {localErrors.confirmNewPassword ? (
                   <p className="text-xs text-destructive">{localErrors.confirmNewPassword}</p>
                 ) : null}
@@ -238,7 +273,7 @@ export default function ChangePasswordCard() {
 
             <DialogFooter>
               <DialogClose asChild>
-                <Button type="button" variant="outline" disabled={isSubmitting} className="h-11 rounded-xl text-xs font-medium shadow-none">
+                <Button type="button" variant="outline" size="sm" disabled={isSubmitting} className="text-xs font-medium">
                   <X className="mr-2 h-4 w-4" /> Cancel
                 </Button>
               </DialogClose>
@@ -246,7 +281,8 @@ export default function ChangePasswordCard() {
               <Button
                 onClick={onSubmit}
                 disabled={isSubmitting}
-                className="h-11 rounded-xl text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+                size="sm"
+                className="text-xs font-medium"
               >
                 {isSubmitting ? <Spinner className="mr-2 h-4 w-4" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
                 Save

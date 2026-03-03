@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth-options"
 import { getApiUrl } from "@/lib/config"
+import { resolveSessionAccessToken } from "@/lib/auth/resolve-session-access-token"
+
+function extractProfiles(payload: any): unknown[] {
+  if (Array.isArray(payload?.profiles)) return payload.profiles
+  if (Array.isArray(payload?.data?.profiles)) return payload.data.profiles
+  if (Array.isArray(payload?.data)) return payload.data
+  if (Array.isArray(payload)) return payload
+  return []
+}
 
 export async function GET(_request: NextRequest) {
   try {
@@ -15,7 +24,7 @@ export async function GET(_request: NextRequest) {
       }, { status: 401 })
     }
 
-    const accessToken = (session as any).accessToken as string | undefined
+    const accessToken = resolveSessionAccessToken(session as any)
 
     if (!accessToken) {
       return NextResponse.json({
@@ -56,8 +65,9 @@ export async function GET(_request: NextRequest) {
     const data = await response.json()
 
     return NextResponse.json({
-      success: true,
-      profiles: data.profiles || [],
+      success: data?.success ?? true,
+      profiles: extractProfiles(data),
+      data,
     })
   } catch (error) {
     const isConfigError = error instanceof Error && error.message.includes("API URL is not configured")

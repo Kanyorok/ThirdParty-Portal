@@ -14,11 +14,11 @@ export const HeaderActions = ({
     className?: string
 }) => {
     return (
-        <div className={cn("flex items-center gap-2", className)}>
-            <div className="flex items-center gap-1 rounded-xl border border-border/50 bg-background/50 p-1">
+        <div className={cn("flex items-center gap-2.5", className)}>
+            <div className="flex items-center gap-1 rounded-full border border-border/70 bg-card/90 px-1.5 py-1">
                 {layoutControls}
                 <NotificationsPopover />
-                <ThemeToggle />
+                <ThemeToggle className="rounded-full text-muted-foreground hover:bg-accent/70 hover:text-foreground" />
             </div>
             <UserNav />
         </div>

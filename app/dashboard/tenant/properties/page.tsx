@@ -9,15 +9,21 @@ import { SharedPagination } from "@/components/common/shared-pagination"
 import { Skeleton } from "@/components/common/skeleton"
 import { AlertCircle, RefreshCw, Building2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useSession } from "next-auth/react"
+import { resolveSessionAccessToken } from "@/lib/auth/resolve-session-access-token"
 
 export default function PropertyRegistry() {
     const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : "")
     const page = Number(searchParams.get("page")) || 1
     const [searchQuery, setSearchQuery] = useState("")
+    const { data: session, status } = useSession()
+    const accessToken = resolveSessionAccessToken(session as any)
+    const isSessionLoading = status === "loading"
 
     const { data, isLoading, isError, refetch, isFetching } = useQuery({
-        queryKey: ['rentable-properties', page],
-        queryFn: () => getRentableProperties(page),
+        queryKey: ['rentable-properties', page, accessToken],
+        queryFn: () => getRentableProperties(page, accessToken),
+        enabled: Boolean(accessToken),
         placeholderData: (previousData) => previousData,
     })
 
@@ -46,7 +52,7 @@ export default function PropertyRegistry() {
 
     return (
         <div className="w-full relative min-h-screen">
-            {isLoading && !data ? (
+            {(isLoading || isSessionLoading) && !data ? (
                 <div className="space-y-12 max-w-[1600px] mx-auto px-4 md:px-8">
                     <div className="flex justify-between items-end border-b border-border/40 pb-10">
                         <div className="space-y-4">

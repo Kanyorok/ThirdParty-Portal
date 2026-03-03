@@ -4,46 +4,46 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --color-background: #F8FAFC;
-  --color-foreground: #0F172A;
+  --color-background: #F4F7FB;
+  --color-foreground: #0B1528;
 
   --color-card: #FFFFFF;
-  --color-card-foreground: #0F172A;
+  --color-card-foreground: #0B1528;
 
   --color-popover: #FFFFFF;
-  --color-popover-foreground: #0F172A;
+  --color-popover-foreground: #0B1528;
 
   --color-primary: var(--primary);
   --color-primary-foreground: #FFFFFF;
 
-  --color-secondary: #F1F5F9;
-  --color-secondary-foreground: #0F172A;
+  --color-secondary: #EEF3FA;
+  --color-secondary-foreground: #0B1528;
 
-  --color-muted: #F1F5F9;
-  --color-muted-foreground: #64748B;
+  --color-muted: #EDF2F9;
+  --color-muted-foreground: #5B6B84;
 
-  --color-accent: #10B981;
+  --color-accent: #0F9F78;
   --color-accent-foreground: #FFFFFF;
 
   --color-destructive: #dc2626;
   --color-destructive-foreground: #FFFFFF;
 
-  --color-border: #E2E8F0;
-  --color-input: #E2E8F0;
+  --color-border: #D7E1EE;
+  --color-input: #CFD9E8;
   --color-ring: var(--primary);
 
-  --color-sidebar: #F1F5F9;
-  --color-sidebar-foreground: #0F172A;
+  --color-sidebar: #EDF4FF;
+  --color-sidebar-foreground: #0E1F3D;
   --color-sidebar-primary: var(--primary);
   --color-sidebar-primary-foreground: #FFFFFF;
-  --color-sidebar-accent: #E2E8F0;
-  --color-sidebar-accent-foreground: #0F172A;
-  --color-sidebar-border: #CBD5E1;
+  --color-sidebar-accent: #DCE8FF;
+  --color-sidebar-accent-foreground: #0E2A63;
+  --color-sidebar-border: #BED2F4;
   --color-sidebar-ring: var(--primary);
 
-  --radius-sm: 0.45rem;
-  --radius-md: 0.65rem;
-  --radius-lg: 0.85rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
   --radius-xl: 1.25rem;
 
   --spacing-sidebar-width: 17rem;
@@ -51,7 +51,12 @@
 }
 
 :root {
-  --primary: #1D4ED8;
+  --primary: #0E63F4;
+  --primary-hover: #0A54D1;
+  --primary-soft: #EAF1FF;
+  --success: #059669;
+  --warning: #D97706;
+  --danger: #DC2626;
   --sidebar-width: var(--spacing-sidebar-width);
   --sidebar-width-icon: var(--spacing-sidebar-width-icon);
 }
@@ -61,33 +66,33 @@
 }
 
 .theme-tenant {
-  --primary: #1D4ED8;
+  --primary: #0E63F4;
 }
 
 .theme-customer {
-  --primary: #0EA5E9;
+  --primary: #0284C7;
 }
 
 .dark {
-  --color-background: #0B1220;
-  --color-foreground: #E2E8F0;
-  --color-card: #0F172A;
-  --color-card-foreground: #E2E8F0;
-  --color-popover: #0F172A;
-  --color-popover-foreground: #E2E8F0;
-  --color-secondary: #111C30;
-  --color-secondary-foreground: #E2E8F0;
-  --color-muted: #111C30;
-  --color-muted-foreground: #94A3B8;
-  --color-accent: #059669;
-  --color-accent-foreground: #E2E8F0;
-  --color-border: #1E293B;
-  --color-input: #1E293B;
-  --color-sidebar: #0B1220;
-  --color-sidebar-foreground: #E2E8F0;
-  --color-sidebar-accent: #111C30;
-  --color-sidebar-accent-foreground: #E2E8F0;
-  --color-sidebar-border: #1E293B;
+  --color-background: #0A1325;
+  --color-foreground: #E5EDF8;
+  --color-card: #0F1A2F;
+  --color-card-foreground: #E5EDF8;
+  --color-popover: #0F1A2F;
+  --color-popover-foreground: #E5EDF8;
+  --color-secondary: #13203A;
+  --color-secondary-foreground: #E5EDF8;
+  --color-muted: #14233F;
+  --color-muted-foreground: #8EA2C0;
+  --color-accent: #0D9F76;
+  --color-accent-foreground: #E5EDF8;
+  --color-border: #22314D;
+  --color-input: #253652;
+  --color-sidebar: #0B1830;
+  --color-sidebar-foreground: #E8F0FF;
+  --color-sidebar-accent: #172A49;
+  --color-sidebar-accent-foreground: #E8F0FF;
+  --color-sidebar-border: #2A4570;
 
   --supplier-color: #60A5FA;
   --tenant-color: #93C5FD;
@@ -96,10 +101,36 @@
 
 @layer base {
   * {
-    @apply border-border transition-colors duration-300 ease-in-out;
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
   }
 
   body {
     @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary;
+    background-image:
+      radial-gradient(circle at 15% -10%, rgba(14, 99, 244, 0.08), transparent 34%),
+      radial-gradient(circle at 90% 0%, rgba(15, 159, 120, 0.05), transparent 30%);
+    background-attachment: fixed;
+  }
+
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  [role='button'] {
+    @apply transition-colors duration-200 ease-out;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
   }
 }

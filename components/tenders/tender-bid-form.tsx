@@ -701,7 +701,7 @@ export default function TenderBidForm({
                 size="sm"
                 variant="outline"
                 onClick={onResolveSubmissionBlock}
-                className="h-7 border-amber-300 bg-white px-2 text-[11px] font-semibold text-amber-800 hover:bg-amber-100"
+                className="h-7 border-amber-300 bg-white px-2 text-[11px] font-semibold text-amber-800 hover:bg-amber-100"                                                                                                                                                                  
               >
                 Go to response
               </Button>

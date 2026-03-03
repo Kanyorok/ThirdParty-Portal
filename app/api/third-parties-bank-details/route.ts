@@ -1,113 +1,136 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
+import { NextRequest, NextResponse } from "next/server"
+import { getServerSession } from "next-auth"
 
-interface FrontendBankDetailPayload {
-    thirdPartyId: number;
-    bankName: string;
-    branch: string;
-    accountNumber: string;
-    currencyId: number;
-    swiftCode?: string | null;
+import { authOptions } from "@/lib/auth-options"
+import { getApiUrl } from "@/lib/config"
+
+const BANK_DETAILS_ENDPOINT = "/api/third-parties-bank-details"
+
+type BankDetailsWritePayload = {
+  ThirdPartyId: number
+  BranchID?: number
+  BranchId?: number
+  AccountNumber?: string
+  CurrencyId?: number
 }
 
-interface BackendBankDetailPayload {
-    ThirdPartyId: number;
-    BankName: string;
-    Branch: string;
-    AccountNumber: string;
-    CurrencyId: number;
-    SwiftCode?: string | null;
+function getBaseApiUrl() {
+  return process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_EXTERNAL_API_URL || getApiUrl()
 }
 
-interface BankDetailResponse {
-    message?: string;
-    errors?: Record<string, string[]>;
-    bankDetails?: any[];
-    bankDetail?: any;
-    data?: any;
+async function parseBody(res: Response) {
+  const text = await res.text().catch(() => "")
+  if (!text) return null
+
+  try {
+    return JSON.parse(text)
+  } catch {
+    return { message: text }
+  }
 }
 
-function transformToPascalCase(payload: FrontendBankDetailPayload): BackendBankDetailPayload {
-    return {
-        ThirdPartyId: payload.thirdPartyId,
-        BankName: payload.bankName,
-        Branch: payload.branch,
-        AccountNumber: payload.accountNumber,
-        CurrencyId: payload.currencyId,
-        SwiftCode: payload.swiftCode,
-    };
+function normalizeText(value: unknown) {
+  if (typeof value !== "string") return undefined
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : undefined
 }
 
-export async function GET(_req: NextRequest) {
-    const session = await getServerSession(authOptions);
-    const accessToken = (session as any)?.accessToken as string | undefined
-    const thirdPartyId =
-        Number((session?.user as any)?.thirdPartyId ?? (session?.user as any)?.third_party_id ?? 0) || undefined
-
-    if (!session || !accessToken || !thirdPartyId) {
-        return NextResponse.json({ message: "Unauthorized or Missing ThirdPartyId in session" }, { status: 401 });
-    }
-
-    try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/third-parties-bank-details?ThirdPartyId=${thirdPartyId}`, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${accessToken}`,
-            },
-        });
-
-        const data: BankDetailResponse = await res.json();
-
-        if (!res.ok) {
-            console.error("Laravel API Error (GET bank details):", data);
-            return NextResponse.json(data, { status: res.status });
-        }
-
-        return NextResponse.json(data);
-    } catch (error) {
-        console.error("API Route Error (GET bank details):", error);
-        return NextResponse.json({ message: "Internal server error" }, { status: 500 });
-    }
+function normalizeNumber(value: unknown) {
+  const next = Number(value)
+  return Number.isFinite(next) && next > 0 ? next : undefined
 }
 
-export async function POST(req: NextRequest) {
-    const session = await getServerSession(authOptions);
-    const accessToken = (session as any)?.accessToken as string | undefined
-    const thirdPartyId =
-        Number((session?.user as any)?.thirdPartyId ?? (session?.user as any)?.third_party_id ?? 0) || undefined
+function resolveThirdPartyId(session: unknown) {
+  const user = (session as any)?.user as Record<string, unknown> | undefined
+  const fromCamel = Number(user?.thirdPartyId ?? 0)
+  if (Number.isFinite(fromCamel) && fromCamel > 0) return fromCamel
 
-    if (!session || !accessToken || !thirdPartyId) {
-        return NextResponse.json({ message: "Unauthorized or Missing ThirdPartyId in session" }, { status: 401 });
-    }
+  const fromSnake = Number(user?.third_party_id ?? 0)
+  if (Number.isFinite(fromSnake) && fromSnake > 0) return fromSnake
 
-    try {
-        const frontendBody: FrontendBankDetailPayload = await req.json();
-        frontendBody.thirdPartyId = thirdPartyId;
+  return null
+}
 
-        const backendBody = transformToPascalCase(frontendBody);
+async function getSessionContext() {
+  const session = await getServerSession(authOptions)
+  const accessToken = (session as any)?.accessToken as string | undefined
+  const thirdPartyId = resolveThirdPartyId(session)
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/third-parties-bank-details`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${accessToken}`,
-            },
-            body: JSON.stringify(backendBody),
-        });
+  if (!session || !accessToken || !thirdPartyId) return null
+  return { accessToken, thirdPartyId }
+}
 
-        const data: BankDetailResponse = await res.json();
+function buildWritePayload(input: unknown, thirdPartyId: number): BankDetailsWritePayload {
+  const payload = (input && typeof input === "object" ? input : {}) as Record<string, unknown>
+  const branchId = normalizeNumber(
+    payload.BranchID ??
+      payload.BranchId ??
+      payload.branchId ??
+      payload.branchID ??
+      payload.branch_id,
+  )
 
-        if (!res.ok) {
-            console.error("Laravel API Error (POST bank details):", data);
-            return NextResponse.json(data, { status: res.status });
-        }
+  return {
+    ThirdPartyId: thirdPartyId,
+    BranchID: branchId,
+    BranchId: branchId,
+    AccountNumber: normalizeText(payload.accountNumber ?? payload.AccountNumber),
+    CurrencyId: normalizeNumber(payload.currencyId ?? payload.CurrencyId),
+  }
+}
 
-        return NextResponse.json(data, { status: 201 });
-    } catch (error) {
-        console.error("API Route Error (POST bank details):", error);
-        return NextResponse.json({ message: "Internal server error" }, { status: 500 });
-    }
+export async function GET(_request: NextRequest) {
+  const context = await getSessionContext()
+  if (!context) {
+    return NextResponse.json({ message: "Unauthorized or missing third-party context." }, { status: 401 })
+  }
+
+  try {
+    const requestUrl = new URL(`${getBaseApiUrl()}${BANK_DETAILS_ENDPOINT}`)
+    requestUrl.searchParams.set("ThirdPartyId", String(context.thirdPartyId))
+
+    const res = await fetch(requestUrl.toString(), {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${context.accessToken}`,
+      },
+      cache: "no-store",
+    })
+
+    const body = await parseBody(res)
+    return NextResponse.json(body ?? { message: "Failed to fetch bank details." }, { status: res.status })
+  } catch (error) {
+    console.error("[Third Party Bank Details API] GET error:", error)
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 })
+  }
+}
+
+export async function POST(request: NextRequest) {
+  const context = await getSessionContext()
+  if (!context) {
+    return NextResponse.json({ message: "Unauthorized or missing third-party context." }, { status: 401 })
+  }
+
+  try {
+    const requestBody = await request.json().catch(() => ({}))
+    const payload = buildWritePayload(requestBody, context.thirdPartyId)
+
+    const res = await fetch(`${getBaseApiUrl()}${BANK_DETAILS_ENDPOINT}`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${context.accessToken}`,
+      },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    })
+
+    const body = await parseBody(res)
+    return NextResponse.json(body ?? { message: "Failed to create bank detail." }, { status: res.status })
+  } catch (error) {
+    console.error("[Third Party Bank Details API] POST error:", error)
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 })
+  }
 }

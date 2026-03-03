@@ -1,196 +1,270 @@
 "use client"
 
 import { useState } from "react"
+import { motion } from "framer-motion"
+import { Badge } from "@/components/common/badge"
+import { Button } from "@/components/common/button"
 import { PaginatedResponse } from "@/types/property"
 import { usePagination } from "@/components/providers/pagination-provider"
 import { InvoiceDetailSheet } from "@/components/dashboard/property/invoice-detail-sheet"
 import { cn } from "@/lib/utils"
+import { downloadInvoicePdf, type Invoice } from "@/lib/api/invoices"
 import {
-    FileText,
-    Calendar,
-    Wallet,
-    Download,
-    Clock,
-    CheckCircle2,
-    AlertCircle,
-    Hash,
-    Coins,
-    Eye
+  AlertCircle,
+  Calendar,
+  CheckCircle2,
+  ChevronRight,
+  Clock3,
+  Download,
+  FileText,
+  Receipt,
 } from "lucide-react"
+import { toast } from "sonner"
 
 interface InvoicesListProps {
-    initialData: PaginatedResponse<any>
-    tenantId?: number
+  initialData: PaginatedResponse<Invoice>
+  tenantId?: number | null
+  accessToken?: string
 }
 
-export function InvoicesList({ initialData, tenantId }: InvoicesListProps) {
-    const { isPending } = usePagination()
-    const [selectedInvoiceId, setSelectedInvoiceId] = useState<number | null>(null)
-    const invoices = initialData?.data || []
-    const currentTenantId = tenantId ?? 9
+function displayText(value: unknown, fallback = "-") {
+  if (value === null || value === undefined) return fallback
+  const text = String(value).trim()
+  return text.length > 0 ? text : fallback
+}
 
-    const getStatusDetails = (status: string) => {
-        switch (status) {
-            case 'P': return {
-                label: 'Pending',
-                class: 'bg-amber-50 text-amber-700 border-amber-200',
-                icon: Clock
-            };
-            case 'Paid': return {
-                label: 'Paid',
-                class: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                icon: CheckCircle2
-            };
-            case 'O': return {
-                label: 'Overdue',
-                class: 'bg-rose-50 text-rose-700 border-rose-200',
-                icon: AlertCircle
-            };
-            default: return {
-                label: status,
-                class: 'bg-slate-50 text-slate-700 border-slate-200',
-                icon: FileText
-            };
-        }
+function toNumber(value: unknown, fallback = 0) {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
+function formatDate(value: string | null | undefined) {
+  if (!value) return "-"
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return String(value)
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(parsed)
+}
+
+function resolveCurrencyCode(currency: Invoice["currency"]) {
+  if (typeof currency === "object" && currency) {
+    const code = String(currency.code ?? "").trim()
+    return code ? code.toUpperCase() : "KES"
+  }
+
+  const raw = String(currency ?? "").trim()
+  if (!raw) return "KES"
+  return raw.length === 3 ? raw.toUpperCase() : raw
+}
+
+function calculateInvoiceTotals(invoice: Invoice) {
+  const entries = Object.values(invoice.amounts ?? {})
+  const subtotal = entries.reduce((sum, amount) => sum + toNumber(amount), 0)
+  const taxRate = toNumber(invoice.tax?.rate)
+  const taxAmount = taxRate > 0 ? (subtotal * taxRate) / 100 : 0
+  const total = subtotal + taxAmount
+
+  return { subtotal, taxRate, taxAmount, total }
+}
+
+function formatMoney(amount: number, currencyCode: string) {
+  return `${currencyCode} ${amount.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`
+}
+
+function resolveStatusMeta(status: unknown) {
+  const raw = String(status ?? "").trim()
+  const normalized = raw.toLowerCase()
+
+  if (raw === "Paid" || normalized.includes("paid") || normalized.includes("settled")) {
+    return {
+      label: "Paid",
+      badgeClass: "border-emerald-200 text-emerald-700 bg-emerald-50",
+      rowAccent: "border-l-emerald-400",
+      Icon: CheckCircle2,
     }
+  }
 
-    const handleDownload = (id: number) => {
-        window.open(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/property/invoices/download/${id}`, '_blank');
-    };
+  if (raw === "P" || normalized.includes("pending")) {
+    return {
+      label: "Pending",
+      badgeClass: "border-amber-200 text-amber-700 bg-amber-50",
+      rowAccent: "border-l-amber-400",
+      Icon: Clock3,
+    }
+  }
 
+  if (raw === "O" || normalized.includes("overdue")) {
+    return {
+      label: "Overdue",
+      badgeClass: "border-rose-200 text-rose-700 bg-rose-50",
+      rowAccent: "border-l-rose-400",
+      Icon: AlertCircle,
+    }
+  }
+
+  return {
+    label: raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : "Unknown",
+    badgeClass: "border-slate-200 text-slate-700 bg-slate-50",
+    rowAccent: "border-l-slate-300",
+    Icon: Receipt,
+  }
+}
+
+function resolveLeaseNumber(invoice: Invoice) {
+  return displayText(invoice.lease?.leaseNumber ?? invoice.leaseNumber, "-")
+}
+
+export function InvoicesList({ initialData, tenantId, accessToken }: InvoicesListProps) {
+  const { isPending } = usePagination()
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<number | null>(null)
+  const invoices = Array.isArray(initialData?.data) ? initialData.data : []
+
+  const handleDownload = async (id: number) => {
+    try {
+      await downloadInvoicePdf(id, accessToken)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Invoice download failed")
+    }
+  }
+
+  if (invoices.length === 0) {
     return (
-        <>
-            <div className={cn(
-                "rounded-2xl border border-slate-200 bg-white overflow-hidden transition-all duration-300",
-                isPending && "opacity-50 pointer-events-none"
-            )}>
-                <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                        <thead>
-                            <tr className="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white">
-                                <th className="px-6 py-4 text-left text-xs font-semibold tracking-wide text-slate-700">
-                                    <div className="flex items-center gap-2">
-                                        <Hash className="h-3.5 w-3.5" strokeWidth={2} />
-                                        Invoice
-                                    </div>
-                                </th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold tracking-wide text-slate-700">
-                                    <div className="flex items-center gap-2">
-                                        <Wallet className="h-3.5 w-3.5" strokeWidth={2} />
-                                        Lease
-                                    </div>
-                                </th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold tracking-wide text-slate-700">
-                                    Status
-                                </th>
-                                <th className="px-6 py-4 text-right text-xs font-semibold tracking-wide text-slate-700">
-                                    <div className="flex items-center justify-end gap-2">
-                                        <Coins className="h-3.5 w-3.5" strokeWidth={2} />
-                                        Amount
-                                    </div>
-                                </th>
-                                <th className="px-6 py-4 text-right text-xs font-semibold tracking-wide text-slate-700">
-                                    Actions
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {invoices.map((invoice) => {
-                                const subtotal = Object.values(invoice.amounts || {}).reduce(
-                                    (acc: number, curr: any) => acc + (Number(curr) || 0),
-                                    0
-                                );
-                                const taxAmount = invoice.tax ? (subtotal * invoice.tax.rate) / 100 : 0;
-                                const totalAmount = subtotal + taxAmount;
-
-                                const status = getStatusDetails(invoice.status);
-                                const StatusIcon = status.icon;
-                                const currencyCode = typeof invoice.currency === 'object' ? invoice.currency.code : (invoice.currency || 'KES');
-
-                                return (
-                                    <tr key={invoice.id} className="group hover:bg-blue-50/30 transition-all duration-200">
-                                        <td className="px-6 py-5">
-                                            <div className="flex items-center gap-3.5">
-                                                <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100/50 border border-blue-200/60 flex items-center justify-center group-hover:border-blue-300 transition-all">
-                                                    <FileText className="h-5 w-5 text-blue-600" strokeWidth={2} />
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <div className="font-mono text-sm font-semibold tracking-tight text-slate-900">
-                                                        {invoice.invoiceNumber}
-                                                    </div>
-                                                    <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-                                                        <Calendar className="h-3 w-3" strokeWidth={2} />
-                                                        {invoice.billingMonth}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-5">
-                                            <div className="space-y-1">
-                                                <div className="text-sm font-semibold text-slate-900">
-                                                    {invoice.lease?.leaseNumber || invoice.leaseNumber}
-                                                </div>
-                                                <div className="text-xs text-slate-500 font-medium">
-                                                    ID: {invoice.id}
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-5">
-                                            <div className={cn(
-                                                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-medium transition-all",
-                                                status.class
-                                            )}>
-                                                <StatusIcon className="h-3 w-3" strokeWidth={2} />
-                                                {status.label}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-5 text-right">
-                                            <div className="space-y-1">
-                                                <div className="text-base font-semibold text-slate-900 tabular-nums">
-                                                    {currencyCode} {totalAmount.toLocaleString(undefined, {
-                                                        minimumFractionDigits: 2,
-                                                        maximumFractionDigits: 2
-                                                    })}
-                                                </div>
-                                                <div className="text-xs text-slate-500 font-medium">
-                                                    {new Date(invoice.invoiceDate).toLocaleDateString('en-US', {
-                                                        month: 'short',
-                                                        day: 'numeric',
-                                                        year: 'numeric'
-                                                    })}
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-5">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <button
-                                                    onClick={() => setSelectedInvoiceId(invoice.id)}
-                                                    className="inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all"
-                                                >
-                                                    <Eye className="h-4 w-4" strokeWidth={2} />
-                                                    <span className="text-xs font-medium">View</span>
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDownload(invoice.id)}
-                                                    className="inline-flex items-center justify-center h-9 w-9 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all group/btn"
-                                                >
-                                                    <Download className="h-4 w-4 transition-transform group-hover/btn:-translate-y-0.5" strokeWidth={2} />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                )
-                            })}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <InvoiceDetailSheet
-                id={selectedInvoiceId}
-                onClose={() => setSelectedInvoiceId(null)}
-                tenantId={currentTenantId}
-            />
-        </>
+      <div className="flex flex-col items-center justify-center py-24 px-6 rounded-2xl border border-dashed border-border/60">
+        <div className="h-16 w-16 rounded-2xl border border-border/70 flex items-center justify-center mb-5">
+          <FileText className="h-8 w-8 text-muted-foreground/40" strokeWidth={1.5} />
+        </div>
+        <h3 className="text-lg font-semibold text-foreground mb-1">No invoices found</h3>
+        <p className="text-sm text-muted-foreground text-center max-w-sm">
+          Billing records will appear here once invoices are issued.
+        </p>
+      </div>
     )
+  }
+
+  return (
+    <>
+      <div className={cn("w-full space-y-3 transition-all", isPending && "opacity-50 pointer-events-none")}>
+        <div className="hidden lg:grid grid-cols-[minmax(0,2fr)_minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,1fr)_auto] items-center gap-4 px-4 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          <span>Invoice</span>
+          <span>Lease</span>
+          <span>Invoice Date</span>
+          <span>Status</span>
+          <span>Total</span>
+          <span className="justify-self-end">Action</span>
+        </div>
+
+        {invoices.map((invoice, index) => {
+          const invoiceNumber = displayText(invoice.invoiceNumber, `Invoice #${invoice.id}`)
+          const billingMonth = displayText(invoice.billingMonth, "-")
+          const leaseNumber = resolveLeaseNumber(invoice)
+          const invoiceDate = formatDate(invoice.invoiceDate)
+          const statusMeta = resolveStatusMeta(invoice.status)
+          const StatusIcon = statusMeta.Icon
+          const currencyCode = resolveCurrencyCode(invoice.currency)
+          const totals = calculateInvoiceTotals(invoice)
+
+          return (
+            <motion.div
+              key={`${invoice.id}-${index}`}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className={cn(
+                "grid gap-3 rounded-2xl border border-slate-200 border-l-4 px-4 py-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,1fr)_auto] lg:items-center",
+                statusMeta.rowAccent
+              )}
+            >
+              <button type="button" onClick={() => setSelectedInvoiceId(invoice.id)} className="min-w-0 text-left">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="truncate text-[15px] font-semibold text-slate-900">{invoiceNumber}</p>
+                  <Badge
+                    className={cn(
+                      "h-6 rounded-full border px-2.5 text-[11px] font-semibold lg:hidden",
+                      statusMeta.badgeClass
+                    )}
+                  >
+                    <StatusIcon className="mr-1 h-3.5 w-3.5" />
+                    {statusMeta.label}
+                  </Badge>
+                </div>
+
+                <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-600">
+                  <Calendar className="h-3.5 w-3.5" />
+                  <span className="font-medium text-slate-800">{billingMonth}</span>
+                </div>
+
+                <p className="mt-1 text-xs text-slate-500">Invoice ID {displayText(invoice.id)}</p>
+              </button>
+
+              <div className="text-sm">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 lg:hidden">Lease</p>
+                <p className="mt-0.5 font-medium text-slate-900">{leaseNumber}</p>
+                <p className="mt-1 text-xs text-slate-500">Created {formatDate(invoice.createdOn)}</p>
+              </div>
+
+              <div className="text-sm">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 lg:hidden">
+                  Invoice Date
+                </p>
+                <p className="mt-0.5 font-medium text-slate-900">{invoiceDate}</p>
+              </div>
+
+              <div className="text-sm">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 lg:hidden">Status</p>
+                <Badge className={cn("h-7 rounded-full border px-3 text-xs font-semibold", statusMeta.badgeClass)}>
+                  <StatusIcon className="mr-1 h-3.5 w-3.5" />
+                  {statusMeta.label}
+                </Badge>
+              </div>
+
+              <div className="text-sm">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 lg:hidden">Total</p>
+                <p className="mt-0.5 text-base font-semibold text-slate-900">{formatMoney(totals.total, currencyCode)}</p>
+                <p className="mt-1 text-xs text-slate-500">Tax {totals.taxRate.toFixed(2)}%</p>
+              </div>
+
+              <div className="flex items-center gap-2 lg:justify-self-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedInvoiceId(invoice.id)}
+                  className="h-9 rounded-full border-slate-300 bg-transparent px-4 text-xs font-semibold hover:bg-slate-50"
+                >
+                  View details
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    handleDownload(invoice.id).catch(() => {
+                      // handled in helper
+                    })
+                  }}
+                  className="h-9 w-9 rounded-full border-slate-300 bg-transparent text-slate-700 hover:bg-slate-50"
+                  aria-label={`Download ${invoiceNumber}`}
+                >
+                  <Download className="h-4 w-4" />
+                </Button>
+              </div>
+            </motion.div>
+          )
+        })}
+      </div>
+
+      <InvoiceDetailSheet
+        id={selectedInvoiceId}
+        onClose={() => setSelectedInvoiceId(null)}
+        tenantId={tenantId}
+        accessToken={accessToken}
+      />
+    </>
+  )
 }

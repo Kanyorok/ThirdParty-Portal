@@ -12,8 +12,8 @@ export default async function DashboardStats() {
                 <p className="text-2xl font-bold">{data.summary.activePreq}</p>
             </div>
             <div className="p-4 border rounded shadow">
-                <h3>Tenders Available</h3>
-                <p className="text-2xl font-bold">{data.summary.tendersAvailable}</p>
+                <h3>Open Tenders</h3>
+                <p className="text-2xl font-bold">{data.summary.openTenders ?? data.summary.tendersAvailable}</p>
             </div>
         </div>
     )

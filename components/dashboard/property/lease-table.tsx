@@ -10,6 +10,8 @@ import { ChevronLeft, ChevronRight, Loader2, Building2, MapPin } from "lucide-re
 import { PaginationProvider, usePagination } from "@/components/providers/pagination-provider"
 import { useLeaseStore } from "@/store/use-lease-store"
 import { cn } from "@/lib/utils"
+import { useSession } from "next-auth/react"
+import { resolveSessionAccessToken } from "@/lib/auth/resolve-session-access-token"
 
 export default function LeaseTable({ tenantId }: { tenantId?: number }) {
     const router = useRouter()
@@ -18,12 +20,16 @@ export default function LeaseTable({ tenantId }: { tenantId?: number }) {
 
     const page = Number(searchParams.get("page")) || 1
     const currentStatus = searchParams.get("status") || "all"
+    const { data: session } = useSession()
+    const accessToken = resolveSessionAccessToken(session as any)
 
     const { leases, meta, isLoading, fetchLeases } = useLeaseStore()
 
     useEffect(() => {
-        fetchLeases(page, tenantId)
-    }, [page, tenantId, currentStatus, fetchLeases])
+        if (!accessToken) return
+        if (typeof tenantId !== "number" || !Number.isFinite(tenantId)) return
+        fetchLeases(page, tenantId, accessToken)
+    }, [page, tenantId, currentStatus, accessToken, fetchLeases])
 
     const handleStatusChange = (value: string) => {
         const params = new URLSearchParams(searchParams.toString())

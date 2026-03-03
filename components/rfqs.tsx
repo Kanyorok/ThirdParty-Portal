@@ -1,16 +1,26 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { type MouseEvent, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { format } from "date-fns"
-import { AlertCircle, ArrowUpRight, Loader2, Search, Timer, X } from "lucide-react"
+import { AlertCircle, ArrowUpRight, Loader2, Mail, Search, Timer, X } from "lucide-react"
+import { toast } from "sonner"
 
 import { cn } from "@/lib/utils"
 import { useDebounce } from "@/hooks/use-debounce"
 import { parseSubmissionDeadline } from "@/lib/deadline"
+import { isRfqAwardedStatus, isRfqClosedStatus } from "@/lib/rfq-status"
+import Loading from "@/components/common/custom-loader"
 import { Badge } from "@/components/common/badge"
 import { Button } from "@/components/common/button"
 import { Input } from "@/components/common/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/common/select"
 import {
   Sheet,
   SheetContent,
@@ -20,7 +30,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/common/sheet"
-import { Separator } from "@/components/common/separator"
 
 type AnyRecord = Record<string, any>
 
@@ -34,6 +43,8 @@ interface RfqInvitation {
 }
 
 type ApiResponse = { data: RfqInvitation[] }
+type RfqStatusFilter = "all" | "open" | "closed"
+type RfqResponseFilter = "all" | "submitted" | "pending"
 
 function normalizeStatus(status?: string) {
   if (!status) return "Unknown"
@@ -73,6 +84,21 @@ function deadlineMeta(deadline?: string | null) {
   const daysLeft = Math.ceil(diffMs / (24 * 60 * 60 * 1000))
   if (daysLeft <= 3) return { label: `${daysLeft} days left`, tone: "text-indigo-600" }
   return { label: `${daysLeft} days left`, tone: "text-emerald-600" }
+}
+
+function normalizeInvitationStatus(value?: string | null) {
+  return String(value ?? "").trim().toLowerCase()
+}
+
+function resolveRfqLifecycle(rfq: RfqInvitation): Exclude<RfqStatusFilter, "all"> {
+  const closedByStatus = [rfq.status, rfq.invitationStatus].some((value) => isRfqClosedStatus(value))
+  const closedByDeadline = deadlineMeta(rfq.submissionDeadline).label.toLowerCase() === "closed"
+  return closedByStatus || closedByDeadline ? "closed" : "open"
+}
+
+function resolveRfqResponseState(rfq: RfqInvitation): Exclude<RfqResponseFilter, "all"> {
+  const state = normalizeInvitationStatus(rfq.invitationStatus)
+  return state === "submitted" ? "submitted" : "pending"
 }
 
 function extractRfqDetails(raw: any) {
@@ -275,8 +301,8 @@ function RfqInvitationSheetRow({ rfq }: { rfq: RfqInvitation }) {
         if (!detailRes.value.ok) {
           throw new Error(
             detailJson?.message ??
-              detailJson?.error ??
-              `Failed to load RFQ (HTTP ${detailRes.value.status})`
+            detailJson?.error ??
+            `Failed to load RFQ (HTTP ${detailRes.value.status})`
           )
         }
 
@@ -326,27 +352,27 @@ function RfqInvitationSheetRow({ rfq }: { rfq: RfqInvitation }) {
   const status = normalizeStatus(String(detailRfq?.status ?? rfq.status ?? ""))
   const invitationStatus = String(
     detailRfq?.invitationStatus ??
-      detailRfq?.invitation_status ??
-      detailRfq?.InvitationStatus ??
-      rfq.invitationStatus ??
-      ""
+    detailRfq?.invitation_status ??
+    detailRfq?.InvitationStatus ??
+    rfq.invitationStatus ??
+    ""
   ).trim()
 
   const rfqNumber = String(
     detailRfq?.rfqNumber ??
-      detailRfq?.number ??
-      detailRfq?.ref ??
-      detailRfq?.rfqRef ??
-      rfq.rfqNumber ??
-      ""
+    detailRfq?.number ??
+    detailRfq?.ref ??
+    detailRfq?.rfqRef ??
+    rfq.rfqNumber ??
+    ""
   ).trim()
 
   const title = String(
     detailRfq?.title ??
-      detailRfq?.comments ??
-      detailRfq?.description ??
-      rfq.comments ??
-      "Request for Quotation"
+    detailRfq?.comments ??
+    detailRfq?.description ??
+    rfq.comments ??
+    "Request for Quotation"
   ).trim()
 
   const root = (detailRaw?.data ?? detailRaw) as AnyRecord | null
@@ -382,7 +408,41 @@ function RfqInvitationSheetRow({ rfq }: { rfq: RfqInvitation }) {
   )
   const supplierResponseStatus = String(details.supplierResponse?.status ?? "").trim()
 
-  const actionLabel = isDraftStatus(supplierResponseStatus) ? "Continue Draft" : "Start Quotation"
+  const actionBlockedMessage = [
+    detailRfq?.status,
+    detailRfq?.invitationStatus,
+    detailRfq?.invitation_status,
+    detailRfq?.InvitationStatus,
+    detailRfq?.awardStatus,
+    detailRfq?.award_status,
+    detailRfq?.AwardStatus,
+    root?.status,
+    root?.invitationStatus,
+    root?.invitation_status,
+    root?.InvitationStatus,
+    root?.awardStatus,
+    root?.award_status,
+    root?.AwardStatus,
+    rfq.status,
+    rfq.invitationStatus,
+    supplierResponseStatus,
+  ].some((value) => isRfqAwardedStatus(value))
+    ? "This RFQ has already been awarded and is no longer accepting responses."
+    : null
+  const actionBlocked = Boolean(actionBlockedMessage)
+  const actionLabel = actionBlocked
+    ? "Awarded"
+    : isDraftStatus(supplierResponseStatus)
+      ? "Continue Draft"
+      : "Start Quotation"
+  const quotationHref = actionBlocked ? "#" : `/dashboard/supplier/rfqs/${encodeURIComponent(rfqId)}/quotation`
+
+  const onActionClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.stopPropagation()
+    if (!actionBlockedMessage) return
+    event.preventDefault()
+    toast.info(actionBlockedMessage)
+  }
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -396,60 +456,85 @@ function RfqInvitationSheetRow({ rfq }: { rfq: RfqInvitation }) {
               setOpen(true)
             }
           }}
-          className="group relative w-full rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 text-left transition hover:border-indigo-200 hover:bg-indigo-50/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-200 sm:px-5 sm:py-4"
+          className={cn(
+            "flex flex-col gap-3 rounded-2xl border border-l-4 p-4 text-left transition sm:flex-row sm:items-start sm:justify-between",
+            urgency.label.toLowerCase() === "closed"
+              ? "border-l-rose-400 border-rose-200/70"
+              : urgency.label.toLowerCase().includes("left")
+                ? "border-l-amber-400 border-border/70"
+                : "border-l-indigo-500 border-border/70",
+            "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-200"
+          )}
         >
-          <span className="pointer-events-none absolute left-0 top-4 h-9 w-1 rounded-full bg-indigo-500/80 sm:top-5 sm:h-10" />
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-base font-semibold text-slate-900">{rfq.rfqNumber}</span>
+          <div className="flex min-w-0 flex-1 items-start gap-3">
+            <div
+              className={cn(
+                "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border",
+                urgency.label.toLowerCase() === "closed"
+                  ? "border-rose-200 text-rose-700"
+                  : urgency.label.toLowerCase().includes("left")
+                    ? "border-amber-200 text-amber-700"
+                    : "border-indigo-200 text-indigo-700"
+              )}
+            >
+              <Timer className="h-4 w-4" />
+            </div>
+
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold leading-snug text-foreground">
+                {rfq.comments || "Request for Quotation"}
+              </p>
+              <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                <span className="font-mono">{rfq.rfqNumber}</span>
+                <span aria-hidden>-</span>
+                <span>{parsedDeadline ? format(parsedDeadline, "dd MMM yyyy") : "No deadline"}</span>
                 <span
                   className={cn(
-                    "inline-flex w-fit rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                    "inline-flex rounded-full border px-2 py-0.5 font-semibold uppercase tracking-wide",
                     invitationBadge(rfq.invitationStatus)
                   )}
                 >
                   {rfq.invitationStatus || "Invited"}
                 </span>
+                <Badge variant="outline" className="rounded-full px-2 py-0.5 text-[10px]">
+                  {normalizeStatus(rfq.status)}
+                </Badge>
+                {actionBlocked ? (
+                  <Badge
+                    variant="outline"
+                    className="rounded-full border-slate-300 bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600"
+                  >
+                    Awarded
+                  </Badge>
+                ) : null}
+                <span className={cn("inline-flex items-center gap-1 font-medium", urgency.tone)}>
+                  <Timer className="h-3.5 w-3.5" />
+                  {urgency.label}
+                </span>
               </div>
-              <p className="text-sm font-medium text-slate-800 line-clamp-2 max-w-2xl">
-                {rfq.comments || "Request for Quotation"}
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3 sm:justify-end">
-              <div className="flex items-center gap-2">
-                <Timer className={cn("h-4 w-4", urgency.tone)} />
-                <div>
-                  <div className={cn("text-xs font-semibold", urgency.tone)}>{urgency.label}</div>
-                  {parsedDeadline ? (
-                    <div className="text-[11px] text-slate-500">
-                      {format(parsedDeadline, "dd MMM yyyy")}
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-
-              <Badge variant="outline" className="text-[11px]">
-                {normalizeStatus(rfq.status)}
-              </Badge>
-
-              <Button
-                asChild
-                size="sm"
-                className="h-8.5 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4"
-              >
-                <Link
-                  href={`/dashboard/supplier/rfqs/${encodeURIComponent(rfqId)}/quotation`}
-                  className="flex items-center gap-1.5"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {actionLabel}
-                  <ArrowUpRight className="h-4 w-4" />
-                </Link>
-              </Button>
             </div>
           </div>
+
+            <Button
+              asChild
+              size="sm"
+              variant="outline"
+              className={cn(
+                "h-8 rounded-full border-border/60 !bg-transparent px-3 text-xs font-semibold hover:!bg-transparent",
+                actionBlocked &&
+                  "border-slate-200 text-slate-400 hover:border-slate-200 hover:text-slate-400"
+              )}
+            >
+              <Link
+                href={quotationHref}
+                className="flex items-center gap-1.5"
+                onClick={onActionClick}
+                aria-disabled={actionBlocked}
+              >
+                {actionLabel}
+                <ArrowUpRight className="h-4 w-4" />
+              </Link>
+            </Button>
         </div>
       </SheetTrigger>
 
@@ -488,6 +573,14 @@ function RfqInvitationSheetRow({ rfq }: { rfq: RfqInvitation }) {
                   className="text-[10px] px-2.5 py-0.5 shrink-0 rounded-full uppercase tracking-wide font-semibold border-slate-200 bg-white text-slate-700"
                 >
                   Response: {normalizeStatus(supplierResponseStatus)}
+                </Badge>
+              ) : null}
+              {actionBlocked ? (
+                <Badge
+                  variant="outline"
+                  className="text-[10px] px-2.5 py-0.5 shrink-0 rounded-full uppercase tracking-wide font-semibold border-slate-300 bg-slate-100 text-slate-600"
+                >
+                  Awarded
                 </Badge>
               ) : null}
               <Badge
@@ -542,17 +635,17 @@ function RfqInvitationSheetRow({ rfq }: { rfq: RfqInvitation }) {
               </div>
             ) : null}
 
-              {!detailLoading && !detailError ? (
-                <div className="divide-y divide-slate-200/70">
-                  <section className="px-3 py-3 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="h-3.5 w-1 rounded-full bg-indigo-500/80" />
-                      <h4 className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                        Overview
-                      </h4>
-                    </div>
-                    <div className="rounded-xl border border-slate-200/70 bg-white">
-                      <div className="grid grid-cols-2 gap-4 p-3">
+            {!detailLoading && !detailError ? (
+              <div className="divide-y divide-slate-200/70">
+                <section className="px-3 py-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="h-3.5 w-1 rounded-full bg-indigo-500/80" />
+                    <h4 className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                      Overview
+                    </h4>
+                  </div>
+                  <div className="rounded-xl border border-slate-200/70 bg-white">
+                    <div className="grid grid-cols-2 gap-4 p-3">
                       <div className="space-y-1">
                         <div className="text-[11px] font-semibold uppercase text-slate-500">
                           Deadline
@@ -589,18 +682,18 @@ function RfqInvitationSheetRow({ rfq }: { rfq: RfqInvitation }) {
                   </div>
                 </section>
 
-                  <section className="px-3 py-3 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="h-3.5 w-1 rounded-full bg-indigo-500/80" />
-                        <h4 className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                          Line items
-                        </h4>
-                      </div>
-                      <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
-                        {details.lines.length} item{details.lines.length === 1 ? "" : "s"}
-                      </span>
+                <section className="px-3 py-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="h-3.5 w-1 rounded-full bg-indigo-500/80" />
+                      <h4 className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                        Line items
+                      </h4>
                     </div>
+                    <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
+                      {details.lines.length} item{details.lines.length === 1 ? "" : "s"}
+                    </span>
+                  </div>
                   {details.lines.length === 0 ? (
                     <p className="text-sm text-slate-500">
                       No line items were returned by the API for this RFQ.
@@ -628,18 +721,18 @@ function RfqInvitationSheetRow({ rfq }: { rfq: RfqInvitation }) {
                   )}
                 </section>
 
-                  <section className="px-3 py-3 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="h-3.5 w-1 rounded-full bg-indigo-500/80" />
-                        <h4 className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                          Attachments
-                        </h4>
-                      </div>
-                      <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
-                        {details.attachments.length}
-                      </span>
+                <section className="px-3 py-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="h-3.5 w-1 rounded-full bg-indigo-500/80" />
+                      <h4 className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                        Attachments
+                      </h4>
                     </div>
+                    <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
+                      {details.attachments.length}
+                    </span>
+                  </div>
                   {details.attachments.length === 0 ? (
                     <p className="text-sm text-slate-500">No attachments.</p>
                   ) : (
@@ -665,18 +758,18 @@ function RfqInvitationSheetRow({ rfq }: { rfq: RfqInvitation }) {
                   )}
                 </section>
 
-                  <section className="px-3 py-3 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="h-3.5 w-1 rounded-full bg-indigo-500/80" />
-                        <h4 className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                          Clarifications
-                        </h4>
-                      </div>
-                      <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
-                        {details.clarifications.length}
-                      </span>
+                <section className="px-3 py-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="h-3.5 w-1 rounded-full bg-indigo-500/80" />
+                      <h4 className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                        Clarifications
+                      </h4>
                     </div>
+                    <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
+                      {details.clarifications.length}
+                    </span>
+                  </div>
                   {details.clarifications.length === 0 ? (
                     <p className="text-sm text-slate-500">No clarifications.</p>
                   ) : (
@@ -684,14 +777,14 @@ function RfqInvitationSheetRow({ rfq }: { rfq: RfqInvitation }) {
                       {details.clarifications.slice(0, 20).map((c, idx) => {
                         const message = String(
                           c?.message ??
-                            c?.question ??
-                            c?.clarification ??
-                            c?.comments ??
-                            c?.Description ??
-                            `Clarification ${idx + 1}`
+                          c?.question ??
+                          c?.clarification ??
+                          c?.comments ??
+                          c?.Description ??
+                          `Clarification ${idx + 1}`
                         )
                         return (
-                        <div key={idx} className="p-2.5 space-y-1">
+                          <div key={idx} className="p-2.5 space-y-1">
                             <div className="text-sm font-medium text-slate-900 line-clamp-2">
                               {message}
                             </div>
@@ -719,16 +812,26 @@ function RfqInvitationSheetRow({ rfq }: { rfq: RfqInvitation }) {
             <div className="w-full">
               <Button
                 asChild
-                className="w-full h-10 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
+                className={cn(
+                  "w-full h-10 rounded-full font-semibold",
+                  actionBlocked
+                    ? "bg-slate-200 text-slate-600 hover:bg-slate-200"
+                    : "bg-indigo-600 hover:bg-indigo-700 text-white"
+                )}
               >
                 <Link
-                  href={`/dashboard/supplier/rfqs/${encodeURIComponent(rfqId)}/quotation`}
+                  href={quotationHref}
                   className="flex items-center justify-center gap-2"
+                  onClick={onActionClick}
+                  aria-disabled={actionBlocked}
                 >
                   {actionLabel}
                   <ArrowUpRight className="h-4 w-4" />
                 </Link>
               </Button>
+              {actionBlockedMessage ? (
+                <p className="mt-2 text-center text-[11px] text-slate-500">{actionBlockedMessage}</p>
+              ) : null}
             </div>
           </SheetFooter>
         </div>
@@ -739,38 +842,12 @@ function RfqInvitationSheetRow({ rfq }: { rfq: RfqInvitation }) {
 
 export function RfqInvitations() {
   const [search, setSearch] = useState("")
+  const [statusFilter, setStatusFilter] = useState<RfqStatusFilter>("all")
+  const [responseFilter, setResponseFilter] = useState<RfqResponseFilter>("all")
   const [data, setData] = useState<RfqInvitation[]>([])
   const [loading, setLoading] = useState(false)
 
   const debounced = useDebounce(search, 300)
-  const stats = useMemo(() => {
-    let closingSoon = 0
-    let dueThisWeek = 0
-    let submitted = 0
-    let published = 0
-    let atRisk = 0
-
-    data.forEach((rfq) => {
-      const hours = getDeadlineHours(rfq.submissionDeadline)
-      if (hours != null && hours > 0) {
-        if (hours <= 24) closingSoon += 1
-        if (hours <= 168) dueThisWeek += 1
-        if (hours <= 48) atRisk += 1
-      }
-      if (normalizeStatus(rfq.status).toLowerCase() === "published") published += 1
-      if (String(rfq.invitationStatus ?? "").toLowerCase() === "submitted") submitted += 1
-    })
-
-    return {
-      total: data.length,
-      closingSoon,
-      dueThisWeek,
-      submitted,
-      awaitingResponse: Math.max(data.length - submitted, 0),
-      atRisk,
-      published,
-    }
-  }, [data])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -798,99 +875,174 @@ export function RfqInvitations() {
     return () => controller.abort()
   }, [debounced])
 
-  const statCards = [
-    {
-      label: "Active invitations",
-      value: stats.total,
-      tone: "text-indigo-600",
-      accent: "bg-indigo-500/80",
-    },
-    {
-      label: "At risk (≤48h)",
-      value: stats.atRisk,
-      tone: "text-rose-600",
-      accent: "bg-rose-500/80",
-    },
-    {
-      label: "Awaiting response",
-      value: stats.awaitingResponse,
-      tone: "text-slate-700",
-      accent: "bg-slate-400/70",
-    },
-  ]
+  const stats = useMemo(() => {
+    let open = 0
+    let closed = 0
+    let submitted = 0
+    let pending = 0
+    let atRisk = 0
+
+    data.forEach((rfq) => {
+      if (resolveRfqLifecycle(rfq) === "open") open += 1
+      else closed += 1
+
+      if (resolveRfqResponseState(rfq) === "submitted") submitted += 1
+      else pending += 1
+
+      const hours = getDeadlineHours(rfq.submissionDeadline)
+      if (hours != null && hours > 0 && hours <= 48) atRisk += 1
+    })
+
+    return {
+      total: data.length,
+      open,
+      closed,
+      submitted,
+      pending,
+      atRisk,
+    }
+  }, [data])
+
+  const filteredData = useMemo(() => {
+    return data.filter((rfq) => {
+      if (statusFilter !== "all" && resolveRfqLifecycle(rfq) !== statusFilter) return false
+      if (responseFilter !== "all" && resolveRfqResponseState(rfq) !== responseFilter) return false
+      return true
+    })
+  }, [data, responseFilter, statusFilter])
+
+  const statusFilterOptions = [
+    { value: "all", label: "All", count: stats.total },
+    { value: "open", label: "Open", count: stats.open },
+    { value: "closed", label: "Closed", count: stats.closed },
+  ] as const
+
+  const responseFilterOptions = [
+    { value: "all", label: "All responses", count: stats.total },
+    { value: "submitted", label: "Submitted", count: stats.submitted },
+    { value: "pending", label: "Pending", count: stats.pending },
+  ] as const
+
+  const sections = useMemo(() => {
+    if (statusFilter !== "all" || responseFilter !== "all") {
+      return [{ id: "matching", title: "Matching invitations", items: filteredData }]
+    }
+
+    const priority = filteredData.filter((rfq) => {
+      const hours = getDeadlineHours(rfq.submissionDeadline)
+      return hours != null && hours > 0 && hours <= 48 && resolveRfqResponseState(rfq) !== "submitted"
+    })
+    const priorityIds = new Set(priority.map((item) => String(item.rfqId)))
+    const remaining = filteredData.filter((rfq) => !priorityIds.has(String(rfq.rfqId)))
+
+    const grouped: Array<{ id: string; title: string; items: RfqInvitation[] }> = []
+    if (priority.length) grouped.push({ id: "priority", title: "Priority invitations", items: priority })
+    if (remaining.length) grouped.push({ id: "all", title: "All invitations", items: remaining })
+    return grouped
+  }, [filteredData, responseFilter, statusFilter])
 
   return (
-    <section className="w-full space-y-5">
-      <header className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-start gap-4">
-          <div className="mt-1 h-9 w-1 rounded-full bg-indigo-600" />
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
-                RFQ Invitations
-              </h1>
-              <span className="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
-                {data.length} active
-              </span>
+    <section className="w-full space-y-5 [&_*]:shadow-none [&_*]:drop-shadow-none">
+      <header className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 text-primary">
+              <Mail className="h-4 w-4" />
             </div>
+            <h1 className="text-xl font-semibold tracking-tight text-foreground">RFQ Invitations</h1>
           </div>
         </div>
 
-        <div className="w-full lg:max-w-sm">
-          <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search RFQ ref or title"
-              className="pl-10 pr-9 h-9 rounded-full border-slate-300 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 text-sm"
-            />
-            {search ? (
-              <button
-                type="button"
-                onClick={() => setSearch("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center"
-              >
-                <X className="h-4 w-4 text-slate-400" />
-              </button>
-            ) : null}
-          </div>
+        <div className="inline-flex items-center gap-2 rounded-full border border-border/60 px-3 py-1.5 text-xs font-medium text-muted-foreground">
+          <span>Total: {stats.total}</span>
+          <span aria-hidden>-</span>
+          <span>Open: {stats.open}</span>
         </div>
       </header>
 
-      <div className="grid gap-2 sm:grid-cols-3">
-        {statCards.map((card) => (
-          <div
-            key={card.label}
-            className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white/80 px-3.5 py-2.5"
-          >
-            <div className={cn("absolute left-0 top-0 h-0.5 w-full", card.accent)} />
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              {card.label}
-            </div>
-            <div className={cn("mt-2 text-2xl font-semibold", card.tone)}>{card.value}</div>
-          </div>
-        ))}
+      <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+        <div className="relative w-full lg:flex-1">
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search RFQ ref or title"
+            className="h-10 rounded-full border-border/60 bg-transparent pl-10 pr-9 text-sm focus:border-primary/50 focus:ring-0"
+          />
+          {search ? (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              className="absolute right-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full"
+            >
+              <X className="h-4 w-4 text-slate-400" />
+            </button>
+          ) : null}
+        </div>
+
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:flex">
+          <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as RfqStatusFilter)}>
+            <SelectTrigger className="h-10 min-w-[170px] rounded-full border-border/60 bg-transparent text-xs font-medium shadow-none">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {statusFilterOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label} ({option.count})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={responseFilter} onValueChange={(value) => setResponseFilter(value as RfqResponseFilter)}>
+            <SelectTrigger className="h-10 min-w-[180px] rounded-full border-border/60 bg-transparent text-xs font-medium shadow-none">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {responseFilterOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label} ({option.count})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <div className="space-y-2">
-        {loading ? (
-          <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">
-            <Loader2 className="inline h-4 w-4 mr-2 animate-spin" />
-            Loading RFQ invitations…
-          </div>
-        ) : null}
+      {loading ? (
+        <Loading
+          fullScreen={false}
+          message="Loading RFQ invitations"
+          className="rounded-2xl border border-dashed border-border/50 !bg-transparent py-10"
+        />
+      ) : null}
 
-        {!loading && data.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">
-            No RFQ invitations available
-          </div>
-        ) : null}
+      {!loading && filteredData.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border/50 p-6 text-center text-sm text-muted-foreground">
+          No RFQ invitations in this view.
+        </div>
+      ) : null}
 
-        {!loading
-          ? data.map((rfq) => <RfqInvitationSheetRow key={rfq.rfqId} rfq={rfq} />)
-          : null}
-      </div>
+      {!loading && filteredData.length > 0 ? (
+        <div className="space-y-4">
+          {sections.map((section) => (
+            <section key={section.id} className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {section.title}
+                </h2>
+                <span className="text-xs text-muted-foreground">{section.items.length}</span>
+              </div>
+
+              <div className="space-y-2">
+                {section.items.map((rfq) => (
+                  <RfqInvitationSheetRow key={rfq.rfqId} rfq={rfq} />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      ) : null}
     </section>
   )
 }
