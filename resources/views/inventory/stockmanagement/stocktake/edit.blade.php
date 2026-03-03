@@ -96,7 +96,7 @@
                                     </td>
                                     <td>
                                         <input type="text" name="lines[{{ $index }}][Remarks]" class="form-control"
-                                               value="{{ $line->Remarks ?? '-'}}">
+                                               value="{{ $line->Remarks ?? '-'}}" required>
                                     </td>
                                 </tr>
                             @endforeach
