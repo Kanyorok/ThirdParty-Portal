@@ -26,7 +26,7 @@ class RegisterThirdPartyDetailsRequest extends FormRequest
             'Country' => ['required', 'string', 'max:255'],
             'PhysicalAddress' => ['required', 'string', 'max:255'],
             'Email' => ['required', 'string', 'email', 'max:255', 'unique:t_ThirdParties,Email'],
-            'Phone' => ['required', 'string', 'max:20'],
+            'Phone' => ['required', 'string', 'max:20', 'regex:/^\+?[0-9]{8,15}$/'],
             'Website' => ['nullable', 'string', 'url', 'max:255'],
             'ThirdPartyType' => ['required', 'integer', 'exists:t_ThirdPartyTypes,TypeId'],
         ];
@@ -38,6 +38,7 @@ class RegisterThirdPartyDetailsRequest extends FormRequest
             'user_id.exists' => __('auth.user_id_not_found'),
             'RegistrationNumber.unique' => __('thirdparty.registration_number_exists'),
             'Email.unique' => __('thirdparty.email_exists'),
+            'Phone.regex' => 'Phone number must contain digits only and may start with +.',
         ];
     }
 }

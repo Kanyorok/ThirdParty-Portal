@@ -23,14 +23,12 @@ use App\Http\Controllers\Settings\Codes\ApiCurrencyController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-// Token validation (Sanctum) for frontend session checks
 Route::post('auth/validate-token', function (Request $request) {
     $user = $request->user();
     if (! $user) {
         return response()->json(['valid' => false], 401);
     }
 
-    // ThirdPartyUser specific flags
     $isActive = method_exists($user, 'isActive') ? $user->isActive() : (bool)($user->IsActive ?? $user->isActive ?? false);
     $isApproved = method_exists($user, 'isApproved') ? $user->isApproved() : (bool)($user->isApproved ?? false);
 
@@ -49,19 +47,19 @@ Route::post('auth/validate-token', function (Request $request) {
     ]);
 })->middleware('auth:sanctum')->name('auth.validate-token');
 
-Route::prefix('third-party-auth')->group(function () {
-    Route::post('login', [ThirdPartyAuthController::class, 'login']);
-    Route::post('register', [ThirdPartyAuthController::class, 'register']); // Step 1: User personal registration
-    Route::get('/email/verify/{id}/{hash}', [ThirdPartyAuthController::class, 'verifyEmail'])
-        ->name('verification.verify')
-        ->middleware('signed');
-    Route::post('/email/resend-verification', [ThirdPartyAuthController::class, 'resendVerification'])->name('verification.resend')->middleware('throttle:6,1');
-    Route::post('forgot-password', [ThirdPartyAuthController::class, 'forgotPassword']);
-    Route::post('reset-password', [ThirdPartyAuthController::class, 'resetPassword']);
-});
+// Route::prefix('third-party-auth')->group(function () {
+//     Route::post('login', [ThirdPartyAuthController::class, 'login']);
+//     Route::post('register', [ThirdPartyAuthController::class, 'register']); // Step 1: User personal registration
+//     Route::get('/email/verify/{id}/{hash}', [ThirdPartyAuthController::class, 'verifyEmail'])
+//         ->name('verification.verify')
+//         ->middleware('signed');
+//     Route::post('/email/resend-verification', [ThirdPartyAuthController::class, 'resendVerification'])->name('verification.resend')->middleware('throttle:6,1');
+//     Route::post('forgot-password', [ThirdPartyAuthController::class, 'forgotPassword']);
+//     Route::post('reset-password', [ThirdPartyAuthController::class, 'resetPassword']);
+// });
 
-// step 2: Register company info (associated third party)
-Route::post('third-parties/register-details', [ThirdPartiesController::class, 'store']);
+// // step 2: Register company info (associated third party)
+// Route::post('third-parties/register-details', [ThirdPartiesController::class, 'store']);
 
 // Health check endpoint
 Route::get('/health', function () {
@@ -72,22 +70,22 @@ Route::get('/health', function () {
     ]);
 });
 
-// Test auth endpoint (WITH AUTH REQUIRED)
-Route::middleware('auth:sanctum')->get('/test-auth', function (Illuminate\Http\Request $request) {
-    $user = Auth::guard('sanctum')->user();
+// // Test auth endpoint (WITH AUTH REQUIRED)
+// Route::middleware('auth:sanctum')->get('/test-auth', function (Illuminate\Http\Request $request) {
+//     $user = Auth::guard('sanctum')->user();
 
-    return response()->json([
-        'success' => true,
-        'message' => 'Authentication working!',
-        'user_authenticated' => $user ? true : false,
-        'user_type' => $user ? get_class($user) : 'No user',
-        'user_id' => $user ? $user->Id : null,
-        'third_party_id' => ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) ? $user->ThirdPartyId : null,
-        'request_headers' => [
-            'authorization' => $request->header('Authorization') ? 'Present (' . substr($request->header('Authorization'), 0, 20) . '...)' : 'Missing',
-        ],
-    ]);
-});
+//     return response()->json([
+//         'success' => true,
+//         'message' => 'Authentication working!',
+//         'user_authenticated' => $user ? true : false,
+//         'user_type' => $user ? get_class($user) : 'No user',
+//         'user_id' => $user ? $user->Id : null,
+//         'third_party_id' => ($user instanceof \App\Models\ThirdParty\ThirdPartyUser) ? $user->ThirdPartyId : null,
+//         'request_headers' => [
+//             'authorization' => $request->header('Authorization') ? 'Present (' . substr($request->header('Authorization'), 0, 20) . '...)' : 'Missing',
+//         ],
+//     ]);
+// });
 
 
 

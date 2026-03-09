@@ -87,6 +87,9 @@ class NewThirdPartyRequest extends FormRequest
             'Email' => ['nullable', 'email', 'max:250'],
             'Phone' => [
                 'required',
+                'string',
+                'max:20',
+                'regex:/^\+?[0-9]{8,15}$/',
                 (new Phone())->countryField('Country'),
                 Rule::unique('t_ThirdParties', 'Phone')->whereNull('DeletedOn'),
             ],
@@ -103,7 +106,14 @@ class NewThirdPartyRequest extends FormRequest
                 Rule::unique('t_ThirdPartyUsers', 'Email')->whereNull('DeletedOn'),
                 'max:250',
             ],
-            'user_Phone' => [Rule::requiredIf($isUser), 'nullable', 'string'],
+            'user_Phone' => [
+                Rule::requiredIf($isUser),
+                'nullable',
+                'string',
+                'max:20',
+                'regex:/^\+?[0-9]{8,15}$/',
+                (new Phone())->countryField('Country'),
+            ],
             'user_Gender' => [Rule::requiredIf($isUser || $isCustomer), 'nullable', 'string'],
             'user_Password' => [
                 'nullable',
@@ -197,6 +207,8 @@ class NewThirdPartyRequest extends FormRequest
             'Phone.unique' => 'This phone number is already registered. Try a different number buddy!',
             'Phone.phone' => 'invalid phone number provided.',
             'Phone.country' => 'invalid phone number provided.',
+            'Phone.regex' => 'Phone number must contain digits only and may start with +.',
+            'user_Phone.regex' => 'User phone number must contain digits only and may start with +.',
             'user_Phone.*' => 'invalid phone number provided.',
         ];
     }

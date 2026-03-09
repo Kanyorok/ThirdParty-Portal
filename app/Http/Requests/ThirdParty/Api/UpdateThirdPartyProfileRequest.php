@@ -25,7 +25,7 @@ class UpdateThirdPartyProfileRequest extends FormRequest
             'CountryId' => ['sometimes', 'integer', 'exists:countries,CountryId'],
             'LocationId' => ['sometimes', 'integer', 'exists:Localities,LocalityId'],
             'Email' => ['sometimes', 'email', 'max:255', 'unique:t_ThirdParties,Email,' . $thirdPartyId . ',Id'],
-            'Phone' => ['sometimes', 'string', 'max:20'],
+            'Phone' => ['sometimes', 'string', 'max:20', 'regex:/^\+?[0-9]{8,15}$/'],
             'PostalAddress' => ['sometimes', 'string', 'max:255'],
             'PhysicalAddress' => ['sometimes', 'string', 'max:255'],
             'Website' => ['sometimes', 'string', 'max:255', 'url'],

@@ -91,7 +91,6 @@ Route::prefix('profile')->middleware(['auth.thirdparty'])->group(function () {
 });
 
 Route::middleware(['auth.thirdparty'])->prefix('portal')->group(function () {
-    // Backward-compatible alias used by some portal clients.
     Route::get('profiles', [ProfileController::class, 'getAvailableProfiles']);
     Route::get('notifications', [NotificationController::class, 'index']);
     Route::get('notifications/preferences', [NotificationController::class, 'preferences']);

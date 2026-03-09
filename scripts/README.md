@@ -175,5 +175,5 @@ Scripts generate these files:
 4. **Keep audit trail** by checking logs regularly
 
 ---
-
+ 
 **For complete testing workflows and detailed documentation, see `LICENSING_TESTING_GUIDE.md`**

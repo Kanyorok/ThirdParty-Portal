@@ -15,7 +15,7 @@ class VerifyEmail extends BaseVerifyEmail
      * @param mixed $notifiable
      * @return string
      */
-    protected function verificationUrl($notifiable)
+    protected function verificationUrl($notifiable): string
     {
         return URL::temporarySignedRoute(
             'verification.verify',

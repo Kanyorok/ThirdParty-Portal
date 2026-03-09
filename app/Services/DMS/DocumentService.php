@@ -43,7 +43,7 @@ use Throwable;
 
 class DocumentService extends PermissionsService
 {
-    protected const string CHECKSUM = 'sha256';
+    protected const string  CHECKSUM = 'sha256';
     public ExtensionsEnum $type;
 
     public function __construct(public Document $document)
