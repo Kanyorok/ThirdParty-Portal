@@ -23,46 +23,7 @@ import { Badge } from "@/components/common/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/common/tooltip"
 import { cn } from "@/lib/utils"
 import { useProfileStore } from "@/store/use-profile-store"
-import { UserProfile } from "@/types/profile-types"
-
-export interface NavSubItem {
-  readonly title: string
-  readonly url: string
-  readonly icon?: React.ComponentType<{ className?: string }>
-  readonly comingSoon?: boolean
-  readonly newTab?: boolean
-  readonly badge?: string
-  readonly description?: string
-  readonly disabled?: boolean
-  readonly allowedProfiles: readonly UserProfile[]
-}
-
-export interface NavMainItem {
-  readonly title: string
-  readonly url: string
-  readonly icon?: React.ComponentType<{ className?: string }>
-  readonly subItems?: readonly NavSubItem[]
-  readonly comingSoon?: boolean
-  readonly newTab?: boolean
-  readonly badge?: string
-  readonly description?: string
-  readonly disabled?: boolean
-  readonly allowedProfiles: readonly UserProfile[]
-}
-
-export interface NavGroup {
-  readonly id: string
-  readonly label?: string
-  readonly items: readonly NavMainItem[]
-  readonly collapsible?: boolean
-  readonly defaultOpen?: boolean
-}
-
-interface NavMainProps {
-  readonly items: readonly NavGroup[]
-  readonly onItemClick?: (item: NavMainItem | NavSubItem) => void
-  readonly className?: string
-}
+import type { NavMainItem, NavMainProps, NavSubItem, UserProfile } from "@/types/third-party-auth-types"
 
 const ComingSoonBadge = memo(() => (
   <Badge variant="outline" className="ml-auto h-4 border-primary/25 bg-primary/10 px-1.5 text-[10px] font-semibold text-primary">
@@ -155,14 +116,14 @@ const NavItemExpanded = memo(
         <SidebarMenuItem>
           {item.disabled || item.comingSoon ? (
             <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>{button}</TooltipTrigger>
-                  <TooltipContent side="right" className="border border-border/70 bg-popover text-[11px] font-semibold text-foreground shadow-none">
-                    {item.comingSoon ? "Feature Coming Soon" : "Restricted Access"}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ) : (
+              <Tooltip>
+                <TooltipTrigger asChild>{button}</TooltipTrigger>
+                <TooltipContent side="right" className="border border-border/70 bg-popover text-[11px] font-semibold text-foreground shadow-none">
+                  {item.comingSoon ? "Feature Coming Soon" : "Restricted Access"}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
             <Link href={item.url} target={item.newTab ? "_blank" : undefined} className="block w-full">
               {button}
             </Link>

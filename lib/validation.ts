@@ -19,6 +19,12 @@ const REVERSE_USER_TYPE_MAP: Record<UserTypeApiValue, UserTypeValue> = {
     C: "customer",
 } as const;
 
+const phoneField = (requiredMessage: string) =>
+    z.string()
+        .trim()
+        .min(1, requiredMessage)
+        .regex(/^\+?[0-9]{8,15}$/, "Phone number must be 8 to 15 digits and may start with +");
+
 // export const userTypeSchema = z.enum(USER_TYPE_VALUES, {
 //     required_error: "Select whether you are a tenant or supplier",
 //     invalid_type_error: "Select a valid user type",
@@ -39,7 +45,7 @@ export const registerSchema = z.object({
     Country: z.string().min(1, "Required"),
     Location: z.coerce.number().min(1, "Required"),
     Email: z.string().email("Invalid email"),
-    Phone: z.string().min(10, "Invalid phone"),
+    Phone: phoneField("Phone number is required"),
     PhysicalAddress: z.string().optional(),
     Website: z.string().url().optional().or(z.literal("")),
     types: z.array(z.string()).min(1, "Selection required"),
@@ -49,7 +55,7 @@ export const registerSchema = z.object({
     user_FirstName: z.string().min(2, "Required"),
     user_LastName: z.string().min(2, "Required"),
     user_Email: z.string().email("Invalid email"),
-    user_Phone: z.string().min(10, "Required"),
+    user_Phone: phoneField("Admin phone is required"),
     user_Gender: z.string().min(1, "Required"),
     user_Password: z.string().min(8, "Min 8 chars"),
     user_Password_confirmation: z.string()
@@ -111,7 +117,7 @@ export const loginSchema = z.object({
 export const userProfileUpdateSchema = z.object({
     firstName: z.string().min(1, "First Name is required"),
     lastName: z.string().min(1, "Last Name is required"),
-    phone: z.string().min(1, "Phone Number is required").regex(/^\+?\d{10,15}$/, "Invalid phone number format"),
+    phone: z.string().min(1, "Phone Number is required").regex(/^\+?[0-9]{8,15}$/, "Phone number must be 8 to 15 digits and may start with +"),
     gender: z.string().optional(),
 });
 
@@ -262,5 +268,3 @@ export const mapThirdPartyServerErrorsToFormFields = createErrorMapper<ThirdPart
 
 export type { UserTypeValue, UserTypeApiValue };
 export { USER_TYPE_VALUES, USER_TYPE_API_VALUES, USER_TYPE_MAP, REVERSE_USER_TYPE_MAP };
-
-

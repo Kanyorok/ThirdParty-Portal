@@ -28,7 +28,6 @@ declare module "next-auth" {
       modified_on?: string | null
       third_party?: unknown
 
-      // Common camelCase aliases
       thirdPartyId?: number | null
       approvalStatus?: string
       isSupplier?: boolean

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { useForm, useWatch } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Mail, Lock, Loader2, AlertCircle, Eye, EyeOff, X } from "lucide-react"
+import { Mail, Lock, Loader2, AlertCircle, Eye, X, EyeClosed } from "lucide-react"
 import { signIn } from "next-auth/react"
 
 import { Button } from "@/components/common/button"
@@ -14,7 +14,7 @@ import { Input } from "@/components/common/input"
 import { cn } from "@/lib/utils"
 
 const schema = z.object({
-    email: z.string().min(1, "Email is required").email("Please enter a valid email address"),
+    email: z.string().min(1, "Email is required").email("Enter a valid Email address"),
     password: z.string().min(1, "Password is required"),
 })
 
@@ -61,13 +61,13 @@ export default function LoginPage() {
                     return
                 }
 
-                setAuthError("Invalid email or password. Please try again.")
+                setAuthError("Email not verified!")
                 return
             }
 
             router.push("/dashboard")
         } catch {
-            setAuthError("An unexpected error occurred. Please try again later.")
+            setAuthError("An unexpected error occurred. Refresh or try again later.")
         }
     }
 
@@ -96,7 +96,7 @@ export default function LoginPage() {
                                     id="email"
                                     type="email"
                                     {...register("email")}
-                                    placeholder="name@company.com"
+                                    placeholder="youremail@gmail.com"
                                     disabled={isSubmitting}
                                     className={cn("h-12 bg-transparent pl-10 pr-10", showError("email") && "border-rose-400 focus-visible:border-rose-500 focus-visible:ring-rose-200")}
                                 />
@@ -132,7 +132,7 @@ export default function LoginPage() {
                                     className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
                                     aria-label={showPassword ? "Hide password" : "Show password"}
                                 >
-                                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    {showPassword ? <EyeClosed className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                 </button>
                             </div>
                             {showError("password") && <p className="text-xs font-medium text-rose-600">{errors.password?.message}</p>}

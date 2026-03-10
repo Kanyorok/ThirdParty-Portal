@@ -143,8 +143,8 @@ export default function AccountOwnerCard({
       nextErrors.email = "Please enter a valid email address."
     }
 
-    if (trimmedPhone && !/^\+?[0-9()\-\s]{7,20}$/.test(trimmedPhone)) {
-      nextErrors.phone = "Please enter a valid phone number."
+    if (trimmedPhone && !/^\+?[0-9]{8,15}$/.test(trimmedPhone)) {
+      nextErrors.phone = "Phone number must be 8 to 15 digits and may start with +."
     }
 
     setFieldErrors(nextErrors)
@@ -329,10 +329,13 @@ export default function AccountOwnerCard({
                       </Label>
                       <Input
                         id="owner-phone"
+                        type="tel"
+                        inputMode="tel"
+                        pattern="[+]?[0-9]{8,15}"
                         value={phoneInput}
                         onChange={(e) => setPhoneInput(e.target.value)}
                         className={fieldErrors.phone ? "border-destructive focus-visible:ring-destructive" : ""}
-                        placeholder="+254700000000"
+                        placeholder="+254712345678"
                         disabled={isSavingContact}
                         aria-invalid={Boolean(fieldErrors.phone)}
                       />

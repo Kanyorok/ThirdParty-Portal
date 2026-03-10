@@ -1,6 +1,5 @@
 import { LucideIcon } from "lucide-react";
 
-// profile display: dropdown menu in the top right corner
 export interface UserData {
     firstName?: string | null;
     lastName?: string | null;

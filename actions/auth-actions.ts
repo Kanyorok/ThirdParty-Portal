@@ -54,7 +54,7 @@ export async function requestPasswordReset(email: string): Promise<AuthResult> {
         return {
             success: false,
             error: "CONFIG_ERROR",
-            message: "API base URL is not configured.",
+            message: "URL not configured.",
         }
     }
 
@@ -85,7 +85,7 @@ export async function requestPasswordReset(email: string): Promise<AuthResult> {
             return {
                 success: false,
                 error: "RATE_LIMIT",
-                message: payload.message || "Too many attempts. Please try again later.",
+                message: payload.message || "Too many attempts. Onyi Tulia!",
                 errors: payload.errors,
             };
         }
@@ -132,7 +132,7 @@ export async function resetPassword(token: string, newPassword: string, email: s
         return {
             success: false,
             error: "CONFIG_ERROR",
-            message: "API base URL is not configured.",
+            message: "URL is not configured.",
         }
     }
 
@@ -184,7 +184,7 @@ export async function resetPassword(token: string, newPassword: string, email: s
         return {
             success: false,
             error: "INTERNAL_ERROR",
-            message: "Unable to connect to the authentication server.",
+            message: "Connection lost. Reload.",
         };
     }
 }

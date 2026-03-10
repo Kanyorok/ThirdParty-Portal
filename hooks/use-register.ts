@@ -13,16 +13,126 @@ type LookupItem = {
     description: string
 }
 
+const ROLE_VALUES = ["SU", "TN", "CU"] as const
+type RoleValue = (typeof ROLE_VALUES)[number]
+const PHONE_REGEX = /^\+?[0-9]{8,15}$/
+const GENERIC_REGISTRATION_ERROR = "We couldn't complete registration. Please correct the highlighted fields and try again."
+const SENSITIVE_ERROR_PATTERN = /(exception|stack|trace|sql|syntax|internal server|undefined|vendor|route|line\s+\d+)/i
+
+const SERVER_FIELD_FALLBACK_MESSAGES: Record<string, string> = {
+    Name: "Please enter a valid legal company name.",
+    TradingName: "Please enter a valid trading name.",
+    BusinessType: "Please select a valid business type.",
+    RegistrationNumber: "Please enter a valid registration number.",
+    TaxPIN: "Please enter a valid tax PIN.",
+    VATNumber: "Please enter a valid VAT number.",
+    Country: "Please select a valid country.",
+    Location: "Please select a valid location.",
+    Email: "Please enter a valid business email address.",
+    Phone: "Please enter a valid business phone number.",
+    PhysicalAddress: "Please enter a valid physical address.",
+    Website: "Please enter a valid website URL.",
+    types: "Please select at least one business role.",
+    supplier_category_id: "Please select a supplier category.",
+    user_Remarks: "Please provide tenant remarks.",
+    user_DateOfBirth: "Please provide a valid date of birth.",
+    user_MaritalStatus: "Please select a valid marital status.",
+    user_Occupation: "Please select a valid occupation.",
+    user_FirstName: "Please enter a valid first name.",
+    user_LastName: "Please enter a valid last name.",
+    user_Email: "Please enter a valid admin email address.",
+    user_Phone: "Please enter a valid admin phone number.",
+    user_Gender: "Please select a valid gender.",
+    user_Password: "Please enter a valid password.",
+    user_Password_confirmation: "Please confirm your password.",
+}
+
+const getSafeServerFieldMessage = (field: string, candidate: unknown): string => {
+    const fallback = SERVER_FIELD_FALLBACK_MESSAGES[field] ?? "Please provide a valid value."
+    if (typeof candidate !== "string") return fallback
+
+    const normalized = candidate.replace(/\s+/g, " ").trim()
+    if (!normalized || normalized.length > 140 || SENSITIVE_ERROR_PATTERN.test(normalized)) {
+        return fallback
+    }
+
+    return normalized
+}
+
 const emptyToUndefined = (value: unknown) => {
     if (typeof value !== "string") return value
     const trimmed = value.trim()
     return trimmed.length ? trimmed : undefined
 }
 
-const optionalTextField = () => z.preprocess(emptyToUndefined, z.string().min(1)).optional()
-const optionalUrlField = () => z.preprocess(emptyToUndefined, z.string().url()).optional()
+const optionalTextField = (label: string, maxLength: number) =>
+    z.preprocess(
+        emptyToUndefined,
+        z
+            .string()
+            .trim()
+            .max(maxLength, `${label} must be ${maxLength} characters or fewer`)
+    ).optional()
 
-const hasRole = (types: string[] | undefined, flag: string) => types?.includes(flag)
+const optionalUrlField = (label: string, maxLength: number) =>
+    z.preprocess(
+        emptyToUndefined,
+        z
+            .string()
+            .trim()
+            .max(maxLength, `${label} must be ${maxLength} characters or fewer`)
+            .url(`Please enter a valid ${label.toLowerCase()}`)
+    ).optional()
+
+const optionalNameField = (label: string) =>
+    z.preprocess(
+        emptyToUndefined,
+        z
+            .string()
+            .trim()
+            .min(2, `${label} must be at least 2 characters`)
+            .max(50, `${label} must be 50 characters or fewer`)
+            .regex(/^[a-zA-Z\s'-]+$/, `${label} can only contain letters, spaces, apostrophes, and hyphens`)
+    ).optional()
+
+const optionalEmailField = (label: string) =>
+    z.preprocess(
+        emptyToUndefined,
+        z
+            .string()
+            .trim()
+            .email(`Please enter a valid ${label.toLowerCase()}`)
+            .max(254, `${label} must be 254 characters or fewer`)
+    ).optional()
+
+const optionalPasswordField = (label: string) =>
+    z.preprocess(
+        emptyToUndefined,
+        z
+            .string()
+            .min(8, `${label} must be at least 8 characters`)
+            .max(128, `${label} must be 128 characters or fewer`)
+    ).optional()
+
+const optionalLookupField = (label: string, maxLength: number) =>
+    z.preprocess(
+        emptyToUndefined,
+        z
+            .string()
+            .trim()
+            .max(maxLength, `${label} must be ${maxLength} characters or fewer`)
+    ).optional()
+
+const phoneField = (requiredMessage: string) =>
+    z.string()
+        .trim()
+        .min(1, requiredMessage)
+        .regex(PHONE_REGEX, "Phone number must be 8 to 15 digits and may start with +")
+
+const optionalPhoneField = (requiredMessage: string) =>
+    z.preprocess(emptyToUndefined, phoneField(requiredMessage)).optional()
+
+const hasRole = (types: RoleValue[] | undefined, flag: RoleValue) => types?.includes(flag)
 
 const VERIFY_EMAIL_LINK_REGEX = /https?:\/\/[^"'<>\s]+\/verify-email\?[^"'<>\s]+/i
 
@@ -51,32 +161,53 @@ export type RegisterThirdPartyResult = {
 }
 
 const registerSchema = z.object({
-    Name: z.string().min(2, "Company name is required"),
-    TradingName: optionalTextField(),
-    BusinessType: z.string().min(1, "Business type is required"),
-    RegistrationNumber: z.string().min(2, "Registration number is required"),
-    TaxPIN: z.string().min(2, "Tax PIN is required"),
-    VATNumber: optionalTextField(),
-    Country: z.string().min(1, "Country is required"),
-    Location: z.coerce.number().min(1, "Location is required"),
-    Email: z.string().email("Valid email is required").min(1, "Email is required"),
-    Phone: z.string().min(10, "Phone number is required"),
-    PhysicalAddress: optionalTextField(),
-    Website: optionalUrlField(),
-    types: z.array(z.string()).min(1, "Select at least one business role"),
+    Name: z
+        .string()
+        .trim()
+        .min(2, "Company name is required")
+        .max(100, "Company name must be 100 characters or fewer"),
+    TradingName: optionalTextField("Trading name", 100),
+    BusinessType: z.string().trim().min(1, "Business type is required"),
+    RegistrationNumber: z
+        .string()
+        .trim()
+        .min(2, "Registration number is required")
+        .max(50, "Registration number must be 50 characters or fewer"),
+    TaxPIN: z
+        .string()
+        .trim()
+        .min(2, "Tax PIN is required")
+        .max(50, "Tax PIN must be 50 characters or fewer"),
+    VATNumber: optionalTextField("VAT number", 50),
+    Country: z
+        .string()
+        .trim()
+        .min(2, "Country is required")
+        .max(3, "Please select a valid country code"),
+    Location: z.coerce.number().int("Please select a valid location").min(1, "Location is required"),
+    Email: z
+        .string()
+        .trim()
+        .email("Please enter a valid business email address")
+        .min(1, "Email is required")
+        .max(254, "Email must be 254 characters or fewer"),
+    Phone: phoneField("Phone number is required"),
+    PhysicalAddress: optionalTextField("Physical address", 200),
+    Website: optionalUrlField("Website URL", 255),
+    types: z.array(z.enum(ROLE_VALUES)).min(1, "Select at least one business role"),
     supplier_category_id: z.preprocess(v => (v === "" ? null : v), z.coerce.number().nullable().optional()),
-    user_Remarks: optionalTextField(),
-    user_DateOfBirth: optionalTextField(),
-    user_MaritalStatus: optionalTextField(),
-    user_Occupation: optionalTextField(),
+    user_Remarks: optionalTextField("Remarks", 500),
+    user_DateOfBirth: optionalTextField("Date of birth", 25),
+    user_MaritalStatus: optionalLookupField("Marital status", 100),
+    user_Occupation: optionalLookupField("Occupation", 100),
     createUser: z.boolean(),
-    user_FirstName: z.string().min(2, "First name is required").optional().or(z.literal("")),
-    user_LastName: z.string().min(2, "Last name is required").optional().or(z.literal("")),
-    user_Email: z.string().email("Valid email is required").optional().or(z.literal("")),
-    user_Phone: z.string().min(10, "Valid phone is required").optional().or(z.literal("")),
-    user_Gender: z.string().min(1, "Gender is required").optional().or(z.literal("")),
-    user_Password: z.string().min(8, "Password must be at least 8 characters").optional().or(z.literal("")),
-    user_Password_confirmation: z.string().optional().or(z.literal(""))
+    user_FirstName: optionalNameField("First name"),
+    user_LastName: optionalNameField("Last name"),
+    user_Email: optionalEmailField("Admin email"),
+    user_Phone: optionalPhoneField("Admin phone is required"),
+    user_Gender: optionalLookupField("Gender", 50),
+    user_Password: optionalPasswordField("Password"),
+    user_Password_confirmation: optionalPasswordField("Confirm password")
 }).superRefine((data, ctx) => {
     if (hasRole(data.types, "SU") && !data.supplier_category_id) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["supplier_category_id"], message: "Select a supplier category." })
@@ -103,6 +234,7 @@ const registerSchema = z.object({
 })
 
 export type RegisterFormInputs = z.infer<typeof registerSchema>
+export type RegisterRole = RoleValue
 
 export const useRegisterForm = () => {
     const [metadata, setMetadata] = useState({
@@ -228,12 +360,18 @@ export const useRegisterForm = () => {
 
         const result = await res.json().catch(() => null)
         if (!res.ok) {
-            if (result?.errors) {
+            let hasFieldErrors = false
+
+            if (result?.errors && typeof result.errors === "object" && !Array.isArray(result.errors)) {
                 Object.entries(result.errors).forEach(([key, value]) => {
-                    form.setError(key as any, { message: Array.isArray(value) ? value[0] : value as string })
+                    const first = Array.isArray(value) ? value[0] : value
+                    const safeMessage = getSafeServerFieldMessage(key, first)
+                    form.setError(key as any, { message: safeMessage })
+                    hasFieldErrors = true
                 })
             }
-            throw new Error(result?.message ?? "Registration failed.")
+
+            throw new Error(hasFieldErrors ? GENERIC_REGISTRATION_ERROR : "We couldn't submit your registration right now. Please try again.")
         }
 
         const verifyEmailLink = extractVerifyEmailUrl(result)
@@ -263,7 +401,7 @@ export const useRegisterForm = () => {
         getLastVerifyEmailUrl: useCallback(() => lastVerifyEmailUrlRef.current, []),
         getLastRegisterResponse: useCallback(() => lastRegisterResponseRef.current, []),
         isSubmitting: form.formState.isSubmitting,
-        toggleType: (type: string) => {
+        toggleType: (type: RoleValue) => {
             const current = form.getValues("types") || []
             const updated = current.includes(type) ? current.filter(t => t !== type) : [...current, type]
             form.setValue("types", updated, { shouldValidate: true })
