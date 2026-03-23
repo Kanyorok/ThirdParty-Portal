@@ -4,35 +4,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { formatDistanceToNowStrict } from "date-fns"
 import { toast } from "sonner"
 
-let cachedAccessToken: string | null = null
-let fetchingAccessToken: Promise<string | null> | null = null
-
-async function resolveAccessToken(): Promise<string | null> {
-  if (cachedAccessToken) return cachedAccessToken
-  if (!fetchingAccessToken) {
-    fetchingAccessToken = (async () => {
-      const res = await fetch("/api/auth/session", { cache: "no-store", credentials: "same-origin" })
-      if (!res.ok) return null
-      const data = await res.json().catch(() => null)
-      const token = data?.accessToken
-      cachedAccessToken = typeof token === "string" ? token : null
-      return cachedAccessToken
-    })()
-  }
-  const token = await fetchingAccessToken
-  fetchingAccessToken = null
-  return token
-}
-
-async function buildAuthHeaders(): Promise<Record<string, string>> {
-  const token = await resolveAccessToken()
-  if (!token) return {}
-  return { Authorization: `Bearer ${token}` }
-}
+/* ── Types ────────────────────────────────────────────────────────── */
 
 export type AppNotification = {
   id: string | number
   message: string
+  subject?: string | null
   title?: string | null
   body?: string | null
   link?: string | null
@@ -44,29 +21,89 @@ export type AppNotification = {
   priorityLevel?: "critical" | "high" | "medium" | "low" | null
   isPriority: boolean
   notificationType?: string | null
-  data: Record<string, any> | null
+  category?: string | null
+  data: Record<string, unknown> | null
 }
 
-type RawNotification = Record<string, any>
-
-function asArray(value: any): any[] {
-  if (Array.isArray(value)) return value
-  return []
+export type NotificationSummary = {
+  total: number
+  unread: number
 }
 
-function pickNotificationsPayload(json: any): any[] {
-  if (!json) return []
+export type NotificationPreferences = {
+  channels: ("in_app" | "email" | "sms")[]
+  muteAll: boolean
+  categories: {
+    prequalification: boolean
+    tenders: boolean
+    general: boolean
+  }
+}
+
+type RawNotification = Record<string, unknown>
+
+/* ── Normalization helpers ────────────────────────────────────────── */
+
+function pickNotificationsPayload(json: unknown): unknown[] {
+  if (!json || typeof json !== "object") return []
   if (Array.isArray(json)) return json
-  if (Array.isArray(json?.data)) return json.data
-  if (Array.isArray(json?.notifications)) return json.notifications
-  if (Array.isArray(json?.data?.data)) return json.data.data
+  const obj = json as Record<string, unknown>
+  if (Array.isArray(obj.notifications)) return obj.notifications
+  if (Array.isArray(obj.data)) return obj.data
+  const nested = obj.data as Record<string, unknown> | undefined
+  if (nested && Array.isArray(nested.data)) return nested.data
   return []
+}
+
+function pickSummary(json: unknown): NotificationSummary | null {
+  if (!json || typeof json !== "object") return null
+  const obj = json as Record<string, unknown>
+  const summary = obj.summary as Record<string, unknown> | undefined
+  if (summary && typeof summary.total === "number") {
+    return { total: summary.total, unread: Number(summary.unread ?? 0) }
+  }
+  return null
+}
+
+function pickPreferences(json: unknown): NotificationPreferences | null {
+  if (!json || typeof json !== "object") return null
+  const obj = json as Record<string, unknown>
+  const pref = obj.preferences as Record<string, unknown> | undefined
+  if (!pref) return null
+  const cats = pref.categories as Record<string, boolean> | undefined
+  return {
+    channels: Array.isArray(pref.channels) ? pref.channels.filter((c): c is "in_app" | "email" | "sms" => typeof c === "string") : [],
+    muteAll: Boolean(pref.muteAll),
+    categories: {
+      prequalification: cats?.prequalification !== false,
+      tenders: cats?.tenders !== false,
+      general: cats?.general !== false,
+    },
+  }
 }
 
 function normalizeText(value?: unknown): string | null {
   if (typeof value === "string" && value.trim()) return value.trim()
   if (typeof value === "number") return String(value)
   return null
+}
+
+/** Strip HTML tags and decode common entities so users see clean text. */
+function stripHtml(text: string | null | undefined): string | null {
+  if (!text) return null
+  const plain = text
+    .replace(/<br\s*\/?>/gi, " ")
+    .replace(/<\/p>\s*<p[^>]*>/gi, " ")
+    .replace(/<[^>]*>/g, "")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim()
+  return plain || null
 }
 
 function normalizePriorityLevel(value?: unknown): AppNotification["priorityLevel"] {
@@ -81,72 +118,46 @@ function normalizePriorityLevel(value?: unknown): AppNotification["priorityLevel
 
 function deriveChannel(raw: RawNotification): "email" | "sms" {
   const candidate =
-    raw.channel ??
-    raw.channels ??
-    raw.type ??
-    raw.notification_type ??
-    raw.data?.channel ??
-    raw.data?.type ??
-    raw.notificationType ??
-    raw.notification_channel
+    raw.channel ?? raw.type ?? raw.notification_type ?? raw.notificationType
   const normalized = String(candidate ?? "").toLowerCase()
   if (normalized.includes("sms")) return "sms"
   return "email"
 }
 
 function deriveChannelId(raw: RawNotification, fallbackId: string | number): string | number {
+  const data = raw.data as Record<string, unknown> | undefined
   return (
-    raw.data?.SMSId ??
-    raw.data?.sms_id ??
-    raw.data?.EmailID ??
-    raw.data?.email_id ??
-    raw.data?.id ??
-    raw.notification_id ??
-    fallbackId
-  )
+    data?.SMSId ?? data?.sms_id ?? data?.EmailID ?? data?.email_id ?? data?.id ??
+    raw.notification_id ?? fallbackId
+  ) as string | number
 }
 
 function normalizeNotification(raw: RawNotification): AppNotification {
   const baseId = raw.id ?? raw.uuid ?? raw.reference ?? raw.key ?? raw.notification_id
-  const title = normalizeText(raw.title ?? raw.data?.title)
-  const body = normalizeText(raw.body ?? raw.description ?? raw.data?.body)
+  const data = (raw.data ?? null) as Record<string, unknown> | null
+
+  const subject = stripHtml(normalizeText(raw.subject ?? data?.subject))
+  const title = stripHtml(normalizeText(raw.title ?? data?.title))
+  const body = stripHtml(normalizeText(raw.body ?? raw.description ?? data?.body))
   const link = normalizeText(
-    raw.link ??
-    raw.url ??
-    raw.action_url ??
-    raw.path ??
-    raw.data?.link ??
-    raw.data?.url ??
-    raw.data?.action_url ??
-    raw.data?.path
+    raw.link ?? raw.url ?? raw.action_url ?? raw.path ??
+    data?.link ?? data?.url ?? data?.action_url ?? data?.path
   )
-  const profileType = normalizeText(raw.profileType ?? raw.data?.profileType)
+  const profileType = normalizeText(raw.profileType ?? data?.profileType)
   const notificationType = normalizeText(
-    raw.notification_type ??
-    raw.type ??
-    raw.kind ??
-    raw.category ??
-    raw.data?.type ??
-    raw.data?.kind ??
-    raw.data?.category
+    raw.notification_type ?? raw.type ?? raw.kind ?? raw.category ??
+    data?.type ?? data?.kind ?? data?.category
   )
+  const category = normalizeText(raw.category ?? data?.category)
   const priorityLevel = normalizePriorityLevel(
-    raw.priority ??
-    raw.severity ??
-    raw.urgency ??
-    raw.data?.priority ??
-    raw.data?.severity ??
-    raw.data?.urgency
+    raw.priority ?? raw.severity ?? raw.urgency ??
+    data?.priority ?? data?.severity ?? data?.urgency
   )
 
-  const message =
-    normalizeText(raw.message) ??
-    title ??
-    body ??
-    "Notification"
+  const message = subject ?? stripHtml(normalizeText(raw.message)) ?? title ?? body ?? "Notification"
 
   const createdAt =
-    normalizeText(raw.created_at ?? raw.createdAt ?? raw.timestamp ?? raw.data?.createdAt) ?? null
+    normalizeText(raw.created_at ?? raw.createdAt ?? raw.timestamp ?? data?.createdAt) ?? null
 
   const read =
     Boolean(raw.read ?? raw.is_read ?? raw.isRead) ||
@@ -154,14 +165,15 @@ function normalizeNotification(raw: RawNotification): AppNotification {
     false
 
   const channel = deriveChannel(raw)
-  const channelId = deriveChannelId(raw, baseId ?? "unknown")
+  const channelId = deriveChannelId(raw, (baseId ?? "unknown") as string | number)
   const isPriority =
     Boolean(priorityLevel) ||
-    String(raw.data?.source ?? "").toLowerCase() === "priority_action"
+    String(data?.source ?? "").toLowerCase() === "priority_action"
 
   return {
-    id: baseId ?? channelId,
+    id: (baseId ?? channelId) as string | number,
     message: message ?? "Notification",
+    subject,
     title,
     body,
     link,
@@ -173,21 +185,12 @@ function normalizeNotification(raw: RawNotification): AppNotification {
     priorityLevel,
     isPriority,
     notificationType,
-    data: raw.data ?? raw,
+    category,
+    data: raw.data as Record<string, unknown> | null ?? raw as Record<string, unknown>,
   }
 }
 
-function safeJsonParse(text: string): any | null {
-  try {
-    return text ? JSON.parse(text) : null
-  } catch {
-    return null
-  }
-}
-
-function hasMissingNotificationsTableError(text?: string | null): boolean {
-  return Boolean(text?.includes("Invalid object name 'notifications'"))
-}
+/* ── Time formatting ──────────────────────────────────────────────── */
 
 export function formatRelativeTime(createdAt?: string | null) {
   if (!createdAt) return ""
@@ -196,33 +199,50 @@ export function formatRelativeTime(createdAt?: string | null) {
   return formatDistanceToNowStrict(dt, { addSuffix: true })
 }
 
-async function fetchNotifications(limit = 12): Promise<AppNotification[]> {
-  const headers = await buildAuthHeaders()
-  const res = await fetch(`/api/notifications`, { cache: "no-store", credentials: "same-origin", headers })
+/* ── Fetch notifications ──────────────────────────────────────────── */
+
+type NotificationsResponse = {
+  items: AppNotification[]
+  summary: NotificationSummary
+  preferences: NotificationPreferences | null
+}
+
+async function fetchNotifications(): Promise<NotificationsResponse> {
+  const res = await fetch("/api/notifications", { cache: "no-store", credentials: "same-origin" })
   const text = await res.text()
-  const payload = safeJsonParse(text)
+
+  let payload: unknown = null
+  try { payload = text ? JSON.parse(text) : null } catch { /* empty */ }
 
   if (!res.ok) {
-    if (hasMissingNotificationsTableError(text)) {
-      console.warn("Notifications endpoint pending backend migration:", text)
-      return []
+    if (text?.includes("Invalid object name 'notifications'")) {
+      return { items: [], summary: { total: 0, unread: 0 }, preferences: null }
     }
     throw new Error("Failed to load notifications")
   }
 
-  const normalized = pickNotificationsPayload(payload).map((n) => normalizeNotification(n))
-  const requested = Number.isFinite(limit) ? Math.max(0, Math.floor(limit)) : normalized.length
-  return normalized.slice(0, Math.min(requested, normalized.length))
+  const items = pickNotificationsPayload(payload).map((n) => normalizeNotification(n as RawNotification))
+  const summary = pickSummary(payload) ?? {
+    total: items.length,
+    unread: items.filter((n) => !n.read).length,
+  }
+  const preferences = pickPreferences(payload)
+
+  return { items, summary, preferences }
 }
 
-export function useNotifications({ limit = 12 }: { limit?: number } = {}) {
+/* ── Queries ──────────────────────────────────────────────────────── */
+
+export function useNotifications() {
   return useQuery({
-    queryKey: ["notifications", limit],
-    queryFn: () => fetchNotifications(limit),
+    queryKey: ["notifications"],
+    queryFn: fetchNotifications,
     staleTime: 20_000,
     retry: 1,
   })
 }
+
+/* ── Mark single as read ──────────────────────────────────────────── */
 
 type MarkReadPayload = {
   channel: "email" | "sms"
@@ -230,24 +250,11 @@ type MarkReadPayload = {
 }
 
 async function markReadRequest({ channel, id }: MarkReadPayload) {
-  const headers = await buildAuthHeaders()
   const res = await fetch(`/api/notifications/${channel}/${encodeURIComponent(String(id))}/read`, {
     method: "POST",
-    headers,
     credentials: "same-origin",
   })
   if (!res.ok) throw new Error("Failed to mark read")
-  return res.json()
-}
-
-async function markAllReadRequest() {
-  const headers = await buildAuthHeaders()
-  const res = await fetch(`/api/notifications/read-all`, {
-    method: "POST",
-    headers,
-    credentials: "same-origin",
-  })
-  if (!res.ok) throw new Error("Failed to mark all read")
   return res.json()
 }
 
@@ -256,23 +263,34 @@ export function useMarkNotificationRead() {
   return useMutation({
     mutationFn: markReadRequest,
     onSuccess: (_data, variables) => {
-      const targetId = variables.id
-      queryClient.setQueriesData({ queryKey: ["notifications"] }, (prev: any) => {
-        const list = asArray(prev)
-        return list.map((n) =>
-          n?.channelId === targetId || n?.id === targetId ? { ...n, read: true } : n
-        )
+      queryClient.setQueriesData({ queryKey: ["notifications"] }, (prev: unknown) => {
+        if (!prev || typeof prev !== "object") return prev
+        const state = prev as NotificationsResponse
+        return {
+          ...state,
+          items: state.items.map((n) =>
+            n.channelId === variables.id || n.id === variables.id ? { ...n, read: true } : n
+          ),
+          summary: { ...state.summary, unread: Math.max(0, state.summary.unread - 1) },
+        }
       })
-      toast.success("Notification marked as read.", {
-        description: "Your inbox is up to date.",
-      })
+      toast.success("Notification marked as read.")
     },
     onError: () => {
-      toast.error("Could not mark notification as read.", {
-        description: "Please try again.",
-      })
+      toast.error("Could not mark notification as read.")
     },
   })
+}
+
+/* ── Mark all as read ─────────────────────────────────────────────── */
+
+async function markAllReadRequest() {
+  const res = await fetch("/api/notifications/read-all", {
+    method: "POST",
+    credentials: "same-origin",
+  })
+  if (!res.ok) throw new Error("Failed to mark all read")
+  return res.json()
 }
 
 export function useMarkAllNotificationsRead() {
@@ -280,18 +298,84 @@ export function useMarkAllNotificationsRead() {
   return useMutation({
     mutationFn: markAllReadRequest,
     onSuccess: () => {
-      queryClient.setQueriesData({ queryKey: ["notifications"] }, (prev: any) => {
-        const list = asArray(prev)
-        return list.map((n) => ({ ...n, read: true }))
+      queryClient.setQueriesData({ queryKey: ["notifications"] }, (prev: unknown) => {
+        if (!prev || typeof prev !== "object") return prev
+        const state = prev as NotificationsResponse
+        return {
+          ...state,
+          items: state.items.map((n) => ({ ...n, read: true })),
+          summary: { ...state.summary, unread: 0 },
+        }
       })
-      toast.success("All notifications marked as read.", {
-        description: "You are all caught up.",
-      })
+      toast.success("All notifications marked as read.")
     },
     onError: () => {
-      toast.error("Could not mark all notifications as read.", {
-        description: "Please try again.",
-      })
+      toast.error("Could not mark all notifications as read.")
+    },
+  })
+}
+
+/* ── Preferences ──────────────────────────────────────────────────── */
+
+async function fetchPreferences(): Promise<NotificationPreferences> {
+  const res = await fetch("/api/notifications/preferences", { cache: "no-store", credentials: "same-origin" })
+  if (!res.ok) throw new Error("Failed to load preferences")
+  const json = await res.json()
+  const pref = pickPreferences(json)
+  if (!pref) throw new Error("Invalid preferences response")
+  return pref
+}
+
+export function useNotificationPreferences() {
+  return useQuery({
+    queryKey: ["notification-preferences"],
+    queryFn: fetchPreferences,
+    staleTime: 60_000,
+    retry: 1,
+  })
+}
+
+type UpdatePreferencesPayload = {
+  preference?: string
+  channels?: string[]
+  muteAll?: boolean
+  categories?: {
+    prequalification?: boolean
+    tenders?: boolean
+    general?: boolean
+  }
+}
+
+async function updatePreferencesRequest(payload: UpdatePreferencesPayload): Promise<NotificationPreferences> {
+  const res = await fetch("/api/notifications/preferences", {
+    method: "PUT",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => null)
+    const msg = (body as Record<string, string> | null)?.message ?? "Failed to save preferences"
+    throw new Error(msg)
+  }
+  const json = await res.json().catch(() => ({}))
+  return pickPreferences(json) ?? ({
+    channels: payload.channels ?? [],
+    muteAll: payload.muteAll ?? false,
+    categories: { prequalification: true, tenders: true, general: true, ...payload.categories },
+  } as NotificationPreferences)
+}
+
+export function useUpdatePreferences() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: updatePreferencesRequest,
+    onSuccess: (data) => {
+      queryClient.setQueryData(["notification-preferences"], data)
+      toast.success("Preferences saved.")
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to save preferences.")
     },
   })
 }

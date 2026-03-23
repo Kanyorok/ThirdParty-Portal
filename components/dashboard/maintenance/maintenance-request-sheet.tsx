@@ -24,7 +24,7 @@ import { toast } from "sonner"
 import { Loader2, Plus, UploadCloud, Wrench } from "lucide-react"
 import { MAINTENANCE_CATEGORIES, PRIORITY_LEVELS, CreateMaintenanceRequestPayload } from "@/types/maintenance"
 import { useSession } from "next-auth/react"
-import { resolveSessionAccessToken } from "@/lib/auth/resolve-session-access-token"
+import { resolveSessionAccessToken } from "@/lib/auth/server-token"
 import { maintenanceService } from "@/lib/api/maintenance"
 
 export function MaintenanceRequestSheet({

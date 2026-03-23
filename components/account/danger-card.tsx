@@ -31,16 +31,13 @@ const itemVariants: Variants = {
     show: { opacity: 1, x: 0, transition: { duration: 0.3, ease: "easeOut" } }
 }
 
-export default function DangerZoneCard({ accessToken }: { accessToken?: string }) {
-    const { data: session } = useSession()
+export default function DangerZoneCard() {
+    const { status } = useSession()
     const [dialogOpen, setDialogOpen] = useState(false)
     const [confirmPassword, setConfirmPassword] = useState("")
     const [passwordError, setPasswordError] = useState<string | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [showPassword, setShowPassword] = useState(false)
-
-    const resolvedAccessToken =
-        accessToken || ((session as any)?.accessToken as string | undefined)
 
     const resetFormState = () => {
         setConfirmPassword("")
@@ -66,7 +63,7 @@ export default function DangerZoneCard({ accessToken }: { accessToken?: string }
             return
         }
 
-        if (!resolvedAccessToken) {
+        if (status !== 'authenticated') {
             toast.error("Authentication required. Please sign in again.")
             return
         }
@@ -74,7 +71,7 @@ export default function DangerZoneCard({ accessToken }: { accessToken?: string }
         setPasswordError(null)
         setIsSubmitting(true)
         try {
-            const response = await apiService.deactivateAccount(password, resolvedAccessToken)
+            const response = await apiService.deactivateAccount(password)
             toast.success(response?.message || "Account deactivated successfully.")
             setDialogOpen(false)
             resetFormState()
@@ -100,7 +97,7 @@ export default function DangerZoneCard({ accessToken }: { accessToken?: string }
                         </p>
                     </div>
 
-                    {!resolvedAccessToken ? (
+                    {status !== 'authenticated' ? (
                         <p className="mx-auto max-w-xl text-sm text-destructive">
                             Authentication required. Please sign in again before deactivating your account.
                         </p>

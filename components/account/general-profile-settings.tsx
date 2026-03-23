@@ -52,7 +52,7 @@ interface GeneralProfileSettingsProps {
 }
 
 export default function GeneralProfileSettings({ initialData }: GeneralProfileSettingsProps) {
-    const { data: session } = useSession();
+    const { status } = useSession();
 
     const { register, handleSubmit, reset, formState: { errors, isSubmitting, isDirty } } = useForm<GeneralProfileInputs>({
         resolver: zodResolver(generalProfileSchema),
@@ -75,7 +75,7 @@ export default function GeneralProfileSettings({ initialData }: GeneralProfileSe
     });
 
     const handleFormSubmit = async (data: GeneralProfileInputs) => {
-        if (!session?.accessToken) {
+        if (status !== 'authenticated') {
             toast.error("Authentication required to save changes.");
             return;
         }
@@ -83,10 +83,8 @@ export default function GeneralProfileSettings({ initialData }: GeneralProfileSe
         toast.promise(
             fetch('/api/third-party-profile', {
                 method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.accessToken}`,
-                },
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
                 body: JSON.stringify(data),
             }).then(async res => {
                 const responseData = await res.json();

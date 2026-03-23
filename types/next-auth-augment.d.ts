@@ -3,118 +3,83 @@ import type { DefaultJWT } from "next-auth/jwt"
 
 declare module "next-auth" {
   interface Session {
+    /** Available server-side only. Stripped from client /api/auth/session responses. */
     accessToken?: string
     user: DefaultSession["user"] & {
-      id?: string
-      user_id?: number
       userId?: number
-      tenant_id?: number | null
       tenantId?: number | null
-      tenantMaintenanceId?: number | null
-      third_party_id?: number | null
-      is_supplier?: boolean
-      is_tenant?: boolean
-      is_customer?: boolean
-      approval_status?: string
-      profile?: unknown
-      gender?: unknown
-      image_id?: number | null
-      image_url?: string | null
-      imageUrl?: string | null
-      image?: string | null
-      is_active?: boolean | null
-      email_verified_on?: string | null
-      created_on?: string | null
-      modified_on?: string | null
-      third_party?: unknown
-
       thirdPartyId?: number | null
-      approvalStatus?: string
+      fullName?: string
+      imageUrl?: string | null
       isSupplier?: boolean
       isTenant?: boolean
       isCustomer?: boolean
-      imageId?: number | null
-      isActive?: boolean | null
-      emailVerifiedOn?: string | null
-      createdOn?: string | null
-      modifiedOn?: string | null
-      thirdParty?: unknown
+      approvalStatus?: string
+
+      /** @deprecated Use camelCase equivalents. Kept for resolver compat. */
+      third_party_id?: number | null
+      /** @deprecated */ is_supplier?: boolean
+      /** @deprecated */ is_tenant?: boolean
+      /** @deprecated */ is_customer?: boolean
+      /** @deprecated */ tenant_id?: number | null
+      /** @deprecated */ full_name?: string
+      /** @deprecated */ image_url?: string | null
+      /** @deprecated */ approval_status?: string
     }
   }
 
   interface User extends DefaultUser {
-    id?: string
-    user_id?: number
     userId?: number
-    tenant_id?: number | null
     tenantId?: number | null
-    tenantMaintenanceId?: number | null
-    third_party_id?: number | null
-    first_name?: string
-    last_name?: string
-    full_name?: string
+    thirdPartyId?: number | null
+    fullName?: string
     phone?: string | null
-    is_supplier?: boolean
-    is_tenant?: boolean
-    is_customer?: boolean
-    approval_status?: string
-    accessToken?: string
-    profile?: unknown
     gender?: unknown
-    image_id?: number | null
-    image_url?: string | null
     imageUrl?: string | null
-    image?: string | null
-    is_active?: boolean | null
-    email_verified_on?: string | null
-    created_on?: string | null
-    modified_on?: string | null
-    third_party?: unknown
+    isActive?: boolean | null
+    isSupplier?: boolean
+    isTenant?: boolean
+    isCustomer?: boolean
+    approvalStatus?: string
+    supplierId?: string | null
+    accessToken?: string
     tokenType?: string
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT extends DefaultJWT {
-    user_id?: number
     userId?: number
-    tenant_id?: number | null
     tenantId?: number | null
-    tenantMaintenanceId?: number | null
-    third_party_id?: number | null
-    first_name?: string
-    last_name?: string
-    full_name?: string
-    phone?: string | null
-    is_supplier?: boolean
-    is_tenant?: boolean
-    is_customer?: boolean
-    approval_status?: string
-    accessToken?: string
-    profile?: unknown
-    gender?: unknown
-    image_id?: number | null
-    image_url?: string | null
-    imageUrl?: string | null
-    image?: string | null
-    is_active?: boolean | null
-    email_verified_on?: string | null
-    created_on?: string | null
-    modified_on?: string | null
-    third_party?: unknown
-    tokenType?: string
-
-    // Common camelCase aliases 
     thirdPartyId?: number | null
-    approvalStatus?: string
+    fullName?: string
+    phone?: string | null
+    gender?: unknown
+    imageUrl?: string | null
+    isActive?: boolean | null
     isSupplier?: boolean
     isTenant?: boolean
     isCustomer?: boolean
-    imageId?: number | null
-    isActive?: boolean | null
-    emailVerifiedOn?: string | null
-    createdOn?: string | null
-    modifiedOn?: string | null
-    thirdParty?: unknown
+    approvalStatus?: string
+    supplierId?: string | null
+    accessToken?: string
+    tokenType?: string
+
+    /** @deprecated compat aliases */
+    user_id?: number
+    tenant_id?: number | null
+    third_party_id?: number | null
+    full_name?: string
+    is_supplier?: boolean
+    is_tenant?: boolean
+    is_customer?: boolean
+    is_active?: boolean | null
+    image_url?: string | null
+    image?: string | null
+    approval_status?: string
+    image_id?: number | null
+    email_verified_on?: string | null
+    created_on?: string | null
+    modified_on?: string | null
   }
 }

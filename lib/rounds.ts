@@ -99,26 +99,44 @@ export const mapApiRound = (round: any): Round => {
         startDate: round.startDate,
         endDate: round.endDate,
         canApply: Boolean(round.canApply),
+        canApplyToMore: Boolean(round.canApplyToMore),
         supplierEligible: Boolean(round.supplierEligible),
+        isClosed: Boolean(round.isClosed),
+        isExpired: Boolean(round.isExpired),
+        windowOpen: Boolean(round.windowOpen),
+        isFutureWindow: Boolean(round.isFutureWindow),
+        notApplicable: Boolean(round.notApplicable),
         description: round.description ?? round.Description ?? round.roundDescription ?? "",
         instructions: extractInstructionSegment(round.description),
         howToApply: round.howToApply ?? round.how_to_apply ?? undefined,
         categories,
         appliedCategories,
         availableCategories,
-        categoryCount: categories.length,
-        unappliedCount: availableCategories.length,
+        categoryCount: round.categoryCount ?? categories.length,
+        appliedCount: round.appliedCount ?? applied,
+        unappliedCount: round.unappliedCount ?? availableCategories.length,
         hasApplied: applied > 0,
-        applicationSummary: applied
+        summary: round.summary,
+        applicationSummary: round.summary
             ? {
                 total_categories: categories.length,
-                applied_categories: applied,
-                approved_categories: approved,
-                rejected_categories: rejected,
-                pending_categories: pending,
+                applied_categories: (round.summary.submitted ?? 0) + (round.summary.approved ?? 0) + (round.summary.under_review ?? 0) + (round.summary.rejected ?? 0) + (round.summary.pending ?? 0),
+                approved_categories: round.summary.approved ?? 0,
+                rejected_categories: round.summary.rejected ?? 0,
+                pending_categories: (round.summary.submitted ?? 0) + (round.summary.under_review ?? 0) + (round.summary.pending ?? 0),
                 overall_progress: overallProgress
             }
-            : undefined,
+            : applied
+                ? {
+                    total_categories: categories.length,
+                    applied_categories: applied,
+                    approved_categories: approved,
+                    rejected_categories: rejected,
+                    pending_categories: pending,
+                    overall_progress: overallProgress
+                }
+                : undefined,
+        sections: round.sections,
         maxVendors: round.maxVendors,
         eligibility: round.eligibility
     }

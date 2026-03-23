@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth-options"
 import { getApiUrl } from "@/lib/config"
-import { resolveSessionAccessToken } from "@/lib/auth/resolve-session-access-token"
+import { resolveSessionAccessToken } from "@/lib/auth/server-token"
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions)

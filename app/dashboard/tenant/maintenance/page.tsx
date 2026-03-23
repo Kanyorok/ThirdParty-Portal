@@ -13,7 +13,7 @@ import { Button } from "@/components/common/button"
 import { maintenanceService } from "@/lib/api/maintenance"
 import { useSearchParams } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { resolveSessionAccessToken } from "@/lib/auth/resolve-session-access-token"
+import { resolveSessionAccessToken } from "@/lib/auth/server-token"
 import {
     resolveTenantIdFromProfilesPayload,
     resolveTenantIdFromSessionUser,

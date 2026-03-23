@@ -43,6 +43,7 @@ export const sidebarItems: readonly NavSection[] = [
         allowedProfiles: ["Supplier"],
         items: [
             withProfiles({ title: "Prequalification", url: "/dashboard/supplier/prequalification", icon: ShieldCheck, description: "Compliance & onboarding" }, ["Supplier"]),
+            withProfiles({ title: "My Applications", url: "/dashboard/supplier/prequalification/my-applications", icon: FileCheck2, description: "Track your prequalification applications" }, ["Supplier"]),
             withProfiles({ title: "Find RFQs", url: "/dashboard/supplier/rfqs", icon: ClipboardList, description: "Browse requests for quotation" }, ["Supplier"]),
             withProfiles({ title: "Find Tenders", url: "/dashboard/supplier/tenders", icon: FileText, description: "Explore available tenders" }, ["Supplier"]),
             withProfiles({ title: "My Bids", url: "/dashboard/supplier/bids", icon: FileCheck2, description: "Track draft and submitted bids" }, ["Supplier"]),

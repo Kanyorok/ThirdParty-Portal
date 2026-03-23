@@ -1,5 +1,4 @@
 import { create } from "zustand"
-import { getSession } from "next-auth/react"
 import { PrequalificationRound } from "@/types/procurement/types"
 
 interface ProcurementState {
@@ -19,8 +18,6 @@ interface ProcurementState {
     setSelectedRound: (round: PrequalificationRound | null) => void
 }
 
-const API_BASE = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/supplier/prequalification`
-
 export const useProcurementStore = create<ProcurementState>((set) => ({
     rounds: [],
     selectedRound: null,
@@ -34,12 +31,9 @@ export const useProcurementStore = create<ProcurementState>((set) => ({
     fetchRounds: async () => {
         set({ isLoading: true, error: null })
         try {
-            const session = await getSession()
-            const res = await fetch(`${API_BASE}/rounds`, {
-                headers: {
-                    Authorization: `Bearer ${session?.accessToken}`,
-                    Accept: "application/json"
-                }
+            const res = await fetch("/api/prequalification/rounds", {
+                headers: { Accept: "application/json" },
+                credentials: "same-origin",
             })
             const result = await res.json()
             if (!res.ok) throw new Error(result.message)
@@ -52,12 +46,9 @@ export const useProcurementStore = create<ProcurementState>((set) => ({
     fetchRoundDetails: async (roundId: number) => {
         set({ isLoading: true, error: null })
         try {
-            const session = await getSession()
-            const res = await fetch(`${API_BASE}/rounds/${roundId}`, {
-                headers: {
-                    Authorization: `Bearer ${session?.accessToken}`,
-                    Accept: "application/json"
-                }
+            const res = await fetch(`/api/prequalification/rounds/${roundId}`, {
+                headers: { Accept: "application/json" },
+                credentials: "same-origin",
             })
             const result = await res.json()
             if (!res.ok) throw new Error(result.message)
@@ -70,15 +61,14 @@ export const useProcurementStore = create<ProcurementState>((set) => ({
     submitApplication: async (payload: any) => {
         set({ isLoading: true, error: null })
         try {
-            const session = await getSession()
-            const res = await fetch(`${API_BASE}/applications`, {
+            const res = await fetch("/api/prequalification/applications", {
                 method: "POST",
                 headers: {
-                    Authorization: `Bearer ${session?.accessToken}`,
                     Accept: "application/json",
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
                 },
-                body: JSON.stringify(payload)
+                credentials: "same-origin",
+                body: JSON.stringify(payload),
             })
             const result = await res.json()
             if (!res.ok) throw new Error(result.message)
@@ -93,16 +83,10 @@ export const useProcurementStore = create<ProcurementState>((set) => ({
     fetchMyApplications: async () => {
         set({ isLoading: true, error: null })
         try {
-            const session = await getSession()
-            const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/v1/supplier/prequalification/applications/my-applications`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${session?.accessToken}`,
-                        Accept: "application/json"
-                    }
-                }
-            )
+            const res = await fetch("/api/prequalification/applications?scope=my", {
+                headers: { Accept: "application/json" },
+                credentials: "same-origin",
+            })
             const result = await res.json()
             if (!res.ok) throw new Error(result.message)
             set({ myApplications: result.data ?? [], isLoading: false })
@@ -114,16 +98,10 @@ export const useProcurementStore = create<ProcurementState>((set) => ({
     fetchApplicationProgress: async (roundId: number) => {
         set({ isLoading: true, error: null })
         try {
-            const session = await getSession()
-            const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/v1/supplier/prequalification/applications/${roundId}/progress`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${session?.accessToken}`,
-                        Accept: "application/json"
-                    }
-                }
-            )
+            const res = await fetch(`/api/prequalification/applications/${roundId}/progress`, {
+                headers: { Accept: "application/json" },
+                credentials: "same-origin",
+            })
             const result = await res.json()
             if (!res.ok) throw new Error(result.message)
             set((state) => ({

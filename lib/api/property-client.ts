@@ -1,5 +1,5 @@
 import { getBaseUrl } from "@/lib/api-base"
-import { normalizeAccessToken } from "@/lib/auth/normalize-access-token"
+import { normalizeAccessToken } from "@/lib/auth/server-token"
 import type { PaginatedResponse } from "@/types/property"
 
 type QueryValue = string | number | boolean | null | undefined

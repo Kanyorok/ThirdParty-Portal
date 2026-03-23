@@ -13,7 +13,7 @@ import { useDebounce } from "@/hooks/use-debounce"
 import { cn } from "@/lib/utils"
 import { useSearchParams } from "next/navigation"
 import { useSession } from "next-auth/react"
-import { resolveSessionAccessToken } from "@/lib/auth/resolve-session-access-token"
+import { resolveSessionAccessToken } from "@/lib/auth/server-token"
 import {
     resolveTenantIdFromProfilesPayload,
     resolveTenantIdFromSessionUser,

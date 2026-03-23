@@ -4,7 +4,7 @@ import {
     propertyRequest,
     requireQueryId,
 } from "@/lib/api/property-client"
-import { normalizeAccessToken } from "@/lib/auth/normalize-access-token"
+import { normalizeAccessToken } from "@/lib/auth/server-token"
 import { getBaseUrl } from "@/lib/api-base"
 
 function normalizeTenantId(tenantId?: number | null) {

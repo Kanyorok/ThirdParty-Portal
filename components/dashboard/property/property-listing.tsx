@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/c
 import { useSession } from "next-auth/react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
-import { resolveSessionAccessToken } from "@/lib/auth/resolve-session-access-token"
+import { resolveSessionAccessToken } from "@/lib/auth/server-token"
 import {
     createLeaseInterest,
     getLeaseInterestById,

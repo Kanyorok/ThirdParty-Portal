@@ -3,10 +3,10 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useForm, useWatch } from "react-hook-form"
+import { useForm, useWatch, type UseFormRegisterReturn } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Mail, Lock, Loader2, AlertCircle, Eye, X, EyeClosed } from "lucide-react"
+import { Mail, Lock, Loader2, AlertCircle, Eye, X, EyeClosed, type LucideIcon } from "lucide-react"
 import { signIn } from "next-auth/react"
 
 import { Button } from "@/components/common/button"
@@ -20,6 +20,63 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>
 
+const fieldIconClass = "pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2"
+const inputBaseClass = "h-12 bg-transparent pl-10 pr-10"
+const inputErrorClass = "border-rose-400 focus-visible:border-rose-500 focus-visible:ring-rose-200"
+const endButtonClass = "absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+
+function AuthAlert({ message }: { message: string }) {
+    return (
+        <div className="flex items-start gap-2 rounded-xl border border-rose-300/70 bg-rose-50/90 px-3.5 py-3 text-rose-700">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <p className="text-sm font-medium">{message}</p>
+        </div>
+    )
+}
+
+interface FormFieldProps {
+    id: string
+    label: string
+    icon: LucideIcon
+    type: string
+    autoComplete: string
+    placeholder: string
+    disabled: boolean
+    hasError: boolean
+    errorMessage?: string
+    registration: UseFormRegisterReturn
+    endAction?: React.ReactNode
+}
+
+function FormField({
+    id, label, icon: Icon, type, autoComplete, placeholder,
+    disabled, hasError, errorMessage, registration, endAction,
+}: FormFieldProps) {
+    return (
+        <div className="space-y-1.5">
+            <label htmlFor={id} className="text-[11px] font-semibold tracking-wide text-slate-600">
+                {label}
+            </label>
+            <div className="relative">
+                <Icon className={cn(fieldIconClass, hasError ? "text-rose-500" : "text-muted-foreground")} />
+                <Input
+                    id={id}
+                    type={type}
+                    autoComplete={autoComplete}
+                    placeholder={placeholder}
+                    disabled={disabled}
+                    className={cn(inputBaseClass, hasError && inputErrorClass)}
+                    {...registration}
+                />
+                {endAction}
+            </div>
+            {hasError && errorMessage && (
+                <p className="text-xs font-medium text-rose-600">{errorMessage}</p>
+            )}
+        </div>
+    )
+}
+
 export default function LoginPage() {
     const router = useRouter()
     const [authError, setAuthError] = React.useState<string | null>(null)
@@ -30,20 +87,16 @@ export default function LoginPage() {
         handleSubmit,
         setValue,
         control,
-        formState: {
-            errors,
-            touchedFields,
-            isSubmitted,
-            isSubmitting
-        },
+        formState: { errors, touchedFields, isSubmitted, isSubmitting },
     } = useForm<FormValues>({
         resolver: zodResolver(schema),
         mode: "onBlur",
     })
 
     const emailValue = useWatch({ control, name: "email" })
-    const showError = (field: keyof FormValues) =>
-        (touchedFields[field] || isSubmitted) && errors[field]
+
+    const hasFieldError = (field: keyof FormValues) =>
+        (touchedFields[field] || isSubmitted) && !!errors[field]
 
     const onSubmit = async (data: FormValues) => {
         setAuthError(null)
@@ -60,14 +113,13 @@ export default function LoginPage() {
                     router.push(`/verify-email/expired?email=${encodeURIComponent(data.email)}`)
                     return
                 }
-
-                setAuthError("Email not verified!")
+                setAuthError("Invalid email or password.")
                 return
             }
 
             router.push("/dashboard")
         } catch {
-            setAuthError("An unexpected error occurred. Refresh or try again later.")
+            setAuthError("An unexpected error occurred. Please try again later.")
         }
     }
 
@@ -81,62 +133,53 @@ export default function LoginPage() {
                     </header>
 
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-                        {authError && (
-                            <div className="flex items-start gap-2 rounded-xl border border-rose-300/70 bg-rose-50/90 px-3.5 py-3 text-rose-700">
-                                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                                <p className="text-sm font-medium">{authError}</p>
-                            </div>
-                        )}
+                        {authError && <AuthAlert message={authError} />}
 
-                        <div className="space-y-1.5">
-                            <label htmlFor="email" className="text-[11px] font-semibold tracking-wide text-slate-600">Email</label>
-                            <div className="relative">
-                                <Mail className={cn("pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2", showError("email") ? "text-rose-500" : "text-muted-foreground")} />
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    {...register("email")}
-                                    placeholder="youremail@gmail.com"
-                                    disabled={isSubmitting}
-                                    className={cn("h-12 bg-transparent pl-10 pr-10", showError("email") && "border-rose-400 focus-visible:border-rose-500 focus-visible:ring-rose-200")}
-                                />
-                                {emailValue && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setValue("email", "", { shouldValidate: true })}
-                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
-                                        aria-label="Clear email"
-                                    >
-                                        <X className="h-4 w-4" />
-                                    </button>
-                                )}
-                            </div>
-                            {showError("email") && <p className="text-xs font-medium text-rose-600">{errors.email?.message}</p>}
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <label htmlFor="password" className="text-[11px] font-semibold tracking-wide text-slate-600">Password</label>
-                            <div className="relative">
-                                <Lock className={cn("pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2", showError("password") ? "text-rose-500" : "text-muted-foreground")} />
-                                <Input
-                                    id="password"
-                                    type={showPassword ? "text" : "password"}
-                                    {...register("password")}
-                                    placeholder="Enter your password"
-                                    disabled={isSubmitting}
-                                    className={cn("h-12 bg-transparent pl-10 pr-10", showError("password") && "border-rose-400 focus-visible:border-rose-500 focus-visible:ring-rose-200")}
-                                />
+                        <FormField
+                            id="email"
+                            label="Email"
+                            icon={Mail}
+                            type="email"
+                            autoComplete="email"
+                            placeholder="youremail@gmail.com"
+                            disabled={isSubmitting}
+                            hasError={hasFieldError("email")}
+                            errorMessage={errors.email?.message}
+                            registration={register("email")}
+                            endAction={emailValue ? (
                                 <button
                                     type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+                                    onClick={() => setValue("email", "", { shouldValidate: true })}
+                                    className={endButtonClass}
+                                    aria-label="Clear email"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                            ) : null}
+                        />
+
+                        <FormField
+                            id="password"
+                            label="Password"
+                            icon={Lock}
+                            type={showPassword ? "text" : "password"}
+                            autoComplete="current-password"
+                            placeholder="Enter your password"
+                            disabled={isSubmitting}
+                            hasError={hasFieldError("password")}
+                            errorMessage={errors.password?.message}
+                            registration={register("password")}
+                            endAction={
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(prev => !prev)}
+                                    className={endButtonClass}
                                     aria-label={showPassword ? "Hide password" : "Show password"}
                                 >
                                     {showPassword ? <EyeClosed className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                 </button>
-                            </div>
-                            {showError("password") && <p className="text-xs font-medium text-rose-600">{errors.password?.message}</p>}
-                        </div>
+                            }
+                        />
 
                         <Button type="submit" disabled={isSubmitting} className="h-12 w-full rounded-xl text-sm font-semibold">
                             {isSubmitting ? (

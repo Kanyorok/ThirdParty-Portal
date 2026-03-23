@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/prequalification/rounds/${encodeURIComponent(id)}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/supplier/prequalification/rounds/${encodeURIComponent(id)}`, {
       headers: {
         Accept: "application/json",
         Authorization: `Bearer ${session.accessToken}`,

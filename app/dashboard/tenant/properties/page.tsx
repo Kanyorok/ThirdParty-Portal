@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/common/skeleton"
 import { AlertCircle, RefreshCw, Building2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useSession } from "next-auth/react"
-import { resolveSessionAccessToken } from "@/lib/auth/resolve-session-access-token"
+import { resolveSessionAccessToken } from "@/lib/auth/server-token"
 
 export default function PropertyRegistry() {
     const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : "")
