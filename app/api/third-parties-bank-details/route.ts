@@ -8,6 +8,9 @@ const BANK_DETAILS_ENDPOINT = "/api/third-parties-bank-details"
 
 type BankDetailsWritePayload = {
   ThirdPartyId: number
+  BankName?: string
+  Branch?: string
+  SwiftCode?: string
   BranchID?: number
   BranchId?: number
   AccountNumber?: string
@@ -64,14 +67,17 @@ function buildWritePayload(input: unknown, thirdPartyId: number): BankDetailsWri
   const payload = (input && typeof input === "object" ? input : {}) as Record<string, unknown>
   const branchId = normalizeNumber(
     payload.BranchID ??
-      payload.BranchId ??
-      payload.branchId ??
-      payload.branchID ??
-      payload.branch_id,
+    payload.BranchId ??
+    payload.branchId ??
+    payload.branchID ??
+    payload.branch_id,
   )
 
   return {
     ThirdPartyId: thirdPartyId,
+    BankName: normalizeText(payload.BankName ?? payload.bankName),
+    Branch: normalizeText(payload.Branch ?? payload.branch),
+    SwiftCode: normalizeText(payload.SwiftCode ?? payload.swiftCode),
     BranchID: branchId,
     BranchId: branchId,
     AccountNumber: normalizeText(payload.accountNumber ?? payload.AccountNumber),

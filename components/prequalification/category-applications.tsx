@@ -197,7 +197,25 @@ export default function CategoryApplications({ round: roundProp, className, vari
         return () => { cancelled = true }
     }, [isOpen, roundProp.id, detailRound])
 
-    const round = detailRound ?? roundProp
+    // Merge detail fetch with list data — preserve categories from whichever
+    // source has them (detail fetch may omit categories via whenLoaded).
+    const round: Round = useMemo(() => {
+        if (!detailRound) return roundProp
+        const detailHasCats = (detailRound.categories?.length ?? 0) > 0
+        return {
+            ...roundProp,
+            ...detailRound,
+            categories: detailHasCats ? detailRound.categories : roundProp.categories,
+            appliedCategories: detailHasCats ? detailRound.appliedCategories : roundProp.appliedCategories,
+            availableCategories: detailHasCats ? detailRound.availableCategories : roundProp.availableCategories,
+            categoryCount: detailHasCats
+                ? (detailRound.categoryCount ?? detailRound.categories?.length ?? 0)
+                : (roundProp.categoryCount ?? roundProp.categories?.length ?? 0),
+            appliedCount: detailHasCats ? detailRound.appliedCount : roundProp.appliedCount,
+            unappliedCount: detailHasCats ? detailRound.unappliedCount : roundProp.unappliedCount,
+            hasApplied: detailHasCats ? detailRound.hasApplied : roundProp.hasApplied,
+        }
+    }, [detailRound, roundProp])
 
     const categories: CategoryProgress[] = useMemo(() => round.categories ?? [], [round.categories])
     const appliedCategories = useMemo(
@@ -317,6 +335,9 @@ export default function CategoryApplications({ round: roundProp, className, vari
         try {
             const formData = new FormData()
             formData.append("file", file)
+            // Backend requires section_id — use the first available section from the round
+            const defaultSectionId = round.sections?.[0]?.sectionId ?? round.sections?.[0]?.id
+            if (defaultSectionId) formData.append("section_id", String(defaultSectionId))
             const res = await fetch(
                 `/api/prequalification/applications/${encodeURIComponent(round.id)}/categories/${encodeURIComponent(categoryId)}/documents`,
                 { method: "POST", credentials: "include", body: formData }

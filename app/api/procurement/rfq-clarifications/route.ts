@@ -6,14 +6,6 @@ export const dynamic = "force-dynamic"
 export const revalidate = 0
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL
-const RFQ_CLARIFICATIONS_PATH =
-    process.env.RFQ_CLARIFICATIONS_PATH || "/api/v1/supplier/rfqs/clarifications"
-
-function joinUrl(base: string, path: string) {
-    const cleanBase = base.replace(/\/+$/, "")
-    const cleanPath = path.startsWith("/") ? path : `/${path}`
-    return `${cleanBase}${cleanPath}`
-}
 
 export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
@@ -33,23 +25,31 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-        const res = await fetch(joinUrl(API_BASE, RFQ_CLARIFICATIONS_PATH), {
+        const targetUrl = `${API_BASE.replace(/\/+$/, "")}/api/v1/supplier/rfqs/clarifications`
+
+        const res = await fetch(targetUrl, {
             method: "POST",
             headers: {
-                "Accept": "application/json",
+                Accept: "application/json",
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${session.accessToken}`,
+                Authorization: `Bearer ${session.accessToken}`,
             },
             body: JSON.stringify(payload),
             cache: "no-store",
         });
 
-        const text = await res.text();
-        const contentType = res.headers.get("content-type") || "";
-        const data = contentType.includes("application/json") ? JSON.parse(text || "{}") : text;
+        const data = await res.json().catch(() => ({}));
 
         if (!res.ok) {
-            return NextResponse.json({ message: data?.message || "Failed to create clarification", errors: data?.errors }, { status: res.status });
+            const obj = data as Record<string, unknown>
+            return NextResponse.json(
+                {
+                    message: (typeof obj?.message === "string" ? obj.message : null) ?? "Failed to create clarification",
+                    error: typeof obj?.error === "string" ? obj.error : undefined,
+                    errors: obj?.errors,
+                },
+                { status: res.status }
+            );
         }
 
         return NextResponse.json(data);

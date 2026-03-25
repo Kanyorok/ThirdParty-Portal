@@ -1,6 +1,8 @@
 export function getBaseUrl() {
     if (typeof window !== "undefined") {
-        return process.env.NEXT_PUBLIC_API_URL || ""
+        // Always use relative paths on the client so requests go through
+        // the Next.js API proxy routes instead of directly to the backend.
+        return ""
     }
     return process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_URL
 }
@@ -25,7 +27,7 @@ export async function getRounds<T = unknown>(q?: Record<string, string | undefin
     const params = new URLSearchParams()
     if (q) Object.entries(q).forEach(([k, v]) => { if (v) params.append(k, v) })
     const queryString = params.toString()
-    return apiFetch<T>(`/api/procurement/prequalification/rounds${queryString ? `?${queryString}` : ""}`)
+    return apiFetch<T>(`/api/prequalification/rounds${queryString ? `?${queryString}` : ""}`)
 }
 
 export async function getSupplierCategories<T = unknown>(): Promise<T> {

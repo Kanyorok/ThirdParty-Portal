@@ -17,27 +17,7 @@ import { cn } from "@/lib/utils"
 import { parseSubmissionDeadline } from "@/lib/deadline"
 import { isRfqAwardedStatus, isRfqClosedStatus, isRfqSubmittedResponseStatus, normalizeRfqStatusKey } from "@/lib/rfq-status"
 import { Button } from "@/components/common/button"
-
-type RFQPayload = {
-    rfq: {
-        id: string
-        ref: string
-        title: string
-        status: string
-        invitationStatus: string
-        submissionDeadline: string
-        buyer: { name: string }
-        currency: string
-        deliveryTerms: string
-        description: string
-    }
-    lines: any[]
-    attachments: any[]
-    clarifications: any[]
-    supplierResponse: {
-        status: string
-    }
-}
+import type { RfqInvitation, RfqClarification } from "@/types/rfq"
 
 function deadlineMeta(deadline: string) {
     const now = new Date()
@@ -97,7 +77,8 @@ export default function RFQPage() {
         }
     })()
 
-    const [data, setData] = useState<RFQPayload | null>(null)
+    const [data, setData] = useState<RfqInvitation | null>(null)
+    const [clarifications, setClarifications] = useState<RfqClarification[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
@@ -111,13 +92,11 @@ export default function RFQPage() {
 
                 if (!res.ok) {
                     const message =
-                        (json as any)?.message ??
-                        (json as any)?.error ??
-                        `Failed to load RFQ (HTTP ${res.status})`
+                        json?.message ?? json?.error ?? `Failed to load RFQ (HTTP ${res.status})`
                     throw new Error(message)
                 }
 
-                const payload = ((json as any)?.data ?? json) as RFQPayload
+                const payload = (json?.data ?? json) as RfqInvitation
                 setData(payload)
             } catch (e: any) {
                 setData(null)
@@ -127,6 +106,18 @@ export default function RFQPage() {
             }
         }
         run()
+    }, [normalizedRfqId])
+
+    /* Fetch clarifications separately */
+    useEffect(() => {
+        if (!normalizedRfqId) return
+        fetch(`/api/procurement/rfq-clarifications/${encodeURIComponent(normalizedRfqId)}`)
+            .then((r) => (r.ok ? r.json() : Promise.resolve(null)))
+            .then((json) => {
+                const items = json?.data ?? json ?? []
+                setClarifications(Array.isArray(items) ? items : [])
+            })
+            .catch(() => setClarifications([]))
     }, [normalizedRfqId])
 
     if (loading) {
@@ -147,20 +138,10 @@ export default function RFQPage() {
 
     if (!data?.rfq) return null
 
-    const root: any = data as any
-    const rfq = root.rfq ?? root.invitation ?? root.data?.rfq ?? root.data?.invitation
-
-    if (!rfq) return null
-
-    const attachments = (root.attachments ?? root.data?.attachments ?? []) as any[]
-    const clarifications = (root.clarifications ?? root.data?.clarifications ?? []) as any[]
-    const lines = (root.lines ?? root.rfq?.lines ?? root.data?.lines ?? root.data?.rfq?.lines ?? []) as any[]
-    const supplierResponse = (root.supplierResponse ?? root.supplier_response ?? root.data?.supplierResponse ?? root.data?.supplier_response ?? {}) as any
-    const submissionDeadline =
-        rfq?.submissionDeadline ??
-        rfq?.submission_deadline ??
-        rfq?.SubmissionDeadline ??
-        rfq?.deadline
+    const rfq = data.rfq
+    const lines = rfq.rfqLines ?? []
+    const supplierResponse = data.myResponse
+    const submissionDeadline = data.submissionDeadline ?? rfq.submissionDeadline
     const parsedDeadline = submissionDeadline
         ? parseSubmissionDeadline(String(submissionDeadline)).date
         : null
@@ -181,31 +162,16 @@ export default function RFQPage() {
                     ? "bg-amber-500"
                     : "bg-emerald-500"
     const responseStatus = String(supplierResponse?.status ?? "")
-    const invitationStatus =
-        rfq?.invitationStatus ??
-        rfq?.invitation_status ??
-        rfq?.InvitationStatus ??
-        root?.invitationStatus ??
-        root?.invitation_status ??
-        root?.InvitationStatus ??
-        ""
-    const awardStatus =
-        rfq?.awardStatus ??
-        rfq?.award_status ??
-        rfq?.AwardStatus ??
-        root?.awardStatus ??
-        root?.award_status ??
-        root?.AwardStatus ??
-        ""
-    const rfqStatus = rfq?.status ?? root?.status ?? ""
+    const invitationStatus = data.invitationStatus ?? ""
+    const rfqStatus = rfq.status ?? data.status ?? ""
 
-    const isAwarded = [rfqStatus, invitationStatus, awardStatus, responseStatus].some((value) =>
+    const isAwarded = [rfqStatus, invitationStatus, responseStatus].some((value) =>
         isRfqAwardedStatus(value)
     )
     const isDraft = normalizeStatusKey(responseStatus) === "draft"
     const isSubmitted = isSubmittedStatus(responseStatus)
     const isClosedForResponse =
-        [rfqStatus, invitationStatus, awardStatus].some((value) => isRfqClosedStatus(value)) ||
+        [rfqStatus, invitationStatus].some((value) => isRfqClosedStatus(value)) ||
         urgency.label.toLowerCase() === "closed"
     const actionBlockedMessage = isAwarded
         ? "This RFQ has already been awarded and is no longer accepting responses."
@@ -218,9 +184,9 @@ export default function RFQPage() {
         ? "Awarded"
         : isSubmitted
             ? "Submitted"
-        : isDraft
-            ? "Continue quotation"
-            : "Start quotation"
+            : isDraft
+                ? "Continue quotation"
+                : "Start quotation"
     const canStartQuotation = !actionBlockedMessage
 
     const openQuotation = () => {
@@ -230,7 +196,7 @@ export default function RFQPage() {
         }
         router.push(`/dashboard/supplier/rfqs/${encodeURIComponent(normalizedRfqId)}/quotation`)
     }
-   
+
     return (
         <div className="w-full max-w-7xl mx-auto px-6 py-6 space-y-5">
             <header className="relative rounded-2xl border border-slate-200/80 bg-white p-3 sm:p-4">
@@ -246,14 +212,14 @@ export default function RFQPage() {
                         </Button>
                         <div className="text-xs font-semibold text-slate-500 uppercase">RFQ Ref</div>
                         <h1 className="text-xl font-semibold text-slate-900">
-                            {rfq.ref ?? rfq.number ?? rfq.rfqNumber ?? rfqId}
+                            {rfq.rfqNumber ?? data.rfqNumber ?? rfqId}
                         </h1>
                         <p className="text-sm text-slate-600 line-clamp-2">
-                            {rfq.title ?? rfq.comments ?? rfq.description ?? "Request for Quotation"}
+                            {rfq.comments ?? data.comments ?? "Request for Quotation"}
                         </p>
                         <div className="flex items-center gap-2 text-xs text-slate-500">
                             <Building2 className="h-4 w-4" />
-                            {rfq?.buyer?.name ?? rfq?.buyerName ?? rfq?.BuyerName ?? "—"}
+                            {"—"}
                         </div>
                     </div>
 
@@ -270,10 +236,10 @@ export default function RFQPage() {
                             <span
                                 className={cn(
                                     "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-                                    statusBadgeClass(rfq.status)
+                                    statusBadgeClass(rfqStatus)
                                 )}
                             >
-                                {rfq.status ?? "Status"}
+                                {rfqStatus || "Status"}
                             </span>
                             <span
                                 className={cn(
@@ -334,13 +300,13 @@ export default function RFQPage() {
                             <div>
                                 <div className="text-xs font-semibold uppercase text-slate-500">Currency</div>
                                 <div className="text-sm font-medium text-slate-900">
-                                    {rfq.currency ?? rfq.Currency ?? "—"}
+                                    {supplierResponse?.currency ?? "—"}
                                 </div>
                             </div>
                             <div>
-                                <div className="text-xs font-semibold uppercase text-slate-500">Delivery terms</div>
+                                <div className="text-xs font-semibold uppercase text-slate-500">Duration (days)</div>
                                 <div className="text-sm font-medium text-slate-900">
-                                    {rfq.deliveryTerms ?? rfq.delivery_terms ?? rfq.DeliveryTerms ?? "—"}
+                                    {supplierResponse?.durationDays ?? "—"}
                                 </div>
                             </div>
                         </div>
@@ -352,7 +318,7 @@ export default function RFQPage() {
                             <h2 className="text-xs font-semibold uppercase text-slate-500">RFQ Description</h2>
                         </div>
                         <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
-                            {rfq.description ?? rfq.comments ?? "—"}
+                            {rfq.comments ?? "—"}
                         </p>
                     </section>
 
@@ -367,22 +333,11 @@ export default function RFQPage() {
                         ) : (
                             <div className="rounded-xl border border-slate-200/70 bg-slate-50/70 divide-y divide-slate-200/70">
                                 {lines.slice(0, 6).map((line, idx) => {
-                                    const label = String(
-                                        line?.itemName ??
-                                        line?.ItemName ??
-                                        line?.item ??
-                                        line?.Item ??
-                                        line?.description ??
-                                        line?.Description ??
-                                        line?.comments ??
-                                        line?.Comments ??
-                                        `Item ${idx + 1}`
-                                    )
-                                    const qtyRaw = line?.quantity ?? line?.Quantity ?? line?.qty ?? line?.Qty
-                                    const qty = Number.isFinite(Number(qtyRaw)) ? Number(qtyRaw) : null
-                                    const uom = String(line?.uom ?? line?.Uom ?? line?.unit ?? line?.Unit ?? "").trim()
+                                    const label = line.itemName ?? `Item ${idx + 1}`
+                                    const qty = Number.isFinite(line.quantity) ? line.quantity : null
+                                    const uom = (line.uom ?? "").trim()
                                     return (
-                                        <div key={`${label}-${idx}`} className="px-3 py-2.5">
+                                        <div key={line.id ?? idx} className="px-3 py-2.5">
                                             <div className="text-sm text-slate-700 line-clamp-1">{label}</div>
                                             <div className="text-xs text-slate-500">
                                                 {qty != null ? `Qty: ${qty}` : "Qty: —"}
@@ -403,32 +358,19 @@ export default function RFQPage() {
                     <section className="rounded-2xl border border-slate-200/80 bg-white p-3 space-y-2.5">
                         <div className="flex items-center gap-3">
                             <Paperclip className="h-4 w-4 text-slate-500" />
-                            <h2 className="text-xs font-semibold uppercase text-slate-500">Attachments</h2>
-                            <span className="text-[10px] text-slate-400">{attachments.length}</span>
+                            <h2 className="text-xs font-semibold uppercase text-slate-500">Evaluation Sections</h2>
+                            <span className="text-[10px] text-slate-400">{rfq.sections?.length ?? 0}</span>
                         </div>
-                        {attachments.length === 0 ? (
-                            <div className="text-sm text-slate-500">No attachments provided.</div>
+                        {(!rfq.sections || rfq.sections.length === 0) ? (
+                            <div className="text-sm text-slate-500">No evaluation sections defined.</div>
                         ) : (
                             <div className="rounded-xl border border-slate-200/70 bg-slate-50/70 divide-y divide-slate-200/70">
-                                {attachments.slice(0, 20).map((attachment, idx) => {
-                                    const label = String(
-                                        attachment?.name ??
-                                        attachment?.fileName ??
-                                        attachment?.filename ??
-                                        attachment?.title ??
-                                        `Attachment ${idx + 1}`
-                                    )
-                                    return (
-                                        <div key={`${label}-${idx}`} className="px-3 py-2.5 text-sm text-slate-700">
-                                            {label}
-                                        </div>
-                                    )
-                                })}
-                                {attachments.length > 20 ? (
-                                    <div className="px-3 py-2.5 text-xs text-slate-500">
-                                        Showing first 20 attachments.
+                                {rfq.sections.map((section) => (
+                                    <div key={section.id} className="px-3 py-2.5">
+                                        <div className="text-sm text-slate-700">{section.name}</div>
+                                        <div className="text-xs text-slate-500">Weight: {section.weight}%</div>
                                     </div>
-                                ) : null}
+                                ))}
                             </div>
                         )}
                     </section>
@@ -443,23 +385,18 @@ export default function RFQPage() {
                             <div className="text-sm text-slate-500">No clarifications issued.</div>
                         ) : (
                             <div className="rounded-xl border border-slate-200/70 bg-slate-50/70 divide-y divide-slate-200/70">
-                                {clarifications.slice(0, 20).map((clarification, idx) => {
-                                    const message = String(
-                                        clarification?.message ??
-                                        clarification?.question ??
-                                        clarification?.clarification ??
-                                        clarification?.comments ??
-                                        clarification?.Description ??
-                                        `Clarification ${idx + 1}`
-                                    )
-                                    return (
-                                        <div key={`${idx}-${message}`} className="px-3 py-2.5">
-                                            <div className="text-sm text-slate-700 line-clamp-2">
-                                                {message}
-                                            </div>
+                                {clarifications.slice(0, 20).map((c, idx) => (
+                                    <div key={c.Id ?? idx} className="px-3 py-2.5">
+                                        <div className="text-sm text-slate-700 line-clamp-2">
+                                            {c.Question ?? `Clarification ${idx + 1}`}
                                         </div>
-                                    )
-                                })}
+                                        {c.Answer ? (
+                                            <div className="text-xs text-slate-500 mt-1 line-clamp-2">
+                                                Answer: {c.Answer}
+                                            </div>
+                                        ) : null}
+                                    </div>
+                                ))}
                                 {clarifications.length > 20 ? (
                                     <div className="px-3 py-2.5 text-xs text-slate-500">
                                         Showing first 20 clarifications.

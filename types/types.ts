@@ -30,6 +30,8 @@ export type Round = {
     duplicateWithinRange?: boolean;
     primaryWindowRoundId?: number | null;
     primaryWindowRoundTitle?: string | null;
+    hasClassifications?: boolean;
+    hasRemainingClassifications?: boolean;
 
     categories?: RoundCategory[];
     appliedCategories?: RoundCategory[];
@@ -42,10 +44,12 @@ export type Round = {
     summary?: {
         approved: number;
         rejected: number;
-        under_review: number;
+        underReview?: number;
+        under_review?: number;
         submitted: number;
         pending: number;
-        not_applied: number;
+        notApplied?: number;
+        not_applied?: number;
     };
     applicationSummary?: {
         total_categories: number;

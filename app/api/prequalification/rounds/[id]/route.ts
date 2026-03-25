@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
 
   const url = new URL(request.url)
   const parts = url.pathname.split("/")
-  const id = parts[parts.length - 2]
+  const id = parts[parts.length - 1]
   if (!id) {
     return NextResponse.json({ message: "Round id is required" }, { status: 400 })
   }

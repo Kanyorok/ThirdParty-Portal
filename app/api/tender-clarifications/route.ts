@@ -35,9 +35,6 @@ export async function GET(req: NextRequest) {
     tender_id: tenderId
   })
 
-  if (session.user.thirdPartyId) query.set("third_party_id", String(session.user.thirdPartyId))
-  if (session.user.supplierId) query.set("supplier_id", String(session.user.supplierId))
-
   try {
     const res = await fetch(
       `${API_URL}/api/v1/supplier/tender-clarifications?${query.toString()}`,
@@ -74,24 +71,20 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   const tenderId = body.tenderId ?? body.tender_id
   const question = body.question?.trim()
+  const isPublic = body.isPublic ?? body.is_public
 
   if (!tenderId || !question) {
     return jsonError("Tender ID and question are required", 400)
   }
 
-  if (!session.user.thirdPartyId) {
-    return jsonError("Third party not linked", 400)
-  }
-
   const payload = {
     tender_id: Number(tenderId),
-    third_party_id: session.user.thirdPartyId,
     question,
-    is_public: Boolean(body.isPublic)
+    is_public: Boolean(isPublic)
   }
 
   try {
-  const res = await fetch(`${API_URL}/api/v1/supplier/tender-clarifications`, {
+    const res = await fetch(`${API_URL}/api/v1/supplier/tender-clarifications`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${session.accessToken}`,

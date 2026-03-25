@@ -209,8 +209,8 @@ const BarChartCard = ({
             No data yet
           </div>
         ) : (
-          <div style={{ height: chartHeight }}>
-            <ResponsiveContainer width="100%" height="100%">
+          <div style={{ height: chartHeight, minWidth: 0 }}>
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <BarChart
                 data={chartData}
                 barCategoryGap={isCompact ? 12 : 20}

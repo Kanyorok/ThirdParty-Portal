@@ -27,10 +27,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 
 const BANK_DETAILS_QUERY_KEY = ["third-party-bank-details"] as const
 const CURRENCIES_QUERY_KEY = ["currencies"] as const
-const BRANCH_OPTIONS_QUERY_KEY = ["third-party-bank-branches"] as const
 
 const bankDetailsSchema = z.object({
-  branchId: z.coerce.number().int().positive("Branch ID is required"),
+  bankName: z.string().trim().min(2, "Bank name is required"),
+  branch: z.string().trim(),
+  swiftCode: z.string().trim(),
   accountNumber: z
     .string()
     .trim()
@@ -48,17 +49,13 @@ type CurrencyOption = {
   symbol?: string
 }
 
-type BranchOption = {
-  id: number
-  name: string
-}
-
 type BankDetail = {
   id: number
   thirdPartyId: number | null
   branchId: number | null
   bankName: string | null
   branchName: string | null
+  swiftCode: string | null
   accountNumber: string
   currencyId: number | null
   createdOn: string | null
@@ -96,29 +93,6 @@ function normalizeCurrency(input: unknown): CurrencyOption | null {
   }
 }
 
-function normalizeBranchOption(input: unknown): BranchOption | null {
-  if (!input || typeof input !== "object") return null
-
-  const row = input as Record<string, unknown>
-  const id = normalizeNumber(
-    row.id ??
-      row.Id ??
-      row.branchId ??
-      row.BranchId ??
-      row.BranchID ??
-      row.branch_id,
-  )
-  if (!id || id <= 0) return null
-
-  const name =
-    normalizeNullableText(row.name ?? row.Name) ??
-    normalizeNullableText(row.label ?? row.Label) ??
-    normalizeNullableText(row.description ?? row.Description) ??
-    `Branch #${id}`
-
-  return { id, name }
-}
-
 function normalizeBankDetail(input: unknown): BankDetail | null {
   if (!input || typeof input !== "object") return null
 
@@ -126,12 +100,16 @@ function normalizeBankDetail(input: unknown): BankDetail | null {
   const id = normalizeNumber(row.id ?? row.Id)
   if (!id || id <= 0) return null
 
+  const rawExtra = row.extra ?? row.Extra
+  const extra = (rawExtra && typeof rawExtra === "object" ? rawExtra : {}) as Record<string, unknown>
+
   return {
     id,
     thirdPartyId: normalizeNumber(row.thirdPartyId ?? row.ThirdPartyId),
     branchId: normalizeNumber(row.branchId ?? row.BranchId ?? row.BranchID ?? row.branch_id),
-    bankName: normalizeNullableText(row.bankName ?? row.BankName),
-    branchName: normalizeNullableText(row.branchName ?? row.BranchName ?? row.branch ?? row.Branch),
+    bankName: normalizeNullableText(extra?.BankName ?? extra?.bankName ?? row.bankName ?? row.BankName),
+    branchName: normalizeNullableText(extra?.Branch ?? extra?.branch ?? row.branchName ?? row.BranchName ?? row.branch ?? row.Branch),
+    swiftCode: normalizeNullableText(extra?.SwiftCode ?? extra?.swiftCode ?? row.swiftCode ?? row.SwiftCode),
     accountNumber: normalizeText(row.accountNumber ?? row.AccountNumber),
     currencyId: normalizeNumber(row.currencyId ?? row.CurrencyId),
     createdOn: normalizeNullableText(row.createdOn ?? row.CreatedOn),
@@ -210,46 +188,8 @@ async function fetchCurrencies() {
 
   const rows = Array.isArray(body?.data) ? body.data : []
   return rows
-    .map((row) => normalizeCurrency(row))
-    .filter((row): row is CurrencyOption => row != null)
-}
-
-function extractBranchOptions(body: any): BranchOption[] {
-  const candidates = [body?.data, body?.items, body]
-
-  for (const candidate of candidates) {
-    if (!Array.isArray(candidate)) continue
-
-    const options = candidate
-      .map((entry) => normalizeBranchOption(entry))
-      .filter((entry): entry is BranchOption => entry != null)
-
-    if (options.length > 0) {
-      const unique = new Map<number, BranchOption>()
-      for (const option of options) {
-        if (!unique.has(option.id)) {
-          unique.set(option.id, option)
-        }
-      }
-      return [...unique.values()]
-    }
-  }
-
-  return []
-}
-
-async function fetchBranchOptions() {
-  const res = await fetch("/api/third-parties-bank-details/branches", {
-    method: "GET",
-    cache: "no-store",
-  })
-  const body = await parseBody(res)
-
-  if (!res.ok) {
-    throw new Error(resolveApiError(body, "Unable to load branch options."))
-  }
-
-  return extractBranchOptions(body)
+    .map((row: unknown) => normalizeCurrency(row))
+    .filter((row: CurrencyOption | null): row is CurrencyOption => row != null)
 }
 
 function formatAccountNumber(value: string) {
@@ -278,7 +218,9 @@ export default function BankDetailsForm() {
   const form = useForm<BankDetailsFormValues>({
     resolver: zodResolver(bankDetailsSchema),
     defaultValues: {
-      branchId: 0,
+      bankName: "",
+      branch: "",
+      swiftCode: "",
       accountNumber: "",
       currencyId: 0,
     },
@@ -303,16 +245,6 @@ export default function BankDetailsForm() {
     staleTime: 5 * 60 * 1000,
   })
 
-  const {
-    data: branches = [],
-    isLoading: isLoadingBranches,
-  } = useQuery({
-    queryKey: [...BRANCH_OPTIONS_QUERY_KEY],
-    queryFn: fetchBranchOptions,
-    staleTime: 5 * 60 * 1000,
-    retry: 1,
-  })
-
   const currencyById = useMemo(() => {
     const map = new Map<number, CurrencyOption>()
     for (const currency of currencies) {
@@ -321,22 +253,10 @@ export default function BankDetailsForm() {
     return map
   }, [currencies])
 
-  const branchById = useMemo(() => {
-    const map = new Map<number, BranchOption>()
-    for (const branch of branches) {
-      map.set(branch.id, branch)
-    }
-    return map
-  }, [branches])
-
-  const preferredBranchId = useMemo(() => {
-    return branches[0]?.id ?? 0
-  }, [branches])
-
   const preferredCurrencyId = useMemo(() => {
     if (!currencies.length) return 0
     const preferred =
-      currencies.find((currency) => {
+      currencies.find((currency: CurrencyOption) => {
         const code = currency.code.trim().toUpperCase()
         return code === "KES" || code === "KSH"
       }) ?? currencies[0]
@@ -350,13 +270,6 @@ export default function BankDetailsForm() {
     form.setValue("currencyId", preferredCurrencyId, { shouldDirty: false })
   }, [form, isFormOpen, preferredCurrencyId])
 
-  useEffect(() => {
-    if (!isFormOpen) return
-    if (form.getValues("branchId") > 0) return
-    if (!branches.length) return
-    form.setValue("branchId", branches[0].id, { shouldDirty: false })
-  }, [branches, form, isFormOpen])
-
   const saveMutation = useMutation({
     mutationFn: async ({
       id,
@@ -366,7 +279,9 @@ export default function BankDetailsForm() {
       values: BankDetailsFormValues
     }) => {
       const requestBody = {
-        BranchID: Number(values.branchId),
+        BankName: values.bankName.trim(),
+        Branch: values.branch?.trim() || undefined,
+        SwiftCode: values.swiftCode?.trim() || undefined,
         AccountNumber: values.accountNumber.replace(/\s+/g, "").trim(),
         CurrencyId: Number(values.currencyId),
       }
@@ -399,7 +314,9 @@ export default function BankDetailsForm() {
       setIsFormOpen(false)
       setEditingBankDetail(null)
       form.reset({
-        branchId: preferredBranchId,
+        bankName: "",
+        branch: "",
+        swiftCode: "",
         accountNumber: "",
         currencyId: preferredCurrencyId,
       })
@@ -447,7 +364,9 @@ export default function BankDetailsForm() {
   const openCreateForm = () => {
     setEditingBankDetail(null)
     form.reset({
-      branchId: preferredBranchId,
+      bankName: "",
+      branch: "",
+      swiftCode: "",
       accountNumber: "",
       currencyId: preferredCurrencyId,
     })
@@ -455,14 +374,11 @@ export default function BankDetailsForm() {
   }
 
   const openEditForm = (detail: BankDetail) => {
-    const nextBranchId =
-      detail.branchId != null && (branchById.has(detail.branchId) || !branches.length)
-        ? detail.branchId
-        : preferredBranchId
-
     setEditingBankDetail(detail)
     form.reset({
-      branchId: nextBranchId,
+      bankName: detail.bankName ?? "",
+      branch: detail.branchName ?? "",
+      swiftCode: detail.swiftCode ?? "",
       accountNumber: detail.accountNumber,
       currencyId: detail.currencyId ?? preferredCurrencyId,
     })
@@ -473,7 +389,9 @@ export default function BankDetailsForm() {
     setIsFormOpen(false)
     setEditingBankDetail(null)
     form.reset({
-      branchId: preferredBranchId,
+      bankName: "",
+      branch: "",
+      swiftCode: "",
       accountNumber: "",
       currencyId: preferredCurrencyId,
     })
@@ -485,8 +403,6 @@ export default function BankDetailsForm() {
       values,
     })
   }
-
-  const canSubmitBankDetail = branches.length > 0
 
   return (
     <section className="overflow-hidden rounded-2xl border border-border/60 bg-background">
@@ -521,28 +437,29 @@ export default function BankDetailsForm() {
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <FormField
                     control={form.control}
-                    name="branchId"
+                    name="bankName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-semibold text-foreground">Branch ID</FormLabel>
-                        <Select
-                          value={field.value > 0 ? String(field.value) : undefined}
-                          onValueChange={(value) => field.onChange(Number(value))}
-                          disabled={isLoadingBranches || !branches.length}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={isLoadingBranches ? "Loading branches..." : "Select a valid branch"} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {branches.map((branch) => (
-                              <SelectItem key={branch.id} value={String(branch.id)}>
-                                {branch.name} ({branch.id})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <FormLabel className="text-xs font-semibold text-foreground">
+                          Bank name <span className="text-destructive">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="e.g. Kenya Commercial Bank" />
+                        </FormControl>
+                        <FormMessage className="text-xs" />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="branch"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-semibold text-foreground">Branch</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="e.g. Westlands" />
+                        </FormControl>
                         <FormMessage className="text-xs" />
                       </FormItem>
                     )}
@@ -553,9 +470,25 @@ export default function BankDetailsForm() {
                     name="accountNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-semibold text-foreground">Account number</FormLabel>
+                        <FormLabel className="text-xs font-semibold text-foreground">
+                          Account number <span className="text-destructive">*</span>
+                        </FormLabel>
                         <FormControl>
                           <Input {...field} className="font-mono" placeholder="e.g. 0123456789012" />
+                        </FormControl>
+                        <FormMessage className="text-xs" />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="swiftCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-semibold text-foreground">Swift code</FormLabel>
+                        <FormControl>
+                          <Input {...field} className="font-mono uppercase" placeholder="e.g. KCBLKENX" />
                         </FormControl>
                         <FormMessage className="text-xs" />
                       </FormItem>
@@ -579,7 +512,7 @@ export default function BankDetailsForm() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {currencies.map((currency) => {
+                            {currencies.map((currency: CurrencyOption) => {
                               const label = currency.code || currency.name || String(currency.id)
                               const suffix =
                                 currency.name && currency.code && currency.name.toLowerCase() !== currency.code.toLowerCase()
@@ -601,12 +534,6 @@ export default function BankDetailsForm() {
                   />
                 </div>
 
-                {!isLoadingBranches && !branches.length ? (
-                  <p className="rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
-                    No valid branch options are available for this account. Contact support/admin to configure branches.
-                  </p>
-                ) : null}
-
                 <div className="flex flex-wrap items-center justify-end gap-2">
                   <Button type="button" variant="outline" size="sm" className="text-xs font-medium" onClick={closeForm}>
                     <X className="mr-1.5 h-4 w-4" />
@@ -616,7 +543,7 @@ export default function BankDetailsForm() {
                     type="submit"
                     size="sm"
                     className="text-xs font-medium"
-                    disabled={saveMutation.isPending || isLoadingBranches || !canSubmitBankDetail}
+                    disabled={saveMutation.isPending}
                   >
                     {saveMutation.isPending ? <Spinner className="mr-1.5 h-4 w-4" /> : <Save className="mr-1.5 h-4 w-4" />}
                     {editingBankDetail ? "Update account" : "Save account"}
@@ -650,9 +577,11 @@ export default function BankDetailsForm() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/20">
-                  <TableHead className="text-xs font-semibold">Branch ID</TableHead>
+                  <TableHead className="text-xs font-semibold">Bank</TableHead>
+                  <TableHead className="text-xs font-semibold">Branch</TableHead>
                   <TableHead className="text-xs font-semibold">Account number</TableHead>
                   <TableHead className="text-xs font-semibold">Currency</TableHead>
+                  <TableHead className="text-xs font-semibold">Swift code</TableHead>
                   <TableHead className="text-xs font-semibold">Updated</TableHead>
                   <TableHead className="text-right text-xs font-semibold">Actions</TableHead>
                 </TableRow>
@@ -667,21 +596,16 @@ export default function BankDetailsForm() {
                     (detail.currencyId != null ? String(detail.currencyId) : "—")
                   const currencySuffix =
                     resolvedCurrency?.name &&
-                    resolvedCurrency?.code &&
-                    resolvedCurrency.name.toLowerCase() !== resolvedCurrency.code.toLowerCase()
+                      resolvedCurrency?.code &&
+                      resolvedCurrency.name.toLowerCase() !== resolvedCurrency.code.toLowerCase()
                       ? ` · ${resolvedCurrency.name}`
                       : ""
-                  const resolvedBranch = detail.branchId != null ? branchById.get(detail.branchId) : null
-                  const branchLabel =
-                    detail.branchId != null
-                      ? resolvedBranch
-                        ? `${resolvedBranch.name} (${detail.branchId})`
-                        : String(detail.branchId)
-                      : detail.branchName || "—"
+                  const branchLabel = detail.branchName || "—"
 
                   return (
                     <TableRow key={detail.id} className="hover:bg-muted/10">
-                      <TableCell className="font-mono text-xs text-foreground">{branchLabel}</TableCell>
+                      <TableCell className="text-sm font-medium text-foreground">{detail.bankName || "—"}</TableCell>
+                      <TableCell className="text-xs text-foreground">{branchLabel}</TableCell>
                       <TableCell className="font-mono text-xs text-foreground">
                         {detail.accountNumber ? formatAccountNumber(detail.accountNumber) : "—"}
                       </TableCell>
@@ -689,6 +613,7 @@ export default function BankDetailsForm() {
                         {currencyLabel}
                         {currencySuffix}
                       </TableCell>
+                      <TableCell className="font-mono text-xs text-foreground">{detail.swiftCode || "—"}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{formatDate(detail.modifiedOn ?? detail.createdOn)}</TableCell>
                       <TableCell className="text-right">
                         <div className="inline-flex items-center gap-2">

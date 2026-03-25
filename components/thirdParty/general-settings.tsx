@@ -2,10 +2,8 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence, Variants } from 'framer-motion'
-import { Sun, Moon, Monitor, Globe, Bell, Shield, Check, ChevronDown } from 'lucide-react'
-import { useTheme as useNextTheme } from "next-themes"
+import { Globe, Bell, Shield, Check, ChevronDown } from 'lucide-react'
 
-type Theme = 'light' | 'dark' | 'system'
 type Language = 'en'
 
 interface SettingOption {
@@ -14,26 +12,10 @@ interface SettingOption {
     icon?: React.ComponentType<{ className?: string }>;
 }
 
-const THEMES: SettingOption[] = [
-    { value: 'light', label: 'Light', icon: Sun },
-    { value: 'dark', label: 'Dark', icon: Moon },
-    { value: 'system', label: 'System', icon: Monitor },
-];
-
 const LANGUAGES: SettingOption[] = [
     { value: 'en', label: 'English' },
     { value: 'sw', label: 'Swahili' }
 ];
-
-function usePortalTheme() {
-    const { theme, setTheme, resolvedTheme } = useNextTheme()
-
-    return {
-        theme: (theme ?? "system") as Theme,
-        setTheme: (newTheme: Theme) => setTheme(newTheme),
-        resolvedTheme: (resolvedTheme ?? "light") as "light" | "dark",
-    }
-}
 
 const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -222,7 +204,6 @@ function Toggle({
 }
 
 export function GeneralSettings() {
-    const { theme, setTheme } = usePortalTheme();
     const [language, setLanguage] = useState<Language>('en');
     const [notifications, setNotifications] = useState(true);
     const [emailNotifications, setEmailNotifications] = useState(true);
@@ -236,18 +217,6 @@ export function GeneralSettings() {
                 animate="visible"
                 className="space-y-4"
             >
-                <SettingSection
-                    icon={Sun}
-                    title="Appearance"
-                    description="Customize how the interface looks across all your devices"
-                >
-                    <RadioGroup
-                        options={THEMES}
-                        value={theme}
-                        onChange={(value) => setTheme(value as Theme)}
-                    />
-                </SettingSection>
-
                 <SettingSection
                     icon={Globe}
                     title="Language & Region"

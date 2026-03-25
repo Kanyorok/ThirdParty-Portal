@@ -242,7 +242,7 @@ export default function SupplierBids() {
   ]
 
   const viewFilterOptions = [
-    { value: "all" as const, label: "All bids", count: summary.total },
+    { value: "all" as const, label: "All applications", count: summary.total },
     { value: "needs-action" as const, label: "Needs action", count: actionRequiredCount },
     { value: "completed" as const, label: "Completed", count: summary.submitted },
   ]
@@ -267,7 +267,7 @@ export default function SupplierBids() {
   const sections = useMemo(() => {
     const filteredAny = statusFilter !== "all" || viewFilter !== "all" || debouncedSearch.trim().length > 0
     if (filteredAny) {
-      return [{ id: "matching", title: "Matching bids", items: filteredBids }]
+      return [{ id: "matching", title: "Matching applications", items: filteredBids }]
     }
 
     const priority = filteredBids.filter((item) => item.normalized !== "submitted")
@@ -276,7 +276,7 @@ export default function SupplierBids() {
 
     const grouped: Array<{ id: string; title: string; items: typeof filteredBids }> = []
     if (priority.length) grouped.push({ id: "priority", title: "Action required", items: priority })
-    if (remaining.length) grouped.push({ id: "all", title: "Completed bids", items: remaining })
+    if (remaining.length) grouped.push({ id: "all", title: "Completed applications", items: remaining })
     return grouped
   }, [debouncedSearch, filteredBids, statusFilter, viewFilter])
 
@@ -284,11 +284,12 @@ export default function SupplierBids() {
     <section className="w-full space-y-5 [&_*]:shadow-none [&_*]:drop-shadow-none">
       <header className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div className="space-y-1">
+          <p className="text-[11px] font-medium leading-none text-muted-foreground">Applications / Tenders</p>
           <div className="flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 text-primary">
               <FileText className="h-4 w-4" />
             </div>
-            <h1 className="text-xl font-semibold tracking-tight text-foreground">My bids</h1>
+            <h1 className="text-xl font-semibold tracking-tight text-foreground">Tender applications</h1>
           </div>
         </div>
 

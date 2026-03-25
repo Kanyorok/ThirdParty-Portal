@@ -120,10 +120,10 @@ export const mapApiRound = (round: any): Round => {
         applicationSummary: round.summary
             ? {
                 total_categories: categories.length,
-                applied_categories: (round.summary.submitted ?? 0) + (round.summary.approved ?? 0) + (round.summary.under_review ?? 0) + (round.summary.rejected ?? 0) + (round.summary.pending ?? 0),
+                applied_categories: (round.summary.submitted ?? 0) + (round.summary.approved ?? 0) + (round.summary.underReview ?? round.summary.under_review ?? 0) + (round.summary.rejected ?? 0) + (round.summary.pending ?? 0),
                 approved_categories: round.summary.approved ?? 0,
                 rejected_categories: round.summary.rejected ?? 0,
-                pending_categories: (round.summary.submitted ?? 0) + (round.summary.under_review ?? 0) + (round.summary.pending ?? 0),
+                pending_categories: (round.summary.submitted ?? 0) + (round.summary.underReview ?? round.summary.under_review ?? 0) + (round.summary.pending ?? 0),
                 overall_progress: overallProgress
             }
             : applied
@@ -138,7 +138,12 @@ export const mapApiRound = (round: any): Round => {
                 : undefined,
         sections: round.sections,
         maxVendors: round.maxVendors,
-        eligibility: round.eligibility
+        eligibility: round.eligibility,
+        hasClassifications: round.hasClassifications,
+        hasRemainingClassifications: round.hasRemainingClassifications,
+        duplicateWithinRange: round.duplicateWithinRange,
+        primaryWindowRoundId: round.primaryWindowRoundId,
+        primaryWindowRoundTitle: round.primaryWindowRoundTitle
     }
 }
 

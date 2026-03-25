@@ -27,10 +27,11 @@ import {
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
-const SIDEBAR_WIDTH = "17rem"
-const SIDEBAR_WIDTH_MOBILE = "19rem"
+const SIDEBAR_WIDTH = "clamp(16rem, 20vw, 18.5rem)"
+const SIDEBAR_WIDTH_MOBILE = "min(22rem, 92vw)"
 const SIDEBAR_WIDTH_ICON = "4.25rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
+const TABLET_BREAKPOINT = 1024
 
 type SidebarContextProps = {
   state: "expanded" | "collapsed"
@@ -92,6 +93,33 @@ function SidebarProvider({
   const toggleSidebar = React.useCallback(() => {
     return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open)
   }, [isMobile, setOpen, setOpenMobile])
+
+  React.useEffect(() => {
+    if (!isMobile && openMobile) {
+      setOpenMobile(false)
+    }
+  }, [isMobile, openMobile])
+
+  // Tablet-first default: md screens use collapsed icon mode, lg+ defaults to expanded.
+  React.useEffect(() => {
+    if (typeof window === "undefined" || isMobile) return
+
+    const applyViewportDefault = () => {
+      if (window.innerWidth < TABLET_BREAKPOINT) {
+        setOpen(false)
+      } else {
+        setOpen(true)
+      }
+    }
+
+    applyViewportDefault()
+
+    const mediaQuery = window.matchMedia(`(min-width: ${TABLET_BREAKPOINT}px)`)
+    const handleChange = () => applyViewportDefault()
+
+    mediaQuery.addEventListener("change", handleChange)
+    return () => mediaQuery.removeEventListener("change", handleChange)
+  }, [isMobile, setOpen])
 
   // Adds a keyboard shortcut to toggle the sidebar.
   React.useEffect(() => {
@@ -187,7 +215,7 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
+          className="bg-sidebar text-sidebar-foreground w-(--sidebar-width) max-w-[92vw] p-0 [&>button]:hidden"
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,

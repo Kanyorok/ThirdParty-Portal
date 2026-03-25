@@ -48,7 +48,7 @@ function SidebarSkeleton() {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const { data: session } = useSession()
-    const { state } = useSidebar()
+    const { state, isMobile, setOpenMobile } = useSidebar()
     const {
         initializeProfiles,
         activeProfile,
@@ -98,7 +98,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             .map(section => ({
                 id: section.id,
                 allowedProfiles: section.allowedProfiles,
-                items: section.items.filter((item: { allowedProfiles: string | string[] }) =>
+                items: section.items.filter((item) =>
                     activeProfile === 'base' ? true : item.allowedProfiles.includes(activeProfile)
                 )
             }))
@@ -111,37 +111,38 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
     if (!mounted) return null
 
+    const handleNavItemClick = () => {
+        if (isMobile) setOpenMobile(false)
+    }
+
     return (
         <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar" {...props}>
-            <SidebarHeader className="px-3 py-3">
+            <SidebarHeader className="px-2.5 py-2.5 sm:px-3 sm:py-3">
                 <div className="flex items-center gap-3 rounded-2xl border border-sidebar-border bg-sidebar-accent/45 px-2.5 py-2">
                     <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white ring-1 ring-blue-600/20 transition-colors">
                         <Command className="size-5" />
                     </div>
                     <div className={cn(
                         "flex flex-col transition-all duration-300",
-                        state === "collapsed" ? "opacity-0 invisible w-0" : "opacity-100 visible w-auto"
+                        state === "collapsed" && !isMobile ? "opacity-0 invisible w-0" : "opacity-100 visible w-auto"
                     )}>
                         <span className="font-semibold tracking-tight text-sm leading-tight text-sidebar-foreground line-clamp-1">
                             {CLIENT_APP_NAME_STRING}
-                        </span>
-                        <span className="text-[11px] font-medium text-sidebar-foreground/70">
-                            Workspace
                         </span>
                     </div>
                 </div>
             </SidebarHeader>
 
-            <SidebarContent className="mt-1 px-2.5 scrollbar-none overflow-y-auto">
+            <SidebarContent className="mt-1 px-2.5 scrollbar-none overflow-y-auto pb-3">
                 {!isHydrated ? (
                     <SidebarSkeleton />
                 ) : (
                     <>
                         <div className="flex flex-col gap-6">
-                            <NavMain items={primaryNav} />
+                            <NavMain items={primaryNav} onItemClick={handleNavItemClick} />
                         </div>
                         <div className="mt-auto pb-4">
-                            <NavMain items={utilityNav} />
+                            <NavMain items={utilityNav} onItemClick={handleNavItemClick} />
                         </div>
                     </>
                 )}
@@ -155,16 +156,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                             tooltip="Logout"
                             className={cn(
                                 "group h-10 w-full rounded-full border border-rose-300/70 bg-sidebar text-rose-700 transition-all hover:bg-rose-500/10 hover:text-rose-700 dark:text-rose-300 dark:hover:text-rose-200",
-                                state === "collapsed" ? "justify-center px-0" : "justify-start"
+                                state === "collapsed" && !isMobile ? "justify-center px-0" : "justify-start"
                             )}
                         >
                             <LogOut className={cn(
                                 "size-4 shrink-0 transition-transform text-rose-600",
-                                state === "collapsed" ? "" : "group-hover:-translate-x-1"
+                                state === "collapsed" && !isMobile ? "" : "group-hover:-translate-x-1"
                             )} />
                             <span className={cn(
                                 "font-semibold text-[12px] tracking-tight ml-2 transition-all",
-                                state === "collapsed" ? "opacity-0 w-0" : "opacity-100"
+                                state === "collapsed" && !isMobile ? "opacity-0 w-0" : "opacity-100"
                             )}>
                                 Sign out
                             </span>

@@ -11,7 +11,10 @@ interface UpdateBidRequest {
   paymentTerms?: string
 }
 
-const EXTERNAL_API_URL = process.env.EXTERNAL_API_URL
+const EXTERNAL_API_URL =
+  process.env.EXTERNAL_API_URL ||
+  process.env.ERP_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_URL
 const DEFAULT_BID_PER_PAGE = 100
 const MAX_BID_FETCH_PAGES = 40
 const DEFAULT_TENDER_PER_PAGE = 100
@@ -175,21 +178,18 @@ function needsTenderInfo(bid: any) {
 }
 
 async function fetchTenderLookupDirectory(
-  accessToken: string,
-  thirdPartyId?: string | number | null
+  accessToken: string
 ) {
   const byId = new Map<string, TenderLookupRecord>()
   const byNo = new Map<string, TenderLookupRecord>()
 
   const baseParams = new URLSearchParams()
-  baseParams.set("enforce_invites", "true")
-  if (thirdPartyId) baseParams.set("third_party_id", String(thirdPartyId))
 
   const fetchPage = async (page: number) => {
     const params = new URLSearchParams(baseParams)
     params.set("page", String(page))
     params.set("per_page", String(DEFAULT_TENDER_PER_PAGE))
-    const response = await fetch(`${EXTERNAL_API_URL}/api/tenders?${params.toString()}`, {
+    const response = await fetch(`${EXTERNAL_API_URL}/api/v1/supplier/tenders?${params.toString()}`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
         Accept: "application/json",
@@ -340,17 +340,17 @@ function getBidKey(bid: any) {
 function sortBidsNewestFirst(left: any, right: any) {
   const leftTs = new Date(
     left?.submitted_at ??
-      left?.received_at ??
-      left?.updated_at ??
-      left?.created_at ??
-      0
+    left?.received_at ??
+    left?.updated_at ??
+    left?.created_at ??
+    0
   ).getTime()
   const rightTs = new Date(
     right?.submitted_at ??
-      right?.received_at ??
-      right?.updated_at ??
-      right?.created_at ??
-      0
+    right?.received_at ??
+    right?.updated_at ??
+    right?.created_at ??
+    0
   ).getTime()
   return rightTs - leftTs
 }
@@ -416,16 +416,14 @@ function hasBidDocumentValidationError(payload: any) {
 
 async function resolveTenderIdByNo(
   accessToken: string,
-  tenderNo: string,
-  thirdPartyId?: string | number | null
+  tenderNo: string
 ) {
   if (!EXTERNAL_API_URL || !tenderNo) return null
 
   const params = new URLSearchParams()
   params.set("search", tenderNo)
-  if (thirdPartyId) params.set("third_party_id", String(thirdPartyId))
 
-  const response = await fetch(`${EXTERNAL_API_URL}/api/tenders?${params.toString()}`, {
+  const response = await fetch(`${EXTERNAL_API_URL}/api/v1/supplier/tenders?${params.toString()}`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
       Accept: "application/json",
@@ -463,11 +461,7 @@ export async function GET(request: NextRequest) {
       searchParams.get("per_page") ?? searchParams.get("perPage"),
       DEFAULT_BID_PER_PAGE
     )
-    const thirdPartyId = (session.user as any)?.thirdPartyId ?? (session.user as any)?.third_party_id ?? null
-    const supplierId = (session.user as any)?.supplierId ?? (session.user as any)?.supplier_id ?? null
     const upstreamParams = new URLSearchParams()
-    if (thirdPartyId) upstreamParams.set("third_party_id", String(thirdPartyId))
-    if (supplierId) upstreamParams.set("supplier_id", String(supplierId))
     if (tenderId) upstreamParams.set("tender_id", String(tenderId))
     if (tenderNo) upstreamParams.set("tender_no", String(tenderNo))
     if (search) upstreamParams.set("search", search)
@@ -527,7 +521,7 @@ export async function GET(request: NextRequest) {
 
     if (sortedFiltered.some(needsTenderInfo)) {
       try {
-        const lookup = await fetchTenderLookupDirectory(String(session.accessToken), thirdPartyId)
+        const lookup = await fetchTenderLookupDirectory(String(session.accessToken))
         sortedFiltered = enrichBidsWithTenderInfo(sortedFiltered, lookup)
       } catch {
         // Keep core bid results available even if tender enrichment fails.
@@ -600,8 +594,6 @@ export async function POST(request: NextRequest) {
     }
 
     const files = formData.getAll('documents') as File[]
-    const thirdPartyId = (session.user as any)?.thirdPartyId ?? (session.user as any)?.third_party_id ?? null
-    const supplierId = (session.user as any)?.supplierId ?? (session.user as any)?.supplier_id ?? null
     const paymentTerms = (formData.get('paymentTerms') as string) || ''
 
     const buildPayload = (resolvedTenderId: string, currentStatus: "draft" | "submitted") => {
@@ -613,8 +605,6 @@ export async function POST(request: NextRequest) {
       payload.append('delivery_period', deliveryPeriod.toString())
       payload.append('payment_terms', paymentTerms)
       payload.append('status', currentStatus)
-      if (thirdPartyId) payload.append("third_party_id", String(thirdPartyId))
-      if (supplierId) payload.append("supplier_id", String(supplierId))
       files.forEach((file) => {
         payload.append('bid_documents[]', file)
       })
@@ -639,7 +629,7 @@ export async function POST(request: NextRequest) {
       let result = await response.json().catch(() => null)
 
       if (!response.ok && response.status === 422 && isInvalidTenderIdError(result) && tenderNo) {
-        const fallbackTenderId = await resolveTenderIdByNo(session.accessToken as string, tenderNo, thirdPartyId)
+        const fallbackTenderId = await resolveTenderIdByNo(session.accessToken as string, tenderNo)
         if (fallbackTenderId && fallbackTenderId !== resolvedTenderId) {
           resolvedTenderId = fallbackTenderId
           response = await postToApi(buildPayload(resolvedTenderId, effectiveStatus))

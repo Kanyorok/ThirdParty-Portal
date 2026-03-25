@@ -1,35 +1,40 @@
 import { NextRequest, NextResponse } from "next/server"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth-options"
 
 export const dynamic = "force-dynamic"
 
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization") || request.headers.get("Authorization") || ""
-    const accessToken = authHeader.toLowerCase().startsWith("bearer ")
-      ? authHeader.slice("bearer ".length).trim()
-      : undefined
+    const session = await getServerSession(authOptions)
+    const accessToken = session?.accessToken
+
+    if (!session?.user || !accessToken) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
 
     const { searchParams } = request.nextUrl
     const search = searchParams.get('search')
     const status = searchParams.get('status')
-    const tenderType = searchParams.get('tenderType')
+    const tenderType = searchParams.get('tenderType') ?? searchParams.get('tender_type')
 
     try {
       const erpBase = process.env.ERP_BASE_URL || process.env.NEXT_PUBLIC_API_URL
-      const apiUrl = new URL(`${erpBase}/api/tenders`)
+      if (!erpBase) {
+        return NextResponse.json({ error: "API not configured" }, { status: 502 })
+      }
+
+      const apiUrl = new URL(`${erpBase}/api/v1/supplier/tenders`)
       if (search) apiUrl.searchParams.set('search', search)
       if (status && status !== 'all') apiUrl.searchParams.set('status', status)
-      if (tenderType && tenderType !== 'all') apiUrl.searchParams.set('tenderType', tenderType)
-      const thirdPartyId = searchParams.get("third_party_id")
-      apiUrl.searchParams.set('enforce_invites', 'true')
-      if (thirdPartyId) {
-        apiUrl.searchParams.set('third_party_id', String(thirdPartyId))
+      if (tenderType && tenderType !== 'all') {
+        apiUrl.searchParams.set('tender_type', tenderType)
       }
 
       const response = await fetch(apiUrl.toString(), {
         headers: {
           'Accept': 'application/json',
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+          Authorization: `Bearer ${accessToken}`,
         },
         signal: AbortSignal.timeout(10000)
       })
@@ -39,7 +44,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json(data)
       } else {
         const errorText = await response.text()
-        console.error(`ERP /api/tenders returned error ${response.status}:`, errorText)
+        console.error(`ERP /api/v1/supplier/tenders returned error ${response.status}:`, errorText)
 
         if (response.status === 401) {
           return NextResponse.json({
@@ -53,7 +58,7 @@ export async function GET(request: NextRequest) {
         }
       }
     } catch (e) {
-      console.warn('ERP /api/tenders call failed:', e)
+      console.warn('ERP /api/v1/supplier/tenders call failed:', e)
     }
 
     return NextResponse.json({

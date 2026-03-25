@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
 
     try {
         const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/v1/prequalification/applications/my-applications`,
+            `${process.env.NEXT_PUBLIC_API_URL}/api/v1/supplier/prequalification/my-applications`,
             {
                 headers: {
                     Accept: "application/json",

@@ -88,6 +88,57 @@ function normalizeText(value?: unknown): string | null {
   return null
 }
 
+function looksLikeTemplateCode(text: string): boolean {
+  const lower = text.toLowerCase()
+  let score = 0
+  if (/<\s*(html|head|body|style|table|tr|td)\b/i.test(text)) score += 1
+  if (/\b(font-family|line-height|max-width|padding|margin|background-color|border-radius)\s*:/i.test(text)) score += 1
+  if (/\b(body|html|\.header|\.content|\.footer)\s*\{[^}]*\}/i.test(text)) score += 1
+  if ((text.match(/\{[^{}]*\}/g) ?? []).length >= 2) score += 1
+  if (lower.includes("<style") || lower.includes("</style>")) score += 1
+  return score >= 2
+}
+
+function cleanTemplateNoise(text: string): string {
+  return text
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/\b(body|html|head|table|tr|td|div|span|p|\.header|\.content|\.footer)\s*\{[^}]*\}/gi, " ")
+    .replace(/\b[a-z-]{2,}\s*:\s*[^;{}]+;?/gi, " ")
+    .replace(/[{}]/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim()
+}
+
+function normalizeNotificationText(value?: unknown): string | null {
+  const raw = normalizeText(value)
+  if (!raw) return null
+
+  // Normalize HTML entities/tags first.
+  const stripped = stripHtml(raw)
+  if (!stripped) return null
+
+  if (!looksLikeTemplateCode(stripped)) return stripped
+
+  const cleaned = cleanTemplateNoise(stripped)
+  if (!cleaned) return null
+
+  // Remove overly technical leftovers commonly seen in raw email templates.
+  const withoutTemplateWords = cleaned
+    .replace(/\b(doctype|stylesheet|font|color|width|height|px|arial|sans-serif)\b/gi, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim()
+
+  return withoutTemplateWords || null
+}
+
+function buildFallbackMessage(notificationType?: string | null, category?: string | null, channel?: "email" | "sms"): string {
+  const kind = String(notificationType ?? category ?? "").toLowerCase()
+  if (kind.includes("tender")) return "You have a new tender notification."
+  if (kind.includes("prequalification")) return "You have a new prequalification notification."
+  if (channel === "sms") return "You have a new SMS notification."
+  return "You have a new notification."
+}
+
 /** Strip HTML tags and decode common entities so users see clean text. */
 function stripHtml(text: string | null | undefined): string | null {
   if (!text) return null
@@ -136,9 +187,9 @@ function normalizeNotification(raw: RawNotification): AppNotification {
   const baseId = raw.id ?? raw.uuid ?? raw.reference ?? raw.key ?? raw.notification_id
   const data = (raw.data ?? null) as Record<string, unknown> | null
 
-  const subject = stripHtml(normalizeText(raw.subject ?? data?.subject))
-  const title = stripHtml(normalizeText(raw.title ?? data?.title))
-  const body = stripHtml(normalizeText(raw.body ?? raw.description ?? data?.body))
+  const subject = normalizeNotificationText(raw.subject ?? data?.subject)
+  const title = normalizeNotificationText(raw.title ?? data?.title)
+  const body = normalizeNotificationText(raw.body ?? raw.description ?? data?.body)
   const link = normalizeText(
     raw.link ?? raw.url ?? raw.action_url ?? raw.path ??
     data?.link ?? data?.url ?? data?.action_url ?? data?.path
@@ -154,7 +205,12 @@ function normalizeNotification(raw: RawNotification): AppNotification {
     data?.priority ?? data?.severity ?? data?.urgency
   )
 
-  const message = subject ?? stripHtml(normalizeText(raw.message)) ?? title ?? body ?? "Notification"
+  const message =
+    subject ??
+    normalizeNotificationText(raw.message) ??
+    title ??
+    body ??
+    buildFallbackMessage(notificationType, category, deriveChannel(raw))
 
   const createdAt =
     normalizeText(raw.created_at ?? raw.createdAt ?? raw.timestamp ?? data?.createdAt) ?? null

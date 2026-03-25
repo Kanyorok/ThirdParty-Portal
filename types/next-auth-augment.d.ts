@@ -3,7 +3,6 @@ import type { DefaultJWT } from "next-auth/jwt"
 
 declare module "next-auth" {
   interface Session {
-    /** Available server-side only. Stripped from client /api/auth/session responses. */
     accessToken?: string
     user: DefaultSession["user"] & {
       userId?: number
@@ -15,16 +14,6 @@ declare module "next-auth" {
       isTenant?: boolean
       isCustomer?: boolean
       approvalStatus?: string
-
-      /** @deprecated Use camelCase equivalents. Kept for resolver compat. */
-      third_party_id?: number | null
-      /** @deprecated */ is_supplier?: boolean
-      /** @deprecated */ is_tenant?: boolean
-      /** @deprecated */ is_customer?: boolean
-      /** @deprecated */ tenant_id?: number | null
-      /** @deprecated */ full_name?: string
-      /** @deprecated */ image_url?: string | null
-      /** @deprecated */ approval_status?: string
     }
   }
 
@@ -65,7 +54,6 @@ declare module "next-auth/jwt" {
     accessToken?: string
     tokenType?: string
 
-    /** @deprecated compat aliases */
     user_id?: number
     tenant_id?: number | null
     third_party_id?: number | null
