@@ -1,9 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { AlertCircle, ArrowRight, CheckCircle2, Eye, EyeOff, ShieldCheck, UserPlus } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
-import { Spinner } from "@/components/common/spinner"
+import { AlertCircle, CheckCircle2, Eye, EyeOff } from "lucide-react"
+import Loading from "@/components/common/custom_loader"
 import { Button } from "@/components/common/button"
 import { Input } from "@/components/common/input"
 import {
@@ -15,17 +14,75 @@ import {
 } from "@/components/common/select"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { type RegisterFormInputs, type RegisterThirdPartyResult, useRegisterForm } from "@/hooks/use-register"
+import { type RegisterFormInputs, type RegisterRole, type RegisterThirdPartyResult, useRegisterForm } from "@/hooks/use-register"
+
+const ORGANIZATION_FIELDS = [
+  "Name",
+  "BusinessType",
+  "RegistrationNumber",
+  "TaxPIN",
+  "Country",
+  "Location",
+  "Email",
+  "Phone",
+  "types"
+] as const
+
+const ADMIN_FIELDS = [
+  "user_FirstName",
+  "user_LastName",
+  "user_Email",
+  "user_Phone",
+  "user_Gender",
+  "user_Password",
+  "user_Password_confirmation"
+] as const
+
+const ROLE_OPTIONS: Array<{ id: RegisterRole; label: string }> = [
+  { id: "SU", label: "Supplier" },
+  { id: "TN", label: "Tenant" },
+  { id: "CU", label: "Customer" },
+]
+
+const labelStyle = "mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-600"
+const inputStyle = "h-11 rounded-lg border-slate-300 bg-white text-slate-900 transition-colors focus-visible:border-slate-900 focus-visible:ring-slate-200"
+const selectStyle = "h-11 w-full rounded-lg border-slate-300 bg-white text-slate-900 transition-colors focus:border-slate-900 focus:ring-slate-200"
+const errorStyle = "mt-1.5 flex items-center gap-1 text-xs font-medium text-rose-600"
+
+function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
+  return (
+    <label className={labelStyle}>
+      {children}
+      {required ? <span className="text-rose-600"> *</span> : null}
+    </label>
+  )
+}
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null
+  return (
+    <p className={errorStyle}>
+      <AlertCircle className="h-3 w-3" />
+      {message}
+    </p>
+  )
+}
+
+function SectionTitle({ title, description }: { title: string; description?: string }) {
+  return (
+    <div className="space-y-1">
+      <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{title}</h2>
+      {description ? <p className="text-sm text-slate-500">{description}</p> : null}
+    </div>
+  )
+}
 
 export default function RegisterForm() {
   const router = useRouter()
-  const [step, setStep] = React.useState<1 | 2>(1)
   const [authError, setAuthError] = React.useState<string | null>(null)
   const [success, setSuccess] = React.useState(false)
-  const [successTitle, setSuccessTitle] = React.useState("Registration Complete")
-  const [successDescription, setSuccessDescription] = React.useState<string>(
-    "Your account has been created successfully."
-  )
+  const [successTitle, setSuccessTitle] = React.useState("Registration successful")
+  const [successDescription, setSuccessDescription] = React.useState("Your account has been created successfully.")
   const [submitState, setSubmitState] = React.useState<"idle" | "posting" | "success" | "error">("idle")
   const [submitNotice, setSubmitNotice] = React.useState<string | null>(null)
   const [showPassword, setShowPassword] = React.useState(false)
@@ -46,19 +103,37 @@ export default function RegisterForm() {
   } = useRegisterForm()
 
   const createUser = form.watch("createUser")
+  const businessTypeValue = form.watch("BusinessType")
+  const supplierCategoryValue = form.watch("supplier_category_id")
+  const countryValue = form.watch("Country")
+  const locationValue = form.watch("Location")
+  const genderValue = form.watch("user_Gender")
 
   const isPosting = submitState === "posting"
   const isBusy = isSubmitting || isPosting
 
-  const adminFields = [
-    "user_FirstName",
-    "user_LastName",
-    "user_Email",
-    "user_Phone",
-    "user_Gender",
-    "user_Password",
-    "user_Password_confirmation"
-  ] as const
+  const getFieldsToValidate = React.useCallback(() => {
+    const fields = [...ORGANIZATION_FIELDS] as string[]
+    if (isSupplier) fields.push("supplier_category_id")
+    if (isTenant) fields.push("user_Remarks")
+    if (createUser) fields.push(...ADMIN_FIELDS)
+    return fields
+  }, [createUser, isSupplier, isTenant])
+
+  const getFirstFieldError = React.useCallback((fields: string[]) => {
+    const errorsMap = form.formState.errors as Record<string, { message?: string }>
+    for (const field of fields) {
+      if (errorsMap[field]?.message) {
+        return { field, message: errorsMap[field].message as string }
+      }
+    }
+    const fallbackError = Object.entries(errorsMap)[0]
+    if (!fallbackError) return null
+    return {
+      field: fallbackError[0],
+      message: fallbackError[1]?.message || "Please fix the validation errors before submitting."
+    }
+  }, [form.formState.errors])
 
   const extractRegisterMessage = React.useCallback((payload?: Record<string, any> | null) => {
     const candidates = [
@@ -89,21 +164,17 @@ export default function RegisterForm() {
       const verificationEmail = pickVerificationEmail(values)
 
       setSubmitState("success")
+      setSubmitNotice("Registration completed.")
 
       if (verificationRequired) {
-        const notice = verificationEmail
-          ? `Account created. We sent a verification email to ${verificationEmail}. Confirm your email to continue.`
-          : "Account created. We sent a verification email. Confirm your email to continue."
-        setSubmitNotice(notice)
         setSuccessTitle("Check your email")
         setSuccessDescription(
           verificationEmail
-            ? `A verification link was sent to ${verificationEmail}. Click the link in the email to activate your account.`
-            : "A verification link was sent to your email address. Click the link to activate your account."
+            ? `We sent a verification link to ${verificationEmail}.`
+            : "We sent a verification link to your email address."
         )
       } else {
-        setSubmitNotice(backendMessage || "Registration completed successfully.")
-        setSuccessTitle("Registration complete")
+        setSuccessTitle("Registration successful")
         setSuccessDescription("Your account has been created successfully.")
       }
 
@@ -112,93 +183,33 @@ export default function RegisterForm() {
     [extractRegisterMessage, pickVerificationEmail]
   )
 
-  const handleNextStep = async (e: React.FormEvent) => {
+  const handleSubmitForm = async (e: React.FormEvent) => {
     e.preventDefault()
     setAuthError(null)
     setSubmitNotice(null)
+    if (isBusy) return
+
     setSubmitState("idle")
-
-    const fieldsToValidate = [
-      "Name",
-      "BusinessType",
-      "RegistrationNumber",
-      "Country",
-      "Location",
-      "TaxPIN",
-      "Email",
-      "Phone",
-      "types"
-    ] as any
-
-    if (isSupplier) fieldsToValidate.push("supplier_category_id")
-    if (isTenant) fieldsToValidate.push("user_Remarks")
-
-    const valid = await form.trigger(fieldsToValidate)
+    const fieldsToValidate = getFieldsToValidate()
+    const valid = await form.trigger(fieldsToValidate as any)
 
     if (!valid) {
-      const errorFields = form.formState.errors
-      const firstError = Object.keys(errorFields)[0]
-
-      setAuthError(
-        errorFields[firstError as keyof typeof errorFields]?.message ||
-        "Please fix the validation errors before continuing"
-      )
-
-      form.setFocus(firstError as any)
-      return
-    }
-
-    if (!createUser) {
-      setSubmitState("posting")
-      setSubmitNotice("Submitting your registration...")
-      try {
-        const values = form.getValues()
-        const registerResponse = await registerThirdParty(values)
-        if (registerResponse?.success) handleRegistrationSuccess(values, registerResponse)
-      } catch (error: any) {
-        setSubmitState("error")
-        setSubmitNotice("Registration failed. Please review the error and try again.")
-        setAuthError(error?.message ?? "An unexpected error occurred.")
-      }
-      return
-    }
-
-    setStep(2)
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  }
-
-  const handleFinalSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setAuthError(null)
-    setSubmitNotice(null)
-    if (isBusy) {
-      return
-    }
-    setSubmitState("idle")
-
-    const valid = await form.trigger(adminFields as any)
-
-    if (!valid) {
-      const errorFields = form.formState.errors
-      const firstError = Object.keys(errorFields)[0]
-      setAuthError(
-        errorFields[firstError as keyof typeof errorFields]?.message ||
-        "Please fix the validation errors before continuing"
-      )
-      form.setFocus(firstError as any)
+      const firstError = getFirstFieldError(fieldsToValidate)
+      setAuthError(firstError?.message ?? "Please fix the validation errors before submitting.")
+      if (firstError?.field) form.setFocus(firstError.field as any)
       return
     }
 
     try {
       setSubmitState("posting")
-      setSubmitNotice("Creating account and submitting registration...")
+      setSubmitNotice("Submitting...")
       const values = form.getValues()
       const registerResponse = await registerThirdParty(values)
       if (registerResponse?.success) handleRegistrationSuccess(values, registerResponse)
-    } catch (error: any) {
+    } catch (error: unknown) {
       setSubmitState("error")
-      setSubmitNotice("Registration failed. Please review the error and try again.")
-      setAuthError(error?.message ?? "An unexpected error occurred.")
+      setSubmitNotice("Registration could not be completed.")
+      setAuthError(error instanceof Error ? error.message : "Registration could not be completed. Please try again.")
     }
   }
 
@@ -210,437 +221,375 @@ export default function RegisterForm() {
   }
 
   const submitButtonTone = cn(
-    "h-12 rounded-xl px-5 text-sm font-semibold tracking-tight disabled:cursor-not-allowed disabled:opacity-90",
-    submitState === "success" && "bg-emerald-600 hover:bg-emerald-600",
-    submitState === "error" && "bg-rose-600 hover:bg-rose-700",
-    (submitState === "idle" || submitState === "posting") && "bg-primary text-primary-foreground hover:bg-[var(--primary-hover)]"
+    "h-12 w-full rounded-lg px-5 text-sm font-semibold tracking-tight disabled:cursor-not-allowed disabled:opacity-90 sm:w-auto sm:min-w-[220px]",
+    submitState === "success" && "bg-emerald-600 text-white hover:bg-emerald-600",
+    submitState === "error" && "bg-rose-600 text-white hover:bg-rose-700",
+    (submitState === "idle" || submitState === "posting") && "bg-slate-900 text-white hover:bg-slate-800"
   )
 
-  const inputStyle = "h-12 bg-background/95"
-  const selectStyle = "h-12 w-full bg-background/95"
-  const selectContentStyle = ""
-  const selectItemStyle = ""
-  const labelStyle = "mb-1.5 block text-[11px] font-semibold tracking-wide text-slate-600"
-  const errorStyle = "mt-1.5 flex items-center gap-1 text-xs font-medium text-rose-600"
-  const sectionStyle = "space-y-4"
-  const sectionTitleStyle = "text-base font-semibold tracking-tight text-slate-900"
-  const panelStyle = "rounded-2xl border border-slate-200/90 bg-white/90 p-5 sm:p-6"
-  const secondaryButtonStyle = "h-12 rounded-xl px-6 text-sm font-semibold"
-  const businessTypeValue = form.watch("BusinessType")
-  const supplierCategoryValue = form.watch("supplier_category_id")
-  const countryValue = form.watch("Country")
-  const locationValue = form.watch("Location")
-  const genderValue = form.watch("user_Gender")
+  if (isLoadingMetadata) {
+    return (
+      <Loading
+        message="Loading form"
+        fullScreen={false}
+        className="py-28"
+      />
+    )
+  }
 
-  if (isLoadingMetadata) return (
-    <div className="py-20 text-center">
-      <Spinner className="h-8 w-8 animate-spin text-blue-600 mx-auto" />
-    </div>
-  )
+  if (metadataError) {
+    return (
+      <div className="py-16 text-center">
+        <p className="text-sm font-medium text-rose-700">{metadataError}</p>
+      </div>
+    )
+  }
 
-  if (metadataError) return (
-    <div className="py-20 text-center text-red-600 font-bold uppercase tracking-tighter">
-      {metadataError}
-    </div>
-  )
-
-  if (success) return (
-    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="mx-auto max-w-md py-12 text-center">
-      <CheckCircle2 className="mx-auto mb-5 h-14 w-14 text-emerald-600" />
-      <h2 className="mb-2 text-[28px] font-semibold tracking-tight text-slate-900">{successTitle}</h2>
-      <p className="mb-6 text-sm leading-relaxed text-slate-600">{successDescription}</p>
-      <Button onClick={() => router.replace("/signin")} className="h-12 w-full rounded-xl bg-[#0e63f4] px-5 text-sm font-semibold tracking-tight text-white hover:bg-[#0a54d1]">
-        Sign In
-      </Button>
-    </motion.div>
-  )
+  if (success) {
+    return (
+      <div className="mx-auto max-w-md py-8 text-center">
+        <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-emerald-600" />
+        <h2 className="mb-2 text-2xl font-semibold tracking-tight text-slate-900">{successTitle}</h2>
+        <p className="mb-6 text-sm text-slate-600">{successDescription}</p>
+        <Button
+          onClick={() => router.replace("/signin")}
+          className="h-11 w-full rounded-xl bg-slate-900 px-5 text-sm font-semibold text-white hover:bg-slate-800"
+        >
+          Sign In
+        </Button>
+      </div>
+    )
+  }
 
   return (
-    <div className="mx-auto max-w-7xl px-1 pb-4">
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
-        <div className="inline-flex h-8 items-center rounded-full border border-[#0e63f4]/20 bg-[#0e63f4]/5 px-3 text-xs font-semibold tracking-wide text-[#0c408f]">
-          Step {step}/2
-        </div>
-        <div className="flex items-center gap-2 text-[13px] font-semibold tracking-tight">
-          <span className={cn("rounded-full border px-3 py-1.5 transition-colors", step === 1 ? "border-[#0e63f4]/35 bg-[#0e63f4]/10 text-[#0c408f]" : "border-slate-200 text-slate-400")}>
-            Organization
-          </span>
-          <span className={cn("rounded-full border px-3 py-1.5 transition-colors", step === 2 ? "border-[#0e63f4]/35 bg-[#0e63f4]/10 text-[#0c408f]" : "border-slate-200 text-slate-400")}>
-            Admin User
-          </span>
-        </div>
-      </div>
-      <div className="mb-8 h-1.5 w-full rounded-full bg-slate-200/70">
-        <div className={cn("h-1.5 rounded-full bg-[#0e63f4] transition-all duration-300", step === 1 ? "w-1/2" : "w-full")} />
-      </div>
+    <div className="mx-auto max-w-6xl">
+      <div className="relative">
+        {isPosting ? (
+          <div className="absolute inset-0 z-20 bg-white/85 backdrop-blur-[1px]">
+            <Loading
+              message="Submitting your registration"
+              fullScreen={false}
+              className="h-full bg-transparent py-0"
+            />
+          </div>
+        ) : null}
 
-      <AnimatePresence mode="wait">
-        {authError && (
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mb-6 flex items-center gap-2 border-l-2 border-rose-500 pl-3 text-rose-700">
-            <AlertCircle className="h-4 w-4 shrink-0" />
-            <span className="text-sm font-semibold">{authError}</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      {submitNotice && submitState !== "error" && (
-        <div className="mb-6 flex items-center gap-2 border-l-2 border-emerald-500 pl-3 text-emerald-700">
-          <CheckCircle2 className="h-4 w-4 shrink-0" />
-          <span className="text-sm font-semibold">{submitNotice}</span>
-        </div>
-      )}
-
-      <form onSubmit={handleFinalSubmit} onKeyDown={e => e.key === "Enter" && e.preventDefault()} className="space-y-7">
-        {step === 1 ? (
-          <motion.div initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} className="space-y-7">
-            <section className={cn(sectionStyle, panelStyle)}>
-              <div>
-                <p className={sectionTitleStyle}>Business roles</p>
+        <form
+          onSubmit={handleSubmitForm}
+          className={cn("space-y-10", isPosting && "pointer-events-none")}
+          noValidate
+          aria-busy={isPosting}
+        >
+          <section className="space-y-4">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+              <div className="w-full lg:max-w-3xl">
+                <div aria-label="Business role" className="grid grid-cols-1 gap-2 sm:grid-cols-3" role="group">
+                  {ROLE_OPTIONS.map((type) => (
+                    <button
+                      key={type.id}
+                      type="button"
+                      onClick={() => toggleType(type.id)}
+                      className={cn(
+                        "h-11 rounded-lg border px-3 text-sm font-semibold transition-colors",
+                        selectedTypes?.includes(type.id)
+                          ? "border-slate-900 bg-slate-900 text-white"
+                          : "border-slate-300 bg-white text-slate-700 hover:border-slate-500 hover:text-slate-900"
+                      )}
+                    >
+                      {type.label}
+                    </button>
+                  ))}
+                </div>
+                <FieldError message={errors.types?.message as string | undefined} />
               </div>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                {[{ id: "SU", label: "Supplier" }, { id: "TN", label: "Tenant" }, { id: "CU", label: "Customer" }].map(type => (
-                  <button
-                    key={type.id}
-                    type="button"
-                    onClick={() => toggleType(type.id)}
-                    className={cn(
-                      "h-11 rounded-xl border px-4 text-sm font-medium transition-colors",
-                      selectedTypes?.includes(type.id)
-                        ? "border-[#0e63f4]/35 bg-[#0e63f4]/10 text-[#0c408f]"
-                        : "border-slate-300 bg-white text-slate-600 hover:border-slate-400 hover:text-slate-800"
-                    )}
-                  >
-                    {type.label}
-                  </button>
-                ))}
+
+              <div className="w-full lg:max-w-xs">
+                <button
+                  type="button"
+                  onClick={() => form.setValue("createUser", !createUser)}
+                  className={cn(
+                    "flex h-11 w-full items-center justify-between rounded-lg border px-3 text-sm font-medium transition-colors",
+                    createUser
+                      ? "border-slate-900 bg-slate-900 text-white"
+                      : "border-slate-300 bg-white text-slate-700 hover:border-slate-500"
+                  )}
+                  role="switch"
+                  aria-checked={createUser}
+                  aria-label="Create user login access"
+                >
+                  <span>{createUser ? "Create user login: On" : "Create user login: Off"}</span>
+                  <span className={cn("relative h-6 w-11 rounded-full transition-colors", createUser ? "bg-white/20" : "bg-slate-200")}>
+                    <span
+                      className={cn(
+                        "absolute top-0.5 h-5 w-5 rounded-full shadow-sm transition-all",
+                        createUser ? "right-0.5 bg-white" : "left-0.5 bg-slate-500"
+                      )}
+                    />
+                  </span>
+                </button>
               </div>
-              {errors.types && <p className={errorStyle}><AlertCircle className="h-3 w-3" />{errors.types.message}</p>}
-            </section>
-
-            <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-              <section className={cn(sectionStyle, panelStyle)}>
-                <div>
-                  <p className={sectionTitleStyle}>Company</p>
-                </div>
-                <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
-                  <div className="md:col-span-2">
-                    <label className={labelStyle}>Legal Company Name</label>
-                    <Input {...form.register("Name")} placeholder="Daniel Logistics Limited" className={inputStyle} />
-                    {errors.Name && <p className={errorStyle}><AlertCircle className="h-3 w-3" />{errors.Name.message}</p>}
-                  </div>
-
-                  <div>
-                    <label className={labelStyle}>Trading Name</label>
-                    <Input {...form.register("TradingName")} placeholder="Daniel Logistics" className={inputStyle} />
-                    {errors.TradingName && <p className={errorStyle}><AlertCircle className="h-3 w-3" />{errors.TradingName.message}</p>}
-                  </div>
-
-                  <div>
-                    <label className={labelStyle}>Registration Number</label>
-                    <Input {...form.register("RegistrationNumber")} placeholder="C123456" className={inputStyle} />
-                    {errors.RegistrationNumber && <p className={errorStyle}><AlertCircle className="h-3 w-3" />{errors.RegistrationNumber.message}</p>}
-                  </div>
-
-                  <div>
-                    <label className={labelStyle}>Business Type</label>
-                    <Select
-                      value={businessTypeValue || undefined}
-                      onValueChange={(value) =>
-                        form.setValue("BusinessType", value, { shouldDirty: true, shouldValidate: true })
-                      }
-                    >
-                      <SelectTrigger className={selectStyle}>
-                        <SelectValue placeholder="Select business type" />
-                      </SelectTrigger>
-                      <SelectContent className={selectContentStyle}>
-                        {metadata.businessTypes.map((bt) => (
-                          <SelectItem key={bt.value} value={bt.value} className={selectItemStyle}>
-                            {bt.description}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.BusinessType && <p className={errorStyle}><AlertCircle className="h-3 w-3" />{errors.BusinessType.message}</p>}
-                  </div>
-
-                  <div>
-                    <label className={labelStyle}>Tax PIN</label>
-                    <Input {...form.register("TaxPIN")} placeholder="P051234567X" className={inputStyle} />
-                    {errors.TaxPIN && <p className={errorStyle}><AlertCircle className="h-3 w-3" />{errors.TaxPIN.message}</p>}
-                  </div>
-
-                  <div>
-                    <label className={labelStyle}>VAT Number</label>
-                    <Input {...form.register("VATNumber")} placeholder="Optional" className={inputStyle} />
-                    {errors.VATNumber && <p className={errorStyle}><AlertCircle className="h-3 w-3" />{errors.VATNumber.message}</p>}
-                  </div>
-
-                  {isSupplier && (
-                    <div className="md:col-span-2">
-                      <label className={labelStyle}>Supplier Category</label>
-                      <Select
-                        value={supplierCategoryValue != null ? String(supplierCategoryValue) : undefined}
-                        onValueChange={(value) =>
-                          form.setValue("supplier_category_id", Number(value), { shouldDirty: true, shouldValidate: true })
-                        }
-                      >
-                        <SelectTrigger className={selectStyle}>
-                          <SelectValue placeholder="Select supplier category" />
-                        </SelectTrigger>
-                        <SelectContent className={selectContentStyle}>
-                          {metadata.supplierCategories.map((cat) => (
-                            <SelectItem key={cat.id} value={String(cat.id)} className={selectItemStyle}>
-                              {cat.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {errors.supplier_category_id && <p className={errorStyle}><AlertCircle className="h-3 w-3" />{errors.supplier_category_id.message}</p>}
-                    </div>
-                  )}
-                </div>
-              </section>
-
-              <section className={cn(sectionStyle, panelStyle)}>
-                <div>
-                  <p className={sectionTitleStyle}>Contact</p>
-                </div>
-                <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
-                  <div>
-                    <label className={labelStyle}>Business Email</label>
-                    <Input type="email" {...form.register("Email")} placeholder="procurement@company.com" className={inputStyle} />
-                    {errors.Email && <p className={errorStyle}><AlertCircle className="h-3 w-3" />{errors.Email.message}</p>}
-                  </div>
-
-                  <div>
-                    <label className={labelStyle}>Phone Number</label>
-                    <Input {...form.register("Phone")} placeholder="+254 700 000 000" className={inputStyle} />
-                    {errors.Phone && <p className={errorStyle}><AlertCircle className="h-3 w-3" />{errors.Phone.message}</p>}
-                  </div>
-
-                  <div>
-                    <label className={labelStyle}>Country</label>
-                    <Select
-                      value={countryValue || undefined}
-                      onValueChange={(value) =>
-                        form.setValue("Country", value, { shouldDirty: true, shouldValidate: true })
-                      }
-                    >
-                      <SelectTrigger className={selectStyle}>
-                        <SelectValue placeholder="Select country" />
-                      </SelectTrigger>
-                      <SelectContent className={selectContentStyle}>
-                        {metadata.countries.map((c) => (
-                          <SelectItem key={c.code} value={c.code} className={selectItemStyle}>
-                            {c.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.Country && <p className={errorStyle}><AlertCircle className="h-3 w-3" />{errors.Country.message}</p>}
-                  </div>
-
-                  <div>
-                    <label className={labelStyle}>Location</label>
-                    <Select
-                      value={locationValue != null ? String(locationValue) : undefined}
-                      onValueChange={(value) =>
-                        form.setValue("Location", Number(value), { shouldDirty: true, shouldValidate: true })
-                      }
-                    >
-                      <SelectTrigger className={selectStyle}>
-                        <SelectValue placeholder="Select locality" />
-                      </SelectTrigger>
-                      <SelectContent className={selectContentStyle}>
-                        {metadata.localities.map((l) => (
-                          <SelectItem key={l.id} value={String(l.id)} className={selectItemStyle}>
-                            {l.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.Location && <p className={errorStyle}><AlertCircle className="h-3 w-3" />{errors.Location.message}</p>}
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label className={labelStyle}>Physical Address</label>
-                    <Input {...form.register("PhysicalAddress")} placeholder="123 King Chain Road, Nairobi" className={inputStyle} />
-                    {errors.PhysicalAddress && <p className={errorStyle}><AlertCircle className="h-3 w-3" />{errors.PhysicalAddress.message}</p>}
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label className={labelStyle}>Website</label>
-                    <Input {...form.register("Website")} placeholder="https://daniellogistics.com" className={inputStyle} />
-                    {errors.Website && <p className={errorStyle}><AlertCircle className="h-3 w-3" />{errors.Website.message}</p>}
-                  </div>
-
-                  {isTenant && (
-                    <div className="md:col-span-2">
-                      <label className={labelStyle}>Tenant Remarks</label>
-                      <Input {...form.register("user_Remarks")} placeholder="Setup notes" className={inputStyle} />
-                      {errors.user_Remarks && <p className={errorStyle}><AlertCircle className="h-3 w-3" />{errors.user_Remarks.message}</p>}
-                    </div>
-                  )}
-                </div>
-              </section>
             </div>
+          </section>
 
-            <section className={cn("flex items-center justify-between", panelStyle)}>
-              <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-[#0e63f4]"><UserPlus size={15} /></div>
+          {authError ? (
+            <div className="flex items-start gap-2 border-l-2 border-rose-500 pl-3 text-rose-700">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span className="text-sm font-medium">{authError}</span>
+            </div>
+          ) : null}
+
+          {submitNotice && submitState !== "error" ? (
+            <div className="flex items-start gap-2 border-l-2 border-emerald-500 pl-3 text-emerald-700">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+              <span className="text-sm font-medium">{submitNotice}</span>
+            </div>
+          ) : null}
+
+          <section className="space-y-4 border-t border-slate-200 pt-7">
+            <SectionTitle title="Business" />
+            <div className="grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-2">
+              <div className="md:col-span-2">
+                <FieldLabel required>Legal Name</FieldLabel>
+                <Input required autoComplete="organization" {...form.register("Name")} placeholder="Daniel Logistics Limited" className={inputStyle} />
+                <FieldError message={errors.Name?.message as string | undefined} />
+              </div>
+
+              <div>
+                <FieldLabel required>Registration Number</FieldLabel>
+                <Input required {...form.register("RegistrationNumber")} placeholder="C123456" className={inputStyle} />
+                <FieldError message={errors.RegistrationNumber?.message as string | undefined} />
+              </div>
+
+              <div>
+                <FieldLabel required>Business Type</FieldLabel>
+                <Select
+                  value={businessTypeValue || undefined}
+                  onValueChange={(value) => form.setValue("BusinessType", value, { shouldDirty: true, shouldValidate: true })}
+                >
+                  <SelectTrigger className={selectStyle} aria-required="true">
+                    <SelectValue placeholder="Select business type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {metadata.businessTypes.map((bt) => (
+                      <SelectItem key={bt.value} value={bt.value}>
+                        {bt.description}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FieldError message={errors.BusinessType?.message as string | undefined} />
+              </div>
+
+              <div>
+                <FieldLabel required>Tax PIN</FieldLabel>
+                <Input required {...form.register("TaxPIN")} placeholder="P051234567X" className={inputStyle} />
+                <FieldError message={errors.TaxPIN?.message as string | undefined} />
+              </div>
+
+              {isSupplier ? (
+                <div className="md:col-span-2">
+                  <FieldLabel required>Supplier Category</FieldLabel>
+                  <Select
+                    value={supplierCategoryValue != null ? String(supplierCategoryValue) : undefined}
+                    onValueChange={(value) => form.setValue("supplier_category_id", Number(value), { shouldDirty: true, shouldValidate: true })}
+                  >
+                    <SelectTrigger className={selectStyle} aria-required="true">
+                      <SelectValue placeholder="Select supplier category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {metadata.supplierCategories.map((cat) => (
+                        <SelectItem key={cat.id} value={String(cat.id)}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FieldError message={errors.supplier_category_id?.message as string | undefined} />
+                </div>
+              ) : null}
+            </div>
+          </section>
+
+          <section className="space-y-4 border-t border-slate-200 pt-7">
+            <SectionTitle title="Contact" />
+            <div className="grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-2">
+              <div>
+                <FieldLabel required>Business Email</FieldLabel>
+                <Input type="email" required autoComplete="email" {...form.register("Email")} placeholder="procurement@company.com" className={inputStyle} />
+                <FieldError message={errors.Email?.message as string | undefined} />
+              </div>
+
+              <div>
+                <FieldLabel required>Phone Number</FieldLabel>
+                <Input type="tel" inputMode="tel" pattern="[+]?[0-9]{8,15}" required autoComplete="tel" {...form.register("Phone")} placeholder="+254712345678" className={inputStyle} />
+                <p className="mt-1 text-xs text-slate-500">Use 8 to 15 digits, optional leading +.</p>
+                <FieldError message={errors.Phone?.message as string | undefined} />
+              </div>
+
+              <div>
+                <FieldLabel required>Country</FieldLabel>
+                <Select
+                  value={countryValue || undefined}
+                  onValueChange={(value) => form.setValue("Country", value, { shouldDirty: true, shouldValidate: true })}
+                >
+                  <SelectTrigger className={selectStyle} aria-required="true">
+                    <SelectValue placeholder="Select country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {metadata.countries.map((c) => (
+                      <SelectItem key={c.code} value={c.code}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FieldError message={errors.Country?.message as string | undefined} />
+              </div>
+
+              <div>
+                <FieldLabel required>Location</FieldLabel>
+                <Select
+                  value={locationValue != null ? String(locationValue) : undefined}
+                  onValueChange={(value) => form.setValue("Location", Number(value), { shouldDirty: true, shouldValidate: true })}
+                >
+                  <SelectTrigger className={selectStyle} aria-required="true">
+                    <SelectValue placeholder="Select location" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {metadata.localities.map((l) => (
+                      <SelectItem key={l.id} value={String(l.id)}>
+                        {l.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FieldError message={errors.Location?.message as string | undefined} />
+              </div>
+
+              {isTenant ? (
+                <div className="md:col-span-2">
+                  <FieldLabel required>Tenant Remarks</FieldLabel>
+                  <Input required {...form.register("user_Remarks")} placeholder="Setup notes" className={inputStyle} />
+                  <FieldError message={errors.user_Remarks?.message as string | undefined} />
+                </div>
+              ) : null}
+            </div>
+          </section>
+
+          {createUser ? (
+            <section className="space-y-4 border-t border-slate-200 pt-7">
+              <SectionTitle title="User Access" />
+              <div className="grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-2">
                 <div>
-                  <h4 className="text-sm font-semibold text-slate-800">Create admin login</h4>
+                  <FieldLabel required>First Name</FieldLabel>
+                  <Input required autoComplete="given-name" {...form.register("user_FirstName")} placeholder="Daniel" className={inputStyle} />
+                  <FieldError message={errors.user_FirstName?.message as string | undefined} />
+                </div>
+
+                <div>
+                  <FieldLabel required>Last Name</FieldLabel>
+                  <Input required autoComplete="family-name" {...form.register("user_LastName")} placeholder="Kitonga" className={inputStyle} />
+                  <FieldError message={errors.user_LastName?.message as string | undefined} />
+                </div>
+
+                <div>
+                  <FieldLabel required>User Email</FieldLabel>
+                  <Input type="email" required autoComplete="email" {...form.register("user_Email")} placeholder="admin@company.com" className={inputStyle} />
+                  <FieldError message={errors.user_Email?.message as string | undefined} />
+                </div>
+
+                <div>
+                  <FieldLabel required>User Phone</FieldLabel>
+                  <Input type="tel" inputMode="tel" pattern="[+]?[0-9]{8,15}" required autoComplete="tel" {...form.register("user_Phone")} placeholder="+254712345678" className={inputStyle} />
+                  <FieldError message={errors.user_Phone?.message as string | undefined} />
+                </div>
+
+                <div className="md:col-span-2">
+                  <FieldLabel required>Gender</FieldLabel>
+                  <Select
+                    value={genderValue || undefined}
+                    onValueChange={(value) => form.setValue("user_Gender", value, { shouldDirty: true, shouldValidate: true })}
+                  >
+                    <SelectTrigger className={selectStyle} aria-required="true">
+                      <SelectValue placeholder="Select gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {metadata.genders.map((g) => (
+                        <SelectItem key={g.value} value={g.value}>
+                          {g.description}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FieldError message={errors.user_Gender?.message as string | undefined} />
+                </div>
+
+                <div className="relative">
+                  <FieldLabel required>Password</FieldLabel>
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    autoComplete="new-password"
+                    {...form.register("user_Password")}
+                    placeholder="At least 8 characters"
+                    className={cn(inputStyle, "pr-10")}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-[33px] text-slate-400 transition-colors hover:text-slate-700"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                  <FieldError message={errors.user_Password?.message as string | undefined} />
+                </div>
+
+                <div className="relative">
+                  <FieldLabel required>Confirm Password</FieldLabel>
+                  <Input
+                    type={showConfirmPassword ? "text" : "password"}
+                    required
+                    autoComplete="new-password"
+                    {...form.register("user_Password_confirmation")}
+                    placeholder="Repeat password"
+                    className={cn(inputStyle, "pr-10")}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-[33px] text-slate-400 transition-colors hover:text-slate-700"
+                    aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                  >
+                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                  <FieldError message={errors.user_Password_confirmation?.message as string | undefined} />
                 </div>
               </div>
-              <button type="button" onClick={() => form.setValue("createUser", !createUser)} className={cn("relative h-7 w-12 rounded-full transition-colors", createUser ? "bg-[#0e63f4]" : "bg-slate-300")}>
-                <div className={cn("absolute top-1 h-5 w-5 rounded-full bg-white transition-all", createUser ? "right-1" : "left-1")} />
-              </button>
             </section>
+          ) : null}
 
-            <Button
-              type="button"
-              onClick={handleNextStep}
-              disabled={isBusy}
-              className={createUser ? "h-12 w-full rounded-xl bg-[#0e63f4] px-5 text-sm font-semibold tracking-tight text-white transition-colors hover:bg-[#0a54d1] focus-visible:ring-2 focus-visible:ring-[#0e63f4]/20 disabled:cursor-not-allowed disabled:opacity-90" : cn("w-full", submitButtonTone)}
-            >
-              {isBusy && !createUser ? (
-                <>
-                  <Spinner className="mr-2" />
-                  {getSubmitButtonLabel("Complete Registration")}
-                </>
-              ) : createUser ? (
-                <span className="inline-flex items-center gap-2">
-                  Continue to admin setup
-                  <ArrowRight className="h-4 w-4" />
-                </span>
+          <div className="border-t border-slate-200 pt-8">
+            <Button type="submit" disabled={isBusy} className={submitButtonTone}>
+              {isBusy ? (
+                getSubmitButtonLabel("Create Account")
               ) : submitState === "success" ? (
                 <>
                   <CheckCircle2 className="mr-2 h-4 w-4" />
-                  {getSubmitButtonLabel("Complete Registration")}
+                  {getSubmitButtonLabel("Create Account")}
                 </>
               ) : submitState === "error" ? (
                 <>
                   <AlertCircle className="mr-2 h-4 w-4" />
-                  {getSubmitButtonLabel("Complete Registration")}
+                  {getSubmitButtonLabel("Create Account")}
                 </>
-                ) : (
-                  getSubmitButtonLabel("Create organization")
-                )}
+              ) : (
+                getSubmitButtonLabel("Create Account")
+              )}
             </Button>
-          </motion.div>
-        ) : (
-          <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} className="space-y-7">
-            <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
-              <section className={cn(sectionStyle, panelStyle)}>
-                <div>
-                  <p className={sectionTitleStyle}>Admin profile</p>
-                </div>
-                <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
-                  <div>
-                    <label className={labelStyle}>First Name</label>
-                    <Input {...form.register("user_FirstName")} placeholder="Daniel" className={inputStyle} />
-                    {errors.user_FirstName && <p className={errorStyle}><AlertCircle className="h-3 w-3" />{errors.user_FirstName.message}</p>}
-                  </div>
-
-                  <div>
-                    <label className={labelStyle}>Last Name</label>
-                    <Input {...form.register("user_LastName")} placeholder="Kitonga" className={inputStyle} />
-                    {errors.user_LastName && <p className={errorStyle}><AlertCircle className="h-3 w-3" />{errors.user_LastName.message}</p>}
-                  </div>
-
-                  <div>
-                    <label className={labelStyle}>Admin Email</label>
-                    <Input {...form.register("user_Email")} placeholder="admin@company.com" className={inputStyle} />
-                    {errors.user_Email && <p className={errorStyle}><AlertCircle className="h-3 w-3" />{errors.user_Email.message}</p>}
-                  </div>
-
-                  <div>
-                    <label className={labelStyle}>Admin Phone</label>
-                    <Input {...form.register("user_Phone")} placeholder="+254 700 000 000" className={inputStyle} />
-                    {errors.user_Phone && <p className={errorStyle}><AlertCircle className="h-3 w-3" />{errors.user_Phone.message}</p>}
-                  </div>
-
-                  <div>
-                    <label className={labelStyle}>Gender</label>
-                    <Select
-                      value={genderValue || undefined}
-                      onValueChange={(value) =>
-                        form.setValue("user_Gender", value, { shouldDirty: true, shouldValidate: true })
-                      }
-                    >
-                      <SelectTrigger className={selectStyle}>
-                        <SelectValue placeholder="Select gender" />
-                      </SelectTrigger>
-                      <SelectContent className={selectContentStyle}>
-                        {metadata.genders.map((g) => (
-                          <SelectItem key={g.value} value={g.value} className={selectItemStyle}>
-                            {g.description}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.user_Gender && <p className={errorStyle}><AlertCircle className="h-3 w-3" />{errors.user_Gender.message}</p>}
-                  </div>
-                </div>
-              </section>
-
-              <section className={cn(sectionStyle, panelStyle)}>
-                <div className="flex items-center justify-between gap-3">
-                  <p className={sectionTitleStyle}>Security</p>
-                  <div className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
-                    <ShieldCheck className="h-3.5 w-3.5" />
-                    Protected
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 gap-5">
-                  <div className="relative">
-                    <label className={labelStyle}>Password</label>
-                    <Input type={showPassword ? "text" : "password"} {...form.register("user_Password")} placeholder="At least 8 characters" className={cn(inputStyle, "pr-10")} />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-[33px] text-slate-400">
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                    {errors.user_Password && <p className={errorStyle}><AlertCircle className="h-3 w-3" />{errors.user_Password.message}</p>}
-                  </div>
-
-                  <div className="relative">
-                    <label className={labelStyle}>Confirm Password</label>
-                    <Input type={showConfirmPassword ? "text" : "password"} {...form.register("user_Password_confirmation")} placeholder="Repeat password" className={cn(inputStyle, "pr-10")} />
-                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-[33px] text-slate-400">
-                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                    {errors.user_Password_confirmation && <p className={errorStyle}><AlertCircle className="h-3 w-3" />{errors.user_Password_confirmation.message}</p>}
-                  </div>
-                </div>
-              </section>
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              <Button type="button" onClick={() => { setStep(1); setSubmitState("idle"); setSubmitNotice(null) }} className={secondaryButtonStyle}>
-                Back
-              </Button>
-              <Button type="submit" disabled={isBusy} className={cn("flex-1", submitButtonTone)}>
-                {isBusy ? (
-                  <>
-                    <Spinner className="mr-2" />
-                    {getSubmitButtonLabel("Register")}
-                  </>
-                ) : submitState === "success" ? (
-                  <>
-                    <CheckCircle2 className="mr-2 h-4 w-4" />
-                    {getSubmitButtonLabel("Register")}
-                  </>
-                ) : submitState === "error" ? (
-                  <>
-                    <AlertCircle className="mr-2 h-4 w-4" />
-                    {getSubmitButtonLabel("Register")}
-                  </>
-                ) : (
-                  getSubmitButtonLabel("Create account")
-                )}
-              </Button>
-            </div>
-          </motion.div>
-        )}
-      </form>
+          </div>
+        </form>
+      </div>
     </div>
   )
 }

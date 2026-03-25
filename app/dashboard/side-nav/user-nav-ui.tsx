@@ -29,41 +29,11 @@ import { Spinner } from "@/components/common/spinner"
 import { cn, getInitials } from "@/lib/utils"
 import { useProfileStore, type ProfileType } from "@/store/use-profile-store"
 import { resolveSessionBusinessProfiles } from "@/lib/profile/session-profiles"
+import type { UserData, UserNavProps } from "@/types/third-party-auth-types"
 
-interface UserData {
-    id?: string | number | null
-    user_id?: number | null
-    firstName?: string | null
-    first_name?: string | null
-    lastName?: string | null
-    last_name?: string | null
-    fullName?: string | null
-    full_name?: string | null
-    name?: string | null
-    email?: string | null
-    isActive?: boolean | null
-    is_active?: boolean | null
-    isSupplier?: boolean | null
-    is_supplier?: boolean | null
-    isTenant?: boolean | null
-    is_tenant?: boolean | null
-    isCustomer?: boolean | null
-    is_customer?: boolean | null
-    imageUrl?: string | null
-    image_url?: string | null
-    image?: string | null
-    imageId?: number | null
-    image_id?: number | null
-}
 
-interface UserNavProps {
-    user?: UserData
-    isLoading: boolean
-    isPending: boolean
-    isOpen: boolean
-    onLogout: () => void
-    onOpenChange: (open: boolean) => void
-}
+const placeholder_avatar = "/avatars/doe.png"
+const USER_IMAGE_UPDATED_EVENT = "profile:user-image-updated"
 
 const MENU_ITEMS = [
     {
@@ -79,9 +49,6 @@ const MENU_ITEMS = [
         href: "/dashboard/notifications",
     },
 ] as const
-
-const placeholder_avatar = "/avatars/doe.png"
-const USER_IMAGE_UPDATED_EVENT = "profile:user-image-updated"
 
 function resolveUserImageUrl(payload: any): string | null {
     const src =
@@ -212,13 +179,13 @@ export const UserNavUI = memo(
             () =>
                 user
                     ? user.fullName ||
-                      user.full_name ||
-                      user.name ||
-                      `${user.firstName || user.first_name || ""} ${user.lastName || user.last_name || ""}`.trim()
+                    user.full_name ||
+                    user.name ||
+                    `${user.firstName || user.first_name || ""} ${user.lastName || user.last_name || ""}`.trim()
                     : "",
             [user],
         )
-        const safeDisplayName = displayName || "User account"
+        const safeDisplayName = displayName || "@User"
 
         const avatarSrcFromUser = useMemo(
             () => user?.imageUrl || user?.image_url || user?.image || null,
@@ -402,41 +369,41 @@ export const UserNavUI = memo(
                                                     className="grid gap-1.5"
                                                     style={{ gridTemplateColumns: `repeat(${Math.min(3, businessProfiles.length)}, minmax(0, 1fr))` }}
                                                 >
-                                                {businessProfiles.map((profile) => {
-                                                    const cfg = PROFILE_CONFIG[profile]
-                                                    const Icon = cfg.icon
-                                                    const isActive = profile === resolvedActiveProfile
+                                                    {businessProfiles.map((profile) => {
+                                                        const cfg = PROFILE_CONFIG[profile]
+                                                        const Icon = cfg.icon
+                                                        const isActive = profile === resolvedActiveProfile
 
-                                                    return (
-                                                        <motion.button
-                                                            key={profile}
-                                                            type="button"
-                                                            onClick={() => handleProfileSwitch(profile)}
-                                                            whileTap={{ scale: 0.98 }}
-                                                            className={cn(
-                                                                "relative inline-flex h-10 items-center justify-center gap-2 rounded-xl border px-2.5 text-xs font-semibold transition-colors",
-                                                                isActive
-                                                                    ? cn(cfg.activeBorder, cfg.activeSurface, cfg.activeTone)
-                                                                    : "border-transparent bg-transparent text-foreground/90 hover:border-border/70 hover:bg-card",
-                                                            )}
-                                                            aria-pressed={isActive}
-                                                        >
-                                                            {isActive ? (
-                                                                <motion.span
-                                                                    layoutId="active-workspace-pill"
-                                                                    className={cn("absolute inset-0 rounded-xl border", cfg.activeBorder, cfg.activeSurface)}
-                                                                    transition={{ type: "spring", stiffness: 450, damping: 34 }}
-                                                                    aria-hidden
-                                                                />
-                                                            ) : null}
-                                                            <span className="relative inline-flex min-w-0 items-center gap-1.5">
-                                                                <Icon className={cn("size-3.5", isActive ? cfg.activeTone : cfg.iconTone)} />
-                                                                <span className="truncate">{cfg.label}</span>
-                                                            </span>
-                                                        </motion.button>
-                                                    )
-                                                })}
-                                            </div>
+                                                        return (
+                                                            <motion.button
+                                                                key={profile}
+                                                                type="button"
+                                                                onClick={() => handleProfileSwitch(profile)}
+                                                                whileTap={{ scale: 0.98 }}
+                                                                className={cn(
+                                                                    "relative inline-flex h-10 items-center justify-center gap-2 rounded-xl border px-2.5 text-xs font-semibold transition-colors",
+                                                                    isActive
+                                                                        ? cn(cfg.activeBorder, cfg.activeSurface, cfg.activeTone)
+                                                                        : "border-transparent bg-transparent text-foreground/90 hover:border-border/70 hover:bg-card",
+                                                                )}
+                                                                aria-pressed={isActive}
+                                                            >
+                                                                {isActive ? (
+                                                                    <motion.span
+                                                                        layoutId="active-workspace-pill"
+                                                                        className={cn("absolute inset-0 rounded-xl border", cfg.activeBorder, cfg.activeSurface)}
+                                                                        transition={{ type: "spring", stiffness: 450, damping: 34 }}
+                                                                        aria-hidden
+                                                                    />
+                                                                ) : null}
+                                                                <span className="relative inline-flex min-w-0 items-center gap-1.5">
+                                                                    <Icon className={cn("size-3.5", isActive ? cfg.activeTone : cfg.iconTone)} />
+                                                                    <span className="truncate">{cfg.label}</span>
+                                                                </span>
+                                                            </motion.button>
+                                                        )
+                                                    })}
+                                                </div>
                                             </div>
                                         </div>
                                     )}

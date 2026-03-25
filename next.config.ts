@@ -1,7 +1,5 @@
 import type { NextConfig } from "next";
 
-const devPort = process.env.PORT ?? "3000";
-
 const nextConfig: NextConfig = {
   output: "standalone",
   typescript: {

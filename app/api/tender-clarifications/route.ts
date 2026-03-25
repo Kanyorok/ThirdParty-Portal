@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
       total: body.total ?? 0,
       tender_id: body.tender_id ?? Number(tenderId)
     })
-  } catch (e) {
+  } catch {
     return jsonError("Upstream request failed", 502)
   }
 }

@@ -98,7 +98,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             .map(section => ({
                 id: section.id,
                 allowedProfiles: section.allowedProfiles,
-                items: section.items.filter(item =>
+                items: section.items.filter((item: { allowedProfiles: string | string[] }) =>
                     activeProfile === 'base' ? true : item.allowedProfiles.includes(activeProfile)
                 )
             }))

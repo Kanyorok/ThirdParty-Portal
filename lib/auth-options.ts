@@ -101,7 +101,7 @@ async function resolveTenantMaintenanceId(userPayload: any, accessToken: string)
       const resolved = extractTenantIdFromPayload(payload)
       if (resolved != null) return resolved
     } catch {
-      // Best-effort enrichment only.
+      // Izah@
     }
   }
 
@@ -156,8 +156,6 @@ export const authOptions: NextAuthOptions = {
           null
 
         return {
-          id: String(u.id),
-          user_id: u.id,
           userId: u.userId ?? u.id,
           tenant_id: resolvedTenantId,
           tenantId: resolvedTenantId,
@@ -224,8 +222,6 @@ export const authOptions: NextAuthOptions = {
       if (token) {
         session.user = {
           ...session.user,
-          id: String(token.user_id || token.id),
-          user_id: token.user_id,
           userId: token.userId ?? token.user_id,
           tenant_id: (token as any).tenant_id,
           tenantId: (token as any).tenantId ?? (token as any).tenant_id,
@@ -235,15 +231,10 @@ export const authOptions: NextAuthOptions = {
             (token as any).tenant_id,
           third_party_id: token.third_party_id,
           thirdPartyId: token.third_party_id,
-          first_name: token.first_name,
-          last_name: token.last_name,
           full_name: token.full_name,
           email: token.email,
           phone: token.phone,
           gender: token.gender,
-          image_id: token.image_id,
-          imageId: token.image_id,
-          image_url: token.image_url,
           imageUrl: token.image_url,
           image: token.image ?? token.image_url,
           is_active: token.is_active,

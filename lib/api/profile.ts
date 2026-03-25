@@ -1,6 +1,6 @@
 type UserProfileLike = Record<string, unknown>
 
-type SuspendAccountResponse = {
+type DeactivateAccountResponse = {
   message?: string
   status?: string
 }
@@ -125,7 +125,7 @@ export const apiService = {
     }
   },
 
-  async suspendAccount(accessToken?: string): Promise<SuspendAccountResponse> {
+  async suspendAccount(accessToken?: string): Promise<DeactivateAccountResponse> {
     const headers = authHeaders(accessToken)
 
     const res = await fetch("/api/third-party-profile", {
@@ -134,19 +134,19 @@ export const apiService = {
       cache: "no-store",
     })
 
-    const body = (await parseJson<SuspendAccountResponse>(res)) as SuspendAccountResponse
+    const body = (await parseJson<DeactivateAccountResponse>(res)) as DeactivateAccountResponse
 
     if (!res.ok) {
-      throw new Error(body.message || "Failed to suspend account")
+      throw new Error(body.message || "Failed to deactivate account")
     }
 
     return body
   },
 
-  async deleteAccount(password: string, accessToken?: string): Promise<SuspendAccountResponse> {
+  async deactivateAccount(password: string, accessToken?: string): Promise<DeactivateAccountResponse> {
     const trimmedPassword = String(password ?? "").trim()
     if (!trimmedPassword) {
-      throw new Error("Password is required to delete account")
+      throw new Error("Password is required to deactivate account")
     }
 
     const headers = {
@@ -165,12 +165,16 @@ export const apiService = {
       cache: "no-store",
     })
 
-    const body = (await parseJson<SuspendAccountResponse>(res)) as SuspendAccountResponse
+    const body = (await parseJson<DeactivateAccountResponse>(res)) as DeactivateAccountResponse
     if (!res.ok) {
-      throw new Error(body.message || "Failed to delete account")
+      throw new Error(body.message || "Failed to deactivate account")
     }
 
     return body
+  },
+
+  async deleteAccount(password: string, accessToken?: string): Promise<DeactivateAccountResponse> {
+    return apiService.deactivateAccount(password, accessToken)
   },
 }
 

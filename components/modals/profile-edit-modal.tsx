@@ -34,9 +34,8 @@ const profileEditSchema = z.object({
         .regex(/^[a-zA-Z\s'-]+$/, "Last name can only contain letters, spaces, hyphens, and apostrophes"),
     phone: z
         .string()
-        .min(10, "Phone number must be at least 10 digits")
-        .max(15, "Phone number must be less than 15 digits")
-        .regex(/^\+?[\d\s-()]+$/, "Please enter a valid phone number"),
+        .min(1, "Phone number is required")
+        .regex(/^\+?[0-9]{8,15}$/, "Phone number must be 8 to 15 digits and may start with +"),
     email: z
         .string()
         .email("Please enter a valid email address")
@@ -263,9 +262,12 @@ export function ProfileEditModal({
                                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
                                     id="phone"
+                                    type="tel"
+                                    inputMode="tel"
+                                    pattern="[+]?[0-9]{8,15}"
                                     {...register("phone")}
                                     className="pl-9"
-                                    placeholder="Enter your phone number"
+                                    placeholder="+254712345678"
                                     autoComplete="tel"
                                 />
                             </div>

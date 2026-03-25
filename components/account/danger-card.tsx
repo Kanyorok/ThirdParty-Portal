@@ -56,7 +56,7 @@ export default function DangerZoneCard({ accessToken }: { accessToken?: string }
         }
     }
 
-    const handleDeleteAccount = async (event: MouseEvent<HTMLButtonElement>) => {
+    const handleDeactivateAccount = async (event: MouseEvent<HTMLButtonElement>) => {
         event.preventDefault()
         if (isSubmitting) return
 
@@ -74,13 +74,13 @@ export default function DangerZoneCard({ accessToken }: { accessToken?: string }
         setPasswordError(null)
         setIsSubmitting(true)
         try {
-            const response = await apiService.deleteAccount(password, resolvedAccessToken)
-            toast.success(response?.message || "Account deleted successfully.")
+            const response = await apiService.deactivateAccount(password, resolvedAccessToken)
+            toast.success(response?.message || "Account deactivated successfully.")
             setDialogOpen(false)
             resetFormState()
             await signOut({ callbackUrl: "/signin", redirect: true })
         } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : "Delete account failed."
+            const message = err instanceof Error ? err.message : "Account deactivation failed."
             setPasswordError(message)
             toast.error(message)
         } finally {
@@ -96,13 +96,13 @@ export default function DangerZoneCard({ accessToken }: { accessToken?: string }
 
                         <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">Attrition</h2>
                         <p className="mx-auto max-w-3xl text-sm sm:text-base text-muted-foreground">
-                            You are about to permanently delete this user account. This action cannot be reversed.
+                            You are about to temporarily deactivate this user account and associated profiles. Access will be revoked immediately.
                         </p>
                     </div>
 
                     {!resolvedAccessToken ? (
                         <p className="mx-auto max-w-xl text-sm text-destructive">
-                            Authentication required. Please sign in again before deleting your account.
+                            Authentication required. Please sign in again before deactivating your account.
                         </p>
                     ) : null}
 
@@ -114,7 +114,7 @@ export default function DangerZoneCard({ accessToken }: { accessToken?: string }
                                     className="h-12 min-w-[300px] rounded-full bg-[#E31B23] px-8 text-base font-semibold text-white shadow-none hover:bg-[#CF171E] hover:shadow-none"
                                 >
                                     <Trash2 className="h-4 w-4" />
-                                    Delete User Account
+                                    Deactivate User Account
                                 </Button>
                             </motion.div>
                         </AlertDialogTrigger>
@@ -123,10 +123,10 @@ export default function DangerZoneCard({ accessToken }: { accessToken?: string }
                             <AlertDialogHeader className="border-b border-border/60 bg-muted/35 px-6 py-5">
                                 <AlertDialogTitle className="flex items-center gap-2 text-xl font-semibold text-foreground">
                                     <AlertTriangle className="h-5 w-5 text-destructive" />
-                                    Confirm Attrition
+                                    Confirm Temporary Deactivation
                                 </AlertDialogTitle>
                                 <AlertDialogDescription className="pt-1 text-sm text-muted-foreground">
-                                    This action is irreversible and will immediately revoke portal access.
+                                    This action will set the account and associated profiles to inactive and immediately revoke portal access.
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
 
@@ -184,19 +184,19 @@ export default function DangerZoneCard({ accessToken }: { accessToken?: string }
                                 </AlertDialogCancel>
 
                                 <AlertDialogAction
-                                    onClick={handleDeleteAccount}
+                                    onClick={handleDeactivateAccount}
                                     disabled={isSubmitting || !confirmPassword.trim()}
                                     className="bg-[#E31B23] shadow-none hover:bg-[#CF171E] hover:shadow-none"
                                 >
                                     {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                                    Delete User Account
+                                    Deactivate User Account
                                 </AlertDialogAction>
                             </AlertDialogFooter>
                         </AlertDialogContent>
                     </AlertDialog>
 
                     <p className="text-xs text-muted-foreground">
-                        You will be signed out immediately after successful deletion.
+                        You will be signed out immediately after successful deactivation.
                     </p>
                 </motion.div>
             </div>

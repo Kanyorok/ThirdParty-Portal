@@ -76,15 +76,15 @@ function validateEmail(email: string): { valid: boolean; message?: string } {
     if (!emailRegex.test(email)) {
         return { valid: false, message: "Invalid email format." }
     }
-    if (email.length > 254) {
-        return { valid: false, message: "Email is too long." }
+    if (email.length > 100) {
+        return { valid: false, message: "Invalid Email. Too Long!." }
     }
     return { valid: true }
 }
 
 function validatePassword(password: string): { valid: boolean; message?: string } {
     if (password.length < 10) {
-        return { valid: false, message: "Password must be at least 10 characters long." }
+        return { valid: false, message: "Password too Short!." }
     }
     return { valid: true }
 }
@@ -113,7 +113,7 @@ export async function requestPasswordReset(email: string): Promise<AuthResult> {
 
         if (!user) {
             await new Promise(resolve => setTimeout(resolve, 1500))
-            return { success: true, message: "If an account with that email exists, we've sent password reset instructions." }
+            return { success: true, message: "If Account exists, we've sent password reset instructions." }
         }
 
         const token = generateSecureToken()
@@ -130,13 +130,13 @@ export async function requestPasswordReset(email: string): Promise<AuthResult> {
 
         await sendPasswordResetEmail(user.email, token)
 
-        return { success: true, message: "If an account with that email exists, we've sent password reset instructions." }
+        return { success: true, message: "If Account exists, we've sent password reset instructions." }
     } catch (error) {
         console.error("Password reset request error:", error)
         return {
             success: false,
             error: "INTERNAL_ERROR",
-            message: "An unexpected error occurred. Please try again later.",
+            message: "An Error occurred while processing your request.",
         }
     }
 }
@@ -175,7 +175,7 @@ export async function validateResetToken(token: string): Promise<{ valid: boolea
         return {
             valid: false,
             error: "INTERNAL_ERROR",
-            message: "Unable to validate reset token due to an internal error.",
+            message: "Unable to validate reset token.",
         }
     }
 }
@@ -197,7 +197,7 @@ export async function resetPassword(token: string, newPassword: string): Promise
             return {
                 success: false,
                 error: "INVALID_OR_EXPIRED",
-                message: "Invalid or expired reset link. Please request a new one.",
+                message: "Invalid or expired reset link. Request a new one.",
             }
         }
 
@@ -216,7 +216,7 @@ export async function resetPassword(token: string, newPassword: string): Promise
         return {
             success: false,
             error: "INTERNAL_ERROR",
-            message: "Failed to reset password due to an internal server error.",
+            message: "Password Reset Unsuccessful",
         }
     }
 }

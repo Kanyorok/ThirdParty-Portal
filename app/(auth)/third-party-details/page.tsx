@@ -42,6 +42,51 @@ interface Locality {
     Name: string
 }
 
+const SENSITIVE_ERROR_PATTERN = /(exception|stack|trace|sql|syntax|internal server|undefined|vendor|route|line\s+\d+)/i
+
+const SAFE_FIELD_MESSAGES: Record<string, string> = {
+    Name: "Please enter a valid company name.",
+    TradingName: "Please enter a valid trading name.",
+    BusinessType: "Please select a valid business type.",
+    RegistrationNumber: "Please enter a valid registration number.",
+    TaxPIN: "Please enter a valid tax PIN.",
+    VATNumber: "Please enter a valid VAT number.",
+    Country: "Please select a valid country.",
+    Location: "Please select a valid location.",
+    PhysicalAddress: "Please enter a valid physical address.",
+    Email: "Please enter a valid email address.",
+    Phone: "Please enter a valid phone number.",
+    Website: "Please enter a valid website URL.",
+    types: "Please select a valid account type.",
+    tenant_Remarks: "Please enter valid remarks.",
+    customer_DateOfBirth: "Please provide a valid date of birth.",
+    customer_Gender: "Please select a valid gender.",
+    customer_MaritalStatus: "Please select a valid marital status.",
+    customer_Occupation: "Please select a valid occupation.",
+}
+
+const getSafeFieldMessage = (field: string, candidate: unknown) => {
+    const fallback = SAFE_FIELD_MESSAGES[field] ?? "Please provide a valid value."
+    if (typeof candidate !== "string") return fallback
+
+    const normalized = candidate.replace(/\s+/g, " ").trim()
+    if (!normalized || normalized.length > 140 || SENSITIVE_ERROR_PATTERN.test(normalized)) {
+        return fallback
+    }
+
+    return normalized
+}
+
+const parseApiPayload = async (response: Response): Promise<Record<string, unknown>> => {
+    const text = await response.text().catch(() => "")
+    if (!text) return {}
+    try {
+        return JSON.parse(text) as Record<string, unknown>
+    } catch {
+        return { message: text }
+    }
+}
+
 const formSchema = z.object({
     Name: z.string()
         .min(2, 'Company name must be at least 2 characters')
@@ -63,10 +108,8 @@ const formSchema = z.object({
         .max(20, 'VAT number must be less than 20 characters')
         .optional()
         .or(z.literal('')),
-    // Backend expects 'Country' as CountryCode for Phone validation, but also 'CountryId'? 
-    // NewThirdPartyRequest::getCountry() looks up by CountryCode.
     Country: z.string().min(2, 'Country is required'),
-    Location: z.string().min(1, 'Location is required'), // ID
+    Location: z.string().min(1, 'Location is required'),
     PhysicalAddress: z.string()
         .min(5, 'Physical address is required')
         .max(200, 'Address must be less than 200 characters'),
@@ -74,18 +117,17 @@ const formSchema = z.object({
         .email('Please enter a valid email address')
         .max(100, 'Email must be less than 100 characters'),
     Phone: z.string()
-        .min(10, 'Please enter a valid phone number')
-        .max(20, 'Phone number must be less than 20 characters'),
+        .trim()
+        .min(1, 'Phone number is required')
+        .regex(/^\+?[0-9]{8,15}$/, 'Phone number must be 8 to 15 digits and may start with +'),
     Website: z.string()
         .url('Please enter a valid URL')
         .max(100, 'Website URL must be less than 100 characters')
         .optional()
         .or(z.literal('')),
 
-    // Types - Single Select
     types: z.string().min(1, 'Please select a third party type'),
 
-    // Conditional Fields
     tenant_Remarks: z.string().optional(),
 
     customer_DateOfBirth: z.date().optional(),
@@ -93,11 +135,6 @@ const formSchema = z.object({
     customer_MaritalStatus: z.string().optional(),
     customer_Occupation: z.string().optional(),
 }).superRefine((data, ctx) => {
-    // Tenant Validation
-    if (data.types === 'TN') {
-        // Remarks optional for tenant? Blade says required_if:type,TN|nullable. nullable allows empty.
-    }
-    // Customer Validation
     if (data.types === 'CU') {
         if (!data.customer_DateOfBirth) {
             ctx.addIssue({
@@ -132,7 +169,29 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>
 
-//animation variants
+const formFields = new Set<keyof FormData>([
+    'Name',
+    'TradingName',
+    'BusinessType',
+    'RegistrationNumber',
+    'TaxPIN',
+    'VATNumber',
+    'Country',
+    'Location',
+    'PhysicalAddress',
+    'Email',
+    'Phone',
+    'Website',
+    'types',
+    'tenant_Remarks',
+    'customer_DateOfBirth',
+    'customer_Gender',
+    'customer_MaritalStatus',
+    'customer_Occupation',
+])
+
+const isFormField = (field: string): field is keyof FormData => formFields.has(field as keyof FormData)
+
 const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { duration: 0.6, staggerChildren: 0.08 } },
@@ -149,10 +208,10 @@ const statusVariants: Variants = {
 
 export default function RegisterThirdPartyDetails() {
     const router = useRouter()
-    // searchParams and userId moved to lower scope to avoid duplication with new logic
+    const searchParams = useSearchParams()
+    const userId = searchParams?.get('userId')?.trim() || null
+    const externalApiBaseUrl = process.env.NEXT_PUBLIC_EXTERNAL_API_URL
 
-
-    // Fetch Enums
     const { data: businessTypes } = useEnums('BusinessType')
     const { data: typeOptions } = useEnums('third-party-types')
     const { data: genderOptions } = useEnums('Gender')
@@ -180,7 +239,7 @@ export default function RegisterThirdPartyDetails() {
             Email: '',
             Phone: '',
             Website: '',
-            types: 'SU', // Default to Supplier
+            types: 'SU',
             tenant_Remarks: '',
             customer_Gender: '',
             customer_MaritalStatus: '',
@@ -189,116 +248,155 @@ export default function RegisterThirdPartyDetails() {
         mode: 'onChange',
     })
 
-    // Helper to check selected types
     const selectedType = form.watch('types')
     const isTenant = selectedType === 'TN'
     const isCustomer = selectedType === 'CU'
     const selectedCountry = form.watch('Country')
 
-    // Fetch Countries
     useEffect(() => {
-        fetch('/api/v1/countries')
-            .then(res => res.json())
-            .then(data => {
-                const list = data.data || []
-                setCountries(list.map((c: any) => ({
-                    id: c.id,
-                    name: c.name,
-                    code: c.code, // Expecting CountryCode here
-                    iso2: c.iso2
-                })))
-                if (list.length > 0) {
-                    // Default Kenya if exists or first
-                    const ke = list.find((c: any) => c.code === 'KE')
-                    if (ke) form.setValue('Country', ke.code)
-                    else form.setValue('Country', list[0].code)
+        let active = true
+        const loadCountries = async () => {
+            try {
+                const response = await fetch('/api/v1/countries', { cache: 'no-store' })
+                if (!response.ok) throw new Error('Failed to fetch countries')
+
+                const payload = await parseApiPayload(response)
+                const list = Array.isArray(payload.data) ? payload.data : []
+                const mapped = list
+                    .map((country): Country | null => {
+                        if (!country || typeof country !== 'object') return null
+                        const item = country as Record<string, unknown>
+                        const id = Number(item.id)
+                        const name = typeof item.name === 'string' ? item.name : ''
+                        const code = typeof item.code === 'string' ? item.code : ''
+                        const iso2 = typeof item.iso2 === 'string' ? item.iso2 : undefined
+                        if (!Number.isFinite(id) || !name || !code) return null
+                        return { id, name, code, iso2 }
+                    })
+                    .filter((country): country is Country => country !== null)
+
+                if (!active) return
+                setCountries(mapped)
+
+                if (mapped.length > 0 && !form.getValues('Country')) {
+                    const preferred = mapped.find((country) => country.code === 'KE') ?? mapped[0]
+                    form.setValue('Country', preferred.code, { shouldValidate: true })
                 }
-            })
-            .catch(err => console.error("Failed to fetch countries", err))
+            } catch {
+                if (!active) return
+                setError('Failed to load countries. Please refresh and try again.')
+            }
+        }
+
+        void loadCountries()
+
+        return () => {
+            active = false
+        }
     }, [form])
 
-    // Fetch Localities when Country changes
     useEffect(() => {
         if (!selectedCountry) {
             setLocalities([])
             return
         }
-        // Fetch localities for country code
-        fetch(`${process.env.NEXT_PUBLIC_EXTERNAL_API_URL}/api/v1/countries/${selectedCountry}/localities`)
-            .then(res => res.json())
-            .then(data => {
-
-                const list = (data.data || []).map((l: any, index: number) => ({
-                    ID: l.ID || l.id || l.iD || l.Id || index,
-                    Name: l.Name || l.name || `Locality ${index}`,
-                }))
-                setLocalities(list)
-            })
-            .catch(err => console.error("Failed to fetch localities", err))
-    }, [selectedCountry])
-
-
-    // Capture userId from URL query params
-    const searchParams = useSearchParams()
-    const [userId, setUserId] = useState<string | null>(null)
-
-    useEffect(() => {
-        const uid = searchParams.get('userId') // Matches 'userId' from backend redirect
-        if (uid) {
-            setUserId(uid)
-
-        } else {
-            // Fallback: try reading from session/auth if logged in, or localStorage?
-            // Since we are moving to NO AUTH flow, URL param is critical.
-            // Maybe show error or redirect if missing?
-            console.warn("No User ID found in URL.")
+        if (!externalApiBaseUrl) {
+            setLocalities([])
+            setError('Location service is unavailable. Please try again later.')
+            return
         }
-    }, [searchParams])
 
-    // Check for existing party (if re-visiting) - original useEffect removed as userId is now stateful
-    // useEffect(() => {
-    //     if (userId) {
-    //         // Logic to check if user already has a party could go here,
-    //         // but usually this page is for NEW registration.
-    //     }
-    // }, [userId])
+        const controller = new AbortController()
+        const loadLocalities = async () => {
+            try {
+                const response = await fetch(`${externalApiBaseUrl}/api/v1/countries/${selectedCountry}/localities`, {
+                    signal: controller.signal,
+                    cache: 'no-store',
+                })
+                if (!response.ok) throw new Error('Failed to fetch localities')
+
+                const payload = await parseApiPayload(response)
+                const raw = Array.isArray(payload.data) ? payload.data : []
+                const mapped = raw
+                    .map((locality, index): Locality | null => {
+                        if (!locality || typeof locality !== 'object') return null
+                        const item = locality as Record<string, unknown>
+                        const rawId = item.ID ?? item.id ?? item.iD ?? item.Id
+                        const parsedId = Number(rawId)
+                        const ID = Number.isFinite(parsedId) ? parsedId : index + 1
+                        const Name =
+                            (typeof item.Name === 'string' && item.Name) ||
+                            (typeof item.name === 'string' && item.name) ||
+                            `Locality ${index + 1}`
+                        return { ID, Name }
+                    })
+                    .filter((locality): locality is Locality => locality !== null)
+
+                setLocalities(mapped)
+            } catch {
+                if (controller.signal.aborted) return
+                setLocalities([])
+                setError('Failed to load locations. Please reselect the country.')
+            }
+        }
+
+        void loadLocalities()
+
+        return () => {
+            controller.abort()
+        }
+    }, [externalApiBaseUrl, selectedCountry])
 
     const onSubmit = async (data: FormData) => {
+        setLoading(true)
+        setError(null)
+
         try {
             if (!userId) {
                 toast.error("User identification missing. Please use the link from your email.")
-                return
+                throw new Error("User identification missing. Please use the link from your email.")
+            }
+
+            if (!externalApiBaseUrl) {
+                throw new Error("Registration service is unavailable. Please try again.")
             }
 
             const payload = {
                 ...data,
-                types: [data.types], // Backend expects array
+                types: [data.types],
                 user_id: userId,
-                // Ensure dates are strings if needed, though JSON.stringify handles Date -> ISO string
-                // Backend NewThirdPartyRequest expects 'customer_DateOfBirth' as 'date' so ISO string works.
             }
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_EXTERNAL_API_URL}/api/third-parties/register-details`, {
+            const response = await fetch(`${externalApiBaseUrl}/api/third-parties/register-details`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                 body: JSON.stringify(payload)
             })
 
-            const resData = await response.json()
+            const resData = await parseApiPayload(response)
 
             if (!response.ok) {
-                if (response.status === 422 && resData.errors) {
-                    const errorMessages = Object.entries(resData.errors)
-                        .map(([field, messages]) => `${field}: ${(messages as string[]).join(', ')}`)
-                        .join(' ')
-                    throw new Error(`Validation failed: ${errorMessages}`)
+                const errors = resData.errors
+                if (response.status === 422 && errors && typeof errors === 'object' && !Array.isArray(errors)) {
+                    Object.entries(errors).forEach(([field, messages]) => {
+                        if (!isFormField(field)) return
+                        const first = Array.isArray(messages) ? messages[0] : messages
+                        form.setError(field, {
+                            type: 'server',
+                            message: getSafeFieldMessage(field, first),
+                        })
+                    })
+                    throw new Error("Please correct the highlighted fields and try again.")
                 }
-                throw new Error(resData.message || 'Registration failed.')
+
+                throw new Error("We couldn't complete registration right now. Please try again.")
             }
 
-            setSuccess(resData.message || 'Details registered successfully!')
+            const successMessage = typeof resData.message === 'string' && resData.message.trim()
+                ? resData.message
+                : 'Details registered successfully!'
+            setSuccess(successMessage)
 
-            // Redirect logic
             try {
                 await signOut({ redirect: false })
             } catch { }
@@ -306,8 +404,8 @@ export default function RegisterThirdPartyDetails() {
                 router.replace('/signin?registrationSuccess=true')
             }, 1000)
 
-        } catch (err: any) {
-            setError(err.message || 'An error occurred.')
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "We couldn't complete registration right now. Please try again.")
         } finally {
             setLoading(false)
         }
@@ -361,7 +459,6 @@ export default function RegisterThirdPartyDetails() {
                             <Form {...form}>
                                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
 
-                                    {/* Compnay Info Section */}
                                     <div className="space-y-6">
                                         <h3 className="text-lg font-semibold flex items-center gap-2 border-b pb-2">
                                             <Building2 className="w-5 h-5 text-blue-600" /> Company Information
@@ -418,7 +515,6 @@ export default function RegisterThirdPartyDetails() {
                                         </div>
                                     </div>
 
-                                    {/* Contact & Location */}
                                     <div className="space-y-6">
                                         <h3 className="text-lg font-semibold flex items-center gap-2 border-b pb-2">
                                             <MapPin className="w-5 h-5 text-blue-600" /> Location & Contact
@@ -434,7 +530,7 @@ export default function RegisterThirdPartyDetails() {
                                             <FormField control={form.control} name="Phone" render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Phone <span className="text-red-500">*</span></FormLabel>
-                                                    <FormControl><Input type="tel" {...field} /></FormControl>
+                                                    <FormControl><Input type="tel" inputMode="tel" pattern="[+]?[0-9]{8,15}" placeholder="+254712345678" {...field} /></FormControl>
                                                     <FormMessage />
                                                 </FormItem>
                                             )} />
@@ -479,7 +575,6 @@ export default function RegisterThirdPartyDetails() {
                                         </div>
                                     </div>
 
-                                    {/* Account Types */}
                                     <div className="space-y-6">
                                         <h3 className="text-lg font-semibold flex items-center gap-2 border-b pb-2">
                                             <UserCircle className="w-5 h-5 text-blue-600" /> Account Types
@@ -497,7 +592,6 @@ export default function RegisterThirdPartyDetails() {
                                             </FormItem>
                                         )} />
 
-                                        {/* Tenant Fields */}
                                         {isTenant && (
                                             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="bg-slate-50 p-6 rounded-xl space-y-4">
                                                 <h4 className="font-medium text-slate-800">Tenant Details</h4>
@@ -511,7 +605,6 @@ export default function RegisterThirdPartyDetails() {
                                             </motion.div>
                                         )}
 
-                                        {/* Customer Fields */}
                                         {isCustomer && (
                                             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="bg-slate-50 p-6 rounded-xl space-y-4">
                                                 <h4 className="font-medium text-slate-800">Customer Details</h4>
