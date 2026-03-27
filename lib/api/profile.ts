@@ -24,7 +24,7 @@ type UploadProfilePictureResponse = {
   message?: string
 }
 
-import { getBaseUrl, apiFetch } from "./api-base"
+import { getBaseUrl, apiFetch } from "../api-base"
 
 function getApiBaseUrl() {
   // prefer runtime or build-time configured base; if absent return empty so

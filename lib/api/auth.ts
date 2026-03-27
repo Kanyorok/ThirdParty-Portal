@@ -1,4 +1,4 @@
-import { getBaseUrl, apiFetch } from "./api-base"
+import { getBaseUrl, apiFetch } from "../api-base"
 const BASE_URL = getBaseUrl() || process.env.NEXT_PUBLIC_API_URL || ''
 
 interface ApiResponse<T = any> {
