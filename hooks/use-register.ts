@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
+import { apiFetch } from "../lib/api-base"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -280,15 +281,11 @@ export const useRegisterForm = () => {
     const fetchInitialMetadata = useCallback(async () => {
         setIsLoadingMetadata(true)
         try {
-            const baseUrl = process.env.NEXT_PUBLIC_API_URL
-            const [countriesRes, categoriesRes, lookupsRes] = await Promise.all([
-                fetch(`${baseUrl}/api/v1/portal/auth/metadata/countries`),
-                fetch(`${baseUrl}/api/v1/portal/auth/metadata/supplier-categories`),
-                fetch(`${baseUrl}/api/v1/portal/auth/lookups/bulk?codes=Gender,BusinessType,MaritalStatus,Occupation`)
+            const [countries, categories, lookups] = await Promise.all([
+                apiFetch(`/api/v1/portal/auth/metadata/countries`),
+                apiFetch(`/api/v1/portal/auth/metadata/supplier-categories`),
+                apiFetch(`/api/v1/portal/auth/lookups/bulk?codes=Gender,BusinessType,MaritalStatus,Occupation`, { allowError: true })
             ])
-            const countries = await countriesRes.json()
-            const categories = await categoriesRes.json()
-            const lookups = await lookupsRes.json()
             const data = lookups?.data ?? lookups?.Data ?? {}
             const pick = (key: string) => data?.[key] ?? data?.[key.toLowerCase()] ?? data?.[(key[0].toLowerCase() + key.slice(1))] ?? []
 
@@ -314,9 +311,8 @@ export const useRegisterForm = () => {
         if (!country?.id) return
         setIsLoadingLocalities(true)
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/auth/metadata/localities/${country.id}`)
-            const result = await res.json()
-            setMetadata(prev => ({ ...prev, localities: result.data || [] }))
+            const result = await apiFetch(`/api/v1/portal/auth/metadata/localities/${country.id}`, { allowError: true })
+            setMetadata(prev => ({ ...prev, localities: result?.data || [] }))
         } finally {
             setIsLoadingLocalities(false)
         }

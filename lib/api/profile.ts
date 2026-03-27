@@ -24,10 +24,12 @@ type UploadProfilePictureResponse = {
   message?: string
 }
 
+import { getBaseUrl, apiFetch } from "./api-base"
+
 function getApiBaseUrl() {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL
-  if (!baseUrl) throw new Error("NEXT_PUBLIC_API_URL is not configured")
-  return baseUrl
+  // prefer runtime or build-time configured base; if absent return empty so
+  // apiFetch will use relative paths
+  return getBaseUrl() || process.env.NEXT_PUBLIC_API_URL || ''
 }
 
 async function parseJson<T>(res: Response): Promise<T | Record<string, unknown>> {
@@ -46,23 +48,13 @@ function defaultHeaders(): HeadersInit {
 
 export const apiService = {
   async getProfile(): Promise<UserProfileLike> {
-    const res = await fetch(`${getApiBaseUrl()}/api/third-party-profile`, {
-      method: "GET",
-      headers: defaultHeaders(),
-      credentials: "same-origin",
-      cache: "no-store",
-    })
-
-    const body = (await parseJson<UpdateProfileResponse>(res)) as UpdateProfileResponse
-    if (!res.ok) {
-      throw new Error(body?.message || "Failed to fetch profile")
-    }
-
-    return (body?.user_profile || body?.userProfile || body?.data || body) as UserProfileLike
+  const body = await apiFetch<UpdateProfileResponse>(`/api/third-party-profile`, { allowError: true })
+  if (!body) throw new Error("Failed to fetch profile")
+  return (body?.user_profile || body?.userProfile || body?.data || body) as UserProfileLike
   },
 
   async changePassword(payload: PasswordPayload) {
-    const res = await fetch(`${getApiBaseUrl()}/api/third-party-profile/password`, {
+    const result = await apiFetch(`/api/third-party-profile/password`, {
       method: "PUT",
       headers: {
         ...defaultHeaders(),
@@ -75,21 +67,18 @@ export const apiService = {
         new_password_confirmation: payload.newPassword,
       }),
       cache: "no-store",
+      allowError: true,
     })
 
-    const body = (await parseJson<{ message?: string }>(res)) as { message?: string }
-    if (!res.ok) {
-      throw new Error(body?.message || "Failed to change password")
-    }
-
-    return body
+    if (!result) throw new Error("Failed to change password")
+    return result
   },
 
   async uploadProfilePicture(file: File): Promise<UploadProfilePictureResponse> {
     const formData = new FormData()
     formData.append("image", file)
 
-    const res = await fetch("/api/v1/profile/user-image", {
+  const res = await fetch("/api/v1/profile/user-image", {
       method: "POST",
       credentials: "same-origin",
       body: formData,
@@ -119,7 +108,7 @@ export const apiService = {
   },
 
   async suspendAccount(): Promise<DeactivateAccountResponse> {
-    const res = await fetch("/api/third-party-profile", {
+  const res = await fetch("/api/third-party-profile", {
       method: "DELETE",
       headers: defaultHeaders(),
       credentials: "same-origin",
@@ -141,7 +130,7 @@ export const apiService = {
       throw new Error("Password is required to deactivate account")
     }
 
-    const res = await fetch("/api/third-party-profile", {
+  const res = await fetch("/api/third-party-profile", {
       method: "DELETE",
       headers: {
         ...defaultHeaders(),

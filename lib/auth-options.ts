@@ -1,4 +1,5 @@
 import CredentialsProvider from "next-auth/providers/credentials"
+import { getBaseUrl, apiFetch } from "./api-base"
 import type { NextAuthOptions, Session } from "next-auth"
 import type { JWT } from "next-auth/jwt"
 
@@ -77,7 +78,7 @@ async function resolveTenantMaintenanceId(userPayload: any, accessToken: string)
     if (resolved != null) return resolved
   }
 
-  const apiBase = process.env.NEXT_PUBLIC_API_URL
+  const apiBase = getBaseUrl() || process.env.NEXT_PUBLIC_API_URL || ''
   if (!apiBase || !(userPayload?.isTenant ?? userPayload?.is_tenant)) return null
 
   const endpoints = [
@@ -87,21 +88,20 @@ async function resolveTenantMaintenanceId(userPayload: any, accessToken: string)
 
   for (const endpoint of endpoints) {
     try {
-      const response = await fetch(`${apiBase}${endpoint}`, {
+      const payload = await apiFetch(`${apiBase}${endpoint}`, {
         method: "GET",
         headers: {
           Accept: "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
         cache: "no-store",
-      })
+        allowError: true
+      }).catch(() => null)
 
-      if (!response.ok) continue
-      const payload = await response.json().catch(() => null)
       const resolved = extractTenantIdFromPayload(payload)
       if (resolved != null) return resolved
     } catch {
-      // Izah@
+      // ignore
     }
   }
 
@@ -121,20 +121,18 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/auth/login`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-            body: JSON.stringify({
-              email: credentials.email,
-              password: credentials.password,
-            }),
-          }
-        )
+        const loginUrl = `${getBaseUrl() || process.env.NEXT_PUBLIC_API_URL || ''}/api/v1/portal/auth/login`
+        const res = await fetch(loginUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            email: credentials.email,
+            password: credentials.password,
+          }),
+        })
 
         if (!res.ok) {
           return null

@@ -43,7 +43,8 @@ export type TenantBreakdown = {
     invoices: TenantInvoiceSummary
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL
+import { getBaseUrl } from "./api-base"
+const API_BASE = getBaseUrl() || process.env.NEXT_PUBLIC_API_URL || ''
 const DASHBOARD_BIDS_PER_PAGE = 100
 const DASHBOARD_BIDS_MAX_PAGES = 40
 
@@ -246,27 +247,15 @@ export async function getDashboardData() {
         Authorization: `Bearer ${accessToken}`,
     }
 
+    const apiBase = API_BASE
     const [preqRes, rfqRes, tendersRes, bidsRes] = await Promise.allSettled([
-        fetch(`${API_BASE}/api/v1/supplier/prequalification/rounds`, {
-            headers,
-            cache: "no-store",
-        }).then(r => r.json()),
+        fetch(`${apiBase}/api/v1/supplier/prequalification/rounds`, { headers, cache: "no-store" }).then(r => r.json()),
 
-        fetch(`${API_BASE}/api/v1/supplier/rfqs`, {
-            headers,
-            cache: "no-store",
-        }).then(r => r.json()),
+        fetch(`${apiBase}/api/v1/supplier/rfqs`, { headers, cache: "no-store" }).then(r => r.json()),
 
-        fetch(
-            `${API_BASE}/api/tenders?enforce_invites=true&third_party_id=${thirdPartyId}`,
-            { headers, cache: "no-store" }
-        ).then(r => r.json()),
+        fetch(`${apiBase}/api/tenders?enforce_invites=true&third_party_id=${thirdPartyId}`, { headers, cache: "no-store" }).then(r => r.json()),
 
-        fetchAllBidSubmissions({
-            apiBase: API_BASE as string,
-            headers,
-            thirdPartyId,
-        }),
+        fetchAllBidSubmissions({ apiBase, headers, thirdPartyId }),
     ])
 
     const user = session?.user as any
@@ -358,17 +347,8 @@ export async function getDashboardData() {
         }
 
         const [leasesRes, invoicesRes] = await Promise.allSettled([
-            fetch(`${API_BASE}/api/v1/property/leases/tenant?${leaseParams.toString()}`, {
-                headers,
-                cache: "no-store",
-            }).then((r) => r.json()),
-            fetch(
-                `${API_BASE}/api/v1/property/invoices/tenant?${invoiceParams.toString()}`,
-                {
-                    headers,
-                    cache: "no-store",
-                }
-            ).then((r) => r.json()),
+            fetch(`${apiBase}/api/v1/property/leases/tenant?${leaseParams.toString()}`, { headers, cache: "no-store" }).then((r) => r.json()),
+                fetch(`${apiBase}/api/v1/property/invoices/tenant?${invoiceParams.toString()}`, { headers, cache: "no-store" }).then((r) => r.json()),
         ])
 
         const leaseEntries =

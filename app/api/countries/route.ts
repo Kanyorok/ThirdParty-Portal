@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { getBaseUrl } from "@/lib/api-base"
 import { z } from "zod"
 import type { CountryOption } from "@/types/third-party"
 
@@ -38,9 +39,10 @@ function normalizeCountries(input: unknown): CountryOption[] {
 
 export async function GET() {
   try {
-    if (!process.env.NEXT_PUBLIC_API_URL) return NextResponse.json({ data: [] })
+  const apiBase = getBaseUrl() || process.env.NEXT_PUBLIC_API_URL || ''
+  if (!apiBase) return NextResponse.json({ data: [] })
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/auth/metadata/countries`, {
+  const res = await fetch(`${apiBase}/api/v1/portal/auth/metadata/countries`, {
       headers: { Accept: "application/json" },
       next: { revalidate: 24 * 60 * 60 },
     })

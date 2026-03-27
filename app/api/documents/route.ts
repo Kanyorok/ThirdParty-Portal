@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth-options"
+import { getBaseUrl } from "@/lib/api-base"
 
 export async function GET(_request: NextRequest) {
     const session = await getServerSession(authOptions)
@@ -9,9 +10,9 @@ export async function GET(_request: NextRequest) {
     }
 
     try {
-        const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/supplier/documents`
+    const backendUrl = `${getBaseUrl() || process.env.NEXT_PUBLIC_API_URL || ''}/api/v1/supplier/documents`
 
-        const res = await fetch(backendUrl, {
+    const res = await fetch(backendUrl, {
             headers: {
                 Accept: "application/json",
                 Authorization: `Bearer ${session.accessToken}`,

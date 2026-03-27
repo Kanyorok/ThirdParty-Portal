@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { getBaseUrl } from "@/lib/api-base"
 import { z } from "zod"
 import { Currency } from '@/types/currencies';
 import { getServerSession } from "next-auth"
@@ -49,12 +50,13 @@ function normalizeCurrencies(input: unknown): Currency[] {
 
 export async function GET() {
     try {
-        if (!process.env.NEXT_PUBLIC_API_URL) return NextResponse.json({ data: [] })
+    const apiBase = getBaseUrl() || process.env.NEXT_PUBLIC_API_URL || ''
+    if (!apiBase) return NextResponse.json({ data: [] })
 
-        const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions)
         const hasToken = Boolean(session?.accessToken)
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/currencies`, {
+    const res = await fetch(`${apiBase}/api/v1/currencies`, {
             headers: {
                 Accept: "application/json",
                 ...(hasToken ? { Authorization: `Bearer ${session!.accessToken}` } : {}),

@@ -2,13 +2,15 @@
 
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
+import { getBaseUrl } from "@/lib/api-base"
 import { ProfileFormValues } from "@/store/profile"
 
 export async function updateProfile(values: ProfileFormValues) {
     const session = await getServerSession(authOptions);
 
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/profile/update`, {
+    const backend = `${getBaseUrl() || process.env.NEXT_PUBLIC_API_URL || ''}/api/v1/portal/profile/update`
+    const response = await fetch(backend, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${session?.accessToken}`,

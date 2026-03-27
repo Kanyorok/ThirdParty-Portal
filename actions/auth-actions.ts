@@ -1,5 +1,7 @@
 "use server"
 
+import { getBaseUrl } from "@/lib/api-base"
+
 export interface AuthResult {
     success: boolean
     message?: string
@@ -27,7 +29,7 @@ type ApiPayload = {
 }
 
 function getApiBaseUrl() {
-    return process.env.NEXT_PUBLIC_API_URL
+    return getBaseUrl() || process.env.NEXT_PUBLIC_API_URL || ''
 }
 
 async function parsePayload(response: Response): Promise<ApiPayload> {

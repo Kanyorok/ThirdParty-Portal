@@ -12,17 +12,25 @@ interface Config {
 }
 
 function getConfig(): Config {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+  let apiUrl = ""
+  if (typeof window !== "undefined") {
+    try {
+      const win: any = window as any
+      const runtime = win.__ENV__ || {}
+      apiUrl = runtime.NEXT_PUBLIC_API_URL || runtime.API_BASE_URL || runtime.EXTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || ""
+    } catch {
+      apiUrl = process.env.NEXT_PUBLIC_API_URL || ""
+    }
+  } else {
+    apiUrl = process.env.NEXT_PUBLIC_API_URL || ""
+  }
   const nextAuthSecret = process.env.NEXTAUTH_SECRET || "";
   const nodeEnv = process.env.NODE_ENV || "development";
 
   // Only validate in server-side runtime (not during build)
   if (typeof window === "undefined" && nodeEnv !== "test") {
     if (!apiUrl) {
-      console.warn(
-        "⚠️  NEXT_PUBLIC_API_URL is not set. API calls may fail.\n" +
-        "   Please add NEXT_PUBLIC_API_URL to your .env.local file."
-      );
+      console.warn("⚠️  NEXT_PUBLIC_API_URL is not set. API calls may use relative paths or runtime overrides.")
     }
 
     if (!nextAuthSecret) {
@@ -46,9 +54,8 @@ export const config = getConfig();
 
 export const getApiUrl = (): string => {
   if (!config.apiUrl) {
-    throw new Error(
-      "API URL is not configured. Please set NEXT_PUBLIC_API_URL in your .env.local file."
-    );
+    // Prefer relative paths instead of throwing in runtime environments
+    return ""
   }
   return config.apiUrl;
 };

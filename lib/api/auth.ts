@@ -1,4 +1,5 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL
+import { getBaseUrl, apiFetch } from "./api-base"
+const BASE_URL = getBaseUrl() || process.env.NEXT_PUBLIC_API_URL || ''
 
 interface ApiResponse<T = any> {
   success: boolean
@@ -57,24 +58,19 @@ const request = async <T = any>(
   options: RequestInit = {},
   token?: string
 ): Promise<T> => {
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
-    ...options,
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  })
-
-  const text = await response.text()
-  const data = text ? JSON.parse(text) : {}
-
-  if (!response.ok || data?.success === false) {
-    throw new ApiError(data?.message || "Request failed", data?.error)
+  const mergedHeaders = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    ...(options.headers || {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   }
 
-  return data
+  const payload = await apiFetch(`${endpoint}`, { ...options, headers: mergedHeaders, allowError: true }).catch((e) => {
+    throw new ApiError(e?.message || "Request failed")
+  })
+
+  if (!payload || payload?.success === false) throw new ApiError(payload?.message || "Request failed", payload?.error)
+  return payload
 }
 
 export const authService = {
