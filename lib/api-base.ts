@@ -1,10 +1,26 @@
 export function getBaseUrl() {
     if (typeof window !== "undefined") {
-        // Always use relative paths on the client so requests go through
-        // the Next.js API proxy routes instead of directly to the backend.
+        // Prefer runtime-injected environment (window.__ENV__) for dynamic
+        // deployments (allows changing API host without rebuilding).
+        // Fallbacks: API_BASE_URL, NEXT_PUBLIC_API_URL, EXTERNAL_API_URL.
+        try {
+            const win: any = window as any
+            const runtime = win.__ENV__ || {}
+            const runtimeUrl = (runtime.API_BASE_URL || runtime.NEXT_PUBLIC_API_URL || runtime.EXTERNAL_API_URL) as string | undefined
+            if (runtimeUrl && runtimeUrl !== '') {
+                // normalize (remove trailing slash)
+                return runtimeUrl.replace(/\/+$/, '')
+            }
+        } catch {
+            // ignore and fall back to default behaviour
+        }
+
+        // Default client behaviour: use relative paths so requests go through
+        // the frontend host (and any reverse-proxy) unless a runtime URL is present.
         return ""
     }
-    return process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_URL
+
+    return process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || process.env.EXTERNAL_API_URL || ''
 }
 
 export async function apiFetch<T>(path: string, options?: RequestInit & { allowError?: boolean }): Promise<T> {
