@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
         const roundId = parts[parts.indexOf("applications") + 1];
 
         // Call Laravel backend to get application progress
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/prequalification/applications/${roundId}/progress`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/supplier/prequalification/applications/${roundId}/progress`, {
             headers: {
                 Accept: "application/json",
                 "Content-Type": "application/json",

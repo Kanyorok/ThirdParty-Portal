@@ -18,7 +18,6 @@ interface ProfilePictureModalProps {
     onClose: () => void;
     user: BaseUser;
     mutateUser: (data?: any, options?: boolean | MutatorOptions) => Promise<any>;
-    accessToken: string;
 }
 
 export const ProfilePictureModal: React.FC<ProfilePictureModalProps> = ({
@@ -26,7 +25,6 @@ export const ProfilePictureModal: React.FC<ProfilePictureModalProps> = ({
     onClose,
     user,
     mutateUser,
-    accessToken,
 }) => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isPending, startTransition] = useTransition();
@@ -49,7 +47,7 @@ export const ProfilePictureModal: React.FC<ProfilePictureModalProps> = ({
         startTransition(async () => {
             try {
                 // Note: result should contain the new image path/URL from Laravel
-                const result = await apiService.uploadProfilePicture(selectedFile, accessToken);
+                const result = await apiService.uploadProfilePicture(selectedFile);
 
                 await mutateUser((prev: BaseUser | undefined) => {
                     if (!prev) return prev;

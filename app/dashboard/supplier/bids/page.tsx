@@ -1,10 +1,6 @@
-import SupplierBids from "@/components/supplier-bids";
+import { redirect } from "next/navigation"
 
 export default function SupplierBidsPage() {
-  return (
-    <main>
-      <SupplierBids />
-    </main>
-  );
+  redirect("/dashboard/supplier/my-applications/tenders")
 }
 

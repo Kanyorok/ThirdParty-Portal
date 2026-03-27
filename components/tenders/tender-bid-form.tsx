@@ -177,10 +177,10 @@ export default function TenderBidForm({
       setSubmittedBidInfo(
         existingStatus === "submitted"
           ? {
-              id: existing.id || existing.bid_id || null,
-              submittedAt: getBidTimestamp(existing) || null,
-              status: String(existing.status || existing.bid_status || "").trim() || null,
-            }
+            id: existing.id || existing.bid_id || null,
+            submittedAt: getBidTimestamp(existing) || null,
+            status: String(existing.status || existing.bid_status || "").trim() || null,
+          }
           : null
       );
 
@@ -506,8 +506,6 @@ export default function TenderBidForm({
           const fieldLabelMap: Record<string, string> = {
             tender_id: "Tender",
             bid_amount: "Bid Amount",
-            third_party_id: "Third Party",
-            supplier_id: "Supplier",
             bid_documents: "Documents",
             currency: "Currency",
             validity_period: "Validity Period",
@@ -701,7 +699,7 @@ export default function TenderBidForm({
                 size="sm"
                 variant="outline"
                 onClick={onResolveSubmissionBlock}
-                className="h-7 border-amber-300 bg-white px-2 text-[11px] font-semibold text-amber-800 hover:bg-amber-100"                                                                                                                                                                  
+                className="h-7 border-amber-300 bg-white px-2 text-[11px] font-semibold text-amber-800 hover:bg-amber-100"
               >
                 Go to response
               </Button>

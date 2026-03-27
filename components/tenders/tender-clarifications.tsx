@@ -84,28 +84,36 @@ export default function TenderClarifications({
     }
 
     try {
-      const response = await fetch(`/api/tender-clarifications?tenderId=${tenderId}`);
+      const response = await fetch(`/api/tender-clarifications?tender_id=${tenderId}`);
 
       if (!response.ok) {
         const raw = await response.text().catch(() => "");
+        const rawText = raw.trim();
         let errorData: any = null;
         try {
-          errorData = raw ? JSON.parse(raw) : null;
+          errorData = rawText ? JSON.parse(rawText) : null;
         } catch {
           errorData = null;
         }
-        const errorMessage =
+
+        const parsedMessage =
+          (typeof errorData === "string" ? errorData : null) ||
           errorData?.message ||
           errorData?.error ||
-          raw ||
-          `Failed to fetch: ${response.status} ${response.statusText}`;
+          errorData?.details?.message;
+        const nonEmptyRaw =
+          rawText && rawText !== "{}" && rawText !== "null" ? rawText : "";
+        const fallbackMessage = `Failed to fetch clarifications: ${response.status} ${response.statusText}`;
+        const errorMessage = parsedMessage || nonEmptyRaw || fallbackMessage;
+
         if (process.env.NODE_ENV !== "production") {
-          console.error('API Error:', {
+          console.warn("Clarifications request failed", {
             status: response.status,
             statusText: response.statusText,
-            data: errorData ?? raw ?? null
+            message: errorMessage,
           });
         }
+
         const err = new Error(errorMessage) as Error & { status?: number };
         err.status = response.status;
         throw err;
@@ -120,7 +128,7 @@ export default function TenderClarifications({
       setLastRefresh(new Date()); // Update refresh timestamp
     } catch (error) {
       if (process.env.NODE_ENV !== "production") {
-        console.error('Error fetching clarifications:', error);
+        console.warn("Error fetching clarifications", error);
       }
       const status = (error as { status?: number })?.status;
       const denied = status === 403;
@@ -169,6 +177,7 @@ export default function TenderClarifications({
           tender_id: tenderId,
           question: newQuestion.trim(),
           is_public: isPublic,
+          isPublic,
         }),
       });
 

@@ -16,23 +16,9 @@ function asBool(value: unknown): boolean {
 export function resolveSessionProfileFlags(user: SessionUserLike) {
   const u = (user || {}) as Record<string, unknown>
 
-  const supplier =
-    asBool(u.is_supplier) ||
-    asBool(u.isSupplier) ||
-    asBool((u.third_party as any)?.isSupplier) ||
-    asBool((u.thirdParty as any)?.isSupplier)
-
-  const tenant =
-    asBool(u.is_tenant) ||
-    asBool(u.isTenant) ||
-    asBool((u.third_party as any)?.isTenant) ||
-    asBool((u.thirdParty as any)?.isTenant)
-
-  const customer =
-    asBool(u.is_customer) ||
-    asBool(u.isCustomer) ||
-    asBool((u.third_party as any)?.isCustomer) ||
-    asBool((u.thirdParty as any)?.isCustomer)
+  const supplier = asBool(u.isSupplier) || asBool(u.is_supplier)
+  const tenant = asBool(u.isTenant) || asBool(u.is_tenant)
+  const customer = asBool(u.isCustomer) || asBool(u.is_customer)
 
   return { supplier, tenant, customer }
 }

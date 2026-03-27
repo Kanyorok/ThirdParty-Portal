@@ -7,43 +7,6 @@ export const revalidate = 0
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL
 
-type RfqInvitation = {
-    rfqId: string
-    rfqNumber: string
-    comments: string
-    status: string
-    submissionDeadline?: string | null
-    invitationStatus?: string
-}
-
-function normalizeInvitation(raw: any): RfqInvitation {
-    const rfqId =
-        raw?.rfqId ??
-        raw?.rfq_id ??
-        raw?.id ??
-        raw?.Id ??
-        ""
-
-    return {
-        rfqId: String(rfqId).trim(),
-        rfqNumber: String(raw?.rfqNumber ?? raw?.number ?? raw?.ref ?? raw?.rfqRef ?? "").trim(),
-        comments: String(raw?.comments ?? raw?.title ?? raw?.description ?? "").trim(),
-        status: String(raw?.status ?? raw?.Status ?? "").trim(),
-        submissionDeadline: raw?.submissionDeadline ?? raw?.submission_deadline ?? raw?.deadline ?? null,
-        invitationStatus: raw?.invitationStatus ?? raw?.invitation_status ?? raw?.InvitationStatus ?? raw?.inviteStatus,
-    }
-}
-
-function filterInvitations(items: RfqInvitation[], q: string) {
-    const needle = q.trim().toLowerCase()
-    if (!needle) return items
-
-    return items.filter((rfq) => {
-        const haystack = `${rfq.rfqNumber} ${rfq.comments} ${rfq.invitationStatus ?? ""} ${rfq.status}`.toLowerCase()
-        return haystack.includes(needle)
-    })
-}
-
 export async function GET(req: NextRequest) {
     const session = await getServerSession(authOptions)
 
@@ -61,14 +24,9 @@ export async function GET(req: NextRequest) {
         )
     }
 
-    const q = req.nextUrl.searchParams.get("q")?.trim() ?? ""
-    const upstreamUrl = new URL(`${API_BASE}/api/v1/supplier/rfqs`)
+    const upstreamUrl = `${API_BASE.replace(/\/+$/, "")}/api/v1/supplier/rfqs`
 
-    if (q) {
-        upstreamUrl.searchParams.set("q", q)
-    }
-
-    const res = await fetch(upstreamUrl.toString(), {
+    const res = await fetch(upstreamUrl, {
         method: "GET",
         headers: {
             Accept: "application/json",
@@ -79,13 +37,12 @@ export async function GET(req: NextRequest) {
 
     const data = await res.json().catch(() => ({}))
 
-    const rawItems =
-        Array.isArray((data as any)?.data) ? (data as any).data :
-            Array.isArray((data as any)?.data?.data) ? (data as any).data.data :
-                []
+    if (!res.ok) {
+        return NextResponse.json(
+            { message: (data as Record<string, unknown>)?.message ?? "Failed to fetch RFQs" },
+            { status: res.status }
+        )
+    }
 
-    const normalized = rawItems.map(normalizeInvitation)
-    const filtered = q ? filterInvitations(normalized, q) : normalized
-
-    return NextResponse.json({ ...data, data: filtered }, { status: res.status })
+    return NextResponse.json(data, { status: res.status })
 }

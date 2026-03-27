@@ -24,7 +24,6 @@ interface Props {
     onClose: () => void
     profile: UserProfile
     mutateProfile: (data?: any, options?: boolean | MutatorOptions) => Promise<any>
-    accessToken: string
 }
 
 export default function EditProfileModal({
@@ -32,7 +31,6 @@ export default function EditProfileModal({
     onClose,
     profile,
     mutateProfile,
-    accessToken
 }: Props) {
     const [formData, setFormData] = useState({
         firstName: profile.firstName,
@@ -60,7 +58,7 @@ export default function EditProfileModal({
     const handleSave = useCallback(async () => {
         setSaving(true)
         try {
-            const response = await profileService.updateProfile('me', formData, accessToken)
+            const response = await profileService.updateProfile('me', formData)
 
             await mutateProfile(formData, { revalidate: true })
             toast.success(response.message || 'Profile updated successfully!')
@@ -70,7 +68,7 @@ export default function EditProfileModal({
         } finally {
             setSaving(false)
         }
-    }, [formData, accessToken, mutateProfile, onClose])
+    }, [formData, mutateProfile, onClose])
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>

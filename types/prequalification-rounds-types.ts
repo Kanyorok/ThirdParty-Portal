@@ -71,11 +71,15 @@ export type ApplicationSummary = {
 }
 
 export type Round = {
-    id: number
+    id: number | string
     title: string
+    name?: string
     status?: string
     startDate?: string
     endDate?: string
+    deadline?: string
+    applicantCount?: number
+    applicationId?: string
     categories?: RoundCategory[]
     hasApplied?: boolean
     canApply?: boolean

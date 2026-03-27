@@ -11,7 +11,7 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "@/components/common/sheet"
 import { toast } from "sonner"
 import { useSession } from "next-auth/react"
-import { getRounds, getSupplierCategories, submitApplicationSafe, getBaseUrl } from "@/lib/api-base"
+import { getRounds, getSupplierCategories, submitApplicationSafe } from "@/lib/api-base"
 import { cn } from "@/lib/utils"
 
 import type { Round, RoundSection, SupplierCategory } from "@/types/prequalification-rounds-types"
@@ -236,47 +236,50 @@ const SuccessState = ({ onClose }: { onClose: () => void }) => (
 
 const CategorySelector = ({ categories, selectedIds, onToggle, error }: { categories: SupplierCategory[]; selectedIds: string[]; onToggle: (id: string) => void; error?: string }) => (
     <div className="space-y-3" role="group" aria-labelledby="categories-label">
-        {categories.map((category) => (
-            <div
-                key={category.id}
-                onClick={() => onToggle(category.id)}
-                className={cn(
-                    "cursor-pointer rounded-xl border border-slate-200 bg-white p-4 transition-colors duration-200",
-                    "hover:border-slate-300",
-                    selectedIds.includes(category.id)
-                        ? "border-blue-300 bg-blue-50/60"
-                        : ""
-                )}
-                role="checkbox"
-                aria-checked={selectedIds.includes(category.id)}
-                tabIndex={0}
-                onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        onToggle(category.id);
-                    }
-                }}
-            >
-                <div className="flex items-center justify-between">
-                    <span className={cn(
-                        "font-medium transition-colors duration-200",
-                        selectedIds.includes(category.id)
-                            ? "text-blue-700"
-                            : "text-slate-900"
-                    )}>
-                        {category.name}
-                    </span>
-                    <div className={cn(
-                        "flex h-5 w-5 items-center justify-center rounded-full border transition-colors duration-200",
-                        selectedIds.includes(category.id)
-                            ? "border-blue-600 bg-blue-600"
-                            : "border-slate-300 bg-white"
-                    )}>
-                        {selectedIds.includes(category.id) && <Check className="w-3 h-3 text-white" />}
+        {categories.map((category) => {
+            const cid = String(category.id);
+            return (
+                <div
+                    key={cid}
+                    onClick={() => onToggle(cid)}
+                    className={cn(
+                        "cursor-pointer rounded-xl border border-slate-200 bg-white p-4 transition-colors duration-200",
+                        "hover:border-slate-300",
+                        selectedIds.includes(cid)
+                            ? "border-blue-300 bg-blue-50/60"
+                            : ""
+                    )}
+                    role="checkbox"
+                    aria-checked={selectedIds.includes(cid)}
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            onToggle(cid);
+                        }
+                    }}
+                >
+                    <div className="flex items-center justify-between">
+                        <span className={cn(
+                            "font-medium transition-colors duration-200",
+                            selectedIds.includes(cid)
+                                ? "text-blue-700"
+                                : "text-slate-900"
+                        )}>
+                            {category.name}
+                        </span>
+                        <div className={cn(
+                            "flex h-5 w-5 items-center justify-center rounded-full border transition-colors duration-200",
+                            selectedIds.includes(cid)
+                                ? "border-blue-600 bg-blue-600"
+                                : "border-slate-300 bg-white"
+                        )}>
+                            {selectedIds.includes(cid) && <Check className="w-3 h-3 text-white" />}
+                        </div>
                     </div>
                 </div>
-            </div>
-        ))}
+            );
+        })}
         {error && (
             <div className="flex items-center gap-2 text-rose-700 text-sm animate-in slide-in-from-left-2" role="alert" aria-live="assertive">
                 <AlertCircle className="w-4 h-4" />
@@ -287,8 +290,8 @@ const CategorySelector = ({ categories, selectedIds, onToggle, error }: { catego
 );
 
 export default function ApplicationForm({ children, open = false, onOpenChange, defaultRoundId, onSuccess }: { children?: React.ReactNode; open?: boolean; onOpenChange?: (open: boolean) => void; defaultRoundId?: string; onSuccess?: (result: { applicationId: string; statusCode: "O" | "CL" | "S"; statusLabel: string; roundId: string }) => void }) {
-    const { data: session } = useSession();
-    const accessToken = session?.accessToken as string;
+    const { status } = useSession();
+    const isAuthenticated = status === 'authenticated';
     const [rounds, setRounds] = useState<Round[]>([]);
     const [categories, setCategories] = useState<SupplierCategory[]>([]);
     const [roundsLoadingState, setRoundsLoadingState] = useState<LoadingState>("idle");
@@ -312,11 +315,11 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
     const selectedRoundId = form.watch("roundId");
 
     const fetchRounds = useCallback(async () => {
-        if (!accessToken) return;
+        if (!isAuthenticated) return;
         setRoundsLoadingState("loading");
         setRoundError("");
         try {
-            const roundsRes: unknown = await getRounds({}, accessToken);
+            const roundsRes: unknown = await getRounds({});
             const parsed = RoundsApiResponseSchema.safeParse(roundsRes);
             const raw = parsed.success ? parsed.data.data ?? [] : Array.isArray(roundsRes) ? roundsRes : [];
             const meta: Record<string, { description?: string; sections?: RoundSection[] }> = {};
@@ -345,11 +348,12 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                     : undefined;
                 meta[rid] = { description: r.description, sections: normSections };
             });
-            const normalizedAll = (raw as z.infer<typeof RoundApiItemSchema>[]).map((r) => {
+            const normalizedAll: Round[] = (raw as z.infer<typeof RoundApiItemSchema>[]).map((r) => {
                 const statusCode = typeof r.status === "string" ? r.status : (r.status as { value?: string })?.value;
                 const deadline = r.deadline || r.endDate || r.startDate;
                 return {
                     id: (r.roundID ?? r.id ?? "").toString(),
+                    title: r.title ?? r.name ?? "Untitled Round",
                     name: r.title ?? r.name ?? "Untitled Round",
                     status: (statusCode || "O") as string,
                     deadline,
@@ -381,10 +385,10 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
             setRoundsLoadingState("error");
             setRounds([]);
         }
-    }, [accessToken, defaultRoundId]);
+    }, [isAuthenticated, defaultRoundId]);
 
     const fetchCategories = useCallback(async () => {
-        if (!accessToken || !selectedRoundId) {
+        if (!isAuthenticated || !selectedRoundId) {
             setCategories([]);
             setCategoriesLoadingState("idle");
             return;
@@ -392,7 +396,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
         setCategoriesLoadingState("loading");
         setCategoryError("");
         try {
-            const categoriesRes: unknown = await getSupplierCategories(accessToken);
+            const categoriesRes: unknown = await getSupplierCategories();
             const parsed = CategoriesApiResponseSchema.safeParse(categoriesRes);
             const raw = parsed.success ? parsed.data.data ?? [] : Array.isArray(categoriesRes) ? categoriesRes : [];
             const mapped: SupplierCategory[] = (raw as z.infer<typeof CategoryApiItemSchema>[]).map((c) => ({
@@ -409,18 +413,18 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
             setCategoriesLoadingState("error");
             setCategories([]);
         }
-    }, [accessToken, selectedRoundId]);
+    }, [isAuthenticated, selectedRoundId]);
 
     useEffect(() => {
-        if (open && accessToken) fetchRounds();
-    }, [open, accessToken, fetchRounds]);
+        if (open && isAuthenticated) fetchRounds();
+    }, [open, isAuthenticated, fetchRounds]);
 
     // When defaultRoundId is provided, auto-select it after rounds load
     useEffect(() => {
         if (defaultRoundId && roundsLoadingState === "success") {
-            const match = rounds.find(r => r.id === defaultRoundId);
+            const match = rounds.find(r => String(r.id) === defaultRoundId);
             if (match) {
-                form.setValue("roundId", match.id, { shouldValidate: true });
+                form.setValue("roundId", String(match.id), { shouldValidate: true });
             }
         }
     }, [defaultRoundId, roundsLoadingState, rounds, form]);
@@ -444,21 +448,13 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
 
     // Fallback: if sections are missing from list response, fetch per-round detail
     const fetchRoundDetail = useCallback(async (rid: string) => {
-        if (!accessToken || !rid) return;
+        if (!isAuthenticated || !rid) return;
         try {
             // Use frontend proxy route for proper session auth and CORS
-            let res = await fetch(`/api/prequalification/rounds/${encodeURIComponent(rid)}`, { cache: 'no-store' });
+            let res = await fetch(`/api/prequalification/rounds/${encodeURIComponent(rid)}`, { cache: 'no-store', credentials: 'same-origin' });
             let jsonRaw: unknown = await res.json().catch(() => ({} as unknown));
             if (!res.ok || !jsonRaw) {
-                // Fallback: call Laravel API directly with bearer token
-                const base = getBaseUrl();
-                const url = `${base}/api/procurement/prequalification/rounds/${encodeURIComponent(rid)}`;
-                res = await fetch(url, {
-                    headers: { Accept: 'application/json', Authorization: `Bearer ${accessToken}` },
-                    cache: 'no-store',
-                });
-                jsonRaw = await res.json().catch(() => ({} as unknown));
-                if (!res.ok) return;
+                return;
             }
             const json = jsonRaw as unknown;
             const unwrap = (j: unknown): Record<string, unknown> => {
@@ -494,7 +490,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
         } catch {
             // no-op
         }
-    }, [accessToken, roundMetaById]);
+    }, [isAuthenticated, roundMetaById]);
 
     useEffect(() => {
         if (!selectedRoundId) return;
@@ -549,7 +545,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
 
     const onSubmit = useCallback(
         async (values: FormValues) => {
-            if (!accessToken) {
+            if (!isAuthenticated) {
                 toast.error("Authentication failed. Please log in again.");
                 return;
             }
@@ -564,7 +560,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
             }
             const categoryIds = values.categoryIds.map((id) => parseInt(id, 10));
             try {
-                const resp = await submitApplicationSafe(roundId, categoryIds, accessToken);
+                const resp = await submitApplicationSafe(roundId, categoryIds);
                 // After submit, upload any staged files for the selected categories
                 if (resp.status === 201) {
                     const staged = uploads.filter(u => (u.status === 'pending' || u.status === 'error') && categoryIds.includes(parseInt(u.categoryId, 10)));
@@ -621,7 +617,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                 setFormMessage({ type: "error", message: (err as Error)?.message || "Please check your connection and try again." });
             }
         },
-        [accessToken, onSuccess, uploads, uploadFile, effectiveRoundId]
+        [isAuthenticated, onSuccess, uploads, uploadFile, effectiveRoundId]
     );
 
     const handleClose = useCallback(() => {
@@ -634,7 +630,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
     const trigger = useMemo(() => <SheetTrigger asChild>{children}</SheetTrigger>, [children]);
 
     const roundValidationState = form.formState.errors.roundId ? "invalid" : "valid";
-    const currentRound = useMemo(() => rounds.find(r => r.id === selectedRoundId) || (defaultRoundId ? rounds[0] : undefined), [rounds, selectedRoundId, defaultRoundId]);
+    const currentRound = useMemo(() => rounds.find(r => String(r.id) === selectedRoundId) || (defaultRoundId ? rounds[0] : undefined), [rounds, selectedRoundId, defaultRoundId]);
     const descriptionsMap = form.watch("descriptions") as Record<string, string> | undefined;
     // round/category validity handled via submitEnabled below
 
@@ -722,15 +718,15 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                                     <SelectContent className="max-w-md rounded-xl border-slate-200 shadow-none">
                                                         {rounds.map((round) => (
                                                             <SelectItem
-                                                                key={round.id}
-                                                                value={round.id}
-                                                                disabled={round.status.toLowerCase() === "cl" || round.status.toLowerCase() === "closed"}
+                                                                key={String(round.id)}
+                                                                value={String(round.id)}
+                                                                disabled={round.status?.toLowerCase() === "cl" || round.status?.toLowerCase() === "closed"}
                                                                 className="rounded-lg p-3 transition-colors hover:bg-slate-50 focus:bg-slate-50"
                                                             >
                                                                 <div className="w-full">
                                                                     <div className="flex items-center justify-between mb-2">
-                                                                        <span className="font-medium text-slate-900">{round.name}</span>
-                                                                        <StatusBadge status={round.status} />
+                                                                        <span className="font-medium text-slate-900">{round.name ?? round.title}</span>
+                                                                        <StatusBadge status={round.status ?? ""} />
                                                                     </div>
                                                                     <div className="flex items-center gap-4 text-xs text-slate-600">
                                                                         {round.deadline && (
@@ -767,9 +763,9 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                         <div className="flex items-center justify-between mb-2">
                                             <div className="flex items-center gap-2">
                                                 <Calendar className="w-4 h-4 text-blue-500" />
-                                                <span className="font-medium text-slate-900">{rounds[0].name}</span>
+                                                <span className="font-medium text-slate-900">{rounds[0].name ?? rounds[0].title}</span>
                                             </div>
-                                            <StatusBadge status={rounds[0].status} />
+                                            <StatusBadge status={rounds[0].status ?? ""} />
                                         </div>
                                         {roundDetail.description && (
                                             <div className="mb-2 whitespace-pre-wrap text-sm text-slate-600">
@@ -824,9 +820,9 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                             <div className="flex items-center justify-between mb-2">
                                                 <div className="flex items-center gap-2">
                                                     <Calendar className="w-4 h-4 text-blue-500" />
-                                                    <span className="font-medium text-slate-900">{currentRound.name}</span>
+                                                    <span className="font-medium text-slate-900">{currentRound.name ?? currentRound.title}</span>
                                                 </div>
-                                                <StatusBadge status={currentRound.status} />
+                                                <StatusBadge status={currentRound.status ?? ""} />
                                             </div>
                                             {roundDetail.description && (
                                                 <div className="mb-2 whitespace-pre-wrap text-sm text-slate-600">

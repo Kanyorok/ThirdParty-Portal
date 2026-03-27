@@ -1,31 +1,19 @@
-import { getSession, signOut } from 'next-auth/react'
-
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL
+import { signOut } from 'next-auth/react'
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const session = await getSession()
     const headers = new Headers(options.headers)
     headers.set('Content-Type', 'application/json')
     headers.set('Accept', 'application/json')
 
-    if (session?.accessToken) {
-        headers.set('Authorization', `Bearer ${session.accessToken}`)
-    }
-
     const config: RequestInit = {
         ...options,
         headers,
+        credentials: 'same-origin',
     }
 
-    const response = await fetch(`${BASE_URL}${endpoint}`, config)
+    const response = await fetch(endpoint, config)
 
     if (response.status === 401) {
-        const refreshedSession = await getSession()
-        if (refreshedSession?.accessToken) {
-            headers.set('Authorization', `Bearer ${refreshedSession.accessToken}`)
-            const retryResponse = await fetch(`${BASE_URL}${endpoint}`, { ...config, headers })
-            if (retryResponse.ok) return retryResponse.json()
-        }
         await signOut({ callbackUrl: '/signin' })
         throw new Error('Unauthorized')
     }

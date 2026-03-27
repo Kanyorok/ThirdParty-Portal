@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { ArrowUpDown, RefreshCw, Search, X } from "lucide-react"
+import Link from "next/link"
+import { ArrowUpRight, RefreshCw, Search, Shield, X } from "lucide-react"
 import { Input } from "@/components/common/input"
 import { Button } from "@/components/common/button"
 import {
@@ -22,21 +23,10 @@ type SortOption = {
     label: string
 }
 
-type StatusOption = {
-    value: StatusFilter
-    label: string
-}
-
 const SORT_OPTIONS: SortOption[] = [
     { value: "title", label: "Title" },
     { value: "startDate", label: "Opens" },
     { value: "endDate", label: "Closes" }
-]
-
-const STATUS_OPTIONS: StatusOption[] = [
-    { value: "all", label: "All" },
-    { value: "open", label: "Active" },
-    { value: "closed", label: "Archived" }
 ]
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50]
@@ -80,7 +70,7 @@ export default function RoundsToolbar({
 
     const updateUrl = useCallback(
         (overrides: Record<string, string | number | undefined>) => {
-            const params = new URLSearchParams(searchParams.toString())
+            const params = new URLSearchParams(searchParams?.toString() ?? "")
             params.set("page", "1")
 
             const allValues: Record<string, string | undefined> = {
@@ -106,11 +96,11 @@ export default function RoundsToolbar({
             })
 
             const nextQueryString = params.toString()
-            const currentQueryString = searchParams.toString()
+            const currentQueryString = searchParams?.toString() ?? ""
             if (nextQueryString === currentQueryString) return
 
             startTransition(() => {
-                const nextUrl = nextQueryString ? `${pathname}?${nextQueryString}` : pathname
+                const nextUrl = nextQueryString ? `${pathname}?${nextQueryString}` : pathname ?? "/"
                 router.replace(nextUrl, { scroll: false })
             })
         },
@@ -197,11 +187,11 @@ export default function RoundsToolbar({
     const archivedCount = Math.max(totalCount - activeCount, 0)
     const appliedCount = rounds.filter((round) => round.hasApplied).length
 
-    const statusChips = useMemo(
+    const statusTabs = useMemo(
         () => [
-            { id: "all" as const, label: "All", count: totalCount },
-            { id: "open" as const, label: "Active", count: activeCount },
-            { id: "closed" as const, label: "Archived", count: archivedCount }
+            { id: "all" as StatusFilter, label: "All", count: totalCount },
+            { id: "open" as StatusFilter, label: "Active", count: activeCount },
+            { id: "closed" as StatusFilter, label: "Archived", count: archivedCount }
         ],
         [totalCount, activeCount, archivedCount]
     )
@@ -209,173 +199,143 @@ export default function RoundsToolbar({
     return (
         <div
             className={cn(
-                "space-y-3",
+                "space-y-4",
                 isPending && "opacity-60 pointer-events-none",
                 className
             )}
         >
-            <header className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex items-start gap-4">
-                    <div className="mt-1 h-9 w-1 rounded-full bg-indigo-600" />
-                    <div className="space-y-1.5">
-                        <div className="flex flex-wrap items-center gap-3">
-                            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
-                                Prequalification Rounds
-                            </h1>
-                            <span className="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
-                                {activeCount} active
-                            </span>
-                        </div>
-                        <p className="text-xs text-slate-500">
-                            Review active rounds, track progress, and submit applications.
-                        </p>
+            {/* ── Header row ── */}
+            <header className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                <div className="flex items-center gap-2">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 text-primary">
+                        <Shield className="h-4 w-4" />
                     </div>
+                    <h1 className="text-xl font-semibold tracking-tight text-foreground">
+                        Prequalification Rounds
+                    </h1>
                 </div>
 
-                <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto">
-                    <div className="relative w-full sm:w-80">
-                        <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                        <Input
-                            value={inputValue}
-                            onChange={(event) => setInputValue(event.target.value)}
-                            placeholder="Search round title"
-                            className="h-9 rounded-full border-slate-300 pl-10 pr-9 text-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
-                        />
-                        {isPending ? (
-                            <span className="absolute right-2.5 top-1/2 -translate-y-1/2">
-                                <RefreshCw className="h-4 w-4 animate-spin text-indigo-600" />
-                            </span>
-                        ) : null}
-                        {!isPending && inputValue ? (
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setInputValue("")
-                                    setSearchQuery("")
-                                    setPage(1)
-                                    updateUrl({ q: "", page: 1 })
-                                    startTransition(() => fetchRounds({ q: "", page: 1 }))
-                                }}
-                                className="absolute right-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full hover:bg-slate-100"
-                                aria-label="Clear search"
-                            >
-                                <X className="h-4 w-4 text-slate-400" />
-                            </button>
-                        ) : null}
+                <div className="flex flex-wrap items-center gap-2">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-border/60 px-3 py-1.5 text-xs font-medium text-muted-foreground">
+                        <span>Total: {totalCount}</span>
+                        <span aria-hidden>·</span>
+                        <span>Active: {activeCount}</span>
                     </div>
+                    <Button
+                        asChild
+                        variant="outline"
+                        className="h-9 rounded-full border-border/60 !bg-transparent px-3 text-xs font-semibold hover:!bg-transparent"
+                    >
+                        <Link href="/dashboard/supplier/prequalification/application">
+                            My applications
+                            <ArrowUpRight className="ml-1.5 h-4 w-4" />
+                        </Link>
+                    </Button>
+                </div>
+            </header>
 
-                    <Select value={statusFilter} onValueChange={(value) => handleStatusChange(value as StatusFilter)}>
-                        <SelectTrigger className="h-9 w-full rounded-full border-slate-300 bg-white text-xs font-medium sm:w-36">
-                            <SelectValue />
+            {/* ── Status filter tabs ── */}
+            <div className="flex flex-wrap items-center gap-1.5">
+                {statusTabs.map((tab) => (
+                    <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => handleStatusChange(tab.id)}
+                        className={cn(
+                            "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
+                            statusFilter === tab.id
+                                ? "border-primary/40 bg-primary/5 text-primary"
+                                : "border-border/60 text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                        )}
+                    >
+                        {tab.label}
+                        <span className={cn(
+                            "tabular-nums",
+                            statusFilter === tab.id ? "text-primary/70" : "text-muted-foreground/60"
+                        )}>
+                            {tab.count}
+                        </span>
+                    </button>
+                ))}
+                {appliedCount > 0 && (
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setHideApplied(!hideApplied)
+                        }}
+                        className={cn(
+                            "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
+                            hideApplied
+                                ? "border-amber-300/60 bg-amber-50/60 text-amber-700"
+                                : "border-border/60 text-muted-foreground hover:border-amber-300/40 hover:text-foreground"
+                        )}
+                    >
+                        {hideApplied ? "Showing unapplied" : "Hide applied"}
+                        <span className="tabular-nums text-muted-foreground/60">{appliedCount}</span>
+                    </button>
+                )}
+            </div>
+
+            {/* ── Search + sort ── */}
+            <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+                <div className="relative w-full lg:flex-1">
+                    <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <Input
+                        value={inputValue}
+                        onChange={(event) => setInputValue(event.target.value)}
+                        placeholder="Search round title"
+                        className="h-10 rounded-full border-border/60 bg-transparent pl-10 pr-9 text-sm focus:border-primary/50 focus:ring-0"
+                    />
+                    {isPending ? (
+                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                            <RefreshCw className="h-4 w-4 animate-spin text-indigo-600" />
+                        </span>
+                    ) : null}
+                    {!isPending && inputValue ? (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setInputValue("")
+                                setSearchQuery("")
+                                setPage(1)
+                                updateUrl({ q: "", page: 1 })
+                                startTransition(() => fetchRounds({ q: "", page: 1 }))
+                            }}
+                            className="absolute right-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full"
+                            aria-label="Clear search"
+                        >
+                            <X className="h-4 w-4 text-slate-400" />
+                        </button>
+                    ) : null}
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <Select value={sortBy} onValueChange={handleSortByChange}>
+                        <SelectTrigger className="h-10 min-w-[120px] rounded-full border-border/60 bg-transparent text-xs font-medium shadow-none">
+                            <SelectValue placeholder="Sort by" />
                         </SelectTrigger>
                         <SelectContent>
-                            {STATUS_OPTIONS.map((option) => (
+                            {SORT_OPTIONS.map((option) => (
                                 <SelectItem key={option.value} value={option.value}>
                                     {option.label}
                                 </SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
+
+                    <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
+                        <SelectTrigger className="h-10 min-w-[80px] rounded-full border-border/60 bg-transparent text-xs font-medium shadow-none">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {PAGE_SIZE_OPTIONS.map((size) => (
+                                <SelectItem key={size} value={String(size)}>
+                                    {size}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
-            </header>
-
-            <div className="flex flex-wrap gap-2">
-                {statusChips.map((item) => (
-                    <button
-                        type="button"
-                        key={item.id}
-                        onClick={() => handleStatusChange(item.id)}
-                        className={cn(
-                            "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition",
-                            statusFilter === item.id
-                                ? "border-indigo-200 bg-indigo-50 text-indigo-700"
-                                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                        )}
-                    >
-                        <span>{item.label}</span>
-                        <span
-                            className={cn(
-                                "inline-flex h-5 min-w-5 items-center justify-center rounded-md px-1.5 text-[11px]",
-                                statusFilter === item.id ? "bg-indigo-100 text-indigo-700" : "bg-slate-100 text-slate-600"
-                            )}
-                        >
-                            {item.count}
-                        </span>
-                    </button>
-                ))}
-
-                <button
-                    type="button"
-                    onClick={() => setHideApplied(!hideApplied)}
-                    className={cn(
-                        "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition",
-                        hideApplied
-                            ? "border-indigo-200 bg-indigo-50 text-indigo-700"
-                            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                    )}
-                >
-                    Hide applied
-                    <span
-                        className={cn(
-                            "inline-flex h-5 min-w-5 items-center justify-center rounded-md px-1.5 text-[11px]",
-                            hideApplied ? "bg-indigo-100 text-indigo-700" : "bg-slate-100 text-slate-600"
-                        )}
-                    >
-                        {appliedCount}
-                    </span>
-                </button>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-                <Select value={sortBy} onValueChange={handleSortByChange}>
-                    <SelectTrigger className="h-9 w-32 rounded-full border-slate-300 bg-white text-xs font-medium">
-                        <SelectValue placeholder="Sort by" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {SORT_OPTIONS.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-
-                <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleSortOrderToggle}
-                    className="h-9 w-9 rounded-full border-slate-300 bg-white p-0 hover:bg-slate-50"
-                    aria-label="Toggle sort order"
-                >
-                    <ArrowUpDown
-                        className={cn(
-                            "h-4 w-4 transition-transform duration-200",
-                            sortOrder === "desc" && "rotate-180 text-indigo-600"
-                        )}
-                    />
-                </Button>
-
-                <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
-                    <SelectTrigger className="h-9 w-20 rounded-full border-slate-300 bg-white text-xs font-medium">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {PAGE_SIZE_OPTIONS.map((size) => (
-                            <SelectItem key={size} value={String(size)}>
-                                {size}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-
-                <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleReset}
-                    className="h-9 rounded-full border-slate-300 bg-white px-3 text-xs font-medium text-slate-700 hover:bg-slate-50"
-                >
-                    Reset
-                </Button>
             </div>
         </div>
     )

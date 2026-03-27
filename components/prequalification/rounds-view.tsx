@@ -58,7 +58,7 @@ export default function RoundsView({ initialQuery }: PageProps) {
     ])
 
     return (
-        <section className="w-full space-y-5 rounded-2xl border border-slate-200/70 bg-gradient-to-b from-slate-50/60 via-white to-white p-3 sm:p-4">
+        <section className="w-full space-y-5 [&_*]:shadow-none [&_*]:drop-shadow-none">
             <RoundsToolbar defaultQuery={normalized} />
             <RoundsTable />
         </section>

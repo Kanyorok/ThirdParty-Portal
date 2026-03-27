@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { Bell } from "lucide-react"
+import { Bell, Mail, MessageSquare, ShieldCheck, FileText, Info } from "lucide-react"
 
 import { Button } from "@/components/common/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/common/popover"
@@ -19,22 +19,32 @@ import {
   useNotifications,
 } from "@/hooks/use-notifications"
 
+/* ── Notification category icon ─────────────────────────────────── */
+
+function CategoryIcon({ category, channel }: { category?: string | null; channel: string }) {
+  const cat = (category ?? "").toLowerCase()
+  if (cat.includes("prequalification")) return <ShieldCheck className="h-3.5 w-3.5" />
+  if (cat.includes("tender")) return <FileText className="h-3.5 w-3.5" />
+  if (channel === "sms") return <MessageSquare className="h-3.5 w-3.5" />
+  if (channel === "email") return <Mail className="h-3.5 w-3.5" />
+  return <Info className="h-3.5 w-3.5" />
+}
+
 export function NotificationsPopover() {
   const router = useRouter()
   const pathname = usePathname()
   const [open, setOpen] = React.useState(false)
-  const { data: items = [], isLoading, isError } = useNotifications({ limit: 10 })
+  const { data, isLoading, isError } = useNotifications()
   const markRead = useMarkNotificationRead()
   const markAllRead = useMarkAllNotificationsRead()
 
-  const unreadCount = React.useMemo(
-    () => items.filter((n) => !n.read).length,
-    [items]
-  )
+  const items = data?.items ?? []
+  const summary = data?.summary ?? { total: 0, unread: 0 }
+  const recent = React.useMemo(() => items.slice(0, 10), [items])
   const isNotifications = pathname?.startsWith("/dashboard/notifications")
 
   const onSelect = (item: AppNotification) => {
-    markRead.mutate({ channel: item.channel, id: item.id })
+    if (!item.read) markRead.mutate({ channel: item.channel, id: item.id })
     setOpen(false)
     router.push(item.link || "/dashboard/notifications")
   }
@@ -53,8 +63,10 @@ export function NotificationsPopover() {
           aria-label="Notifications"
         >
           <Bell className="h-5 w-5" />
-          {unreadCount > 0 && (
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-background" />
+          {summary.unread > 0 && (
+            <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white ring-2 ring-background">
+              {summary.unread > 99 ? "99+" : summary.unread}
+            </span>
           )}
         </Button>
       </PopoverTrigger>
@@ -68,23 +80,19 @@ export function NotificationsPopover() {
           <div className="flex items-center gap-2">
             <Bell className="h-4 w-4 text-primary" />
             <div className="text-sm font-semibold tracking-tight text-foreground">Notifications</div>
-            {unreadCount > 0 && (
+            {summary.unread > 0 && (
               <span className="ml-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                {unreadCount}
+                {summary.unread}
               </span>
             )}
           </div>
 
-          {unreadCount > 0 ? (
+          {summary.unread > 0 ? (
             <Button
               type="button"
               variant="ghost"
               className="h-8 rounded-xl px-2.5 text-[12px] font-semibold text-muted-foreground hover:text-foreground"
-              onClick={() => {
-                if (unreadCount > 0) {
-                  markAllRead.mutate()
-                }
-              }}
+              onClick={() => markAllRead.mutate()}
               disabled={markAllRead.isPending}
             >
               {markAllRead.isPending ? <Spinner className="size-3.5" /> : null}
@@ -113,14 +121,14 @@ export function NotificationsPopover() {
               <div className="text-sm font-semibold text-foreground">Unable to load notifications</div>
               <div className="mt-1 text-[12px] text-muted-foreground">Please try again in a moment.</div>
             </div>
-          ) : items.length === 0 ? (
+          ) : recent.length === 0 ? (
             <div className="px-4 py-10 text-center">
-              <div className="text-sm font-semibold text-foreground">You're all caught up</div>
+              <div className="text-sm font-semibold text-foreground">You&apos;re all caught up</div>
               <div className="mt-1 text-[12px] text-muted-foreground">No notifications right now.</div>
             </div>
           ) : (
             <div>
-              {items.map((n) => (
+              {recent.map((n) => (
                 <button
                   key={n.id}
                   type="button"
@@ -128,28 +136,52 @@ export function NotificationsPopover() {
                   className={cn(
                     "group flex w-full items-start gap-3 px-4 py-3 text-left transition-colors",
                     "hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+                    !n.read && "bg-primary/[0.03]",
                   )}
                 >
-                  <span
-                    className={cn(
-                      "mt-2 h-2 w-2 rounded-full",
-                      n.read ? "bg-muted-foreground/30" : "bg-primary",
-                    )}
-                    aria-hidden
-                  />
+                  {/* Channel/category icon */}
+                  <div className={cn(
+                    "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border",
+                    n.read
+                      ? "border-border/50 text-muted-foreground/50"
+                      : n.channel === "sms"
+                        ? "border-violet-200 text-violet-600"
+                        : "border-sky-200 text-sky-600",
+                  )}>
+                    <CategoryIcon category={n.category ?? n.notificationType} channel={n.channel} />
+                  </div>
+
                   <div className="min-w-0 flex-1">
-                    <div className={cn("text-[13px] leading-snug", n.read ? "text-muted-foreground" : "text-foreground")}>
-                      {n.message}
-                    </div>
-                    <div className="mt-1 flex items-center gap-2 text-[12px] text-muted-foreground">
+                    {/* Subject line */}
+                    {n.subject && (
+                      <p className={cn(
+                        "truncate text-[12px] font-semibold leading-snug",
+                        n.read ? "text-muted-foreground" : "text-foreground",
+                      )}>
+                        {n.subject}
+                      </p>
+                    )}
+                    {/* Body preview */}
+                    <p className={cn(
+                      "line-clamp-2 text-[12px] leading-snug",
+                      n.read ? "text-muted-foreground/70" : "text-muted-foreground",
+                    )}>
+                      {n.body ?? n.message}
+                    </p>
+                    <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground/60">
                       <span>{formatRelativeTime(n.createdAt)}</span>
-                      {n.isPriority ? (
-                        <span className="rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+                      {n.isPriority && (
+                        <span className="rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-700">
                           Priority
                         </span>
-                      ) : null}
+                      )}
                     </div>
                   </div>
+
+                  {/* Unread dot */}
+                  {!n.read && (
+                    <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-primary" aria-hidden />
+                  )}
                 </button>
               ))}
             </div>
@@ -160,7 +192,7 @@ export function NotificationsPopover() {
 
         <div className="flex items-center justify-between gap-2 px-4 py-3">
           <Button asChild variant="outline" className="h-9 rounded-xl border-border/60 bg-background shadow-none">
-            <Link href="/dashboard/settings/notifications">Notification settings</Link>
+            <Link href="/dashboard/settings/notifications">Settings</Link>
           </Button>
           <Button asChild className="h-9 rounded-xl shadow-none">
             <Link href="/dashboard/notifications">View all</Link>

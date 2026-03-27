@@ -1,14 +1,30 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import Link from "next/link"
 import { format } from "date-fns"
-import { ArrowUpRight, FileCheck2, Inbox, Search, Timer, X } from "lucide-react"
+import {
+  AlertTriangle,
+  Calendar,
+  CheckCircle2,
+  ChevronDown,
+  ChevronsUpDown,
+  FileCheck2,
+  RefreshCw,
+  Search,
+  Timer,
+  X,
+} from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { useDebounce } from "@/hooks/use-debounce"
 import Loading from "@/components/common/custom-loader"
-import { Input } from "@/components/common/input"
 import { Button } from "@/components/common/button"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/common/collapsible"
+import { Input } from "@/components/common/input"
 import {
   Select,
   SelectContent,
@@ -16,23 +32,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/common/select"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/common/table"
 import TenderDetailModal from "./tenders/tender-detail-modal"
 import { getBaseUrl } from "@/lib/api-base"
 
-function useDebounce<T>(value: T, delay: number): T {
-  const [debounced, setDebounced] = useState(value)
-  useEffect(() => {
-    const t = setTimeout(() => setDebounced(value), delay)
-    return () => clearTimeout(t)
-  }, [value, delay])
-  return debounced
-}
+/* ── Helpers ─────────────────────────────────────── */
 
-function isRecord(v: unknown): v is Record<string, unknown> {
+type AnyRecord = Record<string, unknown>
+type TenderLifecycle = "active" | "closed" | "archived"
+type TenderAccessFilter = "all" | "open-to-all" | "direct-invites"
+
+function isRecord(v: unknown): v is AnyRecord {
   return typeof v === "object" && v !== null && !Array.isArray(v)
 }
 
-function pick(obj: Record<string, unknown>, keys: readonly string[]) {
+function pick(obj: AnyRecord, keys: readonly string[]) {
   for (const k of keys) {
     const v = obj[k]
     if (v !== undefined && v !== null && v !== "") return v
@@ -40,46 +61,19 @@ function pick(obj: Record<string, unknown>, keys: readonly string[]) {
   return undefined
 }
 
-function statusText(status: string) {
-  switch (status) {
-    case "pb":
-      return "Active"
-    case "dr":
-      return "Archived"
-    case "cl":
-      return "Closed"
-    case "opening_in_progress":
-      return "Opening"
-    default:
-      return status || "Unknown"
-  }
-}
-
-function statusTone(status: string, closedByDeadline = false) {
-  if (closedByDeadline || status === "cl") {
-    return "text-rose-700 border-rose-200"
-  }
-  switch (status) {
-    case "pb":
-      return "text-emerald-700 border-emerald-200"
-    case "dr":
-      return "text-slate-700 border-slate-200"
-    case "opening_in_progress":
-      return "text-amber-700 border-amber-200"
-    default:
-      return "text-slate-700 border-slate-200"
-  }
+function fmt(value?: string | null) {
+  if (!value) return null
+  const d = new Date(value)
+  return Number.isNaN(d.getTime()) ? null : format(d, "dd MMM yyyy")
 }
 
 function deadlineMeta(deadline?: string | null) {
-  if (!deadline) return { label: "No deadline", tone: "text-slate-500", closed: false, closingSoon: false }
+  if (!deadline) return { label: "No deadline", tone: "text-muted-foreground", closed: false, closingSoon: false }
   const parsed = new Date(deadline)
-  if (Number.isNaN(parsed.getTime())) {
-    return { label: "No deadline", tone: "text-slate-500", closed: false, closingSoon: false }
-  }
+  if (Number.isNaN(parsed.getTime())) return { label: "No deadline", tone: "text-muted-foreground", closed: false, closingSoon: false }
 
   const diffMs = parsed.getTime() - Date.now()
-  if (diffMs <= 0) return { label: "Closed", tone: "text-slate-400", closed: true, closingSoon: false }
+  if (diffMs <= 0) return { label: "Closed", tone: "text-rose-600", closed: true, closingSoon: false }
 
   const hoursLeft = Math.ceil(diffMs / (60 * 60 * 1000))
   if (hoursLeft <= 48) {
@@ -92,15 +86,9 @@ function deadlineMeta(deadline?: string | null) {
   }
 
   const daysLeft = Math.ceil(diffMs / (24 * 60 * 60 * 1000))
-  if (daysLeft <= 5) {
-    return { label: `${daysLeft} days left`, tone: "text-amber-600", closed: false, closingSoon: false }
-  }
+  if (daysLeft <= 5) return { label: `${daysLeft} days left`, tone: "text-amber-600", closed: false, closingSoon: false }
   return { label: `${daysLeft} days left`, tone: "text-emerald-600", closed: false, closingSoon: false }
 }
-
-type AnyRecord = Record<string, any>
-type TenderLifecycle = "active" | "closed" | "archived"
-type TenderAccessFilter = "all" | "open-to-all" | "direct-invites"
 
 function resolveLifecycle(statusValue: string, closedByDeadline: boolean): TenderLifecycle {
   if (closedByDeadline || statusValue === "cl") return "closed"
@@ -110,47 +98,196 @@ function resolveLifecycle(statusValue: string, closedByDeadline: boolean): Tende
 
 function resolveAccessFilter(typeValue: string, hasInvitation: boolean): Exclude<TenderAccessFilter, "all"> {
   const normalized = String(typeValue ?? "").trim().toLowerCase()
-  if (
-    [
-      "rs",
-      "restricted",
-      "direct",
-      "direct_invite",
-      "direct-invites",
-      "invite_only",
-      "invite-only",
-      "invited",
-      "private",
-    ].includes(normalized)
-  ) {
-    return "direct-invites"
-  }
-  if (["op", "open", "open_to_all", "open-to-all", "public"].includes(normalized)) {
-    return "open-to-all"
-  }
+  if (["rs", "restricted", "direct", "direct_invite", "direct-invites", "invite_only", "invite-only", "invited", "private"].includes(normalized)) return "direct-invites"
+  if (["op", "open", "open_to_all", "open-to-all", "public"].includes(normalized)) return "open-to-all"
   return hasInvitation ? "direct-invites" : "open-to-all"
 }
 
-function tenderActionLabel(isActionable: boolean, closingSoon: boolean, isDirectInvite: boolean) {
-  if (!isActionable) return "View details"
-  if (closingSoon) return "Respond now"
-  if (isDirectInvite) return "Accept invite"
-  return "Start bid"
+/* ── Status theme (mirrors my-applications) ──────── */
+
+const STATUS: Record<string, { label: string; text: string; dot: string; ring: string }> = {
+  ACTIVE: { label: "Active", text: "text-emerald-600", dot: "bg-emerald-500", ring: "ring-emerald-500/20" },
+  CLOSING_SOON: { label: "Closing soon", text: "text-amber-600", dot: "bg-amber-500", ring: "ring-amber-500/20" },
+  CLOSED: { label: "Closed", text: "text-rose-600", dot: "bg-rose-500", ring: "ring-rose-500/20" },
+  ARCHIVED: { label: "Archived", text: "text-slate-500", dot: "bg-slate-400", ring: "ring-slate-400/20" },
+  OPENING: { label: "Opening", text: "text-violet-600", dot: "bg-violet-500", ring: "ring-violet-500/20" },
+  INVITE: { label: "Direct invite", text: "text-indigo-600", dot: "bg-indigo-500", ring: "ring-indigo-500/20" },
+  UNKNOWN: { label: "Unknown", text: "text-muted-foreground", dot: "bg-muted-foreground/40", ring: "ring-muted-foreground/20" },
 }
+
+function getStatusTheme(key: string) {
+  return STATUS[key.toUpperCase()] ?? STATUS.UNKNOWN
+}
+
+function resolveStatusKey(statusValue: string, deadline: ReturnType<typeof deadlineMeta>): string {
+  if (deadline.closed) return "CLOSED"
+  if (deadline.closingSoon) return "CLOSING_SOON"
+  if (statusValue === "opening_in_progress") return "OPENING"
+  if (statusValue === "dr" || statusValue === "archived") return "ARCHIVED"
+  return "ACTIVE"
+}
+
+/* ── Section themes for collapsible groups ───────── */
+
+const SECTION_THEME = {
+  priority: {
+    trigger: "border-border bg-card hover:bg-muted/50",
+    triggerOpen: "border-rose-200 bg-rose-50 dark:border-rose-900/60 dark:bg-rose-950/30",
+    text: "text-rose-600",
+    badge: "bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400",
+  },
+  active: {
+    trigger: "border-border bg-card hover:bg-muted/50",
+    triggerOpen: "border-blue-200 bg-blue-50 dark:border-blue-900/60 dark:bg-blue-950/30",
+    text: "text-blue-600",
+    badge: "bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400",
+  },
+  closed: {
+    trigger: "border-border bg-card hover:bg-muted/50",
+    triggerOpen: "border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950/30",
+    text: "text-slate-600",
+    badge: "bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-300",
+  },
+  archived: {
+    trigger: "border-border bg-card hover:bg-muted/50",
+    triggerOpen: "border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950/30",
+    text: "text-slate-500",
+    badge: "bg-slate-100 text-slate-600 dark:bg-slate-900/40 dark:text-slate-400",
+  },
+  matching: {
+    trigger: "border-border bg-card hover:bg-muted/50",
+    triggerOpen: "border-blue-200 bg-blue-50 dark:border-blue-900/60 dark:bg-blue-950/30",
+    text: "text-blue-600",
+    badge: "bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400",
+  },
+} as const
+
+/* ── Normalized tender row data ──────────────────── */
+
+interface NormalizedTender {
+  key: string
+  raw: AnyRecord
+  title: string
+  ref: string
+  deadline: ReturnType<typeof deadlineMeta>
+  deadlineText: string
+  typeText: string
+  statusKey: string
+  lifecycle: TenderLifecycle
+  isDirectInvite: boolean
+  invitation: AnyRecord | undefined
+}
+
+function normalizeTender(t: unknown, invitationMap: Record<string, AnyRecord>): NormalizedTender {
+  const o = isRecord(t) ? t : ({} as AnyRecord)
+  const id = String(pick(o, ["id", "Id", "TenderID", "tender_id"]) ?? "").trim()
+  const title = String(pick(o, ["title", "Title", "TenderTitle"]) ?? "Untitled Tender")
+  const ref = String(pick(o, ["tenderNo", "TenderNo"]) ?? "—")
+  const statusValue = String(pick(o, ["status", "Status"]) ?? "").toLowerCase()
+  const typeValue = String(pick(o, ["tenderType", "TenderType", "tender_type", "type", "Type"]) ?? "")
+  const deadlineRaw = String(pick(o, ["submissionDeadline", "SubmissionDeadline"]) ?? "")
+  const parsedDeadline = deadlineRaw ? new Date(deadlineRaw) : null
+  const deadlineText =
+    parsedDeadline && !Number.isNaN(parsedDeadline.getTime())
+      ? format(parsedDeadline, "dd MMM yyyy")
+      : "No deadline"
+  const deadline = deadlineMeta(deadlineRaw || null)
+  const invitation = invitationMap[id]
+  const accessType = resolveAccessFilter(typeValue, Boolean(invitation))
+  const typeText = accessType === "direct-invites" ? "Direct invite" : "Open to all"
+  const lifecycle = resolveLifecycle(statusValue, deadline.closed)
+  const statusKey = resolveStatusKey(statusValue, deadline)
+
+  return {
+    key: id || `${ref}-${title}`,
+    raw: o,
+    title,
+    ref,
+    deadline,
+    deadlineText,
+    typeText,
+    statusKey,
+    lifecycle,
+    isDirectInvite: accessType === "direct-invites",
+    invitation,
+  }
+}
+
+/* ── Row with modal trigger ──────────────────────── */
+
+function TenderRow({
+  tender,
+  invitation,
+  onInvitationUpdate,
+}: {
+  tender: NormalizedTender;
+  invitation?: AnyRecord | null;
+  onInvitationUpdate?: () => void;
+}) {
+  const sTheme = getStatusTheme(tender.statusKey)
+
+  return (
+    <TenderDetailModal
+      tender={tender.raw}
+      invitation={invitation ?? null}
+      onInvitationUpdate={onInvitationUpdate}
+      trigger={
+        <TableRow className="cursor-pointer hover:bg-muted/10 [&>td]:py-2.5">
+          <TableCell className="min-w-0">
+            <p className="truncate text-[13px] font-medium text-foreground">
+              {tender.title}
+            </p>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[10px] text-muted-foreground">{tender.ref}</span>
+              {tender.isDirectInvite && (
+                <span className="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-1.5 py-0.5 text-[9px] font-medium text-indigo-600 dark:border-indigo-900/60 dark:bg-indigo-950/30 dark:text-indigo-400">
+                  Invite
+                </span>
+              )}
+            </div>
+          </TableCell>
+
+          <TableCell className="hidden text-[11px] text-muted-foreground sm:table-cell">
+            {tender.deadlineText !== "No deadline" ? (
+              <span className="flex items-center gap-1">
+                <Calendar className="h-3 w-3 shrink-0 opacity-40" />
+                {tender.deadlineText}
+              </span>
+            ) : "—"}
+          </TableCell>
+
+          <TableCell className="hidden sm:table-cell">
+            <span className={cn("inline-flex items-center gap-1 text-[11px] font-medium", tender.deadline.tone)}>
+              <Timer className="h-3 w-3" />
+              {tender.deadline.label}
+            </span>
+          </TableCell>
+
+          <TableCell className="text-right">
+            <span className="inline-flex items-center gap-1.5">
+              <span className={cn("h-1.5 w-1.5 rounded-full ring-2", sTheme.dot, sTheme.ring)} />
+              <span className={cn("text-[11px] font-medium", sTheme.text)}>{sTheme.label}</span>
+            </span>
+          </TableCell>
+        </TableRow>
+      }
+    />
+  )
+}
+
+/* ── Main list ───────────────────────────────────── */
 
 export default function TendersFilter() {
   const [search, setSearch] = useState("")
-  const [status, setStatus] = useState("all")
-  const [access, setAccess] = useState<TenderAccessFilter>("all")
-  const [loading, setLoading] = useState(false)
+  const [statusFilter, setStatusFilter] = useState("all")
+  const [accessFilter, setAccessFilter] = useState<TenderAccessFilter>("all")
+  const [loading, setLoading] = useState(true)
   const [tenders, setTenders] = useState<unknown[]>([])
   const [error, setError] = useState<string | null>(null)
   const [invitationMap, setInvitationMap] = useState<Record<string, AnyRecord>>({})
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({})
 
-  const [selected, setSelected] = useState<any | null>(null)
-  const [open, setOpen] = useState(false)
-
-  const debounced = useDebounce(search, 350)
+  const debounced = useDebounce(search, 300)
 
   const fetchInvitations = useCallback(async (signal?: AbortSignal) => {
     try {
@@ -159,428 +296,349 @@ export default function TendersFilter() {
         headers: { Accept: "application/json" },
       })
       if (!res.ok) return
-
       const json = await res.json().catch(() => null)
       const list = Array.isArray(json?.data) ? json.data : []
       const map: Record<string, AnyRecord> = {}
-
-      list.forEach((entry: any) => {
-        const invitation = isRecord(entry) && isRecord(entry.invitation) ? entry.invitation : entry
+      list.forEach((entry: AnyRecord) => {
+        const invitation = isRecord(entry) && isRecord(entry.invitation) ? (entry.invitation as AnyRecord) : entry
         const tenderId = String(
-          invitation?.TenderId ??
-          invitation?.tenderId ??
-          entry?.tender?.id ??
-          entry?.tender?.Id ??
-          ""
+          invitation?.TenderId ?? invitation?.tenderId ??
+          (entry?.tender as AnyRecord)?.id ?? (entry?.tender as AnyRecord)?.Id ?? ""
         ).trim()
         if (tenderId) map[tenderId] = invitation
       })
-
       setInvitationMap(map)
-    } catch {
-      // Keep tenders page responsive even when invitation endpoint fails.
-    }
+    } catch { /* keep responsive */ }
   }, [])
 
-  const fetchTenders = useCallback(
-    async (signal?: AbortSignal) => {
-      try {
-        setLoading(true)
-        setError(null)
+  const fetchTenders = useCallback(async (signal?: AbortSignal) => {
+    try {
+      setLoading(true)
+      setError(null)
+      const params = new URLSearchParams()
+      if (debounced) params.set("search", debounced)
+      const res = await fetch(
+        `${getBaseUrl()}/api/tenders${params.toString() ? `?${params}` : ""}`,
+        { signal, headers: { Accept: "application/json" } }
+      )
+      const json = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(json?.message ?? "Failed to load tenders")
+      if (Array.isArray(json?.data)) setTenders(json.data)
+      else if (Array.isArray(json)) setTenders(json)
+      else setTenders([])
+    } catch (e: unknown) {
+      if (e instanceof Error && e.name === "AbortError") return
+      setError(e instanceof Error ? e.message : "Unable to load tenders")
+      setTenders([])
+    } finally {
+      setLoading(false)
+    }
+  }, [debounced])
 
-        const params = new URLSearchParams()
-        if (debounced) params.set("search", debounced)
-
-        const res = await fetch(
-          `${getBaseUrl()}/api/tenders${params.toString() ? `?${params}` : ""}`,
-          { signal, headers: { Accept: "application/json" } }
-        )
-
-        const json = await res.json().catch(() => null)
-        if (!res.ok) throw new Error(json?.message ?? "Failed to load tenders")
-
-        if (Array.isArray(json?.data)) setTenders(json.data)
-        else if (Array.isArray(json)) setTenders(json)
-        else setTenders([])
-      } catch (e: any) {
-        if (e?.name === "AbortError") return
-        setError(e?.message ?? "Unable to load tenders")
-        setTenders([])
-      } finally {
-        setLoading(false)
-      }
-    },
-    [debounced]
-  )
-
-  useEffect(() => {
+  const load = useCallback(() => {
     const c = new AbortController()
     fetchTenders(c.signal)
-    return () => c.abort()
-  }, [fetchTenders])
-
-  useEffect(() => {
-    const c = new AbortController()
     fetchInvitations(c.signal)
     return () => c.abort()
+  }, [fetchTenders, fetchInvitations])
+
+  const handleInvitationUpdate = useCallback(() => {
+    fetchInvitations()
   }, [fetchInvitations])
 
-  const openTender = (t: AnyRecord) => {
-    setSelected(t)
-    setOpen(true)
-  }
+  useEffect(() => {
+    const cancel = load()
+    return cancel
+  }, [load])
 
-  const summary = useMemo(() => {
-    let active = 0
-    let closed = 0
-    let archived = 0
+  /* ── Normalize all tenders ── */
 
-    tenders.forEach((t) => {
-      const o = isRecord(t) ? t : {}
-      const statusValue = String(pick(o, ["status"]) ?? "").toLowerCase()
-      const deadline = String(pick(o, ["submissionDeadline", "SubmissionDeadline"]) ?? "")
-      const meta = deadlineMeta(deadline || null)
-      const lifecycle = resolveLifecycle(statusValue, meta.closed)
+  const normalized = useMemo(
+    () => tenders.map((t) => normalizeTender(t, invitationMap)),
+    [tenders, invitationMap]
+  )
 
-      if (lifecycle === "closed") {
-        closed += 1
-      } else if (lifecycle === "archived") {
-        archived += 1
-      } else {
-        active += 1
-      }
-    })
+  /* ── Stats ── */
 
-    return {
-      active,
-      closed,
-      archived,
-    }
-  }, [tenders])
-
-  const filteredTenders = useMemo(() => {
-    return tenders.filter((t) => {
-      const o = isRecord(t) ? t : {}
-      const id = String(pick(o, ["id", "Id", "TenderID", "tender_id"]) ?? "").trim()
-      const statusValue = String(pick(o, ["status", "Status"]) ?? "").toLowerCase()
-      const deadline = String(pick(o, ["submissionDeadline", "SubmissionDeadline"]) ?? "")
-      const lifecycle = resolveLifecycle(statusValue, deadlineMeta(deadline || null).closed)
-      const matchesStatus = status === "all" ? true : lifecycle === status
-      if (!matchesStatus) return false
-
-      if (access === "all") return true
-
-      const tenderType = String(
-        pick(o, ["tenderType", "TenderType", "tender_type", "type", "Type"]) ?? ""
-      )
-      const accessType = resolveAccessFilter(tenderType, Boolean(id && invitationMap[id]))
-      return accessType === access
-    })
-  }, [access, invitationMap, status, tenders])
-
-  const selectedTenderId =
-    selected && isRecord(selected)
-      ? String(pick(selected, ["id", "Id", "TenderID", "tender_id"]) ?? "").trim()
-      : ""
-  const selectedInvitation = selectedTenderId ? invitationMap[selectedTenderId] ?? null : null
-
-  const normalizedTenders = useMemo(() => {
-    return filteredTenders.map((t) => {
-      const o = isRecord(t) ? t : {}
-      const id = String(pick(o, ["id", "Id", "TenderID", "tender_id"]) ?? "")
-      const title = String(pick(o, ["title", "TenderTitle"]) ?? "Untitled Tender")
-      const ref = String(pick(o, ["tenderNo", "TenderNo"]) ?? "—")
-      const statusValue = String(pick(o, ["status", "Status"]) ?? "").toLowerCase()
-      const typeValue = String(
-        pick(o, ["tenderType", "TenderType", "tender_type", "type", "Type"]) ?? ""
-      )
-      const deadlineRaw = String(pick(o, ["submissionDeadline", "SubmissionDeadline"]) ?? "")
-      const parsedDeadline = deadlineRaw ? new Date(deadlineRaw) : null
-      const deadlineText =
-        parsedDeadline && !Number.isNaN(parsedDeadline.getTime())
-          ? format(parsedDeadline, "dd MMM yyyy")
-          : "No deadline"
-      const deadline = deadlineMeta(deadlineRaw || null)
-      const invitation = invitationMap[id]
-      const accessType = resolveAccessFilter(typeValue, Boolean(invitation))
-      const typeText = accessType === "direct-invites" ? "Direct invite" : "Open to all"
-      const effectiveStatusValue = deadline.closed ? "cl" : statusValue
-      const isActionable = statusValue === "pb" && !deadline.closed
-      const isDirectInvite = accessType === "direct-invites"
-      const rowAccentBorder = deadline.closed
-        ? "border-l-rose-400"
-        : statusValue === "pb"
-          ? "border-l-indigo-500"
-          : statusValue === "opening_in_progress"
-            ? "border-l-amber-400"
-            : "border-l-slate-300"
-      const actionLabel = tenderActionLabel(isActionable, deadline.closingSoon, isDirectInvite)
-
-      return {
-        key: id || `${ref}-${title}`,
-        raw: o as AnyRecord,
-        title,
-        ref,
-        deadline,
-        deadlineText,
-        typeText,
-        effectiveStatusValue,
-        isActionable,
-        isDirectInvite,
-        actionLabel,
-        rowAccentBorder,
-      }
-    })
-  }, [filteredTenders, invitationMap])
-
-  const accessSummary = useMemo(() => {
-    let openToAll = 0
-    let directInvites = 0
-
-    tenders.forEach((t) => {
-      const o = isRecord(t) ? t : {}
-      const id = String(pick(o, ["id", "Id", "TenderID", "tender_id"]) ?? "").trim()
-      const tenderType = String(
-        pick(o, ["tenderType", "TenderType", "tender_type", "type", "Type"]) ?? ""
-      )
-      const accessType = resolveAccessFilter(tenderType, Boolean(id && invitationMap[id]))
-      if (accessType === "direct-invites") directInvites += 1
+  const stats = useMemo(() => {
+    let active = 0, closed = 0, archived = 0, openToAll = 0, directInvites = 0
+    normalized.forEach((t) => {
+      if (t.lifecycle === "closed") closed += 1
+      else if (t.lifecycle === "archived") archived += 1
+      else active += 1
+      if (t.isDirectInvite) directInvites += 1
       else openToAll += 1
     })
+    return { total: normalized.length, active, closed, archived, openToAll, directInvites }
+  }, [normalized])
 
-    return { openToAll, directInvites }
-  }, [invitationMap, tenders])
+  /* ── Filter ── */
 
-  const statusFilterOptions = [
-    { value: "all", label: "All", count: tenders.length },
-    { value: "active", label: "Active", count: summary.active },
-    { value: "closed", label: "Closed", count: summary.closed },
-    { value: "archived", label: "Archived", count: summary.archived },
-  ] as const
+  const filtered = useMemo(() => {
+    return normalized.filter((t) => {
+      if (statusFilter !== "all" && t.lifecycle !== statusFilter) return false
+      if (accessFilter === "open-to-all" && t.isDirectInvite) return false
+      if (accessFilter === "direct-invites" && !t.isDirectInvite) return false
+      return true
+    })
+  }, [normalized, statusFilter, accessFilter])
 
-  const accessFilterOptions = [
-    { value: "all", label: "All types", count: tenders.length },
-    { value: "open-to-all", label: "Open to all", count: accessSummary.openToAll },
-    { value: "direct-invites", label: "Direct invites", count: accessSummary.directInvites },
-  ] as const
+  /* ── Sections ── */
 
   const sections = useMemo(() => {
-    if (status !== "all" || access !== "all") {
-      return [{ id: "matching", title: "Matching tenders", items: normalizedTenders }]
+    if (statusFilter !== "all" || accessFilter !== "all" || debounced) {
+      return [{ id: "matching", title: "Matching tenders", items: filtered }]
     }
 
-    const priority = normalizedTenders.filter(
-      (item) => item.isActionable && (item.deadline.closingSoon || item.isDirectInvite)
+    const priority = filtered.filter(
+      (t) => t.lifecycle === "active" && (t.deadline.closingSoon || t.isDirectInvite)
     )
-    const remaining = normalizedTenders.filter(
-      (item) => !(item.isActionable && (item.deadline.closingSoon || item.isDirectInvite))
-    )
+    const priorityIds = new Set(priority.map((t) => t.key))
+    const activeItems = filtered.filter((t) => !priorityIds.has(t.key) && t.lifecycle === "active")
+    const closedItems = filtered.filter((t) => !priorityIds.has(t.key) && t.lifecycle === "closed")
+    const archivedItems = filtered.filter((t) => !priorityIds.has(t.key) && t.lifecycle === "archived")
 
-    const grouped: Array<{ id: string; title: string; items: typeof normalizedTenders }> = []
+    const grouped: Array<{ id: string; title: string; items: NormalizedTender[] }> = []
     if (priority.length) grouped.push({ id: "priority", title: "Priority opportunities", items: priority })
-    if (remaining.length) grouped.push({ id: "all", title: "All opportunities", items: remaining })
+    if (activeItems.length) grouped.push({ id: "active", title: "Active tenders", items: activeItems })
+    if (closedItems.length) grouped.push({ id: "closed", title: "Closed", items: closedItems })
+    if (archivedItems.length) grouped.push({ id: "archived", title: "Archived", items: archivedItems })
     return grouped
-  }, [access, normalizedTenders, status])
+  }, [filtered, statusFilter, accessFilter, debounced])
+
+  /* ── Auto-expand sections ── */
+
+  useEffect(() => {
+    if (sections.length === 0) return
+    setOpenSections((prev) => {
+      const next = { ...prev }
+      let changed = false
+      for (const s of sections) {
+        if (!(s.id in next)) {
+          next[s.id] = s.id !== "closed" && s.id !== "archived"
+          changed = true
+        }
+      }
+      return changed ? next : prev
+    })
+  }, [sections])
+
+  /* ── Header ── */
+
+  const header = (
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2.5">
+        <div className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground">
+          <FileCheck2 className="h-4 w-4" />
+        </div>
+        <div>
+          <h1 className="text-base font-semibold text-foreground">Available Tenders</h1>
+          {!loading && (
+            <p className="text-[11px] leading-none text-muted-foreground">
+              {stats.total} tender{stats.total !== 1 ? "s" : ""} · {stats.active} active · {stats.directInvites} invite{stats.directInvites !== 1 ? "s" : ""}
+            </p>
+          )}
+        </div>
+      </div>
+      {!loading && (
+        <button
+          type="button"
+          onClick={() => load()}
+          className="inline-flex items-center gap-1 text-[11px] text-muted-foreground transition hover:text-foreground"
+        >
+          <RefreshCw className="h-3 w-3" /> Refresh
+        </button>
+      )}
+    </div>
+  )
+
+  /* ── Loading ── */
+
+  if (loading) return (
+    <div className="space-y-5">
+      {header}
+      <Loading />
+    </div>
+  )
+
+  /* ── Error ── */
+
+  if (error) return (
+    <div className="space-y-5">
+      {header}
+      <div className="flex flex-col items-center py-16 text-center">
+        <AlertTriangle className="mb-2 h-5 w-5 text-destructive/60" />
+        <p className="text-sm text-destructive/80">{error}</p>
+        <Button variant="ghost" size="sm" className="mt-3 text-xs" onClick={() => load()}>Retry</Button>
+      </div>
+    </div>
+  )
+
+  /* ── Empty ── */
+
+  if (tenders.length === 0) return (
+    <div className="space-y-5">
+      {header}
+      <div className="flex flex-col items-center py-20 text-center">
+        <FileCheck2 className="mb-2 h-6 w-6 text-muted-foreground/40" />
+        <p className="text-sm font-medium text-muted-foreground">No tenders available</p>
+        <p className="mt-0.5 text-xs text-muted-foreground/60">
+          Tenders will appear here as procurement teams publish opportunities.
+        </p>
+      </div>
+    </div>
+  )
+
+  /* ── Main view ── */
 
   return (
-    <section className="w-full space-y-5 [&_*]:shadow-none [&_*]:drop-shadow-none">
-      <header className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 text-primary">
-              <FileCheck2 className="h-4 w-4" />
-            </div>
-            <h1 className="text-xl font-semibold tracking-tight text-foreground">Available Tenders</h1>
-          </div>
-        </div>
+    <div className="space-y-5">
+      {header}
 
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex items-center gap-2 rounded-full border border-border/60 px-3 py-1.5 text-xs font-medium text-muted-foreground">
-            <span>Total: {tenders.length}</span>
-            <span aria-hidden>-</span>
-            <span>Active: {summary.active}</span>
-          </div>
-          <Button
-            asChild
-            variant="outline"
-            className="h-9 rounded-xl border-border/60 !bg-transparent px-3 text-xs font-semibold hover:!bg-transparent"
-          >
-            <Link href="/dashboard/supplier/bids">
-              My bids
-              <ArrowUpRight className="ml-1.5 h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
-      </header>
-
-      <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
-        <div className="relative w-full lg:flex-1">
-          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+      {/* Search & Filters */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="relative max-w-xs flex-1">
+          <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/50" />
           <Input
+            placeholder="Search by tender ref or title…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by tender ref or title"
-            className="h-10 rounded-full border-border/60 bg-transparent pl-10 pr-9 text-sm focus:border-primary/50 focus:ring-0"
+            className="h-8 pl-9 text-xs"
           />
-          {search ? (
+          {search && (
             <button
               type="button"
               onClick={() => setSearch("")}
-              className="absolute right-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground"
             >
-              <X className="h-4 w-4 text-slate-400" />
+              <X className="h-3.5 w-3.5" />
             </button>
-          ) : null}
+          )}
         </div>
 
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:flex">
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="h-10 min-w-[170px] rounded-full border-border/60 bg-transparent text-xs font-medium shadow-none">
+        <div className="flex items-center gap-2">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="h-8 w-[130px] text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {statusFilterOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label} ({option.count})
-                </SelectItem>
-              ))}
+              <SelectItem value="all">All ({stats.total})</SelectItem>
+              <SelectItem value="active">Active ({stats.active})</SelectItem>
+              <SelectItem value="closed">Closed ({stats.closed})</SelectItem>
+              <SelectItem value="archived">Archived ({stats.archived})</SelectItem>
             </SelectContent>
           </Select>
 
-          <Select value={access} onValueChange={(value) => setAccess(value as TenderAccessFilter)}>
-            <SelectTrigger className="h-10 min-w-[180px] rounded-full border-border/60 bg-transparent text-xs font-medium shadow-none">
+          <Select value={accessFilter} onValueChange={(v) => setAccessFilter(v as TenderAccessFilter)}>
+            <SelectTrigger className="h-8 w-[150px] text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {accessFilterOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label} ({option.count})
-                </SelectItem>
-              ))}
+              <SelectItem value="all">All types ({stats.total})</SelectItem>
+              <SelectItem value="open-to-all">Open to all ({stats.openToAll})</SelectItem>
+              <SelectItem value="direct-invites">Direct invites ({stats.directInvites})</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      {loading ? (
-        <Loading
-          fullScreen={false}
-          message="Loading tenders"
-          className="rounded-2xl border border-dashed border-border/50 !bg-transparent py-10"
-        />
-      ) : null}
-
-      {!loading && filteredTenders.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border/50 p-6 text-center text-sm text-muted-foreground">
-          <Inbox className="mx-auto mb-2 h-5 w-5 text-slate-400" />
-          No tenders in this view.
+      {/* No results */}
+      {filtered.length === 0 && (
+        <div className="flex flex-col items-center py-16 text-center">
+          <FileCheck2 className="mb-2 h-5 w-5 text-muted-foreground/40" />
+          <p className="text-sm font-medium text-muted-foreground">No matches</p>
+          <p className="mt-0.5 text-xs text-muted-foreground/60">Try a different search or filter.</p>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mt-3 text-xs"
+            onClick={() => { setSearch(""); setStatusFilter("all"); setAccessFilter("all") }}
+          >
+            Clear filters
+          </Button>
         </div>
-      ) : null}
+      )}
 
-      {!loading && filteredTenders.length > 0 ? (
-        <div className="space-y-4">
-          {sections.map((section) => (
-            <section key={section.id} className="space-y-2">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {section.title}
-                </h2>
-                <span className="text-xs text-muted-foreground">{section.items.length}</span>
-              </div>
+      {/* Collapsible sections */}
+      <div className="space-y-3">
+        {sections.map((section) => {
+          const isOpen = !!openSections[section.id]
+          const theme = SECTION_THEME[section.id as keyof typeof SECTION_THEME] ?? SECTION_THEME.matching
+          const inviteCount = section.items.filter((t) => t.isDirectInvite).length
 
-              <div className="space-y-2">
-                {section.items.map((tender) => (
-                  <div
-                    key={tender.key}
-                    className={cn(
-                      "flex flex-col gap-3 rounded-2xl border border-l-4 p-4 sm:flex-row sm:items-start sm:justify-between",
-                      tender.isActionable ? "border-primary/30" : "border-border/60",
-                      tender.rowAccentBorder
+          return (
+            <Collapsible
+              key={section.id}
+              open={isOpen}
+              onOpenChange={(v) => setOpenSections((prev) => ({ ...prev, [section.id]: v }))}
+            >
+              <CollapsibleTrigger asChild>
+                <button
+                  type="button"
+                  className={cn(
+                    "group flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors",
+                    isOpen ? theme.triggerOpen : theme.trigger
+                  )}
+                >
+                  <ChevronsUpDown className={cn(
+                    "h-4 w-4 shrink-0",
+                    isOpen ? theme.text : "text-muted-foreground"
+                  )} />
+
+                  <span className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
+                    {section.title}
+                  </span>
+
+                  <span className="flex shrink-0 items-center gap-3 text-[11px] text-muted-foreground">
+                    {inviteCount > 0 && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-medium text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400">
+                        <CheckCircle2 className="h-3 w-3" />{inviteCount} invite{inviteCount !== 1 ? "s" : ""}
+                      </span>
                     )}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => openTender(tender.raw)}
-                      className="flex min-w-0 flex-1 items-start gap-3 text-left"
-                    >
-                      <div
-                        className={cn(
-                          "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border",
-                          tender.deadline.closed
-                            ? "border-rose-200 text-rose-700"
-                            : tender.deadline.closingSoon
-                              ? "border-amber-200 text-amber-700"
-                              : tender.isActionable
-                                ? "border-emerald-200 text-emerald-700"
-                                : "border-border/60 text-muted-foreground"
-                        )}
-                      >
-                        <Timer className="h-4 w-4" />
-                      </div>
+                    <span className={cn(
+                      "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium",
+                      theme.badge
+                    )}>
+                      <FileCheck2 className="h-3 w-3" />
+                      {section.items.length} tender{section.items.length !== 1 ? "s" : ""}
+                    </span>
+                  </span>
 
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold leading-snug text-foreground">
-                          {tender.title}
-                        </p>
-                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                          <span className="font-mono">{tender.ref}</span>
-                          <span aria-hidden>-</span>
-                          <span>{tender.deadlineText}</span>
-                          <span className="inline-flex rounded-full border border-border/60 px-2 py-0.5 font-semibold">
-                            {tender.typeText}
-                          </span>
-                          <span
-                            className={cn(
-                              "inline-flex rounded-full border px-2 py-0.5 font-semibold",
-                              statusTone(tender.effectiveStatusValue, tender.deadline.closed)
-                            )}
-                          >
-                            {statusText(tender.effectiveStatusValue)}
-                          </span>
-                          <span className={cn("inline-flex items-center gap-1 font-medium", tender.deadline.tone)}>
-                            <Timer className="h-3.5 w-3.5" />
-                            {tender.deadline.label}
-                          </span>
-                        </div>
-                      </div>
-                    </button>
+                  <ChevronDown className={cn(
+                    "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200",
+                    isOpen && "rotate-180"
+                  )} />
+                </button>
+              </CollapsibleTrigger>
 
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className={cn(
-                        "h-8 rounded-full border-border/60 !bg-transparent px-3 text-xs font-semibold hover:!bg-transparent",
-                        tender.isActionable && "border-primary/50 text-primary"
-                      )}
-                      onClick={() => openTender(tender.raw)}
-                    >
-                      {tender.actionLabel}
-                      <ArrowUpRight className="ml-1 h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
-      ) : null}
-
-      {error ? (
-        <div className="border border-rose-200 p-4 text-sm text-rose-700">
-          {error}
-        </div>
-      ) : null}
-
-      <TenderDetailModal
-        isOpen={open}
-        onClose={() => setOpen(false)}
-        tender={selected}
-        invitation={selectedInvitation}
-        onInvitationUpdate={() => {
-          fetchInvitations()
-          fetchTenders()
-        }}
-      />
-    </section>
+              <CollapsibleContent>
+                <div className="rounded-b-lg border border-t-0 border-border bg-card">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="text-[10px] uppercase tracking-wider [&>th]:py-2 [&>th]:text-muted-foreground/60">
+                        <TableHead>Tender</TableHead>
+                        <TableHead className="hidden sm:table-cell">Deadline</TableHead>
+                        <TableHead className="hidden sm:table-cell">Time left</TableHead>
+                        <TableHead className="text-right">Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {section.items.map((tender) => (
+                        <TenderRow
+                          key={tender.key}
+                          tender={tender}
+                          invitation={tender.invitation}
+                          onInvitationUpdate={handleInvitationUpdate}
+                        />
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )
+        })}
+      </div>
+    </div>
   )
 }

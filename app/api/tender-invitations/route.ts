@@ -2,49 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 
-interface TenderInvitation {
-  InvitationID: number;
-  TenderId: string;
-  SupplierId: number;
-  InvitationDate: string;
-  ResponseStatus: "pending" | "accepted" | "declined" | "submitted";
-  ResponseDate?: string;
-  DeclineReason?: string;
-  ConfirmationAttachment?: string;
-  CreatedBy: string;
-  CreatedOn: string;
-  ModifiedBy?: string;
-  ModifiedOn?: string;
-}
+const FINAL_INVITATION_STATUSES = new Set(["accepted", "declined", "rejected"]);
 
-interface TenderInvitationResponse {
-  invitation: TenderInvitation;
-  tender: {
-    id: string;
-    tenderNo: string;
-    title: string;
-    tenderType: string;
-    submissionDeadline: string;
-    openingDate: string;
-    status: string;
-    estimatedValue?: string;
-    currency?: {
-      code: string;
-      symbol: string;
-    };
-  };
-}
-
-interface ExternalApiResponse {
-  data: TenderInvitationResponse[];
-  total: number;
-  page: number;
-  limit: number;
-  supplierInfo?: {
-    supplierId: number;
-    activeRoundId: number;
-    third_party_id: number;
-  };
+function normalizeStatus(value: unknown) {
+  return String(value ?? "").trim().toLowerCase();
 }
 
 export async function GET(request: NextRequest) {
@@ -52,17 +13,14 @@ export async function GET(request: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user || !session.accessToken) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
     }
-
-    const thirdPartyId = session.user.thirdPartyId ?? session.user.third_party_id;
-    const supplierId = session.user.supplierId ?? session.user.supplier_id;
 
     const searchParams = request.nextUrl.searchParams;
     const queryParams = new URLSearchParams();
-
-    if (thirdPartyId) queryParams.append("third_party_id", String(thirdPartyId));
-    if (supplierId) queryParams.append("supplier_id", String(supplierId));
 
     const tenderId = searchParams.get("tender_id") ?? searchParams.get("tenderId");
     if (tenderId) queryParams.append("tender_id", tenderId);
@@ -70,49 +28,52 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get("status");
     if (status) queryParams.append("status", status);
 
-    const externalApiUrl = process.env.NEXT_PUBLIC_API_URL;
-    if (!externalApiUrl) {
+    const apiBase =
+      process.env.ERP_BASE_URL ||
+      process.env.NEXT_PUBLIC_API_URL;
+
+    if (!apiBase) {
       return NextResponse.json(
-        { error: "API configuration missing" },
+        { success: false, error: "API configuration missing" },
         { status: 500 }
       );
     }
 
-    const response = await fetch(
-      `${externalApiUrl}/api/v1/supplier/tenders/invitations?${queryParams}`,
-      {
-        headers: {
-          Authorization: `Bearer ${session.accessToken}`,
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        signal: AbortSignal.timeout(10000),
-      }
-    );
+    const qs = queryParams.toString();
+    const url = `${apiBase}/api/v1/supplier/tenders/invitations${qs ? `?${qs}` : ""}`;
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+        Accept: "application/json",
+      },
+      signal: AbortSignal.timeout(10000),
+    });
+
+    const body = await response.json().catch(() => null);
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
       return NextResponse.json(
-        { error: errorData.message || "External API error" },
+        {
+          success: false,
+          error: body?.message || "Failed to fetch invitations",
+        },
         { status: response.status }
       );
     }
 
-    const data: ExternalApiResponse = await response.json();
-
+    // Backend returns { success, message, data, total }
     return NextResponse.json({
-      data: data.data,
-      pagination: {
-        total: data.total,
-        page: data.page,
-        limit: data.limit,
-        pages: Math.ceil(data.total / data.limit),
-      },
-      supplierInfo: data.supplierInfo,
+      success: body?.success ?? true,
+      message: body?.message ?? "OK",
+      data: body?.data ?? [],
+      total: body?.total ?? 0,
     });
   } catch (error) {
     return NextResponse.json(
       {
+        success: false,
         error: "Failed to fetch tender invitations",
         message: error instanceof Error ? error.message : "Unknown error",
       },
@@ -126,7 +87,10 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user || !session.accessToken) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
     const body = await request.json();
@@ -134,24 +98,84 @@ export async function POST(request: NextRequest) {
     const status = response_status ?? responseStatus;
     const tender = tender_id ?? tenderId;
     const decline = decline_reason ?? declineReason;
+    const normalizedStatus = normalizeStatus(status);
 
-    if (!tender || !status) {
+    if (!tender || !normalizedStatus) {
       return NextResponse.json(
-        { error: "Tender ID and ResponseStatus are required" },
+        { success: false, error: "Tender ID and ResponseStatus are required" },
         { status: 400 }
       );
     }
 
-    if (String(status).toLowerCase() === "declined" && !decline) {
+    if (!["accepted", "declined"].includes(normalizedStatus)) {
       return NextResponse.json(
-        { error: "Decline reason is required" },
+        { success: false, error: "ResponseStatus must be either accepted or declined" },
         { status: 400 }
       );
     }
 
-    const externalApiUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (normalizedStatus === "declined" && !decline) {
+      return NextResponse.json(
+        { success: false, error: "Decline reason is required" },
+        { status: 400 }
+      );
+    }
+
+    const apiBase =
+      process.env.ERP_BASE_URL ||
+      process.env.NEXT_PUBLIC_API_URL;
+
+    if (!apiBase) {
+      return NextResponse.json(
+        { success: false, error: "API configuration missing" },
+        { status: 500 }
+      );
+    }
+
+    const existingResponse = await fetch(
+      `${apiBase}/api/v1/supplier/tenders/invitations?tender_id=${encodeURIComponent(String(tender))}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+          Accept: "application/json",
+        },
+        signal: AbortSignal.timeout(10000),
+      }
+    );
+
+    if (existingResponse.ok) {
+      const existingBody = await existingResponse.json().catch(() => null);
+      const existingData = Array.isArray(existingBody?.data) ? existingBody.data : [];
+
+      const matchedInvitation = existingData.find((entry: any) => {
+        const invitation = entry?.invitation ?? entry;
+        const invitationTenderId =
+          invitation?.TenderId ??
+          invitation?.tenderId ??
+          entry?.tender?.Id ??
+          entry?.tender?.id;
+        return String(invitationTenderId ?? "").trim() === String(tender).trim();
+      });
+
+      const existingStatus = normalizeStatus(
+        matchedInvitation?.ResponseStatus ?? matchedInvitation?.responseStatus
+      );
+
+      if (FINAL_INVITATION_STATUSES.has(existingStatus)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Invitation response is already ${existingStatus} and cannot be changed.`,
+            responseStatus: existingStatus,
+          },
+          { status: 409 }
+        );
+      }
+    }
+
     const response = await fetch(
-      `${externalApiUrl}/api/v1/supplier/tenders/respond`,
+      `${apiBase}/api/v1/supplier/tenders/respond`,
       {
         method: "POST",
         headers: {
@@ -161,29 +185,30 @@ export async function POST(request: NextRequest) {
         },
         body: JSON.stringify({
           tender_id: Number(tender),
-          response_status: status,
+          response_status: normalizedStatus,
           decline_reason: decline || null,
-          third_party_id: thirdPartyId ?? undefined,
         }),
       }
     );
 
+    const result = await response.json().catch(() => null);
+
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
       return NextResponse.json(
-        { error: errorData.message || "Failed to update invitation" },
+        { success: false, error: result?.message || "Failed to update invitation" },
         { status: response.status }
       );
     }
 
-    const result = await response.json();
     return NextResponse.json({
-      message: "Tender invitation updated successfully",
-      data: result,
+      success: result?.success ?? true,
+      message: result?.message ?? "Tender invitation updated successfully",
+      data: result?.data ?? result,
     });
   } catch (error) {
     return NextResponse.json(
       {
+        success: false,
         error: "Internal server error",
         message: error instanceof Error ? error.message : "Unknown error",
       },

@@ -1,4 +1,4 @@
-import { UserProfile, NavSection, NavMainItem } from "@/types/profile-types"
+import { UserProfile, NavSection, NavMainItem, NavSubItem } from "@/types/profile-types"
 import {
     LayoutDashboard, Receipt, FileText,
     ClipboardList, FolderOpen, ShieldCheck, BookOpen,
@@ -10,13 +10,22 @@ import {
 
 const allProfiles: readonly UserProfile[] = ["Supplier", "Tenant", "Customer"]
 
+type DraftNavSubItem = Omit<NavSubItem, "allowedProfiles"> & {
+    allowedProfiles?: readonly UserProfile[]
+}
+
+type DraftNavMainItem = Omit<NavMainItem, "allowedProfiles" | "subItems"> & {
+    allowedProfiles?: readonly UserProfile[]
+    subItems?: readonly DraftNavSubItem[]
+}
+
 function withProfiles(
-    item: Omit<NavMainItem, 'allowedProfiles'> & { allowedProfiles?: readonly UserProfile[] },
+    item: DraftNavMainItem,
     sectionProfiles?: readonly UserProfile[]
 ): NavMainItem {
     const profiles = item.allowedProfiles ?? sectionProfiles ?? allProfiles
 
-    const subItems = item.subItems?.map(sub => ({
+    const subItems = item.subItems?.map((sub) => ({
         ...sub,
         allowedProfiles: sub.allowedProfiles ?? profiles,
     }))
@@ -43,9 +52,19 @@ export const sidebarItems: readonly NavSection[] = [
         allowedProfiles: ["Supplier"],
         items: [
             withProfiles({ title: "Prequalification", url: "/dashboard/supplier/prequalification", icon: ShieldCheck, description: "Compliance & onboarding" }, ["Supplier"]),
+            withProfiles({
+                title: "My Applications",
+                url: "/dashboard/supplier/my-applications",
+                icon: FileCheck2,
+                description: "Track your tender, prequalification, and RFQ applications",
+                subItems: [
+                    { title: "Tenders", url: "/dashboard/supplier/my-applications/tenders" },
+                    { title: "Prequalification", url: "/dashboard/supplier/my-applications/prequalification" },
+                    { title: "RFQs", url: "/dashboard/supplier/my-applications/rfqs" },
+                ],
+            }, ["Supplier"]),
             withProfiles({ title: "Find RFQs", url: "/dashboard/supplier/rfqs", icon: ClipboardList, description: "Browse requests for quotation" }, ["Supplier"]),
             withProfiles({ title: "Find Tenders", url: "/dashboard/supplier/tenders", icon: FileText, description: "Explore available tenders" }, ["Supplier"]),
-            withProfiles({ title: "My Bids", url: "/dashboard/supplier/bids", icon: FileCheck2, description: "Track draft and submitted bids" }, ["Supplier"]),
             withProfiles({ title: "All Documents", url: "/dashboard/supplier/documents", icon: FolderOpen, description: "Contracts, files & uploads" }, ["Supplier"]),
         ],
     },

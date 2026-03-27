@@ -16,7 +16,6 @@ export async function GET(request: NextRequest) {
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const accessToken = (session as any).accessToken as string | undefined;
-  const thirdPartyId = (session.user as any)?.thirdPartyId as number | undefined;
   const q = (request.nextUrl.searchParams.get('q') || '').trim();
   const limit = Math.max(1, Math.min(20, parseInt(request.nextUrl.searchParams.get('limit') || '10')));
 
@@ -29,9 +28,7 @@ export async function GET(request: NextRequest) {
 
   tasks.push((async () => {
     try {
-      const apiUrl = new URL(`${erpBase}/api/tenders`);
-      apiUrl.searchParams.set('enforce_invites', 'true');
-      if (thirdPartyId) apiUrl.searchParams.set('third_party_id', String(thirdPartyId));
+      const apiUrl = new URL(`${erpBase}/api/v1/supplier/tenders`);
       apiUrl.searchParams.set('search', q);
       const res = await fetch(apiUrl.toString(), { headers, signal: AbortSignal.timeout(8000) });
       if (!res.ok) return [];
@@ -51,7 +48,6 @@ export async function GET(request: NextRequest) {
   tasks.push((async () => {
     try {
       const apiUrl = new URL(`${erpBase}/api/procurement/rfq-suppliers`);
-      if (thirdPartyId) apiUrl.searchParams.set('third_party_id', String(thirdPartyId));
       const res = await fetch(apiUrl.toString(), { headers, signal: AbortSignal.timeout(8000) });
       if (!res.ok) return [];
       const data = await res.json();

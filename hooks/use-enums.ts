@@ -14,16 +14,18 @@ interface UseEnumsResult {
     refetch: () => void;
 }
 
+const PUBLIC_ENUMS = ['third-party-types', 'BusinessType', 'Gender', 'MaritalStatus', 'Occupation'];
+
 export const useEnums = (endpoint: string): UseEnumsResult => {
-    const { data: session, status } = useSession();
+    const { status } = useSession();
     const [data, setData] = useState<EnumOption[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     const fetchEnums = useCallback(async () => {
-        const isPublic = ['third-party-types', 'BusinessType', 'Gender', 'MaritalStatus', 'Occupation'].includes(endpoint);
+        const isPublic = PUBLIC_ENUMS.includes(endpoint);
         if (status === 'loading' && !isPublic) return;
-        if (!isPublic && !session?.accessToken) {
+        if (!isPublic && status !== 'authenticated') {
             setIsLoading(false);
             setError('Authentication required to fetch data.');
             setData([]);
@@ -33,10 +35,8 @@ export const useEnums = (endpoint: string): UseEnumsResult => {
         setIsLoading(true);
         setError(null);
         try {
-            const headers: Record<string, string> = {};
-            if (session?.accessToken) headers['Authorization'] = `Bearer ${session.accessToken}`;
-            const url = `${process.env.NEXT_PUBLIC_EXTERNAL_API_URL}/api/enums/${endpoint}`;
-            const response = await axios.get(url, { headers });
+            const url = `/api/enums/${encodeURIComponent(endpoint)}`;
+            const response = await axios.get(url, { withCredentials: true });
             if (!Array.isArray(response.data)) {
                 throw new Error('Unexpected response format');
             }
@@ -48,10 +48,10 @@ export const useEnums = (endpoint: string): UseEnumsResult => {
         } finally {
             setIsLoading(false);
         }
-    }, [endpoint, session?.accessToken, status]);
+    }, [endpoint, status]);
 
     useEffect(() => {
-        const isPublic = ['third-party-types', 'BusinessType', 'Gender', 'MaritalStatus', 'Occupation'].includes(endpoint);
+        const isPublic = PUBLIC_ENUMS.includes(endpoint);
         if (isPublic) {
             fetchEnums();
             return;

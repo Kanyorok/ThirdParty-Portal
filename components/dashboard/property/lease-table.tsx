@@ -11,7 +11,7 @@ import { PaginationProvider, usePagination } from "@/components/providers/pagina
 import { useLeaseStore } from "@/store/use-lease-store"
 import { cn } from "@/lib/utils"
 import { useSession } from "next-auth/react"
-import { resolveSessionAccessToken } from "@/lib/auth/resolve-session-access-token"
+import { resolveSessionAccessToken } from "@/lib/auth/server-token"
 
 export default function LeaseTable({ tenantId }: { tenantId?: number }) {
     const router = useRouter()

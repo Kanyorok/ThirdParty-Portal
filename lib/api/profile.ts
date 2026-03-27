@@ -40,23 +40,16 @@ async function parseJson<T>(res: Response): Promise<T | Record<string, unknown>>
   }
 }
 
-function authHeaders(accessToken?: string): HeadersInit {
-  const headers: HeadersInit = {
-    Accept: "application/json",
-  }
-
-  if (accessToken) {
-    headers.Authorization = `Bearer ${accessToken}`
-  }
-
-  return headers
+function defaultHeaders(): HeadersInit {
+  return { Accept: "application/json" }
 }
 
 export const apiService = {
-  async getProfile(accessToken?: string): Promise<UserProfileLike> {
+  async getProfile(): Promise<UserProfileLike> {
     const res = await fetch(`${getApiBaseUrl()}/api/third-party-profile`, {
       method: "GET",
-      headers: authHeaders(accessToken),
+      headers: defaultHeaders(),
+      credentials: "same-origin",
       cache: "no-store",
     })
 
@@ -68,13 +61,14 @@ export const apiService = {
     return (body?.user_profile || body?.userProfile || body?.data || body) as UserProfileLike
   },
 
-  async changePassword(payload: PasswordPayload, accessToken?: string) {
+  async changePassword(payload: PasswordPayload) {
     const res = await fetch(`${getApiBaseUrl()}/api/third-party-profile/password`, {
       method: "PUT",
       headers: {
-        ...authHeaders(accessToken),
+        ...defaultHeaders(),
         "Content-Type": "application/json",
       },
+      credentials: "same-origin",
       body: JSON.stringify({
         current_password: payload.currentPassword,
         new_password: payload.newPassword,
@@ -91,14 +85,13 @@ export const apiService = {
     return body
   },
 
-  async uploadProfilePicture(file: File, accessToken?: string): Promise<UploadProfilePictureResponse> {
+  async uploadProfilePicture(file: File): Promise<UploadProfilePictureResponse> {
     const formData = new FormData()
     formData.append("image", file)
 
-    const headers: HeadersInit = accessToken ? { Authorization: `Bearer ${accessToken}` } : {}
     const res = await fetch("/api/v1/profile/user-image", {
       method: "POST",
-      headers,
+      credentials: "same-origin",
       body: formData,
       cache: "no-store",
     })
@@ -125,12 +118,11 @@ export const apiService = {
     }
   },
 
-  async suspendAccount(accessToken?: string): Promise<DeactivateAccountResponse> {
-    const headers = authHeaders(accessToken)
-
+  async suspendAccount(): Promise<DeactivateAccountResponse> {
     const res = await fetch("/api/third-party-profile", {
       method: "DELETE",
-      headers,
+      headers: defaultHeaders(),
+      credentials: "same-origin",
       cache: "no-store",
     })
 
@@ -143,20 +135,19 @@ export const apiService = {
     return body
   },
 
-  async deactivateAccount(password: string, accessToken?: string): Promise<DeactivateAccountResponse> {
+  async deactivateAccount(password: string): Promise<DeactivateAccountResponse> {
     const trimmedPassword = String(password ?? "").trim()
     if (!trimmedPassword) {
       throw new Error("Password is required to deactivate account")
     }
 
-    const headers = {
-      ...authHeaders(accessToken),
-      "Content-Type": "application/json",
-    }
-
     const res = await fetch("/api/third-party-profile", {
       method: "DELETE",
-      headers,
+      headers: {
+        ...defaultHeaders(),
+        "Content-Type": "application/json",
+      },
+      credentials: "same-origin",
       body: JSON.stringify({
         password: trimmedPassword,
         current_password: trimmedPassword,
@@ -173,13 +164,13 @@ export const apiService = {
     return body
   },
 
-  async deleteAccount(password: string, accessToken?: string): Promise<DeactivateAccountResponse> {
-    return apiService.deactivateAccount(password, accessToken)
+  async deleteAccount(password: string): Promise<DeactivateAccountResponse> {
+    return apiService.deactivateAccount(password)
   },
 }
 
 export const profileService = {
-  async updateProfile(target: "me" | number | string, payload: Record<string, unknown>, accessToken: string) {
+  async updateProfile(target: "me" | number | string, payload: Record<string, unknown>) {
     const baseUrl = getApiBaseUrl()
 
     const portalFields = [
@@ -208,8 +199,8 @@ export const profileService = {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
-        Authorization: `Bearer ${accessToken}`,
       },
+      credentials: "same-origin",
       body: JSON.stringify(body),
       cache: "no-store",
     })

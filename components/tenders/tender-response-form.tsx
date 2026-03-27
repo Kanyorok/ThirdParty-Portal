@@ -14,32 +14,10 @@ import {
   Send
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface Tender {
-  id: number;              // Database Id (t_Tenders.Id)
-  title: string;
-  tenderNo: string;
-  tenderType: string; // 'op' = Open, 'rs' = Restricted
-  submissionDeadline: string;
-}
-
-interface TenderInvitation {
-  InvitationID?: number;
-  invitationID?: number;   // Laravel lowercase
-  TenderId?: number;       // Database Id (t_Tenders.Id) - uppercase  
-  tenderId?: number;       // Laravel lowercase
-  ResponseStatus?: 'pending' | 'accepted' | 'declined' | 'submitted';
-  responseStatus?: 'pending' | 'accepted' | 'declined' | 'submitted'; // Laravel lowercase
-  ResponseDate?: string;
-  responseDate?: string;   // Laravel lowercase
-  DeclineReason?: string;
-  declineReason?: string;  // Laravel lowercase
-  InvitationDate?: string;
-  invitationDate?: string; // Laravel lowercase
-}
+import type { PortalTender, TenderInvitation } from "@/types/tender";
 
 interface TenderResponseFormProps {
-  tender: Tender;
+  tender: PortalTender;
   invitation?: TenderInvitation | null;
   onUpdate?: () => void;
   onStartBid?: () => void;
@@ -62,6 +40,10 @@ export default function TenderResponseForm({
 
   // Component ready for production use
 
+  const tenderId = (tender as any)?.id ?? (tender as any)?.Id;
+  const tenderTypeValue = String((tender as any)?.tenderType ?? (tender as any)?.TenderType ?? "").toLowerCase();
+  const invitationAny = invitation as any;
+
   const handleResponse = async (status: 'accepted' | 'declined') => {
     if (!invitation) {
       toast.error("No invitation found to respond to");
@@ -77,7 +59,7 @@ export default function TenderResponseForm({
 
     try {
       const requestPayload = {
-        tender_id: invitation?.TenderId || invitation?.tenderId || tender.id,
+        tender_id: invitation?.TenderId || invitationAny?.tenderId || tenderId,
         response_status: status,
         decline_reason: status === 'declined' ? declineReason : null,
       };
@@ -188,9 +170,8 @@ export default function TenderResponseForm({
   };
 
   // Check if this is an open tender
-  const tenderTypeKey = String(tender.tenderType || "").toLowerCase();
-  const isOpenTender = tenderTypeKey === 'op' || tenderTypeKey === 'open';
-  const isRestrictedTender = tenderTypeKey === 'rs' || tenderTypeKey === 'restricted';
+  const isOpenTender = tenderTypeValue === 'op' || tenderTypeValue === 'open';
+  const isRestrictedTender = tenderTypeValue === 'rs' || tenderTypeValue === 'restricted';
 
   if (isOpenTender) {
     return null;
@@ -214,8 +195,10 @@ export default function TenderResponseForm({
     );
   }
 
-  const currentStatus = optimisticStatus || invitation?.ResponseStatus || invitation?.responseStatus || 'pending';
+  const currentStatus = String(optimisticStatus || invitation?.ResponseStatus || invitationAny?.responseStatus || 'pending').toLowerCase();
   const canRespond = currentStatus === 'pending' && isRestrictedTender;
+  const isResponseLocked = !canRespond && currentStatus !== 'pending';
+  const isDeclined = currentStatus === 'declined' || currentStatus === 'rejected';
 
   return (
     <div className="space-y-4">
@@ -231,16 +214,27 @@ export default function TenderResponseForm({
                 <p className="text-xs text-slate-600 capitalize">{getStatusText(currentStatus)}</p>
               </div>
             </div>
-            {invitation && (invitation.ResponseDate || invitation.responseDate) && (
+            {isResponseLocked && (
+              <span className="inline-flex items-center rounded-full border border-slate-300 bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-700">
+                Response locked
+              </span>
+            )}
+            {invitation && (invitation.ResponseDate || invitationAny?.responseDate) && (
               <div className="text-xs text-slate-500">
-                Responded on {new Date(invitation.ResponseDate || invitation.responseDate).toLocaleDateString()}
+                Responded on {new Date(invitation.ResponseDate || invitationAny?.responseDate).toLocaleDateString()}
               </div>
             )}
           </div>
 
-          {(invitation?.DeclineReason || invitation?.declineReason) && (
+          {isDeclined && (
             <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
-              <strong>Decline Reason:</strong> {invitation?.DeclineReason || invitation?.declineReason}
+              <strong>Access locked:</strong> Clarifications and bidding locked after decline.
+            </div>
+          )}
+
+          {(invitation?.DeclineReason || invitationAny?.declineReason) && (
+            <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+              <strong>Decline Reason:</strong> {invitation?.DeclineReason || invitationAny?.declineReason}
             </div>
           )}
         </CardContent>

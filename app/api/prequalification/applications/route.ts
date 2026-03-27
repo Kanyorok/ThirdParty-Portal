@@ -1,4 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth-options";
 import { z } from "zod";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
@@ -80,11 +82,14 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ message: "API not configured" }, { status: 500 });
     }
 
-    const authorization = req.headers.get('authorization');
+    const session = await getServerSession(authOptions);
+    const authorization = session?.accessToken
+        ? `Bearer ${session.accessToken}`
+        : req.headers.get('authorization');
 
     if (!authorization) {
         return NextResponse.json(
-            { message: "Authorization header is required" },
+            { message: "Unauthorized" },
             { status: 401 }
         );
     }

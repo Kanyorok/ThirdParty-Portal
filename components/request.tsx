@@ -200,12 +200,12 @@ export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSumma
 
     if (activeProfile === "Supplier") {
         cards.push({
-            title: "My bids",
+            title: "Tender applications",
             count: resolved.myBids,
             icon: FileCheck2,
             description: `${resolved.submittedBids} submitted • ${resolved.draftBids} draft`,
             tone: "indigo",
-            href: "/dashboard/supplier/bids",
+            href: "/dashboard/supplier/my-applications/tenders",
         })
     }
 

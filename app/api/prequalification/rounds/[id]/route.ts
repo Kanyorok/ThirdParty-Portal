@@ -10,13 +10,13 @@ export async function GET(request: NextRequest) {
 
   const url = new URL(request.url)
   const parts = url.pathname.split("/")
-  const id = parts[parts.length - 2]
+  const id = parts[parts.length - 1]
   if (!id) {
     return NextResponse.json({ message: "Round id is required" }, { status: 400 })
   }
 
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/prequalification/rounds/${encodeURIComponent(id)}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/supplier/prequalification/rounds/${encodeURIComponent(id)}`, {
       headers: {
         Accept: "application/json",
         Authorization: `Bearer ${session.accessToken}`,

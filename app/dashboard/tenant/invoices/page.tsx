@@ -18,7 +18,7 @@ import {
     resolveTenantIdFromSessionUser,
 } from "@/lib/profile/resolve-tenant-id"
 import { resolveUserIdFromSessionUser } from "@/lib/profile/resolve-user-id"
-import { resolveSessionAccessToken } from "@/lib/auth/resolve-session-access-token"
+import { resolveSessionAccessToken } from "@/lib/auth/server-token"
 
 function toFiniteNumber(value: unknown): number | null {
     if (typeof value === "number" && Number.isFinite(value)) return value

@@ -16,7 +16,7 @@ import {
   resolveTenantIdFromSessionUser,
 } from "@/lib/profile/resolve-tenant-id"
 import { resolveUserIdFromSessionUser } from "@/lib/profile/resolve-user-id"
-import { resolveSessionAccessToken } from "@/lib/auth/resolve-session-access-token"
+import { resolveSessionAccessToken } from "@/lib/auth/server-token"
 import {
   getLeaseInterests,
   getPaymentFrequencyCodeDetails,

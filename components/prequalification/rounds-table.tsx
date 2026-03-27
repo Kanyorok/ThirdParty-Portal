@@ -10,6 +10,28 @@ import { useRoundsStore } from "@/hooks/use-rounds-store"
 import { isRoundActive, isRoundArchived } from "@/lib/rounds"
 import { cn } from "@/lib/utils"
 
+function deadlineMeta(endDate?: string) {
+    if (!endDate) return { label: "No deadline", tone: "text-slate-500", closed: false, closingSoon: false }
+    const parsed = new Date(endDate)
+    if (Number.isNaN(parsed.getTime())) return { label: "No deadline", tone: "text-slate-500", closed: false, closingSoon: false }
+    const diffMs = parsed.getTime() - Date.now()
+    if (diffMs <= 0) return { label: "Closed", tone: "text-slate-400", closed: true, closingSoon: false }
+    const hoursLeft = Math.ceil(diffMs / (60 * 60 * 1000))
+    if (hoursLeft <= 48) return { label: hoursLeft > 1 ? `${hoursLeft}h left` : "Closing soon", tone: "text-rose-600 font-semibold", closed: false, closingSoon: true }
+    const daysLeft = Math.ceil(diffMs / (24 * 60 * 60 * 1000))
+    if (daysLeft <= 5) return { label: `${daysLeft} days left`, tone: "text-amber-600", closed: false, closingSoon: false }
+    return { label: `${daysLeft} days left`, tone: "text-emerald-600", closed: false, closingSoon: false }
+}
+
+function formatPeriod(startDate?: string, endDate?: string) {
+    const start = startDate ? format(new Date(startDate), "dd MMM yyyy") : null
+    const end = endDate ? format(new Date(endDate), "dd MMM yyyy") : null
+    if (start && end) return `${start} – ${end}`
+    if (start) return `From ${start}`
+    if (end) return `Until ${end}`
+    return "Dates pending"
+}
+
 export default function RoundsTable() {
     const rounds = useRoundsStore((state) => state.rounds)
     const meta = useRoundsStore((state) => state.meta)
@@ -26,9 +48,6 @@ export default function RoundsTable() {
 
     const totalPages = meta.totalPages ?? 1
     const total = meta.total ?? rounds.length
-    const openCount = meta.openCount ?? rounds.filter(isRoundActive).length
-    const archivedCount = Math.max(total - openCount, 0)
-    const appliedCount = rounds.filter((round) => round.hasApplied).length
 
     const handlePageChange = (nextPage: number) => {
         if (nextPage < 1 || nextPage > totalPages) return
@@ -36,180 +55,222 @@ export default function RoundsTable() {
         fetchRounds({ page: nextPage })
     }
 
-    const formatPeriod = (startDate?: string, endDate?: string) => {
-        const start = startDate ? format(new Date(startDate), "dd MMM yyyy") : null
-        const end = endDate ? format(new Date(endDate), "dd MMM yyyy") : null
-        if (start && end) return `${start} - ${end}`
-        if (start) return start
-        if (end) return end
-        return "Dates pending"
-    }
-
-    const statCards = [
-        {
-            label: "Active",
-            value: openCount,
-            tone: "text-indigo-600",
-            accent: "bg-indigo-500/80",
-            surface: "bg-indigo-50/55 border-indigo-200/80"
-        },
-        {
-            label: "Archived",
-            value: archivedCount,
-            tone: "text-amber-700",
-            accent: "bg-amber-500/80",
-            surface: "bg-amber-50/55 border-amber-200/80"
-        },
-        {
-            label: "Applied",
-            value: appliedCount,
-            tone: "text-emerald-700",
-            accent: "bg-emerald-500/80",
-            surface: "bg-emerald-50/55 border-emerald-200/80"
-        }
-    ]
+    /* ── Group into priority (closing soon & unapplied) vs rest ─── */
+    const sections = useMemo(() => {
+        const priority = visibleRounds.filter(
+            (r) => !r.hasApplied && !isRoundArchived(r) && deadlineMeta(r.endDate).closingSoon
+        )
+        const rest = visibleRounds.filter(
+            (r) => !priority.includes(r)
+        )
+        const groups: { id: string; title: string; items: typeof visibleRounds }[] = []
+        if (priority.length) groups.push({ id: "priority", title: "Closing soon — act now", items: priority })
+        if (rest.length) groups.push({ id: "all", title: "All rounds", items: rest })
+        return groups
+    }, [visibleRounds])
 
     return (
-        <section className="space-y-2">
-            <div className="grid gap-2 sm:grid-cols-3">
-                {statCards.map((card) => (
-                    <div
-                        key={card.label}
-                        className={cn(
-                            "relative overflow-hidden rounded-2xl border px-3.5 py-2.5",
-                            card.surface
-                        )}
-                    >
-                        <div className={cn("absolute left-0 top-0 h-0.5 w-full", card.accent)} />
-                        <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                            {card.label}
-                        </div>
-                        <div className={cn("mt-2 text-2xl font-semibold", card.tone)}>{card.value}</div>
-                    </div>
-                ))}
-            </div>
-
+        <section className="space-y-5">
             {loading && visibleRounds.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">
+                <div className="rounded-2xl border border-dashed border-border/50 p-6 text-center text-sm text-muted-foreground">
                     <Loader2 className="mr-2 inline h-4 w-4 animate-spin" />
-                    Loading prequalification rounds...
+                    Loading prequalification rounds…
                 </div>
             ) : null}
 
             {!loading && error ? (
-                <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+                <div className="rounded-2xl border border-rose-200 bg-rose-50/40 p-4 text-sm text-rose-700">
                     {error}
                 </div>
             ) : null}
 
             {!loading && !error && visibleRounds.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">
+                <div className="rounded-2xl border border-dashed border-border/50 p-8 text-center text-sm text-muted-foreground">
                     <Inbox className="mx-auto mb-2 h-5 w-5 text-slate-400" />
-                    No rounds in this filter
+                    No rounds in this view.
                 </div>
             ) : null}
 
-            {!loading && !error
-                ? visibleRounds.map((round) => {
-                    const appliedCategories = round.appliedCategories ?? []
-                    const totalCategories = round.categoryCount ?? round.categories?.length ?? 0
-                    const availableCount = Math.max(totalCategories - appliedCategories.length, 0)
-                    const isArchived = isRoundArchived(round)
-                    const rowAccent = isArchived ? "before:bg-amber-400/80" : "before:bg-indigo-500/80"
+            {!loading && !error && sections.map((section) => (
+                <div key={section.id} className="space-y-2">
+                    {/* Section header */}
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            {section.title}
+                        </h2>
+                        <span className="text-xs tabular-nums text-muted-foreground">{section.items.length}</span>
+                    </div>
 
-                    return (
-                        <article
-                            key={round.id}
-                            className={cn(
-                                "group relative w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-left transition sm:px-5 sm:py-4",
-                                "before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:rounded-l-2xl before:content-['']",
-                                rowAccent,
-                                !isArchived
-                                    ? "hover:border-indigo-200 hover:bg-indigo-50/35"
-                                    : "hover:border-slate-300 hover:bg-slate-50/70"
-                            )}
-                        >
-                            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                                <div className="min-w-0 space-y-1.5">
-                                    <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                                        <span className="font-mono">Round {round.id}</span>
-                                        <span className="h-1 w-1 rounded-full bg-slate-300" />
-                                        <span>{formatPeriod(round.startDate, round.endDate)}</span>
-                                    </div>
+                    {/* Round cards */}
+                    <div className="space-y-2">
+                        {section.items.map((round) => {
+                            const appliedCategories = round.appliedCategories ?? []
+                            const totalCategories = round.categoryCount ?? round.categories?.length ?? 0
+                            const progressPct = totalCategories > 0
+                                ? Math.round((appliedCategories.length / totalCategories) * 100)
+                                : 0
+                            const isArchived = isRoundArchived(round)
+                            const deadline = deadlineMeta(round.endDate)
+                            const isActionable = !isArchived && !deadline.closed
 
-                                    <h3 className="truncate text-base font-semibold text-slate-900 sm:text-lg">
-                                        {round.title}
-                                    </h3>
+                            const rowAccentBorder = deadline.closed
+                                ? "border-l-rose-400"
+                                : isArchived
+                                    ? "border-l-slate-300"
+                                    : deadline.closingSoon
+                                        ? "border-l-amber-400"
+                                        : "border-l-indigo-500"
 
-                                    <p className="line-clamp-1 text-sm text-slate-500">
-                                        {round.description?.split("\n")[0] ?? "Description coming soon."}
-                                    </p>
-
-                                    <div className="flex flex-wrap items-center gap-2 text-xs">
-                                        <StatusBadge status={round.status} />
-                                        <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 font-semibold text-slate-600">
-                                            {totalCategories} categories
-                                        </span>
-                                        <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 font-semibold text-slate-600">
-                                            {round.maxVendors ? `Max ${round.maxVendors} vendors` : "Vendor slots pending"}
-                                        </span>
-                                        <span
+                            return (
+                                <div
+                                    key={round.id}
+                                    className={cn(
+                                        "group flex flex-col gap-3 rounded-2xl border border-l-4 p-4 transition-colors sm:flex-row sm:items-start sm:justify-between",
+                                        isActionable ? "border-primary/30 hover:bg-slate-50/60" : "border-border/60",
+                                        rowAccentBorder
+                                    )}
+                                >
+                                    {/* ── Left: clickable content area ── */}
+                                    <div className="flex min-w-0 flex-1 items-start gap-3">
+                                        {/* Urgency icon */}
+                                        <div
                                             className={cn(
-                                                "inline-flex items-center gap-1 font-medium",
-                                                isArchived
-                                                    ? "text-amber-700"
-                                                    : availableCount > 0
-                                                        ? "text-emerald-700"
-                                                        : "text-slate-600"
+                                                "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border",
+                                                deadline.closed
+                                                    ? "border-rose-200 bg-rose-50/50 text-rose-600"
+                                                    : deadline.closingSoon
+                                                        ? "border-amber-200 bg-amber-50/50 text-amber-600"
+                                                        : isActionable
+                                                            ? "border-emerald-200 bg-emerald-50/50 text-emerald-600"
+                                                            : "border-border/60 text-muted-foreground"
                                             )}
                                         >
-                                            <Timer className="h-3.5 w-3.5" />
-                                            {isArchived
-                                                ? "Archived"
-                                                : availableCount > 0
-                                                    ? `${availableCount} categories open`
-                                                    : "Applied to all categories"}
-                                        </span>
+                                            <Timer className="h-4 w-4" />
+                                        </div>
+
+                                        {/* Text content */}
+                                        <div className="min-w-0 flex-1 space-y-1.5">
+                                            <p className="truncate text-sm font-semibold leading-snug text-foreground">
+                                                {round.title}
+                                            </p>
+
+                                            {/* Description preview */}
+                                            {round.description ? (
+                                                <p className="line-clamp-1 text-xs leading-relaxed text-muted-foreground/80">
+                                                    {round.description}
+                                                </p>
+                                            ) : null}
+
+                                            {/* Metadata chips */}
+                                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                                                <span className="font-mono">Round {round.id}</span>
+                                                <span aria-hidden className="text-border">·</span>
+                                                <span>{formatPeriod(round.startDate, round.endDate)}</span>
+                                                <StatusBadge status={round.status} />
+                                                {round.maxVendors ? (
+                                                    <span className="inline-flex rounded-full border border-border/60 px-2 py-0.5 font-semibold">
+                                                        Max {round.maxVendors} vendors
+                                                    </span>
+                                                ) : null}
+                                                <span className={cn("inline-flex items-center gap-1 font-medium", deadline.tone)}>
+                                                    <Timer className="h-3.5 w-3.5" />
+                                                    {deadline.label}
+                                                </span>
+                                            </div>
+
+                                            {/* Progress bar */}
+                                            {totalCategories > 0 ? (
+                                                <div className="flex items-center gap-2 pt-0.5">
+                                                    <div className="h-1.5 w-24 overflow-hidden rounded-full bg-slate-100">
+                                                        <div
+                                                            className={cn(
+                                                                "h-full rounded-full transition-all",
+                                                                progressPct === 100
+                                                                    ? "bg-emerald-500"
+                                                                    : progressPct > 0
+                                                                        ? "bg-indigo-500"
+                                                                        : "bg-slate-200"
+                                                            )}
+                                                            style={{ width: `${progressPct}%` }}
+                                                        />
+                                                    </div>
+                                                    <span className="text-[11px] tabular-nums text-muted-foreground">
+                                                        {appliedCategories.length}/{totalCategories} applied
+                                                    </span>
+                                                </div>
+                                            ) : null}
+                                        </div>
+                                    </div>
+
+                                    {/* ── Right: CTA ── */}
+                                    <div className="flex shrink-0 items-center gap-2 sm:self-center">
+                                        <CategoryApplications
+                                            round={round}
+                                            variant={isActionable ? "primary" : "outline"}
+                                        />
                                     </div>
                                 </div>
-
-                                <div className="w-full md:w-auto md:min-w-[260px]">
-                                    <CategoryApplications round={round} className="gap-1" />
-                                    <p className="mt-2 text-[11px] text-slate-500">
-                                        {appliedCategories.length}/{totalCategories || 0} categories applied
-                                    </p>
-                                </div>
-                            </div>
-                        </article>
-                    )
-                })
-                : null}
-
-            <div className="flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-500">
-                <div>
-                    Showing {visibleRounds.length} of {total} rounds · page {page} of {totalPages}
+                            )
+                        })}
+                    </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handlePageChange(page - 1)}
-                        disabled={page <= 1}
-                        className="h-9 w-9 rounded-full border border-slate-200 p-0 text-slate-500 hover:border-slate-300 hover:text-slate-700"
-                    >
-                        <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handlePageChange(page + 1)}
-                        disabled={page >= totalPages}
-                        className="h-9 w-9 rounded-full border border-slate-200 p-0 text-slate-500 hover:border-slate-300 hover:text-slate-700"
-                    >
-                        <ChevronRight className="h-4 w-4" />
-                    </Button>
+            ))}
+
+            {/* ── Pagination ── */}
+            {totalPages > 1 ? (
+                <div className="flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-500">
+                    <div>
+                        Showing {visibleRounds.length} of {total} rounds · page {page} of {totalPages}
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handlePageChange(page - 1)}
+                            disabled={page <= 1}
+                            className="h-8 w-8 rounded-full border border-slate-200 p-0 text-slate-500 hover:border-slate-300 hover:text-slate-700"
+                        >
+                            <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        {Array.from({ length: totalPages }, (_, i) => i + 1)
+                            .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+                            .reduce<(number | "…")[]>((acc, p, idx, arr) => {
+                                if (idx > 0 && p - (arr[idx - 1] ?? 0) > 1) acc.push("…")
+                                acc.push(p)
+                                return acc
+                            }, [])
+                            .map((item, idx) =>
+                                item === "…" ? (
+                                    <span key={`ellipsis-${idx}`} className="px-1 text-slate-400">…</span>
+                                ) : (
+                                    <Button
+                                        key={item}
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handlePageChange(item)}
+                                        className={cn(
+                                            "h-8 w-8 rounded-full p-0 text-xs",
+                                            item === page
+                                                ? "border border-primary/40 bg-primary/5 font-semibold text-primary"
+                                                : "text-slate-500 hover:text-slate-700"
+                                        )}
+                                    >
+                                        {item}
+                                    </Button>
+                                )
+                            )}
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handlePageChange(page + 1)}
+                            disabled={page >= totalPages}
+                            className="h-8 w-8 rounded-full border border-slate-200 p-0 text-slate-500 hover:border-slate-300 hover:text-slate-700"
+                        >
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
+                    </div>
                 </div>
-            </div>
+            ) : null}
         </section>
     )
 }

@@ -21,21 +21,36 @@ export type Round = {
 
     supplierEligible?: boolean;
     canApply?: boolean;
+    canApplyToMore?: boolean;
     isClosed?: boolean;
     isExpired?: boolean;
     windowOpen?: boolean;
     isFutureWindow?: boolean;
+    notApplicable?: boolean;
     duplicateWithinRange?: boolean;
     primaryWindowRoundId?: number | null;
     primaryWindowRoundTitle?: string | null;
+    hasClassifications?: boolean;
+    hasRemainingClassifications?: boolean;
 
     categories?: RoundCategory[];
     appliedCategories?: RoundCategory[];
     availableCategories?: RoundCategory[];
     categoryCount?: number;
+    appliedCount?: number;
     unappliedCount?: number;
     hasApplied?: boolean;
 
+    summary?: {
+        approved: number;
+        rejected: number;
+        underReview?: number;
+        under_review?: number;
+        submitted: number;
+        pending: number;
+        notApplied?: number;
+        not_applied?: number;
+    };
     applicationSummary?: {
         total_categories: number;
         applied_categories: number;
@@ -44,10 +59,24 @@ export type Round = {
         pending_categories: number;
         overall_progress: number;
     }
+    sections?: RoundSection[];
     eligibility?: {
         eligible: boolean;
         reason?: string | null;
     }
+}
+
+export type RoundSection = {
+    id?: number | string | null;
+    sectionId?: number | null;
+    name?: string;
+    weight?: number | null;
+    criteria?: {
+        id?: number | string | null;
+        criteriaId?: number | null;
+        maxScore?: number | null;
+        included?: boolean;
+    }[];
 }
 
 export type RoundCategory = {

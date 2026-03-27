@@ -444,16 +444,15 @@ function getDmsDocName(doc: AnyRecord, index: number) {
 }
 
 function getAttachmentUrl(attachment: AnyRecord) {
+  // For RFQ-issued documents, use the proxy download route
+  if (attachment?.id && attachment?.downloadUrl) {
+    return String(attachment.downloadUrl)
+  }
   const raw =
     attachment?.url ??
     attachment?.href ??
     attachment?.downloadUrl ??
     attachment?.download_url ??
-    attachment?.fileUrl ??
-    attachment?.file_url ??
-    attachment?.link ??
-    attachment?.path ??
-    attachment?.Path ??
     null
 
   if (typeof raw !== "string") return null
@@ -564,21 +563,21 @@ function toMoney(value: number, currency?: string) {
   return cur ? `${cur} ${amount}` : amount
 }
 
-const SURFACE_CARD = "space-y-3 py-0"
-const SURFACE_HEADER = "border-b border-border/50 pb-3"
+const SURFACE_CARD = "space-y-4 rounded-2xl border border-slate-200/80 bg-white p-5 md:p-6"
+const SURFACE_HEADER = "border-b border-slate-200/70 pb-3"
 const SOFT_PANEL = "border-l-2 border-border/60 pl-3"
 const SOFT_PANEL_DASHED = "border-l-2 border-dashed border-border/60 pl-3"
 const META_TEXT = "text-muted-foreground"
 const BADGE_BASE =
   "rounded-full border px-2.5 py-1 text-[11px] font-medium"
 const SECONDARY_BUTTON_BASE =
-  "border-border/60 !bg-transparent text-xs font-semibold text-foreground transition-colors hover:!bg-transparent hover:border-indigo-300 hover:text-indigo-700"
+  "border-border/60 !bg-transparent text-xs font-semibold text-foreground transition-all duration-200 hover:!bg-transparent hover:border-indigo-300 hover:text-indigo-700 focus-visible:ring-2 focus-visible:ring-indigo-500/30"
 const SECONDARY_BUTTON_MD = "h-9 rounded-xl px-3"
 const SECONDARY_BUTTON_SM = "h-8 rounded-lg px-3"
 const TAB_TRIGGER_CLASS =
-  "gap-2 rounded-none border-b-2 border-transparent px-0.5 pb-2 pt-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-700 dark:data-[state=active]:text-indigo-300"
+  "gap-2 rounded-xl border border-transparent px-3 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-indigo-500/30 data-[state=active]:border-indigo-200 data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-700"
 const PRIMARY_CTA_BUTTON =
-  "h-11 w-full justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-600 to-blue-600 font-semibold text-white transition-colors hover:from-indigo-700 hover:to-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+  "h-11 w-full justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-600 to-blue-600 font-semibold text-white shadow-sm shadow-indigo-900/10 transition-all duration-200 hover:-translate-y-0.5 hover:from-indigo-700 hover:to-blue-700 hover:shadow-md hover:shadow-indigo-900/20 focus-visible:ring-2 focus-visible:ring-indigo-500/40 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
 
 export function RfqQuotation() {
   const params = useParams<{ rfqId?: string }>()
@@ -679,73 +678,39 @@ export function RfqQuotation() {
     }
   }, [])
 
+  /* ── Derive typed fields from payload (matches API shape) ── */
   const rfq = useMemo(() => {
-    const p: AnyRecord | null = payload as any
-    return (
-      p?.rfq ??
-      p?.invitation ??
-      p?.rfqInvitation ??
-      p?.data?.rfq ??
-      p?.data?.invitation ??
-      p?.data ??
-      null
-    )
+    const p = payload as AnyRecord | null
+    // GET /supplier/rfqs/{rfq} returns the invitation object directly (or under .data)
+    const root = p?.data ?? p
+    return root?.rfq ?? null
   }, [payload])
 
   const rfqIdValue = useMemo(() => {
-    const raw = String(rfq?.id ?? rfq?.rfqId ?? rfqId).trim()
+    const p = payload as AnyRecord | null
+    const root = p?.data ?? p
+    const raw = String(root?.rfqId ?? rfq?.id ?? rfqId).trim()
     const n = Number(raw)
     return Number.isFinite(n) ? n : raw
-  }, [rfq?.id, rfq?.rfqId, rfqId])
+  }, [payload, rfq?.id, rfqId])
 
   const lines = useMemo(() => {
-    const p: AnyRecord | null = payload as any
-    const candidates = [
-      p?.lines,
-      p?.rfq?.lines,
-      p?.rfq?.rfqLines,
-      p?.rfq?.items,
-      p?.items,
-      p?.data?.lines,
-      p?.data?.items,
-    ]
-    for (const c of candidates) {
-      if (Array.isArray(c)) return c as AnyRecord[]
-    }
-    return [] as AnyRecord[]
-  }, [payload])
+    const rfqLines = rfq?.rfqLines
+    return Array.isArray(rfqLines) ? (rfqLines as AnyRecord[]) : ([] as AnyRecord[])
+  }, [rfq])
 
   const attachments = useMemo(() => {
-    const p: AnyRecord | null = payload as any
-    return pickArray([
-      p?.attachments,
-      p?.rfq?.attachments,
-      p?.data?.attachments,
-      p?.data?.rfq?.attachments,
-    ])
-  }, [payload])
+    return rfq?.documents ?? []
+  }, [rfq])
 
   const clarificationsFromPayload = useMemo(() => {
-    const p: AnyRecord | null = payload as any
-    return pickArray([
-      p?.clarifications,
-      p?.rfq?.clarifications,
-      p?.data?.clarifications,
-      p?.data?.rfq?.clarifications,
-    ])
-  }, [payload])
+    return [] as AnyRecord[] // clarifications come from a separate endpoint
+  }, [])
 
   const supplierResponse = useMemo(() => {
-    const p: AnyRecord | null = payload as any
-    return (
-      p?.supplierResponse ??
-      p?.supplier_response ??
-      p?.data?.supplierResponse ??
-      p?.data?.supplier_response ??
-      p?.rfq?.supplierResponse ??
-      p?.rfq?.supplier_response ??
-      null
-    )
+    const p = payload as AnyRecord | null
+    const root = p?.data ?? p
+    return root?.myResponse ?? null
   }, [payload])
 
   const clarifications = useMemo(() => {
@@ -754,8 +719,7 @@ export function RfqQuotation() {
     const seen = new Set<string>()
 
     merged.forEach((c, idx) => {
-      const id =
-        c?.id ?? c?.Id ?? c?.clarificationId ?? c?.ClarificationId ?? c?.clarification_id ?? null
+      const id = c?.Id ?? c?.id ?? null
       const msg = getClarificationMessage(c, idx)
       const key = id != null ? `id:${String(id)}` : `msg:${msg.toLowerCase()}`
       if (seen.has(key)) return
@@ -766,33 +730,22 @@ export function RfqQuotation() {
     return out
   }, [clarificationsFetched, clarificationsFromPayload])
 
-  const submissionDeadline =
-    rfq?.submissionDeadline ??
-    rfq?.submission_deadline ??
-    rfq?.SubmissionDeadline ??
-    rfq?.deadline ??
-    null
+  const submissionDeadline = (() => {
+    const p = payload as AnyRecord | null
+    const root = p?.data ?? p
+    return root?.submissionDeadline ?? rfq?.submissionDeadline ?? null
+  })()
 
   const deadline = useMemo(() => deadlineMeta(submissionDeadline), [submissionDeadline])
   const deadlineDate = deadline.date
 
-  const rfqStatusValue = rfq?.status ?? payload?.status ?? ""
-  const invitationStatusValue =
-    rfq?.invitationStatus ??
-    rfq?.invitation_status ??
-    rfq?.InvitationStatus ??
-    payload?.invitationStatus ??
-    payload?.invitation_status ??
-    payload?.InvitationStatus ??
-    ""
-  const awardStatusValue =
-    rfq?.awardStatus ??
-    rfq?.award_status ??
-    rfq?.AwardStatus ??
-    payload?.awardStatus ??
-    payload?.award_status ??
-    payload?.AwardStatus ??
-    ""
+  const rfqStatusValue = rfq?.status ?? ""
+  const invitationStatusValue = (() => {
+    const p = payload as AnyRecord | null
+    const root = p?.data ?? p
+    return String(root?.invitationStatus ?? "")
+  })()
+  const awardStatusValue = ""
 
   const lockedByAwarded = [
     rfqStatusValue,
@@ -814,6 +767,8 @@ export function RfqQuotation() {
     : lockedByStatus
       ? "Your quotation has already been submitted."
       : `This RFQ is closed${lockedByDeadline ? " (deadline passed)" : ""}.`
+  const canUploadDocs = !isLocked && supplierResponse?.canUploadDocuments === true
+  const canDeleteDocs = !isLocked && supplierResponse?.canDeleteDocuments === true
   const submittedAtDate = submissionSummary
     ? new Date(submissionSummary.submittedAt)
     : null
@@ -902,12 +857,27 @@ export function RfqQuotation() {
     setDmsDocs([])
     setDmsDocsError(null)
     setDmsDocsLoading(false)
-    setQuoteDocuments([])
     setDmsPickerResults([])
     setDmsPickerError(null)
     setDmsPickerLoading(false)
     setDmsPickerSelected({})
-  }, [normalizedRfqId])
+    // Populate quoteDocuments from myResponse.documents if available
+    const responseDocs = supplierResponse?.documents
+    if (Array.isArray(responseDocs) && responseDocs.length > 0) {
+      setQuoteDocuments(
+        responseDocs.map((doc: any) => ({
+          id: doc.id,
+          name: doc.name ?? "Document",
+          previewUrl: doc.downloadUrl ?? null,
+          repository: null,
+          version: null,
+          source: "dms" as const,
+        }))
+      )
+    } else {
+      setQuoteDocuments([])
+    }
+  }, [normalizedRfqId, supplierResponse])
 
   useEffect(() => {
     if (!normalizedRfqId) return
@@ -1042,7 +1012,7 @@ export function RfqQuotation() {
   }, [enrichedLines])
 
   useEffect(() => {
-    const cur = String(rfq?.currency ?? rfq?.Currency ?? rfq?.currencyCode ?? "").trim()
+    const cur = String(supplierResponse?.currency ?? "").trim()
     if (cur && !currencyTouched) {
       setQuoteCurrency(cur)
     }
@@ -1079,16 +1049,12 @@ export function RfqQuotation() {
   }, [])
 
   const supplierIdValue = useMemo(() => {
-    const raw =
-      rfq?.supplierId ??
-      rfq?.supplier_id ??
-      rfq?.SupplierId ??
-      rfq?.supplier?.id ??
-      rfq?.supplier?.Id ??
-      null
+    const p = payload as AnyRecord | null
+    const root = p?.data ?? p
+    const raw = root?.supplierId ?? rfq?.supplierId ?? null
     const n = Number(raw)
     return Number.isFinite(n) ? n : null
-  }, [rfq])
+  }, [payload, rfq])
 
   const setLine = (lineId: string, patch: Partial<QuoteLine>) => {
     setQuoteLines((prev) => {
@@ -1195,24 +1161,10 @@ export function RfqQuotation() {
     meta: ReturnType<typeof validateSubmitMeta>,
     asDraft: boolean
   ) => {
-    const rfqIdValue = (() => {
-      const raw = String(rfq?.id ?? rfq?.rfqId ?? rfqId).trim()
-      const n = Number(raw)
-      return Number.isFinite(n) ? n : raw
-    })()
-
     const items = enrichedLines.map((l) => {
-      const rawLineId = String(
-        l.raw?.rfqLineId ??
-        l.raw?.rfq_line_id ??
-        l.raw?.lineId ??
-        l.raw?.line_id ??
-        l.raw?.id ??
-        l.raw?.Id ??
-        l.id
-      ).trim()
+      const rawLineId = String(l.raw?.id ?? l.id).trim()
       const parsedLineId = Number(rawLineId)
-      const rfqLineIdValue =
+      const rfqLineId =
         Number.isFinite(parsedLineId) && Number.isInteger(parsedLineId)
           ? parsedLineId
           : rawLineId || l.id
@@ -1221,60 +1173,15 @@ export function RfqQuotation() {
       const quotedPrice = parsePositiveNumber(l.unitPrice) ?? 0
       const totalPayable = qty * quotedPrice
 
-      return {
-        rfqLineId: rfqLineIdValue,
-        rfq_line_id: rfqLineIdValue,
-        quantity: qty,
-        qty,
-        quotedPrice,
-        quoted_price: quotedPrice,
-        totalPayable,
-        total_payable: totalPayable,
-        unitPrice: quotedPrice,
-        unit_price: quotedPrice,
-        remarks: null,
-      }
+      return { rfqLineId, quotedPrice, totalPayable }
     })
 
-    const linePayload = items.map((it) => ({
-      lineId: String((it as any).rfqLineId ?? ""),
-      rfqLineId: (it as any).rfqLineId,
-      rfq_line_id: (it as any).rfq_line_id,
-      quantity: (it as any).quantity,
-      qty: (it as any).qty,
-      unitPrice: (it as any).quotedPrice,
-      unit_price: (it as any).quoted_price,
-      quotedPrice: (it as any).quotedPrice,
-      quoted_price: (it as any).quoted_price,
-      totalPayable: (it as any).totalPayable,
-      total_payable: (it as any).total_payable,
-      remarks: null,
-    }))
-
     return {
-      rfqId: rfqIdValue,
-      rfq_id: rfqIdValue,
-      supplierId: supplierIdValue,
-      supplier_id: supplierIdValue,
+      rfqId: typeof rfqIdValue === "number" ? rfqIdValue : Number(rfqIdValue),
       currency: String(meta.currency).trim().toUpperCase(),
       durationDays: meta.duration,
-      duration_days: meta.duration,
       isDraft: asDraft,
-      is_draft: asDraft,
-      status: asDraft ? "draft" : "submitted",
-      remarks: remarks || null,
-      submissionDate: new Date().toISOString(),
-      submission_date: new Date().toISOString(),
-      documents:
-        quoteDocuments.length > 0
-          ? quoteDocuments.map((d) => ({ id: d.id, name: d.name, source: d.source }))
-          : undefined,
-      documentIds: quoteDocuments.length > 0 ? quoteDocuments.map((d) => d.id) : undefined,
-      document_ids: quoteDocuments.length > 0 ? quoteDocuments.map((d) => d.id) : undefined,
       items,
-      lineItems: items,
-      line_items: items,
-      lines: linePayload,
     }
   }
 
@@ -1411,7 +1318,7 @@ export function RfqQuotation() {
 
       const summaryCurrency =
         quoteCurrency ||
-        String(rfq?.currency ?? rfq?.Currency ?? rfq?.currencyCode ?? "").trim()
+        String(supplierResponse?.currency ?? "").trim()
       const summaryData: SubmissionSummary = {
         pricedLines: totals.filledCount,
         totalLines: totals.totalLines,
@@ -1454,10 +1361,10 @@ export function RfqQuotation() {
         description: lockedByAwarded
           ? "This RFQ has already been awarded."
           : lockedByStatus
-          ? "Your quotation is already submitted."
-          : lockedByDeadline
-            ? "The submission deadline has passed."
-            : "This RFQ is closed.",
+            ? "Your quotation is already submitted."
+            : lockedByDeadline
+              ? "The submission deadline has passed."
+              : "This RFQ is closed.",
       })
       return
     }
@@ -1467,6 +1374,10 @@ export function RfqQuotation() {
       toast.error("Enter a clarification question")
       return
     }
+    if (supplierIdValue == null) {
+      toast.error("Missing supplier context for clarification")
+      return
+    }
 
     setAskingClarification(true)
     try {
@@ -1474,17 +1385,16 @@ export function RfqQuotation() {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
-          rfqId: rfqIdValue,
-          rfq_id: rfqIdValue,
-          message,
+          rfqId: typeof rfqIdValue === "number" ? rfqIdValue : Number(rfqIdValue),
+          supplierId: supplierIdValue,
           question: message,
-          clarification: message,
         }),
       })
 
       const json = await res.json().catch(() => ({}))
       if (!res.ok) {
-        throw new Error(json?.message ?? json?.error ?? `Failed to send clarification (HTTP ${res.status})`)
+        const fieldErrors = formatValidationErrors(json?.errors)
+        throw new Error(fieldErrors ?? json?.message ?? json?.error ?? `Failed to send clarification (HTTP ${res.status})`)
       }
 
       toast.success("Clarification sent", {
@@ -1543,15 +1453,12 @@ export function RfqQuotation() {
     }
   }
 
-  const rfqNumber = String(rfq?.rfqNumber ?? rfq?.number ?? rfq?.ref ?? rfq?.rfqRef ?? "")
-    .trim()
-  const currency = String(rfq?.currency ?? rfq?.Currency ?? rfq?.currencyCode ?? "").trim()
+  const rfqNumber = String(rfq?.rfqNumber ?? "").trim()
+  const currency = String(supplierResponse?.currency ?? "").trim()
 
   const loadDmsDocs = async () => {
     if (dmsDocsLoading) return
-
-    const q = String(rfqNumber || rfqIdValue || "").trim()
-    if (!q) {
+    if (!rfqIdValue) {
       toast.error("Missing RFQ reference")
       return
     }
@@ -1559,14 +1466,7 @@ export function RfqQuotation() {
     setDmsDocsLoading(true)
     setDmsDocsError(null)
     try {
-      const params = new URLSearchParams()
-      params.set("q", q)
-      params.set("page", "1")
-      params.set("limit", "10")
-      params.set("rfqId", String(rfqIdValue))
-      params.set("rfq_id", String(rfqIdValue))
-
-      const res = await fetch(`/api/dms/documents?${params.toString()}`, {
+      const res = await fetch(`/api/procurement/rfq-response-documents/${encodeURIComponent(String(rfqIdValue))}`, {
         headers: { Accept: "application/json" },
         cache: "no-store",
       })
@@ -1575,11 +1475,6 @@ export function RfqQuotation() {
         throw new Error(json?.error ?? json?.message ?? `Failed to load documents (HTTP ${res.status})`)
       }
       setDmsDocs(Array.isArray(json?.data) ? (json.data as AnyRecord[]) : [])
-      if (!Array.isArray(json?.data) || json.data.length === 0) {
-        toast.message("No documents found", {
-          description: "No matching documents were found in DMS for this RFQ.",
-        })
-      }
     } catch (e: any) {
       setDmsDocsError(e?.message || "Failed to load documents")
     } finally {
@@ -1587,10 +1482,9 @@ export function RfqQuotation() {
     }
   }
 
-  const searchDmsPicker = async (query: string) => {
+  const searchDmsPicker = async (_query: string) => {
     if (dmsPickerLoading) return
-    const q = query.trim()
-    if (!q) {
+    if (!rfqIdValue) {
       setDmsPickerResults([])
       return
     }
@@ -1598,14 +1492,7 @@ export function RfqQuotation() {
     setDmsPickerLoading(true)
     setDmsPickerError(null)
     try {
-      const params = new URLSearchParams()
-      params.set("q", q)
-      params.set("page", "1")
-      params.set("limit", "20")
-      params.set("rfqId", String(rfqIdValue))
-      params.set("rfq_id", String(rfqIdValue))
-
-      const res = await fetch(`/api/dms/documents?${params.toString()}`, {
+      const res = await fetch(`/api/procurement/rfq-response-documents/${encodeURIComponent(String(rfqIdValue))}`, {
         headers: { Accept: "application/json" },
         cache: "no-store",
       })
@@ -1652,9 +1539,9 @@ export function RfqQuotation() {
 
       const name = getDmsDocName(doc, idx)
       const previewUrl =
-        typeof doc?.previewUrl === "string" && doc.previewUrl.trim()
-          ? doc.previewUrl.trim()
-          : `/api/dms/preview?id=${encodeURIComponent(String(docId))}&documentId=${encodeURIComponent(String(docId))}&document_id=${encodeURIComponent(String(docId))}`
+        typeof doc?.downloadUrl === "string" && doc.downloadUrl.trim()
+          ? doc.downloadUrl.trim()
+          : null
 
       next.push({
         id: docId,
@@ -1681,13 +1568,34 @@ export function RfqQuotation() {
     })
   }
 
-  const removeQuoteDocument = (id: string | number) => {
+  const removeQuoteDocument = async (id: string | number) => {
+    // Only call delete API for real documents (not temp uploads)
+    if (!String(id).startsWith("tmp:") && !canDeleteDocs) {
+      toast.error("Documents cannot be deleted after submission")
+      return
+    }
+    if (!String(id).startsWith("tmp:")) {
+      try {
+        const res = await fetch(
+          `/api/procurement/rfq-response-documents/${encodeURIComponent(String(rfqIdValue))}/${encodeURIComponent(String(id))}`,
+          { method: "DELETE" }
+        )
+        if (!res.ok) {
+          const json = await res.json().catch(() => ({}))
+          toast.error(json?.message ?? "Failed to delete document")
+          return
+        }
+      } catch {
+        toast.error("Failed to delete document")
+        return
+      }
+    }
     setQuoteDocuments((prev) => prev.filter((d) => String(d.id) !== String(id)))
   }
 
   const uploadFilesToDms = async (files: FileList | null) => {
     if (!files || files.length === 0) return
-    if (isLocked) return
+    if (isLocked || !canUploadDocs) return
 
     const list = Array.from(files).slice(0, 5)
     if (files.length > 5) {
@@ -1706,12 +1614,8 @@ export function RfqQuotation() {
       try {
         const fd = new FormData()
         fd.append("file", file)
-        fd.append("name", file.name)
-        fd.append("title", file.name)
-        fd.append("rfqId", String(rfqIdValue))
-        fd.append("rfq_id", String(rfqIdValue))
 
-        const res = await fetch("/api/dms/documents", {
+        const res = await fetch(`/api/procurement/rfq-response-documents/${encodeURIComponent(String(rfqIdValue))}`, {
           method: "POST",
           body: fd,
         })
@@ -1722,22 +1626,11 @@ export function RfqQuotation() {
         }
 
         const created = json?.data ?? json
-        const newId =
-          created?.id ??
-          created?.Id ??
-          created?.documentId ??
-          created?.DocumentId ??
-          created?.document_id ??
-          null
+        const newId = created?.id ?? null
 
         if (newId == null) {
           throw new Error("Upload succeeded but document id was not returned")
         }
-
-        const previewUrl =
-          typeof created?.previewUrl === "string" && created.previewUrl.trim()
-            ? created.previewUrl.trim()
-            : `/api/dms/preview?id=${encodeURIComponent(String(newId))}&documentId=${encodeURIComponent(String(newId))}&document_id=${encodeURIComponent(String(newId))}`
 
         setQuoteDocuments((prev) =>
           prev.map((d) =>
@@ -1745,9 +1638,9 @@ export function RfqQuotation() {
               ? {
                 ...d,
                 id: newId,
-                previewUrl,
-                repository: typeof created?.repository === "string" ? created.repository : null,
-                version: created?.version ?? null,
+                previewUrl: created?.downloadUrl ?? null,
+                repository: null,
+                version: null,
                 uploading: false,
               }
               : d
@@ -1772,6 +1665,7 @@ export function RfqQuotation() {
 
   const missingSet = useMemo(() => new Set(missingLineIds), [missingLineIds])
   const formattedDeadline = deadlineDate ? format(deadlineDate, "PP p") : null
+  const formattedDeadlineCompact = deadlineDate ? format(deadlineDate, "dd MMM yyyy") : null
   const docsUploading = quoteDocuments.some((d) => d.uploading)
   const canSubmit =
     !isLocked &&
@@ -1790,6 +1684,10 @@ export function RfqQuotation() {
     () => Object.values(dmsPickerSelected).filter(Boolean).length,
     [dmsPickerSelected]
   )
+
+  const rfqTone = badgeTone("rfq", rfqStatusValue)
+  const invitationTone = badgeTone("invitation", invitationStatusValue)
+  const responseTone = badgeTone("response", supplierResponse?.status)
 
   const onSubmitClick = () => {
     if (isLocked) {
@@ -1889,55 +1787,90 @@ export function RfqQuotation() {
 
   return (
     <section className="w-full space-y-5 pb-20 md:pb-0 [&_*]:shadow-none [&_*]:drop-shadow-none">
-      <header className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 text-primary">
-              <ListChecks className="h-4 w-4" />
+      <header className="animate-in fade-in-0 slide-in-from-top-1 duration-500 overflow-hidden rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white via-slate-50 to-indigo-50/40 p-5 md:p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200/70 bg-indigo-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-indigo-700">
+              <ListChecks className="h-3.5 w-3.5" />
+              RFQ quotation workspace
             </div>
-            <h1 className="text-xl font-semibold tracking-tight text-foreground">RFQ Quotation</h1>
+
+            <div>
+              <h1 className="text-xl font-semibold tracking-tight text-slate-900 md:text-2xl">
+                {String(rfq?.comments ?? "").trim() || "RFQ Quotation"}
+              </h1>
+              <p className="mt-1 text-sm text-slate-600">
+                {rfqNumber || `RFQ ${String(rfqIdValue)}`} • Build a complete commercial response and submit with confidence.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="outline" className={cn(BADGE_BASE, rfqTone.className)}>
+                RFQ: {rfqTone.label}
+              </Badge>
+              <Badge variant="outline" className={cn(BADGE_BASE, invitationTone.className)}>
+                Invitation: {invitationTone.label}
+              </Badge>
+              {supplierResponse?.status ? (
+                <Badge variant="outline" className={cn(BADGE_BASE, responseTone.className)}>
+                  Response: {responseTone.label}
+                </Badge>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              className="h-9 rounded-xl border-border/60 !bg-white px-3 text-xs font-semibold hover:!bg-white"
+              onClick={() => router.push("/dashboard/supplier/rfqs")}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to RFQs
+            </Button>
+            {!isLocked ? (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={saveDraft}
+                  disabled={submitting !== null}
+                  className="h-9 rounded-xl border-border/60 !bg-white px-3 text-xs font-semibold hover:!bg-white"
+                >
+                  {submitting === "draft" ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4" />
+                  )}
+                  Save Draft
+                </Button>
+                <Button
+                  onClick={onSubmitClick}
+                  disabled={!canSubmit}
+                  className="h-9 rounded-xl bg-primary px-3 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+                >
+                  Submit Response
+                  <ArrowUpRight className="ml-1.5 h-4 w-4" />
+                </Button>
+              </>
+            ) : null}
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex items-center gap-2 rounded-full border border-border/60 px-3 py-1.5 text-xs font-medium text-muted-foreground">
-            <span>Total lines: {totals.totalLines}</span>
-            <span aria-hidden>-</span>
-            <span>Priced: {totals.filledCount}</span>
+        <div className="mt-4 grid gap-2 sm:grid-cols-3">
+          <div className="rounded-xl border border-slate-200/80 bg-white/85 p-3">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Progress</div>
+            <div className="mt-1 text-sm font-semibold text-slate-900">{totals.filledCount}/{totals.totalLines} lines priced</div>
           </div>
-          <Button
-            variant="outline"
-            className="h-9 rounded-xl border-border/60 !bg-transparent px-3 text-xs font-semibold hover:!bg-transparent"
-            onClick={() => router.push("/dashboard/supplier/rfqs")}
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to RFQs
-          </Button>
-          {!isLocked ? (
-            <>
-              <Button
-                variant="outline"
-                onClick={saveDraft}
-                disabled={submitting !== null}
-                className="h-9 rounded-xl border-border/60 !bg-transparent px-3 text-xs font-semibold hover:!bg-transparent"
-              >
-                {submitting === "draft" ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Save className="h-4 w-4" />
-                )}
-                Save Draft
-              </Button>
-              <Button
-                onClick={onSubmitClick}
-                disabled={!canSubmit}
-                className="h-9 rounded-xl bg-primary px-3 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
-              >
-                Submit Response
-                <ArrowUpRight className="ml-1.5 h-4 w-4" />
-              </Button>
-            </>
-          ) : null}
+          <div className="rounded-xl border border-slate-200/80 bg-white/85 p-3">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Deadline</div>
+            <div className={cn("mt-1 text-sm font-semibold", deadline.tone)}>
+              {formattedDeadlineCompact ?? "Not set"}
+            </div>
+          </div>
+          <div className="rounded-xl border border-slate-200/80 bg-white/85 p-3">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Quote total</div>
+            <div className="mt-1 text-sm font-semibold text-slate-900">{toMoney(totals.grandTotal, quoteCurrency || currency)}</div>
+          </div>
         </div>
       </header>
 
@@ -2006,7 +1939,7 @@ export function RfqQuotation() {
       <div className="space-y-6">
         <main>
           <Tabs defaultValue="pricing" className="space-y-6">
-            <TabsList className="h-auto w-full flex-wrap justify-start gap-4 border-b border-border/50 pb-1 text-muted-foreground sm:flex-nowrap">
+            <TabsList className="animate-in fade-in-0 slide-in-from-bottom-1 h-auto w-full flex-wrap justify-start gap-2 rounded-2xl border border-slate-200/80 bg-white p-2 text-muted-foreground duration-500 sm:flex-nowrap" style={{ animationDelay: "60ms" }}>
               <TabsTrigger
                 value="pricing"
                 className={TAB_TRIGGER_CLASS}
@@ -2037,7 +1970,7 @@ export function RfqQuotation() {
             </TabsList>
 
             <TabsContent value="pricing" className="space-y-6">
-              <section className={SURFACE_CARD}>
+              <section className={cn(SURFACE_CARD, "animate-in fade-in-0 slide-in-from-bottom-1 duration-500")} style={{ animationDelay: "90ms" }}>
                 <div className={SURFACE_HEADER}>
                   <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                     <h2 className="text-base font-semibold">Line items</h2>
@@ -2083,23 +2016,23 @@ export function RfqQuotation() {
                     </div>
                   ) : (
                     <>
-                      <div className="hidden overflow-x-auto md:block">
+                      <div className="hidden overflow-x-auto rounded-2xl border border-slate-200/80 bg-white md:block">
                         <Table className="text-[13px]">
                           <TableHeader>
-                            <TableRow className="border-border/50">
-                              <TableHead className={`px-3 py-2 text-[11px] font-semibold uppercase ${META_TEXT}`}>
+                            <TableRow className="border-slate-200/80 bg-slate-50/80">
+                              <TableHead className="px-3 py-2 text-[11px] font-semibold uppercase text-slate-500">
                                 Item
                               </TableHead>
-                              <TableHead className={`w-[132px] px-3 py-2 text-[11px] font-semibold uppercase ${META_TEXT}`}>
+                              <TableHead className="w-[132px] px-3 py-2 text-[11px] font-semibold uppercase text-slate-500">
                                 Qty
                               </TableHead>
-                              <TableHead className={`w-[88px] px-3 py-2 text-[11px] font-semibold uppercase ${META_TEXT}`}>
+                              <TableHead className="w-[88px] px-3 py-2 text-[11px] font-semibold uppercase text-slate-500">
                                 Currency
                               </TableHead>
-                              <TableHead className={`w-[156px] px-3 py-2 text-[11px] font-semibold uppercase ${META_TEXT}`}>
+                              <TableHead className="w-[156px] px-3 py-2 text-[11px] font-semibold uppercase text-slate-500">
                                 Unit price
                               </TableHead>
-                              <TableHead className={`w-[150px] px-3 py-2 text-[11px] font-semibold uppercase ${META_TEXT}`}>
+                              <TableHead className="w-[150px] px-3 py-2 text-[11px] font-semibold uppercase text-slate-500">
                                 Total
                               </TableHead>
                             </TableRow>
@@ -2116,15 +2049,15 @@ export function RfqQuotation() {
                                 <TableRow
                                   key={l.id}
                                   className={cn(
-                                    "align-middle border-border/40 transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-900/30",
-                                    isMissing && "bg-destructive/10 hover:bg-destructive/10"
+                                    "align-middle border-slate-100/80 transition-colors hover:bg-indigo-50/40",
+                                    isMissing && "bg-rose-50 hover:bg-rose-50"
                                   )}
                                 >
                                   <TableCell className="px-3 py-2.5">
                                     <div className="space-y-1">
-                                      <div className="text-[13px] font-medium leading-snug">{l.label}</div>
+                                      <div className="text-[13px] font-semibold leading-snug text-slate-900">{l.label}</div>
                                       {l.uom ? (
-                                        <div className={`text-[11px] ${META_TEXT}`}>
+                                        <div className="text-[11px] text-slate-500">
                                           UoM: {l.uom}
                                         </div>
                                       ) : null}
@@ -2141,7 +2074,7 @@ export function RfqQuotation() {
                                       }
                                       placeholder="0"
                                       className={cn(
-                                        "h-8 text-xs",
+                                        "h-8 text-xs transition-all duration-200 focus-visible:ring-2 focus-visible:ring-indigo-500/30",
                                         isMissing &&
                                         "border-destructive focus-visible:ring-destructive"
                                       )}
@@ -2167,7 +2100,7 @@ export function RfqQuotation() {
                                       }
                                       placeholder="0.00"
                                       className={cn(
-                                        "h-8 text-xs",
+                                        "h-8 text-xs transition-all duration-200 focus-visible:ring-2 focus-visible:ring-indigo-500/30",
                                         isMissing &&
                                         "border-destructive focus-visible:ring-destructive"
                                       )}
@@ -2175,7 +2108,7 @@ export function RfqQuotation() {
                                   </TableCell>
 
                                   <TableCell className="w-[150px] px-3 py-2.5">
-                                    <div className="text-[13px] font-semibold tabular-nums">
+                                    <div className="text-[13px] font-semibold tabular-nums text-slate-900">
                                       {lineTotal == null
                                         ? "—"
                                         : toMoney(lineTotal, currency)}
@@ -2201,8 +2134,8 @@ export function RfqQuotation() {
                             <div
                               key={l.id}
                               className={cn(
-                                "border-b border-border/50 px-0 py-3 space-y-2.5",
-                                isMissing && "border-destructive/50"
+                                "space-y-2.5 rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white to-slate-50/70 p-3",
+                                isMissing && "border-destructive/50 bg-destructive/5"
                               )}
                             >
                               <div className="flex items-start justify-between gap-4">
@@ -2232,7 +2165,7 @@ export function RfqQuotation() {
                                     }
                                     placeholder="0"
                                     className={cn(
-                                      "h-9 text-sm",
+                                      "h-9 text-sm transition-all duration-200 focus-visible:ring-2 focus-visible:ring-indigo-500/30",
                                       isMissing &&
                                       "border-destructive focus-visible:ring-destructive"
                                     )}
@@ -2256,7 +2189,7 @@ export function RfqQuotation() {
                                     }
                                     placeholder="0.00"
                                     className={cn(
-                                      "h-9 text-sm",
+                                      "h-9 text-sm transition-all duration-200 focus-visible:ring-2 focus-visible:ring-indigo-500/30",
                                       isMissing &&
                                       "border-destructive focus-visible:ring-destructive"
                                     )}
@@ -2293,7 +2226,7 @@ export function RfqQuotation() {
                         }}
                         placeholder="30"
                         className={cn(
-                          "h-10 text-sm",
+                          "h-10 text-sm transition-all duration-200 focus-visible:ring-2 focus-visible:ring-indigo-500/30",
                           submitFieldErrors.durationDays &&
                           "border-destructive focus-visible:ring-destructive"
                         )}
@@ -2314,7 +2247,7 @@ export function RfqQuotation() {
                             variant="outline"
                             disabled={isLocked}
                             className={cn(
-                              "h-10 w-full justify-between text-sm font-normal",
+                              "h-10 w-full justify-between text-sm font-normal transition-all duration-200 focus-visible:ring-2 focus-visible:ring-indigo-500/30",
                               submitFieldErrors.currency &&
                               "border-destructive focus-visible:ring-destructive"
                             )}
@@ -2393,7 +2326,7 @@ export function RfqQuotation() {
                                 })
                               }}
                               placeholder="Or type code (e.g. USD)"
-                              className="h-9 text-sm tracking-widest"
+                              className="h-9 text-sm tracking-widest transition-all duration-200 focus-visible:ring-2 focus-visible:ring-indigo-500/30"
                             />
                           </div>
                         </PopoverContent>
@@ -2485,7 +2418,7 @@ export function RfqQuotation() {
             </TabsContent>
 
             <TabsContent value="rfq-docs" className="space-y-6">
-              <section className={SURFACE_CARD}>
+              <section className={cn(SURFACE_CARD, "animate-in fade-in-0 slide-in-from-bottom-1 duration-500")} style={{ animationDelay: "110ms" }}>
                 <div className={SURFACE_HEADER}>
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
@@ -2506,7 +2439,7 @@ export function RfqQuotation() {
                     Attach supporting documents if any.
                   </p>
                 </div>
-                <div className="py-4 space-y-3">
+                <div className="py-4 space-y-4">
                   <input
                     ref={uploadInputRef}
                     type="file"
@@ -2518,26 +2451,31 @@ export function RfqQuotation() {
                     }}
                   />
 
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={isLocked}
-                      onClick={openDmsPicker}
-                      className={cn("font-semibold", SECONDARY_BUTTON_BASE, SECONDARY_BUTTON_SM)}
-                    >
-                      Attach from DMS
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={isLocked}
-                      onClick={() => uploadInputRef.current?.click()}
-                      className={cn("gap-2 font-semibold", SECONDARY_BUTTON_BASE, SECONDARY_BUTTON_SM)}
-                    >
-                      <Upload className="h-4 w-4" />
-                      Upload file
-                    </Button>
+                  <div className="rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white to-slate-50/70 p-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={!canUploadDocs}
+                        onClick={openDmsPicker}
+                        className={cn("font-semibold", SECONDARY_BUTTON_BASE, SECONDARY_BUTTON_SM)}
+                      >
+                        Attach from DMS
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={!canUploadDocs}
+                        onClick={() => uploadInputRef.current?.click()}
+                        className={cn("gap-2 font-semibold", SECONDARY_BUTTON_BASE, SECONDARY_BUTTON_SM)}
+                      >
+                        <Upload className="h-4 w-4" />
+                        Upload file
+                      </Button>
+                    </div>
+                    <p className="mt-2 text-xs text-slate-500">
+                      Documents are optional. Add supporting files to strengthen your bid.
+                    </p>
                   </div>
 
                   {quoteDocuments.length === 0 ? (
@@ -2559,7 +2497,7 @@ export function RfqQuotation() {
                         return (
                           <div
                             key={idKey}
-                            className="flex items-start justify-between gap-3 border-b border-border/50 py-3"
+                            className="flex items-start justify-between gap-3 rounded-xl border border-slate-200/80 bg-slate-50/50 p-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-indigo-50/40"
                           >
                             <div className="min-w-0 space-y-1">
                               <div className="text-sm font-medium text-foreground truncate">
@@ -2584,11 +2522,11 @@ export function RfqQuotation() {
                               <AttachmentActionsMenu
                                 previewUrl={previewUrl}
                                 onVerify={hasRealId ? () => verifyAttachment(d.id, d.name) : null}
-                                onRemove={() => removeQuoteDocument(d.id)}
+                                onRemove={canDeleteDocs ? () => removeQuoteDocument(d.id) : null}
                                 disabled={isLocked}
                                 previewDisabled={d.uploading}
                                 verifyDisabled={d.uploading}
-                                removeDisabled={d.uploading}
+                                removeDisabled={d.uploading || !canDeleteDocs}
                               />
                             </div>
                           </div>
@@ -2602,12 +2540,9 @@ export function RfqQuotation() {
                     </div>
                   )}
 
-                  <div className="text-xs text-slate-600">
-                    Documents are optional. You can submit without attaching anything.
-                  </div>
                   <Separator className="my-1" />
 
-                  <div className="space-y-3">
+                  <div className="space-y-3 rounded-2xl border border-slate-200/80 bg-white p-4">
                     <div className="flex items-center justify-between gap-3">
                       <div className="text-sm font-semibold text-foreground">
                         Reference documents
@@ -2664,7 +2599,7 @@ export function RfqQuotation() {
                               return (
                                 <div
                                   key={`${docId}-${name}`}
-                                  className="flex items-start justify-between gap-4 border-b border-border/50 py-3"
+                                  className="flex items-start justify-between gap-4 rounded-xl border border-slate-200/80 bg-slate-50/50 p-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-indigo-50/40"
                                 >
                                   <div className="min-w-0 space-y-1">
                                     <div className="text-sm font-medium text-foreground truncate">
@@ -2706,7 +2641,7 @@ export function RfqQuotation() {
                           return (
                             <div
                               key={`${idx}-${name}`}
-                              className="flex items-start justify-between gap-4 border-b border-border/50 py-3"
+                              className="flex items-start justify-between gap-4 rounded-xl border border-slate-200/80 bg-slate-50/50 p-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-indigo-50/40"
                             >
                               <div className="min-w-0 space-y-1">
                                 <div className="text-sm font-medium text-foreground truncate">

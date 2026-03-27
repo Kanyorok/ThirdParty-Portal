@@ -73,13 +73,13 @@ export default function RoundApplication({ roundId }: { roundId: number }) {
                         <SelectValue placeholder="CHOOSE TARGET CATEGORY" />
                     </SelectTrigger>
                     <SelectContent className="rounded-none border-2 border-black">
-                        {selectedRound.categories?.map((cat: any) => (
+                        {selectedRound.categories?.map((cat) => (
                             <SelectItem
-                                key={cat.id}
-                                value={String(cat.id)}
+                                key={cat.category_id}
+                                value={String(cat.category_id)}
                                 className="font-bold uppercase italic"
                             >
-                                {cat.name}
+                                {cat.category_name}
                             </SelectItem>
                         ))}
                     </SelectContent>
@@ -118,7 +118,7 @@ export default function RoundApplication({ roundId }: { roundId: number }) {
                             <span className="text-[10px] font-black uppercase truncate pr-4">
                                 {file.name}
                             </span>
-                            <button
+                            <button                                                                                                                                         
                                 onClick={() =>
                                     setFiles(prev => prev.filter((_, idx) => idx !== i))
                                 }
