@@ -98,7 +98,9 @@ export async function POST(request: Request) {
             );
         }
 
-        const laravelEndpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/portal/auth/register`;
+    // Prefer NEXT_PUBLIC_API_URL, fall back to other env vars that may be present in production
+    const baseApi = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_EXTERNAL_API_URL || process.env.API_BASE_URL || '';
+    const laravelEndpoint = `${baseApi.replace(/\/$/, '')}/api/v1/portal/auth/register`;
 
         const response = await fetch(laravelEndpoint, {
             method: "POST",
@@ -109,9 +111,16 @@ export async function POST(request: Request) {
             body: JSON.stringify(body),
         });
 
-        const data = await response.json();
+        let data: any = null;
+        try {
+            data = await response.json().catch(() => null);
+        } catch (e) {
+            console.error('[Register API] Failed to parse JSON from Laravel response', e);
+        }
 
         if (!response.ok) {
+            // Log status and body for debugging in production logs (no sensitive internals)
+            console.error('[Register API] Laravel responded with', { status: response.status, body: data });
             const safeErrors = sanitizeFieldErrors(data?.errors);
             return NextResponse.json(
                 {
