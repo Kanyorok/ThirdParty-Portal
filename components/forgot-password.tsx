@@ -12,6 +12,7 @@ import { Button } from "@/components/common/button"
 import { Input } from "@/components/common/input"
 import { Label } from "@/components/common/label"
 import { Alert, AlertDescription } from "@/components/common/alert"
+import { Spinner } from "@/components/common/spinner"
 import { ContactSection } from "@/components/signin/contact-section"
 import { requestPasswordReset, type AuthResult } from "@/actions/auth-actions"
 import { cn } from "@/lib/utils"
@@ -130,8 +131,8 @@ export function ForgotPasswordForm() {
                         <Button onClick={onResend} variant="outline" className="h-12 w-full rounded-xl text-sm font-semibold" disabled={isSubmitting || isResending}>
                             {isResending ? (
                                 <>
-                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                    Sending...
+                                    <Spinner className="mr-2 h-4 w-4" />
+                                    Sending email
                                 </>
                             ) : (
                                 <>

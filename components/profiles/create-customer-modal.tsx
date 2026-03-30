@@ -3,11 +3,12 @@
 import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { motion } from "framer-motion"
-import { User, Loader2 } from "lucide-react"
+import { User } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/common/dialog"
 import { Button } from "@/components/common/button"
 import { Input } from "@/components/common/input"
 import { Label } from "@/components/common/label"
+import { Spinner } from "@/components/common/spinner"
 import { Textarea } from "@/components/common/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/common/select"
 import { useProfileManagement } from "@/hooks/use-profile-management";
@@ -34,16 +35,17 @@ export function CreateCustomerModal({ open, onOpenChange, onSuccess }: CreateCus
     register,
     handleSubmit,
     formState: { errors },
-    control,
     setValue,
   } = useForm<CustomerFormData>({
     resolver: zodResolver(customerProfileSchema),
     defaultValues: {
       third_party_name: "",
-      email: "",
-      phone: "",
-      physical_address: "",
-      registration_number: "",
+      phone_number: "",
+      alternative_phone: "",
+      shipping_address: "",
+      billing_address: "",
+      country: "",
+      city: "",
     },
   })
 
@@ -54,8 +56,6 @@ export function CreateCustomerModal({ open, onOpenChange, onSuccess }: CreateCus
       onSuccess?.()
     }
   }
-
-  const countryIdValue = useWatch({ control, name: "country_id" })
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -94,74 +94,86 @@ export function CreateCustomerModal({ open, onOpenChange, onSuccess }: CreateCus
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address *</Label>
+                <Label htmlFor="phone_number">Phone Number</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  {...register("email")}
-                  placeholder="customer@example.com"
+                  id="phone_number"
+                  {...register("phone_number")}
+                  placeholder="+254..."
                 />
-                {errors.email && (
-                  <p className="text-sm text-destructive">{errors.email.message}</p>
+                {errors.phone_number && (
+                  <p className="text-sm text-destructive">{errors.phone_number.message}</p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number *</Label>
+                <Label htmlFor="alternative_phone">Alternative Phone</Label>
                 <Input
-                  id="phone"
-                  {...register("phone")}
+                  id="alternative_phone"
+                  {...register("alternative_phone")}
                   placeholder="+254..."
                 />
-                {errors.phone && (
-                  <p className="text-sm text-destructive">{errors.phone.message}</p>
+                {errors.alternative_phone && (
+                  <p className="text-sm text-destructive">{errors.alternative_phone.message}</p>
                 )}
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="registration_number">ID / Reg Number (Optional)</Label>
-                <Input
-                  id="registration_number"
-                  {...register("registration_number")}
-                  placeholder="e.g. 12345678"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="country_id">Country *</Label>
-                <Select
-                  onValueChange={(v) => setValue("country_id", parseInt(v))}
-                  defaultValue={countryIdValue?.toString()}
-                >
+                <Label htmlFor="country">Country</Label>
+                <Select onValueChange={(value) => setValue("country", value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select country" />
                   </SelectTrigger>
                   <SelectContent>
                     {countries.map((c) => (
-                      <SelectItem key={c.id} value={c.id.toString()}>
+                      <SelectItem key={c.id} value={c.label}>
                         {c.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                {errors.country_id && (
-                  <p className="text-sm text-destructive">{errors.country_id.message}</p>
+                {errors.country && (
+                  <p className="text-sm text-destructive">{errors.country.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="city">City</Label>
+                <Input
+                  id="city"
+                  {...register("city")}
+                  placeholder="Enter city"
+                />
+                {errors.city && (
+                  <p className="text-sm text-destructive">{errors.city.message}</p>
                 )}
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="physical_address">Physical Address *</Label>
+              <Label htmlFor="shipping_address">Shipping Address</Label>
               <Textarea
-                id="physical_address"
-                {...register("physical_address")}
-                placeholder="Enter your location details"
+                id="shipping_address"
+                {...register("shipping_address")}
+                placeholder="Enter shipping address"
                 rows={3}
               />
-              {errors.physical_address && (
-                <p className="text-sm text-destructive">{errors.physical_address.message}</p>
+              {errors.shipping_address && (
+                <p className="text-sm text-destructive">{errors.shipping_address.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="billing_address">Billing Address</Label>
+              <Textarea
+                id="billing_address"
+                {...register("billing_address")}
+                placeholder="Enter billing address"
+                rows={3}
+              />
+              {errors.billing_address && (
+                <p className="text-sm text-destructive">{errors.billing_address.message}</p>
               )}
             </div>
           </motion.div>
@@ -173,8 +185,8 @@ export function CreateCustomerModal({ open, onOpenChange, onSuccess }: CreateCus
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
+                  <Spinner className="mr-2 h-4 w-4" />
+                  Saving profile
                 </>
               ) : (
                 "Create Profile"

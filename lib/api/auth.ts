@@ -65,12 +65,12 @@ const request = async <T = any>(
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   }
 
-  const payload = await apiFetch(`${endpoint}`, { ...options, headers: mergedHeaders, allowError: true }).catch((e) => {
+  const payload = await apiFetch<ApiResponse<T>>(`${endpoint}`, { ...options, headers: mergedHeaders, allowError: true }).catch((e) => {
     throw new ApiError(e?.message || "Request failed")
   })
 
-  if (!payload || payload?.success === false) throw new ApiError(payload?.message || "Request failed", payload?.error)
-  return payload
+  if (!payload || payload.success === false) throw new ApiError(payload?.message || "Request failed", payload?.error)
+  return payload as T
 }
 
 export const authService = {

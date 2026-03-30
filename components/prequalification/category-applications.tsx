@@ -22,7 +22,6 @@ import {
     Download,
     FileText,
     Info,
-    Loader2,
     Paperclip,
     Send,
     Shield,
@@ -30,6 +29,7 @@ import {
     Upload,
     Users,
 } from "lucide-react"
+import { Spinner } from "@/components/common/spinner"
 import { format } from "date-fns"
 import { Round, CategoryProgress } from "@/types/types"
 import { cn } from "@/lib/utils"
@@ -490,8 +490,8 @@ export default function CategoryApplications({ round: roundProp, className, vari
                     <div ref={contentRef} className="flex-1 overflow-y-auto px-6 pb-24 pt-3 lg:px-8">
                         {detailLoading && (
                             <div className="mb-3 flex items-center gap-2 rounded-xl border border-indigo-100 bg-indigo-50/50 px-3 py-2 text-xs text-indigo-700">
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                Loading round details…
+                                <Spinner className="h-3.5 w-3.5" />
+                                Loading round details
                             </div>
                         )}
                         {/* ── Overview tab ── */}
@@ -762,8 +762,8 @@ export default function CategoryApplications({ round: roundProp, className, vari
 
                                 {docsLoading ? (
                                     <div className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-sm text-slate-500">
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                        Loading documents…
+                                        <Spinner className="h-4 w-4" />
+                                        Loading documents
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
@@ -802,7 +802,7 @@ export default function CategoryApplications({ round: roundProp, className, vari
                                                                 onClick={() => fileInputRefs.current[catId]?.click()}
                                                             >
                                                                 {isUploadingThis ? (
-                                                                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                                                    <Spinner className="mr-1 h-3 w-3" />
                                                                 ) : (
                                                                     <Upload className="mr-1 h-3 w-3" />
                                                                 )}
@@ -966,12 +966,12 @@ export default function CategoryApplications({ round: roundProp, className, vari
                                 onClick={submitApplication}
                             >
                                 {applying ? (
-                                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                                    <Spinner className="mr-1.5 h-3.5 w-3.5" />
                                 ) : (
                                     <Send className="mr-1.5 h-3.5 w-3.5" />
                                 )}
                                 {applying
-                                    ? "Submitting…"
+                                    ? "Submitting application"
                                     : `Apply to ${selectedIds.size} ${selectedIds.size === 1 ? "category" : "categories"}`}
                             </Button>
                         </>

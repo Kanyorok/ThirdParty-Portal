@@ -1,13 +1,20 @@
-import { Loader2Icon } from "lucide-react"
+import { InlineLoading } from "@/components/common/custom-loader"
 
 import { cn } from "@/lib/utils"
 
-function Spinner({ className, ...props }: React.ComponentProps<"svg">) {
+interface SpinnerProps extends React.ComponentProps<"div"> {
+  label?: string
+  showLabel?: boolean
+}
+
+function Spinner({ className, label = "Loading", showLabel = false, ...props }: SpinnerProps) {
   return (
-    <Loader2Icon
+    <InlineLoading
       role="status"
-      aria-label="Loading"
-      className={cn("size-4 animate-spin", className)}
+      aria-label={label}
+      message={label}
+      showLabel={showLabel}
+      className={cn(showLabel ? undefined : "gap-0", className)}
       {...props}
     />
   )

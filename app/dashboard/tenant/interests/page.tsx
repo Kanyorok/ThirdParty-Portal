@@ -118,7 +118,7 @@ export default function InterestsRegistryPage() {
   const [frequencyFilter, setFrequencyFilter] = useState<string>("all")
   const debouncedSearch = useDebounce(searchQuery, 350)
   const searchParams = useSearchParams()
-  const page = Number(searchParams.get("page")) || 1
+  const page = Number(searchParams?.get("page")) || 1
 
   const { data: session, status } = useSession()
   const accessToken = resolveSessionAccessToken(session as any)

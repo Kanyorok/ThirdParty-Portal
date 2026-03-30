@@ -1,82 +1,80 @@
-// import { NextRequest, NextResponse } from "next/server"
-// import { getServerSession } from "next-auth"
-// import { authOptions } from "@/lib/auth-options"
+import { NextRequest, NextResponse } from "next/server"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth-options"
 
-// type AwardPayload = {
-// 	rfqId: number
-// 	supplierId: number
-// 	status: "AWARDED"
-// 	awardedOn: string
-// 	comments?: string
-// }
+type AwardPayload = {
+    rfqId: number
+    supplierId: number
+    status: "AWARDED"
+    awardedOn: string
+    comments?: string
+}
 
-// export async function GET(request: NextRequest) {
-// 	const session = await getServerSession(authOptions)
+export const dynamic = "force-dynamic"
+export const revalidate = 0
 
-// 	if (!session?.accessToken) {
-// 		return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
-// 	}
+export async function GET(request: NextRequest) {
+    const session = await getServerSession(authOptions)
 
-// 	const search = request.nextUrl.searchParams.toString()
-// 	const baseUrl = process.env.NEXT_PUBLIC_API_URL
+    if (!session?.accessToken) {
+        return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+    }
 
-// 	if (!baseUrl) {
-// 		return NextResponse.json({ message: "API not configured" }, { status: 500 })
-// 	}
+    const search = request.nextUrl.searchParams.toString()
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL
 
-// 	const targetUrl = `${baseUrl}/api/v1/rfq-suppliers${search ? `?${search}` : ""}`
+    if (!baseUrl) {
+        return NextResponse.json({ message: "API not configured" }, { status: 500 })
+    }
 
-// 	try {
-// 		const res = await fetch(targetUrl, {
-// 			headers: {
-// 				Accept: "application/json",
-// 				Authorization: `Bearer ${session.accessToken}`,
-// 			},
-// 			cache: "no-store",
-// 		})
+    const targetUrl = `${baseUrl.replace(/\/+$/, "")}/api/v1/rfq-suppliers${search ? `?${search}` : ""}`
 
-// 		const contentType = res.headers.get("content-type") ?? ""
-// 		const payload = contentType.includes("application/json")
-// 			? await res.json()
-// 			: await res.text()
+    try {
+        const res = await fetch(targetUrl, {
+            headers: {
+                Accept: "application/json",
+                Authorization: `Bearer ${session.accessToken}`,
+            },
+            cache: "no-store",
+        })
 
-// 		if (!res.ok) {
-// 			return NextResponse.json(
-// 				{
-// 					message: (payload as any)?.message ?? "Failed to fetch RFQs",
-// 					errors: (payload as any)?.errors,
-// 				},
-// 				{ status: res.status }
-// 			)
-// 		}
+        const contentType = res.headers.get("content-type") ?? ""
+        const payload = contentType.includes("application/json") ? await res.json() : await res.text()
 
-// 		return NextResponse.json(payload)
-// 	} catch (error) {
-// 		const message = error instanceof Error ? error.message : "Unknown error"
-// 		return NextResponse.json(
-// 			{ message: "Upstream request failed", error: message },
-// 			{ status: 502 }
-// 		)
-// 	}
-// }
+        if (!res.ok) {
+            return NextResponse.json(
+                {
+                    message: (payload as Record<string, any>)?.message ?? "Failed to fetch RFQ suppliers",
+                    errors: (payload as Record<string, any>)?.errors,
+                },
+                { status: res.status }
+            )
+        }
 
-// export async function POST(request: NextRequest) {
-// 	let body: AwardPayload
+        return NextResponse.json(payload)
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error"
+        return NextResponse.json({ message: "Upstream request failed", error: message }, { status: 502 })
+    }
+}
 
-// 	try {
-// 		body = await request.json()
-// 	} catch {
-// 		return NextResponse.json({ message: "Invalid JSON body" }, { status: 400 })
-// 	}
+export async function POST(request: NextRequest) {
+    let body: AwardPayload
 
-// 	if (
-// 		!Number.isInteger(body.rfqId) ||
-// 		!Number.isInteger(body.supplierId) ||
-// 		body.status !== "AWARDED" ||
-// 		typeof body.awardedOn !== "string"
-// 	) {
-// 		return NextResponse.json({ message: "Invalid payload" }, { status: 422 })
-// 	}
+    try {
+        body = await request.json()
+    } catch {
+        return NextResponse.json({ message: "Invalid JSON body" }, { status: 400 })
+    }
 
-// 	return NextResponse.json({ success: true })
-// }
+    if (
+        !Number.isInteger(body.rfqId) ||
+        !Number.isInteger(body.supplierId) ||
+        body.status !== "AWARDED" ||
+        typeof body.awardedOn !== "string"
+    ) {
+        return NextResponse.json({ message: "Invalid payload" }, { status: 422 })
+    }
+
+    return NextResponse.json({ success: true })
+}

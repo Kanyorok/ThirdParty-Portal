@@ -88,20 +88,20 @@ export default function TenderResponseForm({
 
       if (!response.ok) {
         // Provide user-friendly error messages
-        let errorMessage = 'Failed to update invitation response';
+        let errorMessage = 'Unable to update invitation response.';
         if (data.message) errorMessage = data.message;
         else if (data.error) errorMessage = data.error;
-        else if (response.status === 404) errorMessage = 'API endpoint not found';
-        else if (response.status === 422) errorMessage = 'Invalid request data';
-        else if (response.status === 500) errorMessage = 'Server error - please try again';
+        else if (response.status === 404) errorMessage = 'Invitation response endpoint was not found.';
+        else if (response.status === 422) errorMessage = 'The invitation response request is invalid.';
+        else if (response.status === 500) errorMessage = 'The server could not process the invitation response.';
 
         throw new Error(errorMessage);
       }
 
       toast.success(
         status === 'accepted'
-          ? "Tender invitation accepted successfully!"
-          : "Tender invitation declined successfully!"
+          ? "Tender invitation accepted."
+          : "Tender invitation declined."
       );
 
       setOptimisticStatus(status);
@@ -115,7 +115,7 @@ export default function TenderResponseForm({
       toast.error(
         error instanceof Error
           ? error.message
-          : "Failed to update invitation response"
+          : "Unable to update invitation response."
       );
     } finally {
       setIsLoading(false);

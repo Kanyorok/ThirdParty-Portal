@@ -5,7 +5,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/c
 import { Label } from '@/components/common/label'
 import { Input } from '@/components/common/input'
 import { Button } from '@/components/common/button'
-import { Edit, Loader2 } from 'lucide-react'
+import { Spinner } from '@/components/common/spinner'
+import { Edit } from 'lucide-react'
 import PhoneInput from 'react-phone-input-2'
 import { toast } from 'sonner'
 import { profileService } from '@/lib/api/profile'
@@ -61,10 +62,10 @@ export default function EditProfileModal({
             const response = await profileService.updateProfile('me', formData)
 
             await mutateProfile(formData, { revalidate: true })
-            toast.success(response.message || 'Profile updated successfully!')
+            toast.success(response.message || 'Profile updated successfully.')
             onClose()
         } catch (error: any) {
-            toast.error(error.message || 'Failed to update profile')
+            toast.error(error.message || 'Unable to update profile.')
         } finally {
             setSaving(false)
         }
@@ -158,8 +159,8 @@ export default function EditProfileModal({
                     <Button onClick={handleSave} disabled={saving || isPending} className="flex items-center gap-2">
                         {saving ? (
                             <>
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                Saving...
+                                <Spinner className="h-4 w-4" />
+                                Saving changes
                             </>
                         ) : (
                             'Save Changes'

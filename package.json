@@ -4,10 +4,15 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "dev:check": "node ./scripts/validate-dev-env.mjs",
+    "predev": "npm run dev:check",
     "dev": "next dev --turbopack",
+    "prebuild": "npm run verify",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "verify": "npm run lint && npm run typecheck"
   },
   "lint-staged": {
     "*.{js,ts,jsx,tsx}": [

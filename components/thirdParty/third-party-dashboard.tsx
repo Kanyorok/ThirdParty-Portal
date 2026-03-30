@@ -49,8 +49,8 @@ export default function ThirdPartyDashboard() {
                     <>
                         <DashboardHeader
                             name={profile?.thirdPartyName}
-                            approvalStatus={profile?.approvalStatus}
-                            status={profile?.status}
+                            approvalStatus={profile?.approvalStatus ?? undefined}
+                            status={typeof profile?.status === "number" ? profile.status : Number(profile?.status) || undefined}
                             onEdit={() => setIsModalOpen(true)}
                         />
 

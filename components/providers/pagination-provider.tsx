@@ -28,7 +28,7 @@ export function PaginationProvider({
     const searchParams = useSearchParams()
 
     const handlePageChange = (page: number) => {
-        const params = new URLSearchParams(searchParams.toString())
+        const params = new URLSearchParams(searchParams?.toString() ?? "")
         params.set("page", page.toString())
 
         startTransition(() => {

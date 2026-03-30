@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react"
 import { Button } from "@/components/common/button"
 import Loading from "@/components/common/custom-loader"
 import { Label } from "@/components/common/label"
+import { Spinner } from "@/components/common/spinner"
 import { Textarea } from "@/components/common/textarea"
 import {
   AlertCircle,
@@ -1014,7 +1015,7 @@ export default function TicketDetailPage() {
                 onClick={() => void loadDetail()}
                 disabled={detailLoading}
               >
-                {detailLoading ? "Refreshing..." : <><RefreshCw className="mr-1.5 h-4 w-4" />Refresh</>}
+                {detailLoading ? <><Spinner className="mr-1.5 h-4 w-4" />Refreshing</> : <><RefreshCw className="mr-1.5 h-4 w-4" />Refresh</>}
               </Button>
             </div>
           </div>
@@ -1288,7 +1289,7 @@ export default function TicketDetailPage() {
                     ) : null}
                     <div className="flex justify-end">
                       <Button type="submit" disabled={replying || !reply.trim()} className={PRIMARY_BUTTON}>
-                        {replying ? "Sending..." : <><Send className="mr-1.5 h-4 w-4" />Send reply</>}
+                        {replying ? <><Spinner className="mr-1.5 h-4 w-4" />Sending reply</> : <><Send className="mr-1.5 h-4 w-4" />Send reply</>}
                       </Button>
                     </div>
                   </form>
