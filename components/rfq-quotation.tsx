@@ -1190,11 +1190,11 @@ export function RfqQuotation() {
       if (lockedByAwarded) {
         toast.info("This RFQ has already been awarded and no further responses are allowed.")
       } else if (lockedByStatus) {
-        toast.success("Quotation already submitted", {
+        toast.info("Response already submitted.", {
           description: "A response has already been submitted for this RFQ.",
         })
       } else {
-        toast.error("This RFQ is closed")
+        toast.error("RFQ closed.")
       }
       return
     }
@@ -1235,9 +1235,9 @@ export function RfqQuotation() {
         }
         setMissingLineIds([])
         setDraftSavedAt(new Date(savedAt))
-        toast.success("Draft response saved successfully")
+        toast.success("Draft saved.")
       } catch (e: any) {
-        toast.error("Couldn't save draft", {
+        toast.error("Unable to save draft.", {
           description: e?.message || "Please try again.",
         })
       } finally {
@@ -1309,7 +1309,7 @@ export function RfqQuotation() {
             ? firstError
             : null
 
-        toast.error("Couldn't submit quotation", {
+        toast.error("Unable to submit response.", {
           description:
             formatValidationErrors(errors) ?? (detail ? `${errMessage}: ${detail}` : errMessage),
         })
@@ -1331,7 +1331,7 @@ export function RfqQuotation() {
       setClientLocked("submitted")
       setSubmitDialogOpen(false)
 
-      toast.success("Response submitted successfully", {
+      toast.success("Response submitted.", {
         description: "Redirecting you back to the RFQ…",
       })
       try {
@@ -1339,7 +1339,7 @@ export function RfqQuotation() {
       } catch { }
       scheduleRedirectToRfq()
     } catch (e: any) {
-      toast.error("Request failed", {
+      toast.error("Unable to submit response.", {
         description: e?.message || "Please check your connection and try again.",
       })
     } finally {
@@ -1397,13 +1397,13 @@ export function RfqQuotation() {
         throw new Error(fieldErrors ?? json?.message ?? json?.error ?? `Failed to send clarification (HTTP ${res.status})`)
       }
 
-      toast.success("Clarification sent", {
+      toast.success("Clarification sent.", {
         description: "We’ll notify you when the buyer responds.",
       })
       setClarificationDraft("")
       refreshClarifications()
     } catch (e: any) {
-      toast.error("Couldn't send clarification", {
+      toast.error("Unable to send clarification.", {
         description: e?.message || "Please try again.",
       })
     } finally {
@@ -1554,7 +1554,7 @@ export function RfqQuotation() {
     })
 
     if (next.length === 0) {
-      toast.message("No new documents added", {
+      toast.message("No new documents added.", {
         description: "Selected documents are already attached.",
       })
       return
@@ -1563,7 +1563,7 @@ export function RfqQuotation() {
     setQuoteDocuments((prev) => [...prev, ...next])
     setDmsPickerSelected({})
     setDmsPickerOpen(false)
-    toast.success("Documents added", {
+    toast.success("Documents added.", {
       description: `${next.length} document${next.length === 1 ? "" : "s"} attached to this quotation.`,
     })
   }
@@ -1571,7 +1571,7 @@ export function RfqQuotation() {
   const removeQuoteDocument = async (id: string | number) => {
     // Only call delete API for real documents (not temp uploads)
     if (!String(id).startsWith("tmp:") && !canDeleteDocs) {
-      toast.error("Documents cannot be deleted after submission")
+      toast.error("Documents cannot be deleted after submission.")
       return
     }
     if (!String(id).startsWith("tmp:")) {
@@ -1582,11 +1582,11 @@ export function RfqQuotation() {
         )
         if (!res.ok) {
           const json = await res.json().catch(() => ({}))
-          toast.error(json?.message ?? "Failed to delete document")
+          toast.error(json?.message ?? "Unable to delete document.")
           return
         }
       } catch {
-        toast.error("Failed to delete document")
+        toast.error("Unable to delete document.")
         return
       }
     }
@@ -1694,11 +1694,11 @@ export function RfqQuotation() {
       if (lockedByAwarded) {
         toast.info("This RFQ has already been awarded and no further responses are allowed.")
       } else if (lockedByStatus) {
-        toast.success("Quotation already submitted", {
+        toast.info("Response already submitted.", {
           description: "A response has already been submitted for this RFQ.",
         })
       } else {
-        toast.error("This RFQ is closed")
+        toast.error("RFQ closed.")
       }
       return
     }
@@ -2266,7 +2266,7 @@ export function RfqQuotation() {
                                 </span>
                               ) : (
                                 <span className={META_TEXT}>
-                                  {currenciesLoading ? "Loading..." : "Select currency"}
+                                  {currenciesLoading ? "Loading currencies" : "Select currency"}
                                 </span>
                               )}
                             </span>
@@ -2504,14 +2504,14 @@ export function RfqQuotation() {
                                 {d.name}
                               </div>
                               <div className={`text-xs ${META_TEXT}`}>
-                                {d.source === "upload" ? "Uploaded" : "From DMS"}
+                                {d.source === "upload" ? "Document uploaded" : "From DMS"}
                                 {d.repository ? ` • ${d.repository}` : ""}
                                 {d.version != null ? ` • v${String(d.version)}` : ""}
                               </div>
                               {d.uploading ? (
                                 <div className={`text-xs ${META_TEXT} inline-flex items-center gap-2`}>
                                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                  Uploading…
+                                  Uploading document…
                                 </div>
                               ) : verified ? (
                                 <div className="text-xs text-emerald-700">Verified</div>
@@ -2624,7 +2624,7 @@ export function RfqQuotation() {
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        {attachments.slice(0, 10).map((a, idx) => {
+                        {attachments.slice(0, 10).map((a: any, idx: number) => {
                           const name = getAttachmentName(a, idx)
                           const docId = getAttachmentDocumentId(a)
                           const url = getAttachmentUrl(a)

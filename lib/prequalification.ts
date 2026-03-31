@@ -9,6 +9,15 @@ export const APPLICATION_STATUS_MAP = {
     R: { label: "Rejected", color: "text-rose-600", bg: "bg-rose-100", icon: "XCircle" },
 } as const;
 
+export function applicationStatusLabel(status: ApplicationStatusCode = "D"): string {
+    return APPLICATION_STATUS_MAP[status]?.label ?? APPLICATION_STATUS_MAP.D.label
+}
+
+export function applicationStatusClasses(status: ApplicationStatusCode = "D"): string {
+    const meta = APPLICATION_STATUS_MAP[status] ?? APPLICATION_STATUS_MAP.D
+    return `${meta.bg} ${meta.color}`
+}
+
 export function getProgressColor(percent: number = 0): string {
     if (percent >= 100) return "bg-emerald-500";
     if (percent >= 50) return "bg-sky-500";

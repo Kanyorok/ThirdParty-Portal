@@ -143,13 +143,13 @@ export const useRoundsStore = create<RoundsState>((set, get) => ({
 
             const data = await res.json()
             const roundsList = Array.isArray(data.data) ? data.data.map(mapApiRound) : []
-            const sortedRounds = roundsList.slice().sort((a, b) => {
+            const sortedRounds = roundsList.slice().sort((a: any, b: any) => {
                 const activeA = isRoundActive(a)
                 const activeB = isRoundActive(b)
                 if (activeA === activeB) return 0
                 return activeA ? -1 : 1
             })
-            const openCount = sortedRounds.filter((r) => isRoundActive(r)).length
+            const openCount = sortedRounds.filter((r: any) => isRoundActive(r)).length
 
             set({
                 rounds: sortedRounds,

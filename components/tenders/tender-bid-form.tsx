@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { resolveBidStatus } from "@/lib/bids/status";
+import { Spinner } from "@/components/common/spinner";
 
 // Simple module scoped counter for fallback IDs (avoids window any casts)
 let docCounter = 0;
@@ -999,8 +1000,8 @@ export default function TenderBidForm({
             >
               {isSubmitting && submitType === 'draft' ? (
                 <div className="flex items-center text-xs">
-                  <div className="mr-2 h-3.5 w-3.5 animate-spin rounded-full border-b-2 border-slate-600" />
-                  {isEditingDraft ? 'Updating...' : 'Saving...'}
+                  <Spinner className="mr-2 h-3.5 w-3.5" />
+                  {isEditingDraft ? 'Updating draft' : 'Saving draft'}
                 </div>
               ) : (
                 <>
@@ -1017,8 +1018,8 @@ export default function TenderBidForm({
             >
               {isSubmitting && submitType === 'final' ? (
                 <div className="flex items-center text-xs">
-                  <div className="mr-2 h-3.5 w-3.5 animate-spin rounded-full border-b-2 border-white" />
-                  Submitting...
+                  <Spinner className="mr-2 h-3.5 w-3.5" />
+                  Submitting bid
                 </div>
               ) : (
                 <>

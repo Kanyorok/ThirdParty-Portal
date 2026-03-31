@@ -6,6 +6,7 @@ interface ProcurementState {
     rounds: Round[]
     selectedRound: Round | null
     myApplications: any[]
+    applicationStatus: Record<string, any>
     applicationProgress: Record<number, any>
     isLoading: boolean
     error: string | null
@@ -17,17 +18,20 @@ interface ProcurementState {
     fetchApplicationProgress: (roundId: number) => Promise<void>
 
     setSelectedRound: (round: Round | null) => void
+    setRounds: (rounds: Round[]) => void
 }
 
 export const useProcurementStore = create<ProcurementState>((set) => ({
     rounds: [],
     selectedRound: null,
     myApplications: [],
+    applicationStatus: {},
     applicationProgress: {},
     isLoading: false,
     error: null,
 
     setSelectedRound: (round) => set({ selectedRound: round }),
+    setRounds: (rounds) => set({ rounds }),
 
     fetchRounds: async () => {
         set({ isLoading: true, error: null })
@@ -92,7 +96,13 @@ export const useProcurementStore = create<ProcurementState>((set) => ({
             })
             const result = await res.json()
             if (!res.ok) throw new Error(result.message)
-            set({ myApplications: result.data ?? [], isLoading: false })
+            const applications = Array.isArray(result.data) ? result.data : []
+            const applicationStatus = applications.reduce((accumulator: Record<string, any>, application: any) => {
+                const key = String(application?.ApplicationID ?? application?.applicationId ?? Object.keys(accumulator).length)
+                accumulator[key] = application
+                return accumulator
+            }, {})
+            set({ myApplications: applications, applicationStatus, isLoading: false })
         } catch (err: any) {
             set({ error: err.message, isLoading: false })
         }

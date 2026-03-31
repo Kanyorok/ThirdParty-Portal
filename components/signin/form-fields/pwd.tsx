@@ -3,7 +3,7 @@
 import type React from "react"
 import { Eye, EyeOff, Check, X } from "lucide-react"
 import { Input } from "@/components/common/input"
-import { FormField } from "./login-fields"
+import { FormField } from "../form-field"
 
 interface PasswordFieldProps {
     id: string
@@ -11,11 +11,10 @@ interface PasswordFieldProps {
     placeholder: string
     value: string
     error?: string
-    status: string
+    status: "default" | "error" | "success"
     showPassword: boolean
     onTogglePassword: () => void
     register: any
-    helpText?: string
     showMatchIndicator?: boolean
     passwordsMatch?: boolean
     onPaste?: (e: React.ClipboardEvent) => void
@@ -32,14 +31,13 @@ export const PasswordField: React.FC<PasswordFieldProps> = ({
     showPassword,
     onTogglePassword,
     register,
-    helpText,
     showMatchIndicator = false,
     passwordsMatch = false,
     onPaste,
     inputClassName,
 }) => {
     return (
-        <FormField status={status} label={label} required helpText={helpText} error={error} id={id}>
+        <FormField status={status} label={label} required error={error} id={id}>
             <div className="relative w-full">
                 <Input
                     id={id}

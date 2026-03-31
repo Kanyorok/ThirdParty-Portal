@@ -369,13 +369,13 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                 }
                 throw new Error(json?.message ?? json?.error ?? "Failed to send clarification")
             }
-            toast.success("Clarification sent")
+            toast.success("Clarification sent.")
             setClarDraft("")
             setClarRfqLineId("")
             setClarIsPublic(false)
             refreshClarifications()
         } catch (e: any) {
-            toast.error("Couldn't send clarification", { description: e?.message })
+            toast.error("Unable to send clarification.", { description: e?.message })
         } finally { setAskingClar(false) }
     }
 
@@ -550,9 +550,9 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
             if (typeof window !== "undefined") {
                 window.localStorage.setItem(draftKey, JSON.stringify({ version: 2, savedAt: Date.now(), lines: quoteLines, currency: quoteCurrency, durationDays }))
             }
-            toast.success("Draft saved")
+            toast.success("Draft saved.")
         } catch (e: any) {
-            toast.error("Couldn't save draft", { description: e?.message })
+            toast.error("Unable to save draft.", { description: e?.message })
         }
     }
 
@@ -612,7 +612,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                 const upstreamStatus = json?.upstreamStatus ?? res.status
                 if (isAlreadySubmittedErrorResponse(json, upstreamStatus)) {
                     setClientLocked(true)
-                    toast.error("Already submitted", { description: "A response was already submitted for this RFQ." })
+                    toast.info("Response already submitted.", { description: "A response was already submitted for this RFQ." })
                     return
                 }
                 if (json?.errors && typeof json.errors === "object") {
@@ -629,9 +629,9 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
 
             setClientLocked(true)
             try { window.localStorage.removeItem(draftKey) } catch { }
-            toast.success("Response submitted successfully")
+            toast.success("Response submitted.")
         } catch (e: any) {
-            toast.error("Couldn't submit quotation", { description: e?.message })
+            toast.error("Unable to submit response.", { description: e?.message })
         } finally { setSubmitting(null) }
     }
 
@@ -645,23 +645,23 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                 const fd = new FormData(); fd.append("file", file)
                 const res = await fetch(`/api/procurement/rfq-response-documents/${encodeURIComponent(String(rfqIdValue))}`, { method: "POST", body: fd })
                 const json = await res.json().catch(() => ({}))
-                if (!res.ok) throw new Error(json?.message ?? "Upload failed")
+                if (!res.ok) throw new Error(json?.message ?? "Unable to upload document")
                 const created = json?.data ?? json
                 setQuoteDocuments((prev) => prev.map((d) => String(d.id) === tmpId ? { ...d, id: created?.id ?? tmpId, previewUrl: created?.downloadUrl ?? null, uploading: false } : d))
             } catch (e: any) {
                 setQuoteDocuments((prev) => prev.filter((d) => String(d.id) !== tmpId))
-                toast.error("Upload failed", { description: e?.message })
+                toast.error("Unable to upload document.", { description: e?.message })
             }
         }
     }
 
     const removeDocument = async (id: string | number) => {
-        if (!String(id).startsWith("tmp:") && !canDeleteDocs) { toast.error("Cannot delete documents after submission"); return }
+        if (!String(id).startsWith("tmp:") && !canDeleteDocs) { toast.error("Documents cannot be deleted after submission."); return }
         if (!String(id).startsWith("tmp:")) {
             try {
                 const res = await fetch(`/api/procurement/rfq-response-documents/${encodeURIComponent(String(rfqIdValue))}/${encodeURIComponent(String(id))}`, { method: "DELETE" })
-                if (!res.ok) { toast.error("Failed to delete document"); return }
-            } catch { toast.error("Failed to delete document"); return }
+                if (!res.ok) { toast.error("Unable to delete document."); return }
+            } catch { toast.error("Unable to delete document."); return }
         }
         setQuoteDocuments((prev) => prev.filter((d) => String(d.id) !== String(id)))
     }
@@ -675,10 +675,10 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                 body: JSON.stringify({ id: docId, documentId: docId, rfqId: rfqIdValue }),
             })
             const payload = await res.json().catch(() => ({}))
-            if (!res.ok) throw new Error((payload as any)?.message ?? "Verification failed")
+            if (!res.ok) throw new Error((payload as any)?.message ?? "Unable to verify document")
             setVerifiedByDocId((prev) => ({ ...prev, [String(docId)]: payload }))
-            toast.success("Document verified")
-        } catch (e: any) { toast.error(e?.message || "Verification failed") }
+            toast.success("Document verified.")
+        } catch (e: any) { toast.error(e?.message || "Unable to verify document.") }
     }
 
     const handleOpenChange = (open: boolean) => {
@@ -1196,9 +1196,9 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                                                         <div className="min-w-0 space-y-0.5">
                                                             <div className="truncate text-[13px] font-medium text-slate-900">{d.name}</div>
                                                             <div className="text-[10px] text-slate-500">
-                                                                {d.uploading ? <span className="inline-flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" />Uploading…</span>
+                                                                {d.uploading ? <span className="inline-flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" />Uploading document…</span>
                                                                     : verified ? <span className="text-emerald-600">Verified</span>
-                                                                        : d.source === "upload" ? "Uploaded" : "From DMS"}
+                                                                        : d.source === "upload" ? "Document uploaded" : "From DMS"}
                                                             </div>
                                                         </div>
                                                         <AttachmentActionsMenu

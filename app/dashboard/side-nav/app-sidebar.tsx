@@ -1,7 +1,9 @@
 'use client'
 
 import React, { useMemo, useEffect, useState } from "react"
-import { Command, LogOut } from "lucide-react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { ChevronRight, Command, LogOut, PanelRightOpen, Settings2 } from "lucide-react"
 import { signOut, useSession } from "next-auth/react"
 import {
     Sidebar,
@@ -13,6 +15,12 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from "@/components/common/sidebar"
+import {
+    Popover,
+    PopoverClose,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/common/popover"
 import { sidebarItems } from "@/navigation/sidebar/sidebar-nav-items"
 import { useProfileStore } from "@/store/use-profile-store"
 import { NavMain } from "@/app/dashboard/side-nav/nav-main"
@@ -20,10 +28,167 @@ import { CLIENT_APP_NAME_STRING } from "@/config/client-config"
 import { cn } from "@/lib/utils"
 import { resolveSessionAvailableProfiles, resolveSessionBusinessProfiles } from "@/lib/profile/session-profiles"
 
+type UtilityNavItem = {
+    title: string
+    url: string
+    icon?: React.ComponentType<{ className?: string }>
+    badge?: string
+    disabled?: boolean
+    comingSoon?: boolean
+    newTab?: boolean
+}
+
+function normalizeSidebarUrl(url: string) {
+    const next = url.trim()
+    if (!next || next === "/") return "/"
+    return next.endsWith("/") ? next.slice(0, -1) : next
+}
+
+function UtilityMenuSheet({
+    items,
+    collapsed,
+    onNavigate,
+}: {
+    items: UtilityNavItem[]
+    collapsed: boolean
+    onNavigate: () => void
+}) {
+    const pathname = usePathname()
+    const [open, setOpen] = useState(false)
+
+    const normalizedPathname = useMemo(() => normalizeSidebarUrl(pathname || "/"), [pathname])
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <SidebarMenu>
+                <SidebarMenuItem>
+                    <PopoverTrigger asChild>
+                        <SidebarMenuButton
+                            tooltip="Account & Help"
+                            className={cn(
+                                "group text-sidebar-foreground transition-all hover:bg-sidebar-accent/20",
+                                collapsed
+                                    ? "h-8.5 w-8.5 justify-center rounded-[0.8rem] px-0 sm:h-9 sm:w-9 sm:rounded-[0.85rem]"
+                                    : "min-h-[2.75rem] rounded-[0.9rem] px-2 py-1.75 sm:min-h-[2.9rem] sm:rounded-[0.95rem] sm:px-2.25 sm:py-2"
+                            )}
+                        >
+                            {collapsed ? (
+                                <PanelRightOpen className="size-4.5" />
+                            ) : (
+                                <>
+                                    <div className="flex size-6.5 shrink-0 items-center justify-center rounded-lg bg-sidebar-accent/40 text-sidebar-foreground/72 transition-colors group-hover:bg-primary/10 group-hover:text-primary sm:size-7">
+                                        <PanelRightOpen className="size-3.25 sm:size-3.5" />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <div className="text-[11.5px] font-bold tracking-tight text-sidebar-foreground sm:text-[12px]">
+                                            Account & Help
+                                        </div>
+                                    </div>
+                                    <ChevronRight className="size-3.5 text-sidebar-foreground/35" />
+                                </>
+                            )}
+                        </SidebarMenuButton>
+                    </PopoverTrigger>
+                </SidebarMenuItem>
+            </SidebarMenu>
+
+            <PopoverContent
+                side="right"
+                align="start"
+                sideOffset={collapsed ? 6 : 8}
+                className="w-[228px] rounded-[0.95rem] border border-border/55 bg-background p-0 shadow-[0_16px_36px_-24px_rgba(15,23,42,0.16)] sm:w-[236px] sm:rounded-[1rem]"
+            >
+                <div>
+                    <div className="px-3 py-2.5">
+                        <div className="text-[12px] font-semibold tracking-tight text-foreground">Account & Help</div>
+                    </div>
+
+                    <div className="px-2 pb-2">
+                        {items.map((item, index) => {
+                            const target = normalizeSidebarUrl(item.url)
+                            const isActive = normalizedPathname === target || normalizedPathname.startsWith(`${target}/`)
+                            const ItemIcon = item.icon ?? Settings2
+                            const isDisabled = item.disabled || item.comingSoon
+
+                            const content = (
+                                <div
+                                    className={cn(
+                                        "relative flex items-center gap-2.5 rounded-[0.8rem] px-2.25 py-2 transition-all sm:gap-3 sm:rounded-[0.85rem] sm:px-2.5",
+                                        isActive
+                                            ? "bg-primary/[0.065] text-foreground"
+                                            : "text-foreground/78 hover:bg-muted/40 hover:text-foreground",
+                                        isDisabled && "opacity-45"
+                                    )}
+                                >
+                                    {isActive ? (
+                                        <span
+                                            aria-hidden="true"
+                                            className="absolute bottom-2 top-2 left-0.5 w-0.5 rounded-full bg-primary"
+                                        />
+                                    ) : null}
+                                    <div
+                                        className={cn(
+                                            "flex size-6 shrink-0 items-center justify-center rounded-full sm:size-6.5",
+                                            isActive
+                                                ? "bg-primary/10 text-primary"
+                                                : "bg-muted/60 text-foreground/75"
+                                        )}
+                                    >
+                                        <ItemIcon className="size-3.25 sm:size-3.5" />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <div className="text-[11.5px] font-bold tracking-tight sm:text-[12px]">{item.title}</div>
+                                    </div>
+                                    {item.badge ? (
+                                        <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 text-[9px] font-semibold text-white">
+                                            {item.badge}
+                                        </span>
+                                    ) : null}
+                                    <ChevronRight className={cn("size-3.5 shrink-0", isActive ? "text-primary" : "text-foreground/25")} />
+                                </div>
+                            )
+
+                            const row = (
+                                <div
+                                    key={item.title}
+                                    className={cn(index > 0 && "border-t border-border/45")}
+                                >
+                                    {content}
+                                </div>
+                            )
+
+                            if (isDisabled) {
+                                return row
+                            }
+
+                            return (
+                                <div key={item.title} className={cn(index > 0 && "border-t border-border/45")}>
+                                    <PopoverClose asChild>
+                                        <Link
+                                            href={item.url}
+                                            target={item.newTab ? "_blank" : undefined}
+                                            onClick={() => {
+                                                setOpen(false)
+                                                onNavigate()
+                                            }}
+                                        >
+                                            {content}
+                                        </Link>
+                                    </PopoverClose>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
+            </PopoverContent>
+        </Popover>
+    )
+}
+
 function NavItemSkeleton() {
     return (
-        <div className="flex items-center gap-3 px-3.5 h-11 w-full">
-            <div className="size-7 rounded-lg bg-sidebar-accent/70 animate-pulse shrink-0" />
+        <div className="flex h-10 w-full items-center gap-2.5 px-3">
+            <div className="size-6.5 shrink-0 rounded-lg bg-sidebar-accent/70 animate-pulse" />
             <div className="h-3 w-24 bg-sidebar-accent/70 animate-pulse rounded-md" />
         </div>
     )
@@ -31,11 +196,11 @@ function NavItemSkeleton() {
 
 function SidebarSkeleton() {
     return (
-        <div className="flex flex-col gap-8 py-4 px-3">
+        <div className="flex flex-col gap-6 px-2.5 py-3">
             {[1, 2].map((group) => (
-                <div key={group} className="space-y-4">
-                    <div className="px-5 h-2 w-16 bg-sidebar-accent/70 rounded-full mb-4" />
-                    <div className="space-y-2">
+                <div key={group} className="space-y-3">
+                    <div className="mb-3 h-2 w-16 rounded-full bg-sidebar-accent/70" />
+                    <div className="space-y-1.5">
                         {[1, 2, 3].map((i) => (
                             <NavItemSkeleton key={i} />
                         ))}
@@ -59,6 +224,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const [mounted, setMounted] = useState(false)
 
     useEffect(() => setMounted(true), [])
+
+    const profileLabel = activeProfile === "base" ? "Workspace" : activeProfile
+    const isCollapsed = state === "collapsed" && !isMobile
 
     const availableProfiles = useMemo(
         () => resolveSessionAvailableProfiles(session?.user as any),
@@ -109,6 +277,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         }
     }, [activeProfile, mounted, isHydrated])
 
+    const utilityItems = useMemo(
+        () => utilityNav.flatMap((section) => section.items) as UtilityNavItem[],
+        [utilityNav]
+    )
+
     if (!mounted) return null
 
     const handleNavItemClick = () => {
@@ -116,55 +289,70 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
 
     return (
-        <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar" {...props}>
-            <SidebarHeader className="px-2.5 py-2.5 sm:px-3 sm:py-3">
-                <div className="flex items-center gap-3 rounded-2xl border border-sidebar-border bg-sidebar-accent/45 px-2.5 py-2">
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white ring-1 ring-blue-600/20 transition-colors">
-                        <Command className="size-5" />
-                    </div>
-                    <div className={cn(
-                        "flex flex-col transition-all duration-300",
-                        state === "collapsed" && !isMobile ? "opacity-0 invisible w-0" : "opacity-100 visible w-auto"
-                    )}>
-                        <span className="font-semibold tracking-tight text-sm leading-tight text-sidebar-foreground line-clamp-1">
-                            {CLIENT_APP_NAME_STRING}
-                        </span>
+        <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar/95 backdrop-blur-xl" {...props}>
+            <SidebarHeader className="px-2 py-2 sm:px-2.5 sm:py-2.5">
+                <div className={cn(
+                    "relative overflow-hidden rounded-[1rem] border border-sidebar-border/65 bg-sidebar px-2.25 py-2.25 sm:rounded-[1.05rem] sm:px-2.5 sm:py-2.5",
+                    state === "collapsed" && !isMobile ? "px-2 py-2" : ""
+                )}>
+                    <div className="relative flex items-start gap-2.5">
+                        <div className="flex size-8.5 shrink-0 items-center justify-center rounded-[0.9rem] bg-primary text-primary-foreground transition-colors sm:size-9 sm:rounded-[0.95rem]">
+                            <Command className="size-[1.05rem] sm:size-[1.125rem]" />
+                        </div>
+                        <div className={cn(
+                            "min-w-0 flex-1 transition-all duration-300",
+                            state === "collapsed" && !isMobile ? "opacity-0 invisible w-0" : "opacity-100 visible w-auto"
+                        )}>
+                            <div className="flex items-center justify-between gap-2">
+                                <span className="line-clamp-1 text-[12.5px] font-semibold leading-tight tracking-tight text-sidebar-foreground sm:text-[13px]">
+                                    {CLIENT_APP_NAME_STRING}
+                                </span>
+                                <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.15em] text-primary">
+                                    {profileLabel}
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </SidebarHeader>
 
-            <SidebarContent className="mt-1 px-2.5 scrollbar-none overflow-y-auto pb-3">
+            <SidebarContent className="mt-0.5 px-1.5 scrollbar-none overflow-y-auto pb-2 sm:px-2">
                 {!isHydrated ? (
                     <SidebarSkeleton />
                 ) : (
                     <>
-                        <div className="flex flex-col gap-6">
-                            <NavMain items={primaryNav} onItemClick={handleNavItemClick} />
+                        <div className="flex flex-col gap-3.5 sm:gap-4">
+                            <NavMain items={primaryNav} onItemClick={handleNavItemClick} variant="primary" />
                         </div>
-                        <div className="mt-auto pb-4">
-                            <NavMain items={utilityNav} onItemClick={handleNavItemClick} />
+                        <div className="mt-auto px-1.5 pb-2 sm:px-2 sm:pb-2.5">
+                            <div className={cn(
+                                "rounded-[0.95rem] py-1",
+                                state === "collapsed" && !isMobile && "border-transparent bg-transparent py-0"
+                            )}>
+                                <UtilityMenuSheet items={utilityItems} collapsed={isCollapsed} onNavigate={handleNavItemClick} />
+                            </div>
                         </div>
                     </>
                 )}
             </SidebarContent>
 
-            <SidebarFooter className="border-t border-sidebar-border px-3 py-3">
+            <SidebarFooter className="border-t border-sidebar-border/70 px-1.5 py-1.5 sm:px-2 sm:py-2">
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton
                             onClick={() => signOut({ callbackUrl: "/signin" })}
                             tooltip="Logout"
                             className={cn(
-                                "group h-10 w-full rounded-full border border-rose-300/70 bg-sidebar text-rose-700 transition-all hover:bg-rose-500/10 hover:text-rose-700 dark:text-rose-300 dark:hover:text-rose-200",
-                                state === "collapsed" && !isMobile ? "justify-center px-0" : "justify-start"
+                                "group h-8.5 w-full rounded-[0.8rem] text-sidebar-foreground/62 transition-all hover:bg-rose-500/[0.06] hover:text-rose-600 dark:hover:text-rose-300 sm:rounded-[0.85rem]",
+                                state === "collapsed" && !isMobile ? "justify-center px-0" : "justify-start px-2"
                             )}
                         >
                             <LogOut className={cn(
-                                "size-4 shrink-0 transition-transform text-rose-600",
-                                state === "collapsed" && !isMobile ? "" : "group-hover:-translate-x-1"
+                                "size-[0.95rem] shrink-0 text-rose-500/90 transition-transform group-hover:-translate-x-0.5",
+                                state === "collapsed" && !isMobile ? "group-hover:translate-x-0" : ""
                             )} />
                             <span className={cn(
-                                "font-semibold text-[12px] tracking-tight ml-2 transition-all",
+                                "ml-1.5 text-[10.5px] font-semibold tracking-tight transition-all",
                                 state === "collapsed" && !isMobile ? "opacity-0 w-0" : "opacity-100"
                             )}>
                                 Sign out

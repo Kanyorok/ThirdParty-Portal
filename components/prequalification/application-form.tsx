@@ -1,10 +1,11 @@
 "use client"
 
+import { Spinner } from "@/components/common/spinner";
 import { useEffect, useMemo, useState, useCallback, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Loader2, CheckCircle2, AlertCircle, Clock, RefreshCw, Info, X, Send, Users, Calendar, Frown, XCircle, CheckCheck, Check, InfoIcon } from "lucide-react"
+import { CheckCircle2, AlertCircle, Clock, RefreshCw, Info, X, Send, Users, Calendar, Frown, XCircle, CheckCheck, Check, InfoIcon } from "lucide-react"
 import { Button } from "@/components/common/button"
 import { Label } from "@/components/common/label"
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/common/select"
@@ -695,7 +696,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                                 <Calendar className="w-4 h-4" />
                                                 Available Rounds
                                             </Label>
-                                            {roundsLoadingState === "loading" && <Loader2 className="w-4 h-4 animate-spin text-blue-500" aria-label="Loading rounds" />}
+                                            {roundsLoadingState === "loading" && <Spinner className="h-4 w-4" aria-label="Loading rounds" />}
                                         </div>
                                         {roundsLoadingState === "loading" && <LoadingSkeleton />}
                                         {roundsLoadingState === "error" && <ErrorState error={roundError} onRetry={fetchRounds} />}
@@ -836,7 +837,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                             <Users className="w-4 h-4" />
                                             Select Categories ({selectedCategoryIds.length} selected)
                                         </Label>
-                                        {categoriesLoadingState === "loading" && <Loader2 className="w-4 h-4 animate-spin text-blue-500" aria-label="Loading categories" />}
+                                        {categoriesLoadingState === "loading" && <Spinner className="h-4 w-4" aria-label="Loading categories" />}
                                     </div>
                                     {categoriesLoadingState === "loading" && <LoadingSkeleton />}
                                     {categoriesLoadingState === "error" && <ErrorState error={categoryError} onRetry={fetchCategories} />}
@@ -906,7 +907,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                                                                         >
                                                                                             <option value="">Select section</option>
                                                                                             {sectionOptions.length === 0 ? (
-                                                                                                <option value="" disabled>Loading sections…</option>
+                                                                                                <option value="" disabled>Loading sections</option>
                                                                                             ) : (
                                                                                                 sectionOptions.map((s, si) => (
                                                                                                     <option key={s.id || String(si)} value={s.id}>{s.name}{typeof s.weight === 'number' ? ` (${s.weight}%)` : ''}</option>
@@ -954,8 +955,8 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                             >
                                 {formLoadingState === "submitting" ? (
                                     <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Submitting Application...
+                                        <Spinner className="mr-2 h-4 w-4" />
+                                        Submitting application
                                     </>
                                 ) : (
                                     <>

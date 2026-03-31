@@ -65,8 +65,8 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${geist.variable} antialiased min-h-screen overflow-x-hidden`}
       >
-  {/* Load runtime environment overrides (deployer may overwrite public/env.js) */}
-  <script src="/env.js" defer={false} />
+        {/*  TODO: Remove in prod */}
+        <script src="/env.js" defer={false} />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

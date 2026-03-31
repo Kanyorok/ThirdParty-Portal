@@ -9,7 +9,7 @@ import Link from 'next/link'
 
 export default function VerifyEmailExpired() {
     const params = useSearchParams()
-    const email = params.get('email')
+    const email = params?.get('email')
 
     const [loading, setLoading] = useState(false)
     const [sent, setSent] = useState(false)

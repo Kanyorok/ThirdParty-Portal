@@ -11,8 +11,14 @@ const normalizeVerifyEmailPath = (raw?: string | null): string | null => {
 
     let configuredBase = ""
     try {
-        const win: any = window as any
-        const runtime = win.__ENV__ || {}
+        const runtimeWindow = window as typeof window & {
+            __ENV__?: {
+                NEXT_PUBLIC_API_URL?: string
+                API_BASE_URL?: string
+                EXTERNAL_API_URL?: string
+            }
+        }
+        const runtime = runtimeWindow.__ENV__ || {}
         configuredBase = (runtime.NEXT_PUBLIC_API_URL || runtime.API_BASE_URL || runtime.EXTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE_URL || "").replace(/\/$/, '')
     } catch {
         configuredBase = (process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE_URL || "").replace(/\/$/, '')
@@ -27,7 +33,7 @@ const normalizeVerifyEmailPath = (raw?: string | null): string | null => {
 export default function VerifyEmail() {
     const searchParams = useSearchParams()
     const router = useRouter()
-    const verifyUrl = searchParams.get('verify_url')
+    const verifyUrl = searchParams?.get('verify_url')
     const ran = useRef(false)
 
     useEffect(() => {

@@ -94,9 +94,9 @@ export default function GeneralProfileSettings({ initialData }: GeneralProfileSe
                     throw new Error(`${errorMessage}\n${errorDetails}`);
                 }
                 reset(data);
-                return responseData.message || 'Profile updated successfully!';
+                return responseData.message || 'Profile updated successfully.';
             }),
-            { loading: 'Saving profile...', success: m => m, error: e => e.message }
+            { loading: 'Saving profile', success: m => m, error: e => e.message }
         );
     };
 

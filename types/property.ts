@@ -27,6 +27,25 @@ export interface Property {
     blocks: Block[];
     locationId?: number | undefined;
     propertyDescription?: string;
+    locationName?: string | null;
+    localityName?: string | null;
+    imageUrl?: string | null;
+    image_url?: string | null;
+    image?: string | null;
+    coverImage?: string | null;
+    cover_image?: string | null;
+    banner?: string | null;
+    bannerUrl?: string | null;
+    photo?: string | null;
+    thumbnail?: string | null;
+    thumbnailUrl?: string | null;
+    media?: unknown;
+    gallery?: unknown;
+}
+
+export interface PropertyLocality {
+    id: number;
+    name: string;
 }
 
 export interface PaginatedResponse<T> {

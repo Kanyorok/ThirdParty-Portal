@@ -8,18 +8,37 @@ export interface ThirdPartyType {
 }
 
 export interface ThirdPartyDetails {
+  [key: string]: unknown
   thirdPartyName?: string | null
+  ThirdPartyName?: string | null
+  third_party_name?: string | null
   tradingName?: string | null
+  TradingName?: string | null
+  trading_name?: string | null
   businessType?: string | null
+  BusinessType?: string | null
+  business_type?: string | null
   registrationNumber?: string | null
+  RegistrationNumber?: string | null
+  registration_number?: string | null
   taxPIN?: string | null
+  TaxPIN?: string | null
+  tax_pin?: string | null
   taxPin?: string | null
   vatNumber?: string | null
+  VatNumber?: string | null
   physicalAddress: string | null
+  PhysicalAddress?: string | null
+  physical_address?: string | null
   website: string | null
+  Website?: string | null
   email?: string | null
+  Email?: string | null
   phone?: string | null
+  Phone?: string | null
   countryId?: string | number | null
+  businessTypeDetail?: { label?: string | null; description?: string | null; Description?: string | null } | null
+  business_type_detail?: { label?: string | null; description?: string | null; Description?: string | null } | null
 }
 
 export interface SupplierProfile {
@@ -57,8 +76,11 @@ export interface CustomerProfile {
 }
 
 export interface ThirdPartyEntity {
+  [key: string]: unknown
   id?: number
   profileCompletion?: number
+  ProfileCompletion?: number
+  profile_completion?: number
   approvalStatus: string | null
   isPrequalified?: boolean
   supplierId?: string | null
@@ -66,10 +88,17 @@ export interface ThirdPartyEntity {
   isTenant?: boolean
   isCustomer?: boolean
   thirdPartyDetails?: ThirdPartyDetails
+  third_party_details?: ThirdPartyDetails
+  thirdPartyName?: string | null
+  third_party_name?: string | null
   tradingName?: string | null
+  TradingName?: string | null
   businessType?: string | null
+  BusinessType?: string | null
   registrationNumber?: string | null
+  RegistrationNumber?: string | null
   taxPin?: string | null
+  taxPIN?: string | null
   vatNumber?: string | null
   countryId?: number | null
   physicalAddress?: string | null
@@ -79,16 +108,23 @@ export interface ThirdPartyEntity {
 }
 
 export interface ThirdPartyUserProfile {
+  [key: string]: unknown
   id?: number
   userId?: number
   firstName?: string
+  first_name?: string
   lastName?: string
+  last_name?: string
   fullName?: string
+  full_name?: string
   email?: string
+  Email?: string
   phone: string | null
+  Phone?: string | null
   imageId: number | null
   gender: any
   thirdPartyId?: string | number | null
+  third_party_id?: string | number | null
   isActive?: boolean
   isSupplier?: boolean
   isTenant?: boolean
@@ -100,6 +136,25 @@ export interface ThirdPartyUserProfile {
   third_party?: ThirdPartyEntity
   thirdPartyDetails?: ThirdPartyDetails
   third_party_details?: ThirdPartyDetails
+  thirdPartyName?: string | null
+  third_party_name?: string | null
+  tradingName?: string | null
+  trading_name?: string | null
+  businessType?: string | null
+  BusinessType?: string | null
+  registrationNumber?: string | null
+  RegistrationNumber?: string | null
+  taxPIN?: string | null
+  TaxPIN?: string | null
+  taxPin?: string | null
+  physicalAddress?: string | null
+  PhysicalAddress?: string | null
+  website?: string | null
+  Website?: string | null
+  countryId?: string | number | null
+  profileCompletion?: number | null
+  ProfileCompletion?: number | null
+  profile_completion?: number | null
 }
 
 export interface ProfileResponse {

@@ -65,11 +65,11 @@ function statusBadgeClass(status?: string) {
 }
 
 export default function RFQPage() {
-    const { rfqId } = useParams<{ rfqId: string }>()
+    const params = useParams<{ rfqId: string }>()
     const router = useRouter()
 
     const normalizedRfqId = (() => {
-        const raw = String(rfqId ?? "")
+        const raw = String(params?.rfqId ?? "")
         try {
             return decodeURIComponent(raw).trim()
         } catch {
@@ -212,7 +212,7 @@ export default function RFQPage() {
                         </Button>
                         <div className="text-xs font-semibold text-slate-500 uppercase">RFQ Ref</div>
                         <h1 className="text-xl font-semibold text-slate-900">
-                            {rfq.rfqNumber ?? data.rfqNumber ?? rfqId}
+                            {rfq.rfqNumber ?? data.rfqNumber ?? normalizedRfqId}
                         </h1>
                         <p className="text-sm text-slate-600 line-clamp-2">
                             {rfq.comments ?? data.comments ?? "Request for Quotation"}

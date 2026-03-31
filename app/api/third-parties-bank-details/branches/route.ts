@@ -41,11 +41,11 @@ function normalizeBranchOptions(payload: unknown) {
       .map((entry: any) => {
         const id = Number(
           entry?.id ??
-            entry?.Id ??
-            entry?.branchId ??
-            entry?.BranchId ??
-            entry?.BranchID ??
-            entry?.branch_id,
+          entry?.Id ??
+          entry?.branchId ??
+          entry?.BranchId ??
+          entry?.BranchID ??
+          entry?.branch_id,
         )
         if (!Number.isFinite(id) || id <= 0) return null
 
@@ -65,7 +65,9 @@ function normalizeBranchOptions(payload: unknown) {
 
     if (options.length > 0) {
       const unique = new Map<number, { id: number; name: string; value?: string }>()
-      for (const option of options) {
+      const normalizedOptions = options as Array<{ id: number; name: string; value?: string }>
+
+      for (const option of normalizedOptions) {
         if (!unique.has(option.id)) {
           unique.set(option.id, option)
         }

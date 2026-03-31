@@ -282,9 +282,9 @@ export const useRegisterForm = () => {
         setIsLoadingMetadata(true)
         try {
             const [countries, categories, lookups] = await Promise.all([
-                apiFetch(`/api/v1/portal/auth/metadata/countries`),
-                apiFetch(`/api/v1/portal/auth/metadata/supplier-categories`),
-                apiFetch(`/api/v1/portal/auth/lookups/bulk?codes=Gender,BusinessType,MaritalStatus,Occupation`, { allowError: true })
+                apiFetch<{ data?: any[] }>(`/api/v1/portal/auth/metadata/countries`),
+                apiFetch<{ data?: any[] }>(`/api/v1/portal/auth/metadata/supplier-categories`),
+                apiFetch<Record<string, any>>(`/api/v1/portal/auth/lookups/bulk?codes=Gender,BusinessType,MaritalStatus,Occupation`, { allowError: true })
             ])
             const data = lookups?.data ?? lookups?.Data ?? {}
             const pick = (key: string) => data?.[key] ?? data?.[key.toLowerCase()] ?? data?.[(key[0].toLowerCase() + key.slice(1))] ?? []
@@ -311,7 +311,7 @@ export const useRegisterForm = () => {
         if (!country?.id) return
         setIsLoadingLocalities(true)
         try {
-            const result = await apiFetch(`/api/v1/portal/auth/metadata/localities/${country.id}`, { allowError: true })
+            const result = await apiFetch<{ data?: any[] }>(`/api/v1/portal/auth/metadata/localities/${country.id}`, { allowError: true })
             setMetadata(prev => ({ ...prev, localities: result?.data || [] }))
         } finally {
             setIsLoadingLocalities(false)

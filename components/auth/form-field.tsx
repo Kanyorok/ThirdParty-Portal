@@ -48,8 +48,8 @@ const ERROR_MESSAGES: Record<string, string> = {
 function SignInForm() {
     const router = useRouter()
     const searchParams = useSearchParams()
-    const callbackUrl = searchParams.get("callbackUrl") || "/dashboard"
-    const urlError = searchParams.get("error")
+    const callbackUrl = searchParams?.get("callbackUrl") || "/dashboard"
+    const urlError = searchParams?.get("error")
 
     const [showPassword, setShowPassword] = useState(false)
     const [showSuccess, setShowSuccess] = useState(false)
@@ -77,7 +77,7 @@ function SignInForm() {
     }, [urlError, setError])
 
     useEffect(() => {
-        if (searchParams.get("registrationSuccess") === "true") {
+        if (searchParams?.get("registrationSuccess") === "true") {
             setShowSuccess(true)
             const timer = setTimeout(() => setShowSuccess(false), 5000)
             return () => clearTimeout(timer)
@@ -108,9 +108,9 @@ function SignInForm() {
                 setError("root", { message: ERROR_MESSAGES[errorCode] || result.error })
             } else if (result?.ok) {
                 toast.success("Welcome back!", { description: "Redirecting to your dashboard..." })
-                
+
                 let redirectUrl = result.url || callbackUrl || "/dashboard"
-                
+
                 // Prevent redirection to "undefined" string or invalid URLs
                 if (redirectUrl === "undefined" || redirectUrl === "null" || !redirectUrl) {
                     redirectUrl = "/dashboard"

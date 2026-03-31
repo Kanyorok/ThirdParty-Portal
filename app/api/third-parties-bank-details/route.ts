@@ -85,6 +85,22 @@ function buildWritePayload(input: unknown, thirdPartyId: number): BankDetailsWri
   }
 }
 
+function validateWritePayload(payload: BankDetailsWritePayload) {
+  if (!payload.BranchID) {
+    return "Branch is required."
+  }
+
+  if (!payload.AccountNumber) {
+    return "Account number is required."
+  }
+
+  if (!payload.CurrencyId) {
+    return "Currency is required."
+  }
+
+  return null
+}
+
 export async function GET(_request: NextRequest) {
   const context = await getSessionContext()
   if (!context) {
@@ -121,6 +137,11 @@ export async function POST(request: NextRequest) {
   try {
     const requestBody = await request.json().catch(() => ({}))
     const payload = buildWritePayload(requestBody, context.thirdPartyId)
+    const validationError = validateWritePayload(payload)
+
+    if (validationError) {
+      return NextResponse.json({ message: validationError }, { status: 400 })
+    }
 
     const res = await fetch(`${getBaseApiUrl()}${BANK_DETAILS_ENDPOINT}`, {
       method: "POST",

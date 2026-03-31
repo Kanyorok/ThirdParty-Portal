@@ -23,7 +23,7 @@ export function ThemeToggle({ className, variant = "ghost", size = "icon" }: The
     if (!mounted) {
         return (
             <Button size={size} variant={variant} aria-label="Loading theme switcher" className={className} disabled>
-                <span className="sr-only">Loading...</span>
+                <span className="sr-only">Loading theme switcher</span>
             </Button>
         )
     }

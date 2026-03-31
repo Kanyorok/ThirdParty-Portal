@@ -4,7 +4,7 @@ import type React from "react"
 import { memo, useMemo, useCallback } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ChevronRight } from "lucide-react"
+import { ArrowUpRight, ChevronRight } from "lucide-react"
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/common/collapsible"
 import {
@@ -25,14 +25,25 @@ import { cn } from "@/lib/utils"
 import { useProfileStore } from "@/store/use-profile-store"
 import type { NavMainItem, NavMainProps, NavSubItem, UserProfile } from "@/types/third-party-auth-types"
 
-const ComingSoonBadge = memo(() => (
-  <Badge variant="outline" className="ml-auto h-4 border-primary/25 bg-primary/10 px-1.5 text-[10px] font-semibold text-primary">
+const ComingSoonBadge = memo(({ compact = false }: { compact?: boolean }) => (
+  <Badge
+    variant="outline"
+    className={cn(
+      "ml-auto border-primary/25 bg-primary/10 font-semibold text-primary",
+      compact ? "h-3.5 px-1 text-[9px]" : "h-4 px-1.5 text-[10px]",
+    )}
+  >
     Soon
   </Badge>
 ))
 
-const NavBadge = memo(({ badge }: { badge: string }) => (
-  <Badge className="ml-auto h-4 px-1.5 text-[10px] font-semibold bg-blue-600 text-white">
+const NavBadge = memo(({ badge, compact = false }: { badge: string; compact?: boolean }) => (
+  <Badge
+    className={cn(
+      "ml-auto bg-blue-600 font-semibold text-white",
+      compact ? "h-3.5 px-1 text-[9px]" : "h-4 px-1.5 text-[10px]",
+    )}
+  >
     {badge}
   </Badge>
 ))
@@ -43,13 +54,15 @@ const NavItemExpanded = memo(
     isActive,
     isSubmenuOpen,
     onItemClick,
-    activeProfile
+    activeProfile,
+    variant,
   }: {
     item: NavMainItem
     isActive: (url: string, subItems?: readonly NavSubItem[]) => boolean
     isSubmenuOpen: (subItems?: readonly NavSubItem[]) => boolean
     onItemClick?: (item: NavMainItem | NavSubItem) => void
     activeProfile: UserProfile
+    variant: "primary" | "secondary"
   }) => {
     const isItemActive = useMemo(() => isActive(item.url, item.subItems), [isActive, item.url, item.subItems])
     const isOpen = useMemo(() => isSubmenuOpen(item.subItems), [isSubmenuOpen, item.subItems])
@@ -65,29 +78,46 @@ const NavItemExpanded = memo(
 
     const menuButtonContent = (
       <>
-        <div className="flex min-w-0 flex-1 items-center gap-3">
+        <div className="flex min-w-0 flex-1 items-start gap-2 sm:gap-2.5">
           {item.icon && (
             <div className={cn(
-              "flex size-7 items-center justify-center rounded-lg border transition-all duration-300",
+              "mt-0.5 flex items-center justify-center transition-all duration-300",
+              variant === "secondary" ? "size-6 rounded-lg sm:size-6.5" : "size-7 rounded-[0.9rem] sm:size-7.5 sm:rounded-[0.95rem]",
               isItemActive
-                ? "border-primary/25 bg-primary/10 text-primary"
-                : "border-sidebar-border bg-sidebar text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
+                ? "bg-primary text-primary-foreground shadow-[0_12px_24px_-18px_rgba(37,99,235,0.55)]"
+                : isOpen
+                  ? variant === "secondary"
+                    ? "bg-primary/12 text-primary"
+                    : "bg-primary/14 text-primary"
+                  : variant === "secondary"
+                    ? "bg-sidebar-accent/40 text-sidebar-foreground/65 group-hover:bg-primary/8 group-hover:text-primary"
+                    : "bg-sidebar-accent/60 text-sidebar-foreground/72 group-hover:bg-sidebar-accent group-hover:text-sidebar-foreground"
             )}>
-              <item.icon className="h-4 w-4" />
+              <item.icon className={cn("shrink-0", variant === "secondary" ? "h-3.25 w-3.25 sm:h-3.5 sm:w-3.5" : "h-[0.9rem] w-[0.9rem] sm:h-[0.95rem] sm:w-[0.95rem]")} />
             </div>
           )}
-          <span className={cn(
-            "truncate text-[13px] font-semibold tracking-tight transition-colors",
-            isItemActive ? "text-sidebar-foreground" : "text-sidebar-foreground/75 group-hover:text-sidebar-foreground"
-          )}>{item.title}</span>
+          <div className="min-w-0 flex-1">
+            <span className={cn(
+              "block truncate text-[11.5px] font-semibold tracking-tight transition-colors sm:text-[12px]",
+              isItemActive
+                ? "text-sidebar-foreground"
+                : variant === "secondary"
+                  ? "text-sidebar-foreground/78 group-hover:text-sidebar-foreground"
+                  : "text-sidebar-foreground/88 group-hover:text-sidebar-foreground"
+            )}>{item.title}</span>
+          </div>
         </div>
         <div className="flex items-center gap-2">
-          {item.comingSoon && <ComingSoonBadge />}
-          {item.badge && !item.comingSoon && <NavBadge badge={item.badge} />}
+          {item.comingSoon && <ComingSoonBadge compact={variant === "secondary"} />}
+          {item.badge && !item.comingSoon && <NavBadge badge={item.badge} compact={variant === "secondary"} />}
           {visibleSubItems.length > 0 && (
             <ChevronRight className={cn(
-              "h-3.5 w-3.5 text-sidebar-foreground/40 transition-transform duration-300",
-              isOpen && "rotate-90 text-primary"
+              "h-3.5 w-3.5 transition-transform duration-300",
+              isOpen
+                ? variant === "secondary"
+                  ? "rotate-90 text-primary/85 drop-shadow-[0_0_8px_rgba(59,130,246,0.14)]"
+                  : "rotate-90 text-primary drop-shadow-[0_0_10px_rgba(59,130,246,0.22)]"
+                : "text-sidebar-foreground/55"
             )} />
           )}
         </div>
@@ -100,14 +130,20 @@ const NavItemExpanded = memo(
           disabled={item.disabled || item.comingSoon}
           isActive={isItemActive}
           className={cn(
-            "group h-11 px-3 transition-all duration-300 rounded-xl border",
+            "group relative transition-all duration-300",
+            variant === "secondary" ? "min-h-[2.8rem] rounded-[0.9rem] px-2 py-1.75 sm:min-h-[3rem] sm:rounded-[0.95rem] sm:px-2.25 sm:py-2" : "min-h-[3.25rem] rounded-[1rem] px-2.25 py-2 sm:min-h-[3.625rem] sm:rounded-[1.15rem] sm:px-2.5 sm:py-2.5",
             isItemActive
-              ? "border-primary/25 bg-primary/10 text-sidebar-foreground"
-              : "border-transparent bg-transparent hover:border-sidebar-border hover:bg-sidebar-accent/55",
+              ? "bg-primary/[0.08] text-sidebar-foreground"
+              : variant === "secondary"
+                ? "bg-transparent hover:bg-sidebar-accent/20"
+                : "bg-transparent hover:bg-sidebar-accent/55",
             (item.disabled || item.comingSoon) && "opacity-40 grayscale"
           )}
           onClick={handleItemClick}
         >
+          {isItemActive && (
+            <span aria-hidden="true" className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-primary" />
+          )}
           {menuButtonContent}
         </SidebarMenuButton>
       )
@@ -118,7 +154,7 @@ const NavItemExpanded = memo(
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>{button}</TooltipTrigger>
-                <TooltipContent side="right" className="border border-border/70 bg-popover text-[11px] font-semibold text-foreground shadow-none">
+                <TooltipContent side="right" sideOffset={10} className="border border-border/70 bg-popover px-2.5 py-1.5 text-[10px] font-semibold text-foreground shadow-none">
                   {item.comingSoon ? "Feature Coming Soon" : "Restricted Access"}
                 </TooltipContent>
               </Tooltip>
@@ -139,16 +175,41 @@ const NavItemExpanded = memo(
             <SidebarMenuButton
               isActive={isItemActive}
               className={cn(
-                "group h-11 px-3 transition-all duration-300 rounded-xl border",
-                isOpen ? "border-sidebar-border bg-sidebar-accent/55" : "border-transparent hover:border-sidebar-border hover:bg-sidebar-accent/55"
+                "group relative overflow-hidden transition-all duration-300",
+                variant === "secondary" ? "min-h-[2.8rem] rounded-[0.9rem] px-2 py-1.75 sm:min-h-[3rem] sm:rounded-[0.95rem] sm:px-2.25 sm:py-2" : "min-h-[3.25rem] rounded-[1rem] px-2.25 py-2 sm:min-h-[3.625rem] sm:rounded-[1.15rem] sm:px-2.5 sm:py-2.5",
+                isOpen
+                  ? variant === "secondary"
+                    ? "bg-primary/[0.07]"
+                    : "bg-primary/[0.08]"
+                  : variant === "secondary"
+                    ? "hover:bg-sidebar-accent/20"
+                    : "hover:bg-sidebar-accent/55"
               )}
               onClick={handleItemClick}
             >
+              {isOpen && (
+                <>
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "absolute inset-y-2.5 rounded-full",
+                      variant === "secondary"
+                        ? "left-[0.68rem] w-0.5 bg-primary/70"
+                        : "left-[0.76rem] w-[2px] bg-primary",
+                    )}
+                  />
+                </>
+              )}
               {menuButtonContent}
             </SidebarMenuButton>
           </CollapsibleTrigger>
           <CollapsibleContent className="data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
-            <SidebarMenuSub className="ml-7 border-l border-sidebar-border pl-3 py-1.5 space-y-1">
+            <SidebarMenuSub className={cn(
+              "relative mt-1.5 space-y-1 border-l pl-2 sm:pl-2.5",
+              variant === "secondary"
+                ? "border-sidebar-border/45"
+                : "border-sidebar-border/60"
+            )}>
               {visibleSubItems.map((subItem) => {
                 const subActive = isActive(subItem.url)
                 return (
@@ -157,17 +218,58 @@ const NavItemExpanded = memo(
                       isActive={subActive}
                       asChild
                       className={cn(
-                        "h-9 px-3 transition-all duration-200 rounded-lg relative overflow-hidden border",
+                        "group/subitem relative overflow-hidden transition-all duration-200",
+                        variant === "secondary" ? "min-h-[2.35rem] rounded-lg px-2 py-1.5 sm:min-h-[2.5rem] sm:py-1.75" : "min-h-[2.55rem] rounded-[0.85rem] px-2 py-1.75 sm:min-h-[2.75rem] sm:rounded-[0.9rem] sm:px-2.25 sm:py-2",
                         subActive
-                          ? "border-primary/25 bg-primary/10 text-primary font-semibold"
-                          : "border-transparent text-sidebar-foreground/70 hover:border-sidebar-border hover:bg-sidebar-accent/55 hover:text-sidebar-foreground"
+                          ? "bg-primary/[0.08] text-primary font-semibold"
+                          : variant === "secondary"
+                            ? "text-sidebar-foreground/68 hover:bg-sidebar-accent/18 hover:text-sidebar-foreground/88"
+                            : "text-sidebar-foreground/78 hover:bg-sidebar-accent/35 hover:text-sidebar-foreground"
                       )}
                       onClick={() => onItemClick?.(subItem)}
                     >
-                      <Link href={subItem.url} target={subItem.newTab ? "_blank" : undefined} className="flex w-full items-center gap-2">
-                        <span className="text-[12px] tracking-tight truncate flex-1">{subItem.title}</span>
-                        {subItem.comingSoon && <ComingSoonBadge />}
-                        {subItem.badge && !subItem.comingSoon && <NavBadge badge={subItem.badge} />}
+                      <Link href={subItem.url} target={subItem.newTab ? "_blank" : undefined} className="relative flex w-full items-start gap-2 sm:gap-2.5">
+                        {subActive && (
+                          <>
+                            <span
+                              aria-hidden="true"
+                              className={cn(
+                                "absolute z-0 rounded-full bg-primary",
+                                variant === "secondary"
+                                  ? isOpen
+                                    ? "bottom-2 top-2 left-[calc(0.72rem-1px)] w-0.5 opacity-100"
+                                    : "bottom-2 top-2 left-[calc(0.72rem-1px)] w-0.5 opacity-95"
+                                  : isOpen
+                                    ? "bottom-2 top-2 left-[calc(0.85rem-1px)] w-[2px] opacity-100"
+                                    : "bottom-2 top-2 left-[calc(0.85rem-1px)] w-[2px] opacity-100",
+                              )}
+                            />
+                          </>
+                        )}
+                        <span className={cn(
+                          "relative z-[1] shrink-0 rounded-full ring-sidebar transition-colors",
+                          variant === "secondary" ? "mt-1 h-1.5 w-1.5 ring-[3px]" : "mt-1.25 h-1.5 w-1.5 ring-[3px]",
+                          subActive
+                            ? isOpen
+                              ? "bg-primary"
+                              : "bg-primary"
+                            : "bg-sidebar-foreground/25"
+                        )} />
+                        <span className="min-w-0 flex-1">
+                          <span className={cn(
+                            "flex items-center gap-2 font-semibold tracking-tight",
+                            variant === "secondary" ? "text-[10.5px] sm:text-[11px]" : "text-[11px] sm:text-[11.5px]"
+                          )}>
+                            <span className="truncate">{subItem.title}</span>
+                            {subItem.comingSoon && <ComingSoonBadge compact={variant === "secondary"} />}
+                            {subItem.badge && !subItem.comingSoon && <NavBadge badge={subItem.badge} compact={variant === "secondary"} />}
+                          </span>
+                        </span>
+                        <ArrowUpRight className={cn(
+                          "shrink-0 transition-colors",
+                          variant === "secondary" ? "mt-0.5 h-3 w-3" : "mt-0.5 h-3.25 w-3.25",
+                          subActive ? "text-primary" : "text-sidebar-foreground/50"
+                        )} />
                       </Link>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
@@ -195,13 +297,13 @@ const NavItemCollapsed = memo(
 
     const triggerContent = (
       <>
-        {item.icon && <item.icon className="h-5 w-5 z-10" />}
-        {isItemActive && <div className="absolute -left-1 h-5 w-1 rounded-full bg-primary" />}
+        {item.icon && <item.icon className="z-10 h-4.5 w-4.5" />}
+        {isItemActive && <div className="absolute -left-0.5 h-5 w-0.5 rounded-full bg-primary" />}
       </>
     )
 
     return (
-      <SidebarMenuItem className="flex justify-center mb-1">
+      <SidebarMenuItem className="mb-px flex justify-center">
         <TooltipProvider>
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
@@ -213,10 +315,10 @@ const NavItemCollapsed = memo(
                   if (!item.disabled && !item.comingSoon) onItemClick?.(item)
                 }}
                 className={cn(
-                  "h-11 w-11 justify-center transition-all duration-300 rounded-xl relative group border",
+                  "group relative h-8.5 w-8.5 justify-center rounded-[0.8rem] transition-all duration-300 sm:h-9 sm:w-9 sm:rounded-[0.85rem]",
                   isItemActive
-                    ? "border-primary/25 bg-primary/10 text-primary"
-                    : "border-transparent text-sidebar-foreground/60 hover:border-sidebar-border hover:bg-sidebar-accent/55 hover:text-sidebar-foreground"
+                    ? "bg-primary text-primary-foreground shadow-[0_12px_24px_-18px_rgba(37,99,235,0.55)] ring-1 ring-primary/15"
+                    : "text-sidebar-foreground/74 hover:bg-sidebar-accent/55 hover:text-sidebar-foreground"
                 )}
               >
                 {item.disabled || item.comingSoon ? (
@@ -226,16 +328,11 @@ const NavItemCollapsed = memo(
                 )}
               </SidebarMenuButton>
             </TooltipTrigger>
-            <TooltipContent side="right" sideOffset={15} className="border border-border/70 bg-popover px-3 py-2 shadow-none">
-              <div className="flex flex-col gap-0.5 max-w-56">
-                <div className="text-[12px] font-semibold tracking-tight text-foreground">{item.title}</div>
-                {item.description && (
-                  <div className="text-[11px] leading-snug text-muted-foreground font-medium">
-                    {item.description}
-                  </div>
-                )}
+            <TooltipContent side="right" sideOffset={8} className="border border-border/60 bg-popover px-2.5 py-1.5 shadow-none">
+              <div className="max-w-52 space-y-0.5">
+                <div className="text-[11px] font-semibold tracking-tight text-foreground">{item.title}</div>
                 {(item.comingSoon || item.disabled) && (
-                  <div className="text-[10px] text-muted-foreground font-semibold pt-1">
+                  <div className="pt-0.5 text-[9px] font-semibold text-muted-foreground">
                     {item.comingSoon ? "Coming soon" : "Restricted"}
                   </div>
                 )}
@@ -248,7 +345,7 @@ const NavItemCollapsed = memo(
   },
 )
 
-export const NavMain = memo(({ items, onItemClick, className }: NavMainProps) => {
+export const NavMain = memo(({ items, onItemClick, className, variant = "primary" }: NavMainProps) => {
   const pathname = usePathname()
   const { state, isMobile } = useSidebar()
   const activeProfile = useProfileStore((s) => s.activeProfile)
@@ -322,16 +419,26 @@ export const NavMain = memo(({ items, onItemClick, className }: NavMainProps) =>
   )
 
   return (
-    <div className={cn("space-y-6 py-2", className)}>
+    <div className={cn("space-y-3.5 py-1", variant === "secondary" && "space-y-1.5 py-0.5", className)}>
       {items.map((group) => (
         <SidebarGroup key={group.id} className="p-0">
           {group.label && state !== "collapsed" && (
-            <SidebarGroupLabel className="mb-2 px-5 text-[11px] font-semibold tracking-tight text-sidebar-foreground/60">
+            <SidebarGroupLabel
+              className={cn(
+                "mb-2 px-3.5 text-[10px] font-bold uppercase tracking-[0.16em] text-sidebar-foreground/58 sm:px-4",
+                variant === "secondary" && "mb-1.5 px-2.5 text-[9px] font-bold tracking-[0.2em] text-sidebar-foreground/46 sm:px-3",
+              )}
+            >
               {group.label}
             </SidebarGroupLabel>
           )}
           <SidebarGroupContent>
-            <SidebarMenu className={cn("gap-1", state === "collapsed" && !isMobile ? "px-1" : "px-3")}>
+            <SidebarMenu
+              className={cn(
+                "gap-0.5",
+                state === "collapsed" && !isMobile ? "px-0" : variant === "secondary" ? "px-0.5 sm:px-1" : "px-1.5 sm:px-2",
+              )}
+            >
               {group.items.map((item) =>
                 state === "collapsed" && !isMobile ? (
                   <NavItemCollapsed key={item.title} item={item} isActive={isActive} onItemClick={onItemClick} />
@@ -343,6 +450,7 @@ export const NavMain = memo(({ items, onItemClick, className }: NavMainProps) =>
                     isSubmenuOpen={isSubmenuOpen}
                     onItemClick={onItemClick}
                     activeProfile={activeProfile as UserProfile}
+                    variant={variant}
                   />
                 ),
               )}

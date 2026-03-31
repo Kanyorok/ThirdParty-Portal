@@ -1,11 +1,11 @@
 import { UserProfile, NavSection, NavMainItem, NavSubItem } from "@/types/profile-types"
 import {
-    LayoutDashboard, Receipt, FileText,
-    ClipboardList, FolderOpen, ShieldCheck, BookOpen,
-    Settings, HelpCircle, Ticket,
+    LayoutGrid, ReceiptText, BriefcaseBusiness,
+    ClipboardList, FolderKanban, ShieldCheck, BookOpen,
+    Settings2, CircleHelp, Ticket,
     Construction,
-    LandPlot,
-    FileCheck2
+    Building2,
+    Files
 } from "lucide-react"
 
 const allProfiles: readonly UserProfile[] = ["Supplier", "Tenant", "Customer"]
@@ -43,7 +43,7 @@ export const sidebarItems: readonly NavSection[] = [
         title: "Overview",
         allowedProfiles: allProfiles,
         items: [
-            withProfiles({ title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, description: "Summary & quick actions" }, allProfiles),
+            withProfiles({ title: "Dashboard", url: "/dashboard", icon: LayoutGrid, description: "Summary & quick actions" }, allProfiles),
         ],
     },
     {
@@ -55,17 +55,29 @@ export const sidebarItems: readonly NavSection[] = [
             withProfiles({
                 title: "My Applications",
                 url: "/dashboard/supplier/my-applications",
-                icon: FileCheck2,
+                icon: Files,
                 description: "Track your tender, prequalification, and RFQ applications",
                 subItems: [
-                    { title: "Tenders", url: "/dashboard/supplier/my-applications/tenders" },
-                    { title: "Prequalification", url: "/dashboard/supplier/my-applications/prequalification" },
-                    { title: "RFQs", url: "/dashboard/supplier/my-applications/rfqs" },
+                    {
+                        title: "Tenders",
+                        url: "/dashboard/supplier/my-applications/tenders",
+                        description: "Monitor tender submissions, deadlines, and outcomes",
+                    },
+                    {
+                        title: "Prequalification",
+                        url: "/dashboard/supplier/my-applications/prequalification",
+                        description: "Review category progress, scores, and approvals",
+                    },
+                    {
+                        title: "RFQs",
+                        url: "/dashboard/supplier/my-applications/rfqs",
+                        description: "Manage quotes, response status, and award signals",
+                    },
                 ],
             }, ["Supplier"]),
             withProfiles({ title: "Find RFQs", url: "/dashboard/supplier/rfqs", icon: ClipboardList, description: "Browse requests for quotation" }, ["Supplier"]),
-            withProfiles({ title: "Find Tenders", url: "/dashboard/supplier/tenders", icon: FileText, description: "Explore available tenders" }, ["Supplier"]),
-            withProfiles({ title: "All Documents", url: "/dashboard/supplier/documents", icon: FolderOpen, description: "Contracts, files & uploads" }, ["Supplier"]),
+            withProfiles({ title: "Find Tenders", url: "/dashboard/supplier/tenders", icon: BriefcaseBusiness, description: "Explore available tenders" }, ["Supplier"]),
+            withProfiles({ title: "All Documents", url: "/dashboard/supplier/documents", icon: FolderKanban, description: "Contracts, files & uploads" }, ["Supplier"]),
         ],
     },
     {
@@ -73,10 +85,10 @@ export const sidebarItems: readonly NavSection[] = [
         title: "Property Management",
         allowedProfiles: ["Tenant"],
         items: [
-            withProfiles({ title: "Rentable Properties", url: "/dashboard/tenant/properties", icon: LandPlot, description: "Units, availability & listings" }, ["Tenant"]),
+            withProfiles({ title: "Rentable Properties", url: "/dashboard/tenant/properties", icon: Building2, description: "Units, availability & listings" }, ["Tenant"]),
             withProfiles({ title: "My Interests", url: "/dashboard/tenant/interests", icon: ClipboardList, description: "Track submitted property interests" }, ["Tenant"]),
             withProfiles({ title: "Leases", url: "/dashboard/tenant/leases", icon: BookOpen, description: "Lease terms & renewals" }, ["Tenant"]),
-            withProfiles({ title: "Invoices", url: "/dashboard/tenant/invoices", icon: Receipt, description: "Billing history & payments" }, ["Tenant"]),
+            withProfiles({ title: "Invoices", url: "/dashboard/tenant/invoices", icon: ReceiptText, description: "Billing history & payments" }, ["Tenant"]),
             withProfiles({ title: "Maintenance", url: "/dashboard/tenant/maintenance", icon: Construction, description: "Requests & work orders" }, ["Tenant"])
         ],
     },
@@ -93,8 +105,8 @@ export const sidebarItems: readonly NavSection[] = [
         title: "Account & Help",
         allowedProfiles: allProfiles,
         items: [
-            withProfiles({ title: "Settings", url: "/dashboard/settings/profile", icon: Settings, description: "Profile & preferences" }, allProfiles),
-            withProfiles({ title: "Help Center", url: "/dashboard/help", icon: HelpCircle, description: "Guides & support" }, allProfiles),
+            withProfiles({ title: "Settings", url: "/dashboard/settings/profile", icon: Settings2, description: "Profile & preferences" }, allProfiles),
+            withProfiles({ title: "Help Center", url: "/dashboard/help", icon: CircleHelp, description: "Guides & support" }, allProfiles),
             withProfiles({ title: "My Tickets", url: "/dashboard/help/tickets", icon: Ticket, description: "Track and reply to support tickets" }, allProfiles),
         ],
     },
