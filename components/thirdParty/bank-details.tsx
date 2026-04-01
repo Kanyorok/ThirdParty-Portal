@@ -27,10 +27,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 
 const BANK_DETAILS_QUERY_KEY = ["third-party-bank-details"] as const
 const CURRENCIES_QUERY_KEY = ["currencies"] as const
+const BRANCHES_QUERY_KEY = ["third-party-bank-branches"] as const
 
 const bankDetailsSchema = z.object({
   bankName: z.string().trim().min(2, "Bank name is required"),
-  branch: z.string().trim(),
+  branchId: z.coerce.number().int().positive("Branch is required"),
   swiftCode: z.string().trim(),
   accountNumber: z
     .string()
@@ -47,6 +48,12 @@ type CurrencyOption = {
   code: string
   name: string
   symbol?: string
+}
+
+type BranchOption = {
+  id: number
+  name: string
+  value?: string
 }
 
 type BankDetail = {
@@ -192,6 +199,35 @@ async function fetchCurrencies() {
     .filter((row: CurrencyOption | null): row is CurrencyOption => row != null)
 }
 
+async function fetchBranches() {
+  const res = await fetch("/api/third-parties-bank-details/branches", {
+    method: "GET",
+    cache: "no-store",
+  })
+  const body = await parseBody(res)
+
+  if (!res.ok) {
+    throw new Error(resolveApiError(body, "Unable to load bank branches."))
+  }
+
+  const rows = Array.isArray(body?.data) ? body.data : []
+  return rows
+    .map((row: any) => {
+      const id = normalizeNumber(row?.id)
+      if (!id || id <= 0) return null
+
+      const name = normalizeText(row?.name ?? row?.value)
+      if (!name) return null
+
+      return {
+        id,
+        name,
+        value: normalizeText(row?.value) || undefined,
+      }
+    })
+    .filter((row: BranchOption | null): row is BranchOption => row != null)
+}
+
 function formatAccountNumber(value: string) {
   const compact = value.replace(/\s+/g, "")
   return compact.replace(/(.{4})/g, "$1 ").trim()
@@ -219,7 +255,7 @@ export default function BankDetailsForm() {
     resolver: zodResolver(bankDetailsSchema),
     defaultValues: {
       bankName: "",
-      branch: "",
+      branchId: 0,
       swiftCode: "",
       accountNumber: "",
       currencyId: 0,
@@ -245,6 +281,16 @@ export default function BankDetailsForm() {
     staleTime: 5 * 60 * 1000,
   })
 
+  const {
+    data: branches = [],
+    isLoading: isLoadingBranches,
+  } = useQuery({
+    queryKey: [...BRANCHES_QUERY_KEY],
+    queryFn: fetchBranches,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  })
+
   const currencyById = useMemo(() => {
     const map = new Map<number, CurrencyOption>()
     for (const currency of currencies) {
@@ -252,6 +298,14 @@ export default function BankDetailsForm() {
     }
     return map
   }, [currencies])
+
+  const branchById = useMemo(() => {
+    const map = new Map<number, BranchOption>()
+    for (const branch of branches) {
+      map.set(branch.id, branch)
+    }
+    return map
+  }, [branches])
 
   const preferredCurrencyId = useMemo(() => {
     if (!currencies.length) return 0
@@ -280,7 +334,9 @@ export default function BankDetailsForm() {
     }) => {
       const requestBody = {
         BankName: values.bankName.trim(),
-        Branch: values.branch?.trim() || undefined,
+        BranchID: Number(values.branchId),
+        BranchId: Number(values.branchId),
+        Branch: branchById.get(Number(values.branchId))?.name,
         SwiftCode: values.swiftCode?.trim() || undefined,
         AccountNumber: values.accountNumber.replace(/\s+/g, "").trim(),
         CurrencyId: Number(values.currencyId),
@@ -315,7 +371,7 @@ export default function BankDetailsForm() {
       setEditingBankDetail(null)
       form.reset({
         bankName: "",
-        branch: "",
+        branchId: 0,
         swiftCode: "",
         accountNumber: "",
         currencyId: preferredCurrencyId,
@@ -365,7 +421,7 @@ export default function BankDetailsForm() {
     setEditingBankDetail(null)
     form.reset({
       bankName: "",
-      branch: "",
+      branchId: 0,
       swiftCode: "",
       accountNumber: "",
       currencyId: preferredCurrencyId,
@@ -377,7 +433,7 @@ export default function BankDetailsForm() {
     setEditingBankDetail(detail)
     form.reset({
       bankName: detail.bankName ?? "",
-      branch: detail.branchName ?? "",
+      branchId: detail.branchId ?? 0,
       swiftCode: detail.swiftCode ?? "",
       accountNumber: detail.accountNumber,
       currencyId: detail.currencyId ?? preferredCurrencyId,
@@ -390,7 +446,7 @@ export default function BankDetailsForm() {
     setEditingBankDetail(null)
     form.reset({
       bankName: "",
-      branch: "",
+      branchId: 0,
       swiftCode: "",
       accountNumber: "",
       currencyId: preferredCurrencyId,
@@ -453,13 +509,30 @@ export default function BankDetailsForm() {
 
                   <FormField
                     control={form.control}
-                    name="branch"
+                    name="branchId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-semibold text-foreground">Branch</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="e.g. Westlands" />
-                        </FormControl>
+                        <FormLabel className="text-xs font-semibold text-foreground">
+                          Branch <span className="text-destructive">*</span>
+                        </FormLabel>
+                        <Select
+                          value={field.value > 0 ? String(field.value) : undefined}
+                          onValueChange={(value) => field.onChange(Number(value))}
+                          disabled={isLoadingBranches || !branches.length}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={isLoadingBranches ? "Loading branches" : "Select branch"} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {branches.map((branch: BranchOption) => (
+                              <SelectItem key={branch.id} value={String(branch.id)}>
+                                {branch.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage className="text-xs" />
                       </FormItem>
                     )}
@@ -508,7 +581,7 @@ export default function BankDetailsForm() {
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder={isLoadingCurrencies ? "Loading currencies..." : "Select currency"} />
+                              <SelectValue placeholder={isLoadingCurrencies ? "Loading currencies" : "Select currency"} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -638,7 +711,7 @@ export default function BankDetailsForm() {
             </Table>
 
             {isFetchingBankDetails ? (
-              <div className="border-t border-border/60 px-4 py-2 text-right text-[11px] text-muted-foreground">Refreshing...</div>
+              <div className="border-t border-border/60 px-4 py-2 text-right text-[11px] text-muted-foreground">Refreshing</div>
             ) : null}
           </div>
         )}

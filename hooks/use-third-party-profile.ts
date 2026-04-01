@@ -31,9 +31,9 @@ async function parseResponse(res: Response): Promise<ThirdPartyProfileResponse> 
 function buildApiError(payload: ThirdPartyProfileResponse, fallback: string) {
     const fieldMessages = payload.errors
         ? Object.values(payload.errors)
-              .flat()
-              .filter(Boolean)
-              .join(" ")
+            .flat()
+            .filter(Boolean)
+            .join(" ")
         : ""
     const message = [payload.message || fallback, fieldMessages].filter(Boolean).join(" ").trim()
     return new Error(message || fallback)
@@ -72,7 +72,7 @@ export function useThirdPartyProfile() {
                 }
                 return payload.message || "Profile updated successfully"
             })(),
-            { loading: "Saving...", success: (m) => m, error: (e) => String(e) },
+            { loading: "Saving profile", success: (m) => m, error: (e) => String(e) },
         )
     }
 
@@ -86,7 +86,7 @@ export function useThirdPartyProfile() {
                 }
                 return payload.message || "Profile updated successfully"
             })(),
-            { loading: "Saving...", success: (m) => m, error: (e) => String(e) },
+            { loading: "Saving profile", success: (m) => m, error: (e) => String(e) },
         )
     }
 
@@ -121,7 +121,7 @@ export function useThirdPartyProfile() {
     }
 
     return {
-        profile: pickProfile(data),
+        profile: pickProfile(data ?? null),
         createProfile,
         updateProfile,
         patchProfile,

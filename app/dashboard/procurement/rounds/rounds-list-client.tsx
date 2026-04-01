@@ -3,11 +3,11 @@
 import { useEffect } from "react"
 import { Input } from "@/components/common/input"
 import { RoundCard } from "@/components/procurement/round-card"
-import { PrequalificationRound } from "@/types/procurement/types"
+import type { Round } from "@/types/types"
 import { useRoundFilter } from "@/hooks/procurement/use-round-filter"
 import { useProcurementStore } from "@/store/use-procurement-store"
 
-export function RoundsListClient({ initialData }: { initialData: PrequalificationRound[] }) {
+export function RoundsListClient({ initialData }: { initialData: Round[] }) {
     const { rounds, setRounds } = useProcurementStore()
 
     useEffect(() => {

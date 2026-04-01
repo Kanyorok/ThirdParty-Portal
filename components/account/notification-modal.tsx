@@ -6,10 +6,15 @@ import { Bell } from "lucide-react";
 import { toast } from "sonner";
 import { profileService } from "@/lib/api/profile";
 import { MutatorOptions } from "swr";
-import { Profile } from "@/types/profile-management";
 import { Button } from "@/components/common/button";
 import { Spinner } from "@/components/common/spinner";
 import { motion } from "framer-motion";
+
+type Profile = {
+    third_party_id?: string | number | null;
+    third_party_name?: string | null;
+    status?: string | null;
+}
 
 interface NotificationModalProps {
     isOpen: boolean;
@@ -29,19 +34,25 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
     const [isPending, startTransition] = useTransition();
 
     const handleSave = useCallback(async () => {
+        if (profile.third_party_id == null) {
+            toast.error("Profile ID is missing.");
+            return;
+        }
+
+        const profileId = profile.third_party_id
+
         startTransition(async () => {
             try {
                 await profileService.updateProfile(
-                    profile.third_party_id,
-                    { status: profile.status },
-                    accessToken
+                    profileId,
+                    { status: profile.status }
                 );
 
                 await mutateProfile();
-                toast.success("Notification preferences updated!");
+                toast.success("Notification preferences updated.");
                 onClose();
             } catch (error: any) {
-                toast.error(error.message || "Failed to update settings.");
+                toast.error(error.message || "Unable to update notification preferences.");
             }
         });
     }, [accessToken, mutateProfile, onClose, profile]);
@@ -87,8 +98,8 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                             <Button onClick={handleSave} disabled={isPending} className="min-w-[140px]">
                                 {isPending ? (
                                     <>
-                                        <Spinner className="mr-2 h-4 w-4 animate-spin" />
-                                        Saving...
+                                        <Spinner className="mr-2 h-4 w-4" />
+                                        Saving changes
                                     </>
                                 ) : (
                                     "Confirm Changes"

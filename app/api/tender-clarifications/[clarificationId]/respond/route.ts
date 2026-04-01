@@ -42,6 +42,8 @@ export async function PUT(req: NextRequest) {
     return jsonError("Response is required", 400)
   }
 
+  const actorId = session.user.userId ?? session.user.thirdPartyId ?? null
+
   const payload = {
     response: responseText,
     response_by: body.responseBy ?? "Procurement Team",
@@ -49,7 +51,7 @@ export async function PUT(req: NextRequest) {
     status: body.status ?? "answered",
     is_public: Boolean(body.publishToAll),
     attachments: Array.isArray(body.attachments) ? body.attachments : [],
-    modified_by: session.user.id,
+    modified_by: actorId,
     modified_on: new Date().toISOString()
   }
 

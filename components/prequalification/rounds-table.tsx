@@ -1,8 +1,9 @@
 "use client"
 
+import { Spinner } from "@/components/common/spinner"
 import { useMemo } from "react"
 import { format } from "date-fns"
-import { ChevronLeft, ChevronRight, Inbox, Loader2, Timer } from "lucide-react"
+import { ChevronLeft, ChevronRight, Inbox, Timer } from "lucide-react"
 import { Button } from "@/components/common/button"
 import StatusBadge from "./status-badge"
 import CategoryApplications from "./category-applications"
@@ -73,8 +74,8 @@ export default function RoundsTable() {
         <section className="space-y-5">
             {loading && visibleRounds.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-border/50 p-6 text-center text-sm text-muted-foreground">
-                    <Loader2 className="mr-2 inline h-4 w-4 animate-spin" />
-                    Loading prequalification rounds…
+                    <Spinner className="mr-2 inline-flex h-4 w-4" />
+                    Loading prequalification rounds
                 </div>
             ) : null}
 

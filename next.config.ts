@@ -2,11 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  allowedDevOrigins: ['127.0.0.1'],
-  reactStrictMode: false,
+  allowedDevOrigins: ["127.0.0.1", "localhost"],
+  reactStrictMode: true,
   compiler: {
     removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error"] } : false,
   },

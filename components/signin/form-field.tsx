@@ -1,5 +1,5 @@
 import React from "react"
-import { Label } from "@/components/ui/label"
+import { Label } from "@/components/common/label"
 import { AlertCircle, CheckCircle } from "lucide-react"
 
 interface FormFieldProps {
@@ -32,10 +32,10 @@ export function FormField({
           </span>
         )}
       </div>
-      
+
       <div className="relative">
         {children}
-        
+
         {status === "error" && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500 pointer-events-none">
             <AlertCircle className="h-5 w-5" />
@@ -44,8 +44,8 @@ export function FormField({
       </div>
 
       {error ? (
-        <p 
-          id={`${id}-error`} 
+        <p
+          id={`${id}-error`}
           className="text-sm text-red-500 mt-1 flex items-center gap-1 animate-in slide-in-from-top-1"
           role="alert"
         >

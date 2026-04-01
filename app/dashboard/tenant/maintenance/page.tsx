@@ -32,7 +32,7 @@ export default function MaintenancePage() {
     const { data: session, status } = useSession()
     const accessToken = resolveSessionAccessToken(session as any)
     const searchParams = useSearchParams()
-    const page = parseInt(searchParams.get("page") || "1", 10)
+    const page = parseInt(searchParams?.get("page") || "1", 10)
     const sessionTenantId = resolveTenantIdFromSessionUser(session?.user)
     const [tenantId, setTenantId] = useState<number | null>(sessionTenantId)
     const userId = resolveUserIdFromSessionUser(session?.user)
@@ -115,7 +115,7 @@ export default function MaintenancePage() {
         }
     }, [tenantId, session?.user, userId])
 
-    const { data, error, isLoading, mutate } = useSWR(
+    const { data, error, isLoading, mutate } = useSWR<any>(
         accessToken && canAttemptMaintenanceFetch
             ? ["/api/property/maintenancerequest", accessToken, page, searchQuery, tenantId, fallbackTenantIds.join(",")]
             : null,

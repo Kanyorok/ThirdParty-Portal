@@ -40,11 +40,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Prepare submission payload
+    const actorId = session.user.userId ?? session.user.thirdPartyId ?? null
+
     const submissionPayload = {
       status: 'submitted',
       submissionDate: new Date().toISOString(),
       finalDeclaration: body.finalDeclaration || null,
-      modifiedBy: session.user.id,
+      modifiedBy: actorId,
       modifiedOn: new Date().toISOString(),
     };
 

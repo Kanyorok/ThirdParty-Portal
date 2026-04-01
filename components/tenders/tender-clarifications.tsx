@@ -7,6 +7,7 @@ import { Textarea } from "@/components/common/textarea";
 import { Badge } from "@/components/common/badge";
 import { ScrollArea } from "@/components/common/scroll-area";
 import { toast } from "sonner";
+import { Spinner } from "@/components/common/spinner";
 import {
   MessageSquare,
   Send,
@@ -137,7 +138,7 @@ export default function TenderClarifications({
         error instanceof Error ? error.message : "Unable to load clarifications"
       );
       if (showLoadingIndicator) {
-        toast.error("Failed to load clarifications");
+        toast.error("Unable to load clarifications.");
       }
     } finally {
       if (showLoadingIndicator) {
@@ -156,7 +157,7 @@ export default function TenderClarifications({
   // Manual refresh function for button
   const handleRefresh = () => {
     fetchClarifications();
-    toast.success("Refreshed clarifications");
+    toast.success("Clarifications refreshed.");
   };
 
   const handleSubmitClarification = async () => {
@@ -184,12 +185,12 @@ export default function TenderClarifications({
       const data = await response.json();
 
       if (!response.ok) {
-        let errorMessage = data.message || 'Failed to submit clarification';
+        let errorMessage = data.message || 'Unable to submit clarification.';
         console.error('Submit Error:', { status: response.status, data });
         throw new Error(errorMessage);
       }
 
-      toast.success("Clarification request submitted successfully!");
+      toast.success("Clarification submitted successfully.");
       setNewQuestion("");
       setIsPublic(false);
       setShowNewClarification(false);
@@ -202,7 +203,7 @@ export default function TenderClarifications({
       toast.error(
         error instanceof Error
           ? error.message
-          : "Failed to submit clarification request"
+          : "Unable to submit clarification."
       );
     } finally {
       setIsSubmitting(false);
@@ -243,7 +244,7 @@ export default function TenderClarifications({
       onRequestAccess?.();
     } catch (error) {
       setAcceptError(error instanceof Error ? error.message : "Unable to accept invitation.");
-      toast.error("Failed to accept invitation");
+      toast.error("Unable to accept invitation.");
     } finally {
       setAccepting(false);
     }
@@ -379,8 +380,8 @@ export default function TenderClarifications({
                 >
                   {isSubmitting ? (
                     <>
-                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                      Sending...
+                      <Spinner className="mr-2 h-4 w-4" />
+                      Sending clarification
                     </>
                   ) : (
                     <>

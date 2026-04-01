@@ -3,12 +3,14 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react"
 import {
     Building2, Search, Inbox, Maximize2, Sparkles,
-    MapPin, ArrowUpRight, LayoutGrid, ChevronDown, X
+    MapPin, ArrowUpRight, LayoutGrid, ChevronDown, X,
+    Blocks, DoorOpen, ShieldCheck, Clock3
 } from "lucide-react"
 import { usePagination } from "@/components/providers/pagination-provider"
-import { Property, PaginatedResponse } from "@/types/property"
+import { Property, PaginatedResponse, PropertyLocality } from "@/types/property"
 import { Button } from "@/components/common/button"
 import { Badge } from "@/components/common/badge"
+import { Spinner } from "@/components/common/spinner"
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/common/sheet"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/common/accordion"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/common/dialog"
@@ -444,23 +446,26 @@ export function RentablePropertiesList({
     initialData?: PaginatedResponse<Property>;
     searchQuery: string;
     setSearchQuery: (q: string) => void;
-    localities?: any[];
+    localities?: PropertyLocality[];
 }) {
     const { isPending } = usePagination()
     const [statusFilter, setStatusFilter] = useState<string | null>(null)
 
     const properties = useMemo(() => initialData?.data ?? [], [initialData])
 
-    const resolveLocation = useCallback((locId: number | undefined) => {
-        if (!locId) return "Nairobi, KE"
-        const found = localities.find(l => l.id === locId)
-        return found ? found.name : "Nairobi, KE"
+    const resolveLocation = useCallback((property: Property) => {
+        const directName = property.locationName || property.localityName
+        if (typeof directName === "string" && directName.trim()) return directName.trim()
+
+        if (!property.locationId) return "Location pending confirmation"
+        const found = localities.find((locality) => locality.id === property.locationId)
+        return found ? found.name : `Locality #${property.locationId}`
     }, [localities])
 
     const filteredProperties = useMemo(() => {
         const query = searchQuery.trim().toLowerCase()
         return properties.filter(p => {
-            const locName = resolveLocation(p.locationId).toLowerCase()
+            const locName = resolveLocation(p).toLowerCase()
             const matchesSearch =
                 p.propertyName.toLowerCase().includes(query) ||
                 p.propertyCode.toLowerCase().includes(query) ||
@@ -476,56 +481,176 @@ export function RentablePropertiesList({
         })
     }, [properties, searchQuery, statusFilter, resolveLocation])
 
+    const propertyViewModels = useMemo(() => {
+        return filteredProperties
+            .map((property) => ({
+                property,
+                locationName: resolveLocation(property),
+                stats: getPropertyStats(property),
+                imageUrl: resolveImageUrl(property),
+            }))
+            .sort((left, right) => {
+                if (right.stats.vacantUnits !== left.stats.vacantUnits) {
+                    return right.stats.vacantUnits - left.stats.vacantUnits
+                }
+
+                return right.stats.totalUnits - left.stats.totalUnits
+            })
+    }, [filteredProperties, resolveLocation])
+
+    const portfolioStats = useMemo(() => {
+        return propertyViewModels.reduce(
+            (acc, item) => {
+                acc.properties += 1
+                acc.units += item.stats.totalUnits
+                acc.vacant += item.stats.vacantUnits
+                acc.blocks += item.stats.totalBlocks
+                return acc
+            },
+            { properties: 0, units: 0, vacant: 0, blocks: 0 }
+        )
+    }, [propertyViewModels])
+
+    const activeFilterCount = (searchQuery.trim() ? 1 : 0) + (statusFilter ? 1 : 0)
+    const occupancyRate =
+        portfolioStats.units > 0
+            ? Math.round(((portfolioStats.units - portfolioStats.vacant) / portfolioStats.units) * 100)
+            : 0
+
     return (
         <div className="w-full space-y-8 antialiased">
-            <header className="space-y-6">
-                <div className="space-y-2.5">
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200">
-                        <Sparkles className="h-3.5 w-3.5 text-blue-600" />
-                        <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-700">Property Registry</span>
+            <header className="space-y-5">
+                <div className="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.16),_transparent_40%),linear-gradient(135deg,_#ffffff_0%,_#f8fbff_48%,_#eef6ff_100%)] p-6 shadow-[0_18px_50px_-30px_rgba(15,23,42,0.28)] md:p-8">
+                    <div className="absolute right-0 top-0 h-44 w-44 rounded-full bg-blue-100/50 blur-3xl" />
+                    <div className="absolute -bottom-16 right-8 hidden h-40 w-40 rounded-full border border-blue-100 bg-white/60 lg:block" />
+
+                    <div className="relative grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)] xl:items-end">
+                        <div className="space-y-4">
+                            <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white/80 px-3 py-1.5 shadow-sm backdrop-blur-sm">
+                                <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+                                <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-700">Property Registry</span>
+                            </div>
+
+                            <div className="space-y-3">
+                                <h1 className="max-w-3xl text-3xl font-semibold tracking-tight text-slate-950 md:text-4xl">
+                                    Lease-ready commercial spaces with clearer availability and faster intent capture
+                                </h1>
+                                <p className="max-w-2xl text-sm leading-6 text-slate-600 md:text-[15px]">
+                                    Browse vetted properties, compare live availability, and submit interest from a single flow designed to shorten decision time.
+                                </p>
+                            </div>
+
+                            <div className="flex flex-wrap gap-2.5">
+                                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[11px] font-semibold text-emerald-700">
+                                    <ShieldCheck className="h-3.5 w-3.5" />
+                                    Verified inventory
+                                </div>
+                                <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-[11px] font-semibold text-blue-700">
+                                    <Clock3 className="h-3.5 w-3.5" />
+                                    Faster enquiry path
+                                </div>
+                                <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700">
+                                    <DoorOpen className="h-3.5 w-3.5 text-amber-600" />
+                                    {portfolioStats.vacant.toLocaleString()} spaces currently open
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            <div className="rounded-2xl border border-white/80 bg-white/80 p-4 shadow-sm backdrop-blur-sm">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Live listings</p>
+                                <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">{portfolioStats.properties}</p>
+                                <p className="mt-1 text-xs text-slate-600">Properties surfaced for leasing decisions</p>
+                            </div>
+                            <div className="rounded-2xl border border-white/80 bg-white/80 p-4 shadow-sm backdrop-blur-sm">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Vacancy rate</p>
+                                <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">{portfolioStats.units > 0 ? `${Math.max(100 - occupancyRate, 0)}%` : "0%"}</p>
+                                <p className="mt-1 text-xs text-slate-600">Availability across {portfolioStats.units.toLocaleString()} units</p>
+                            </div>
+                            <div className="rounded-2xl border border-white/80 bg-white/80 p-4 shadow-sm backdrop-blur-sm">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Ready now</p>
+                                <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">{portfolioStats.vacant}</p>
+                                <p className="mt-1 text-xs text-slate-600">Vacant spaces that can take interest today</p>
+                            </div>
+                            <div className="rounded-2xl border border-white/80 bg-white/80 p-4 shadow-sm backdrop-blur-sm">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Property mix</p>
+                                <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">{portfolioStats.blocks}</p>
+                                <p className="mt-1 text-xs text-slate-600">Blocks distributed across listed assets</p>
+                            </div>
+                        </div>
                     </div>
-                    <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
-                        Available Properties for Rent
-                    </h1>
-                    <p className="text-sm text-slate-600">Browse to rent/lease properties</p>
                 </div>
 
-                <div className="flex flex-col lg:flex-row gap-4">
-                    <div className="relative flex-1 group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" strokeWidth={2} />
-                        <input
-                            type="text"
-                            placeholder="Search properties by name, code, or location..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-11 pr-10 h-11 rounded-xl bg-white border border-slate-200 focus:border-blue-300 focus:ring-4 focus:ring-blue-50 outline-none transition-all text-sm placeholder:text-slate-400"
-                        />
-                        {searchQuery && (
-                            <button
-                                onClick={() => setSearchQuery("")}
-                                type="button"
-                                className="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 rounded-lg hover:bg-slate-100 flex items-center justify-center transition-colors"
-                            >
-                                <X className="h-4 w-4 text-slate-400" strokeWidth={2} />
-                            </button>
-                        )}
+                <div className="rounded-[1.75rem] border border-slate-200 bg-white/90 p-3 shadow-[0_16px_40px_-32px_rgba(15,23,42,0.35)] backdrop-blur-sm md:p-4">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+                        <div className="relative flex-1 group">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" strokeWidth={2} />
+                            <input
+                                type="text"
+                                placeholder="Search by property name, code, or location"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-11 pr-10 text-sm outline-none transition-all placeholder:text-slate-400 focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-50"
+                            />
+                            {searchQuery && (
+                                <button
+                                    onClick={() => setSearchQuery("")}
+                                    type="button"
+                                    className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg transition-colors hover:bg-slate-100"
+                                >
+                                    <X className="h-4 w-4 text-slate-400" strokeWidth={2} />
+                                </button>
+                            )}
+                        </div>
+
+                        <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-1 lg:min-w-[300px]">
+                            {["All", "Vacant", "Occupied"].map((label) => (
+                                <button
+                                    key={label}
+                                    onClick={() => setStatusFilter(label === "All" ? null : label)}
+                                    className={cn(
+                                        "flex-1 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all whitespace-nowrap",
+                                        (statusFilter === label || (label === "All" && !statusFilter))
+                                            ? "bg-white text-slate-900 shadow-sm"
+                                            : "text-slate-600 hover:bg-white/60 hover:text-slate-900"
+                                    )}
+                                >
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
-                    <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-xl border border-slate-200 lg:min-w-[280px]">
-                        {["All", "Vacant", "Occupied"].map((label) => (
-                            <button
-                                key={label}
-                                onClick={() => setStatusFilter(label === "All" ? null : label)}
-                                className={cn(
-                                    "flex-1 px-4 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap",
-                                    (statusFilter === label || (label === "All" && !statusFilter))
-                                        ? "bg-white text-slate-900"
-                                        : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
-                                )}
+                    <div className="mt-3 flex flex-col gap-3 border-t border-slate-100 px-1 pt-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
+                            <span className="font-semibold text-slate-900">{propertyViewModels.length}</span>
+                            <span>{propertyViewModels.length === 1 ? "property" : "properties"} matched</span>
+                            <span className="hidden text-slate-300 sm:inline">•</span>
+                            <span>{portfolioStats.vacant} vacant units ready for interest</span>
+                            {activeFilterCount > 0 ? (
+                                <Badge className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-700">
+                                    {activeFilterCount} active {activeFilterCount === 1 ? "filter" : "filters"}
+                                </Badge>
+                            ) : null}
+                        </div>
+
+                        {activeFilterCount > 0 ? (
+                            <Button
+                                onClick={() => {
+                                    setSearchQuery("")
+                                    setStatusFilter(null)
+                                }}
+                                variant="outline"
+                                className="h-10 rounded-xl border-slate-200 px-4 text-xs font-semibold text-slate-700"
                             >
-                                {label}
-                            </button>
-                        ))}
+                                Clear filters
+                            </Button>
+                        ) : (
+                            <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+                                <Blocks className="h-3.5 w-3.5 text-blue-500" />
+                                Listings are ranked by available inventory first
+                            </div>
+                        )}
                     </div>
                 </div>
             </header>
@@ -541,16 +666,20 @@ export function RentablePropertiesList({
                 <EmptyState isSearch={!!searchQuery || !!statusFilter} onClear={() => { setSearchQuery(""); setStatusFilter(null) }} />
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
-                    {filteredProperties.map((property) => (
+                    {propertyViewModels.map(({ property, locationName, stats, imageUrl }) => (
                         <PropertyDetailsSheet
                             key={property.id}
                             property={property}
-                            locationName={resolveLocation(property.locationId)}
+                            locationName={locationName}
+                            stats={stats}
+                            imageUrl={imageUrl}
                         >
                             <div className="cursor-pointer">
                                 <PropertyCard
                                     property={property}
-                                    locationName={resolveLocation(property.locationId)}
+                                    locationName={locationName}
+                                    stats={stats}
+                                    imageUrl={imageUrl}
                                 />
                             </div>
                         </PropertyDetailsSheet>
@@ -571,61 +700,86 @@ type UnitChoice = {
     availabilityLabel: string
 }
 
-function PropertyCard({ property, locationName }: { property: Property, locationName: string }) {
-    const stats = useMemo(() => {
-        let totalUnits = 0, vacantUnits = 0;
-        property.blocks?.forEach(b => b.floors?.forEach(f => f.units?.forEach(u => {
-            totalUnits++;
-            if (u.availabilityLabel === "Vacant") vacantUnits++;
-        })));
-        return { totalUnits, vacantUnits };
-    }, [property]);
-
+function PropertyCard({ property, locationName, stats, imageUrl }: { property: Property, locationName: string, stats: PropertyStats, imageUrl?: string | null }) {
     return (
-        <div className="group/card relative bg-white rounded-2xl border border-slate-200 overflow-hidden transition-all duration-300 hover:border-blue-300">
-            <div className="relative aspect-[16/9] bg-gradient-to-br from-blue-50 to-slate-50 overflow-hidden">
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <Building2 className="h-20 w-20 text-slate-200 group-hover/card:scale-110 group-hover/card:text-blue-200 transition-all duration-500" strokeWidth={1} />
-                </div>
+        <div className="group/card relative overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-blue-300 hover:shadow-[0_24px_60px_-32px_rgba(37,99,235,0.35)]">
+            <PropertyVisual title={property.propertyName} imageUrl={imageUrl} className="aspect-[16/10]">
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/20 via-transparent to-transparent opacity-70" />
 
-                <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300" />
-
-                <div className="absolute top-4 left-4 flex gap-2">
-                    <Badge className="bg-white/95 backdrop-blur-sm text-slate-900 border border-slate-200 text-[10px] font-semibold px-3 py-1 rounded-lg">
+                <div className="absolute left-4 top-4 flex flex-wrap gap-2">
+                    <Badge className="rounded-full border border-slate-200 bg-white/95 px-3 py-1 text-[10px] font-semibold text-slate-900 backdrop-blur-sm">
                         {property.propertyCode}
                     </Badge>
-                    {stats.vacantUnits > 0 && (
-                        <Badge className="bg-emerald-500/95 backdrop-blur-sm text-white border-none text-[10px] font-semibold px-3 py-1 rounded-lg">
-                            {stats.vacantUnits} Units Available
-                        </Badge>
-                    )}
+                    <Badge className={cn("rounded-full px-3 py-1 text-[10px] font-semibold backdrop-blur-sm", getAvailabilityTone(stats))}>
+                        {stats.vacantUnits > 0 ? `${stats.vacantUnits} Ready Now` : "Waitlist Opportunity"}
+                    </Badge>
                 </div>
-            </div>
 
-            <div className="p-5 space-y-4">
-                <div className="space-y-2">
-                    <h3 className="text-lg font-semibold text-slate-900 group-hover/card:text-blue-600 transition-colors line-clamp-1">
+                <div className="absolute inset-x-4 bottom-4 rounded-2xl border border-white/70 bg-white/88 p-3 shadow-sm backdrop-blur-sm">
+                    <div className="flex items-center justify-between gap-3">
+                        <div>
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Availability</p>
+                            <p className="mt-1 text-sm font-semibold text-slate-950">{getPropertyLead(stats)}</p>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Vacancy</p>
+                            <p className="mt-1 text-lg font-semibold tracking-tight text-slate-950">{stats.vacancyRate}%</p>
+                        </div>
+                    </div>
+                </div>
+            </PropertyVisual>
+
+            <div className="space-y-5 p-5">
+                <div className="space-y-2.5">
+                    <h3 className="line-clamp-1 text-lg font-semibold text-slate-900 transition-colors group-hover/card:text-blue-600">
                         {property.propertyName}
                     </h3>
                     <div className="flex items-center gap-1.5 text-slate-600">
                         <MapPin className="h-3.5 w-3.5 text-blue-500" strokeWidth={2} />
                         <span className="text-xs font-medium">{locationName}</span>
                     </div>
+                    <p className="line-clamp-2 text-sm leading-6 text-slate-600">
+                        {property.propertyDescription || "Modern commercial space configured for fast discovery, easier comparison, and quicker lease interest capture."}
+                    </p>
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                    <div className="flex items-center gap-6">
-                        <div>
-                            <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide mb-0.5">Units</p>
-                            <p className="text-base font-semibold text-slate-900">{stats.totalUnits}</p>
-                        </div>
-                        <div className="h-8 w-px bg-slate-200" />
-                        <div>
-                            <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide mb-0.5">Type</p>
-                            <p className="text-base font-semibold text-slate-900">Commercial</p>
-                        </div>
+                <div className="grid grid-cols-3 gap-2">
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
+                        <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">Units</p>
+                        <p className="text-base font-semibold text-slate-950">{stats.totalUnits}</p>
                     </div>
-                    <div className="h-9 w-9 rounded-xl bg-blue-50 flex items-center justify-center group-hover/card:bg-blue-500 group-hover/card:text-white transition-all">
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
+                        <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">Floors</p>
+                        <p className="text-base font-semibold text-slate-950">{stats.totalFloors}</p>
+                    </div>
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
+                        <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">Blocks</p>
+                        <p className="text-base font-semibold text-slate-950">{stats.totalBlocks}</p>
+                    </div>
+                </div>
+
+                <div className="space-y-3 border-t border-slate-100 pt-4">
+                    <div className="flex items-center justify-between text-xs font-medium text-slate-600">
+                        <span>Immediate fit</span>
+                        <span>{stats.vacantUnits} of {stats.totalUnits} units available</span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                        <div
+                            className={cn(
+                                "h-full rounded-full transition-all duration-500",
+                                stats.vacantUnits > 0 ? "bg-emerald-500" : "bg-slate-300"
+                            )}
+                            style={{ width: `${Math.max(stats.vacancyRate, stats.totalUnits > 0 ? 8 : 0)}%` }}
+                        />
+                    </div>
+                </div>
+
+                <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50/60 px-4 py-3">
+                    <div>
+                        <p className="text-xs font-semibold text-slate-900">Explore units and submit interest</p>
+                        <p className="mt-1 text-[11px] text-slate-600">Faster decision flow with availability surfaced upfront</p>
+                    </div>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 transition-all group-hover/card:bg-blue-500 group-hover/card:text-white">
                         <ArrowUpRight className="h-4 w-4" strokeWidth={2} />
                     </div>
                 </div>
@@ -634,15 +788,12 @@ function PropertyCard({ property, locationName }: { property: Property, location
     )
 }
 
-function PropertyDetailsSheet({ property, locationName, children }: { property: Property, locationName: string, children: React.ReactNode }) {
+function PropertyDetailsSheet({ property, locationName, stats, imageUrl, children }: { property: Property, locationName: string, stats: PropertyStats, imageUrl?: string | null, children: React.ReactNode }) {
     const { data: session } = useSession()
     const accessToken = resolveSessionAccessToken(session as any) || null
-
-    const totalVacant = property.blocks?.reduce((acc, b) =>
-        acc + b.floors.reduce((fAcc, f) =>
-            fAcc + f.units.filter(u => u.availabilityLabel === "Vacant").length, 0
-        ), 0
-    );
+    const totalVacant = stats.vacantUnits
+    const totalUnits = stats.totalUnits
+    const today = new Date().toISOString().split("T")[0]
 
     const unitChoices = useMemo<UnitChoice[]>(
         () =>
@@ -789,14 +940,14 @@ function PropertyDetailsSheet({ property, locationName, children }: { property: 
             }
 
             if (verificationFailed) {
-                toast.success("Lease interest submitted. Verification endpoint did not respond.")
+                toast.success("Lease interest submitted. Verification could not be confirmed.")
             } else {
-                toast.success((created as any)?.message || "Property interest created successfully")
+                toast.success((created as any)?.message || "Interest submitted successfully.")
             }
             setIsInterestDialogOpen(false)
             resetInterestForm()
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : "Failed to submit lease interest.")
+            toast.error(error instanceof Error ? error.message : "Unable to submit interest.")
         } finally {
             setIsSubmittingInterest(false)
         }
@@ -805,99 +956,155 @@ function PropertyDetailsSheet({ property, locationName, children }: { property: 
     return (
         <Sheet>
             <SheetTrigger asChild>{children}</SheetTrigger>
-            <SheetContent className="w-full sm:max-w-[540px] md:max-w-2xl bg-white p-0 border-l border-slate-200 overflow-hidden">
-                <div className="h-full flex flex-col">
-                    <header className="p-8 pb-10 bg-gradient-to-br from-blue-50/40 to-white border-b border-slate-200 relative shrink-0">
-                        <div className="relative z-10 space-y-4">
-                            <Badge className="bg-blue-500 text-white border-none px-3 py-1.5 rounded-lg text-[10px] font-semibold tracking-wide uppercase">
-                                {property.propertyCode}
-                            </Badge>
-                            <SheetTitle className="text-3xl font-semibold text-slate-900 tracking-tight leading-tight pr-12">
-                                {property.propertyName}
-                            </SheetTitle>
-                            <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
-                                <MapPin className="h-4 w-4 text-blue-500" strokeWidth={2} />
-                                {locationName}
+            <SheetContent className="w-full overflow-hidden border-l border-slate-200 bg-white p-0 sm:max-w-[540px] md:max-w-2xl">
+                <div className="flex h-full flex-col">
+                    <header className="relative shrink-0 border-b border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.18),_transparent_40%),linear-gradient(135deg,_#eff6ff_0%,_#ffffff_55%,_#f8fafc_100%)] p-8 pb-10">
+                        <div className="absolute inset-y-0 right-0 hidden w-[36%] md:block">
+                            <PropertyVisual title={property.propertyName} imageUrl={imageUrl} className="h-full rounded-none border-l border-slate-200" />
+                        </div>
+                        <div className="relative z-10 space-y-5">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Badge className="rounded-full border-none bg-blue-600 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-white">
+                                    {property.propertyCode}
+                                </Badge>
+                                <Badge className={cn("rounded-full px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em]", getAvailabilityTone(stats))}>
+                                    {totalVacant > 0 ? `${totalVacant} units available` : "Currently fully occupied"}
+                                </Badge>
+                            </div>
+                            <div className="space-y-3">
+                                <SheetTitle className="pr-12 text-3xl font-semibold leading-tight tracking-tight text-slate-900">
+                                    {property.propertyName}
+                                </SheetTitle>
+                                <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
+                                    <MapPin className="h-4 w-4 text-blue-500" strokeWidth={2} />
+                                    {locationName}
+                                </div>
+                                <p className="max-w-2xl text-sm leading-6 text-slate-600">
+                                    {property.propertyDescription || "A well-positioned commercial property with a cleaner leasing journey, clearer unit visibility, and a faster path to submit interest."}
+                                </p>
                             </div>
                         </div>
-                        <div className="absolute -right-10 -bottom-10 text-blue-50 select-none pointer-events-none">
+                        <div className="pointer-events-none absolute -right-10 -bottom-10 select-none text-blue-50">
                             <Building2 className="h-64 w-64" strokeWidth={0.5} />
                         </div>
                     </header>
 
-                    <div className="flex-1 overflow-y-auto px-8 py-8 space-y-8 pb-32">
+                    <div className="flex-1 space-y-8 overflow-y-auto px-8 py-8 pb-36">
+                        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                            <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Vacant now</p>
+                                <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">{totalVacant}</p>
+                                <p className="mt-1 text-xs text-slate-600">Immediate spaces open for leasing</p>
+                            </div>
+                            <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Total units</p>
+                                <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">{totalUnits}</p>
+                                <p className="mt-1 text-xs text-slate-600">Inventory across this property</p>
+                            </div>
+                            <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Blocks</p>
+                                <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">{stats.totalBlocks}</p>
+                                <p className="mt-1 text-xs text-slate-600">Distinct building sections</p>
+                            </div>
+                            <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Floors</p>
+                                <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">{stats.totalFloors}</p>
+                                <p className="mt-1 text-xs text-slate-600">Levels available to review</p>
+                            </div>
+                        </section>
+
+                        <section className="space-y-4 rounded-[1.5rem] border border-blue-100 bg-blue-50/60 p-5">
+                            <div className="flex items-start justify-between gap-4">
+                                <div>
+                                    <h4 className="text-sm font-semibold text-slate-900">Why this listing is easier to convert</h4>
+                                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                                        Availability is surfaced before the enquiry step, so you can review inventory and act with less back-and-forth.
+                                    </p>
+                                </div>
+                                <div className="rounded-2xl bg-white px-3 py-2 text-right shadow-sm">
+                                    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Vacancy rate</p>
+                                    <p className="mt-1 text-xl font-semibold tracking-tight text-slate-950">{stats.vacancyRate}%</p>
+                                </div>
+                            </div>
+                            <div className="grid gap-3 sm:grid-cols-3">
+                                <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
+                                    <p className="text-xs font-semibold text-slate-900">Clearer stock visibility</p>
+                                    <p className="mt-1 text-xs leading-5 text-slate-600">Browse every block, floor, and unit without switching screens.</p>
+                                </div>
+                                <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
+                                    <p className="text-xs font-semibold text-slate-900">Faster intent capture</p>
+                                    <p className="mt-1 text-xs leading-5 text-slate-600">Submit interest directly from the property view once a fit is clear.</p>
+                                </div>
+                                <div className="rounded-2xl border border-white/80 bg-white/80 p-4">
+                                    <p className="text-xs font-semibold text-slate-900">Better shortlist quality</p>
+                                    <p className="mt-1 text-xs leading-5 text-slate-600">Prioritise spaces with current vacancy and useful structure details.</p>
+                                </div>
+                            </div>
+                        </section>
+
                         <div className="space-y-6">
                             <div className="space-y-2">
-                                <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Overview</h4>
-                                <p className="text-base leading-relaxed text-slate-700">
-                                    {property.propertyDescription || "Premium commercial property located in a prime business district with excellent accessibility and modern amenities."}
-                                </p>
+                                <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Property structure</h4>
+                                <p className="text-sm text-slate-600">Open each floor to inspect unit sizes and current availability before submitting interest.</p>
                             </div>
-
-                            <div className="flex items-center gap-6 p-6 bg-blue-50 rounded-xl border border-blue-200">
-                                <div className="flex items-baseline gap-2">
-                                    <div className="text-4xl font-semibold text-slate-900">{totalVacant}</div>
-                                    <div className="text-sm text-slate-600">of {property.blocks?.reduce((acc, b) =>
-                                        acc + b.floors.reduce((fAcc, f) => fAcc + f.units.length, 0), 0
-                                    )}</div>
-                                </div>
-                                <div className="h-12 w-px bg-blue-200" />
-                                <div className="text-xs font-medium text-slate-600 leading-relaxed">
-                                    Units currently<br />available to lease
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="space-y-6">
-                            <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Property Structure</h4>
 
                             {property.blocks?.map((block) => (
                                 <section key={block.id} className="space-y-4">
-                                    <div className="flex items-center gap-3 pb-2 border-b border-slate-200">
-                                        <div className="h-9 w-9 rounded-xl bg-blue-500 text-white flex items-center justify-center">
+                                    <div className="flex items-center gap-3 border-b border-slate-200 pb-2">
+                                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500 text-white">
                                             <LayoutGrid className="h-4 w-4" strokeWidth={2} />
                                         </div>
-                                        <h4 className="text-lg font-semibold text-slate-900">{block.blockName}</h4>
+                                        <div>
+                                            <h4 className="text-lg font-semibold text-slate-900">{block.blockName}</h4>
+                                            <p className="text-xs text-slate-500">{block.floors?.length ?? 0} floors in this block</p>
+                                        </div>
                                     </div>
 
                                     <Accordion type="multiple" className="space-y-2">
                                         {block.floors?.map((floor) => (
                                             <AccordionItem key={floor.id} value={`floor-${floor.id}`} className="border-none">
-                                                <AccordionTrigger className="hover:no-underline py-0 [&[data-state=open]>div]:border-blue-300 [&[data-state=open]>div]:bg-blue-50/30">
-                                                    <div className="flex items-center justify-between w-full p-4 rounded-xl bg-white border border-slate-200 text-left transition-all">
+                                                <AccordionTrigger className="py-0 hover:no-underline [&[data-state=open]>div]:border-blue-300 [&[data-state=open]>div]:bg-blue-50/30">
+                                                    <div className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white p-4 text-left transition-all">
                                                         <div className="flex items-center gap-4">
-                                                            <div className="h-10 w-10 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center">
+                                                            <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-blue-200 bg-blue-50">
                                                                 <span className="text-base font-semibold text-blue-600">
                                                                     {floor.floorLabel.replace(/\D/g, '')?.padStart(2, '0') || "01"}
                                                                 </span>
                                                             </div>
                                                             <div>
                                                                 <p className="text-sm font-semibold text-slate-900">{floor.floorLabel}</p>
-                                                                <p className="text-xs text-slate-600 font-medium mt-0.5">{floor.units.length} Units</p>
+                                                                <p className="mt-0.5 text-xs font-medium text-slate-600">{floor.units.length} units</p>
                                                             </div>
                                                         </div>
                                                         <ChevronDown className="h-4 w-4 text-slate-400 transition-transform duration-200" strokeWidth={2} />
                                                     </div>
                                                 </AccordionTrigger>
-                                                <AccordionContent className="pt-2 px-1">
+                                                <AccordionContent className="px-1 pt-2">
                                                     <div className="space-y-2">
                                                         {floor.units?.map((unit) => (
                                                             <div
                                                                 key={unit.id}
-                                                                className="flex items-center justify-between p-4 rounded-xl bg-slate-50/50 border border-slate-200 hover:border-blue-300 hover:bg-blue-50/20 transition-colors"
+                                                                className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/50 p-4 transition-colors hover:border-blue-300 hover:bg-blue-50/20"
                                                             >
                                                                 <div className="space-y-1">
-                                                                    <p className="text-sm font-semibold text-slate-900">{unit.unitCode}</p>
-                                                                    <div className="flex items-center gap-2 text-xs text-slate-600 font-medium">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <p className="text-sm font-semibold text-slate-900">{unit.unitCode}</p>
+                                                                        {String(unit.availabilityLabel || "").toLowerCase() === "vacant" ? (
+                                                                            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-700">
+                                                                                Recommended now
+                                                                            </span>
+                                                                        ) : null}
+                                                                    </div>
+                                                                    <div className="flex items-center gap-2 text-xs font-medium text-slate-600">
                                                                         <Maximize2 className="h-3.5 w-3.5 text-blue-500" strokeWidth={2} />
                                                                         {unit.unitSize} sq ft
                                                                     </div>
                                                                 </div>
                                                                 <Badge className={cn(
-                                                                    "text-[10px] font-semibold uppercase px-2.5 py-1 rounded-lg border",
+                                                                    "rounded-lg border px-2.5 py-1 text-[10px] font-semibold uppercase",
                                                                     unit.availabilityLabel === "Vacant"
-                                                                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                                                        : "bg-slate-100 text-slate-600 border-slate-200"
+                                                                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                                                        : "border-slate-200 bg-slate-100 text-slate-600"
                                                                 )}>
                                                                     {unit.availabilityLabel}
                                                                 </Badge>
@@ -913,25 +1120,39 @@ function PropertyDetailsSheet({ property, locationName, children }: { property: 
                         </div>
                     </div>
 
-                    <footer className="p-6 border-t border-slate-200 bg-white flex gap-3 shrink-0 absolute bottom-0 w-full z-50">
-                        <Button
-                            variant="outline"
-                            className="flex-1 h-11 rounded-xl text-xs font-medium border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-none focus-visible:ring-4 focus-visible:ring-blue-50 focus-visible:border-blue-300"
-                        >
-                            Download Details
-                        </Button>
-                        <Button
-                            disabled={totalVacant === 0}
-                            onClick={openInterestDialog}
-                            className={cn(
-                                "flex-[2] h-11 rounded-xl text-xs font-medium transition-colors shadow-none focus-visible:ring-4 focus-visible:ring-blue-50",
-                                totalVacant === 0
-                                    ? "bg-slate-200 text-slate-500 cursor-not-allowed hover:bg-slate-200"
-                                    : "bg-blue-500 hover:bg-blue-600 text-white",
-                            )}
-                        >
-                            {totalVacant === 0 ? "No Units Available" : `Show Interest (${totalVacant} Available)`}
-                        </Button>
+                    <footer className="absolute bottom-0 z-50 w-full shrink-0 border-t border-slate-200 bg-white/95 p-5 backdrop-blur-sm">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <p className="text-sm font-semibold text-slate-900">
+                                    {totalVacant > 0 ? `${totalVacant} spaces can take interest today` : "This property is currently fully occupied"}
+                                </p>
+                                <p className="mt-1 text-xs text-slate-600">
+                                    Submitting interest is non-binding and helps the leasing team respond with the right options faster.
+                                </p>
+                            </div>
+
+                            <div className="flex gap-3">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => openPrintablePropertySummary({ property, locationName, stats, imageUrl })}
+                                    className="h-11 rounded-xl border-slate-200 bg-white px-5 text-xs font-semibold text-slate-700 shadow-none transition-colors hover:border-slate-300 hover:bg-slate-50"
+                                >
+                                    Download details
+                                </Button>
+                                <Button
+                                    disabled={totalVacant === 0}
+                                    onClick={openInterestDialog}
+                                    className={cn(
+                                        "h-11 rounded-xl px-5 text-xs font-semibold shadow-none transition-colors focus-visible:ring-4 focus-visible:ring-blue-50",
+                                        totalVacant === 0
+                                            ? "cursor-not-allowed bg-slate-200 text-slate-500 hover:bg-slate-200"
+                                            : "bg-blue-600 text-white hover:bg-blue-700"
+                                    )}
+                                >
+                                    {totalVacant === 0 ? "No vacant units right now" : `Request this space (${totalVacant})`}
+                                </Button>
+                            </div>
+                        </div>
                     </footer>
                 </div>
             </SheetContent>
@@ -943,12 +1164,19 @@ function PropertyDetailsSheet({ property, locationName, children }: { property: 
                     if (!nextOpen) resetInterestForm()
                 }}
             >
-                <DialogContent className="sm:max-w-[640px] border border-slate-200 bg-white shadow-none">
+                <DialogContent className="border border-slate-200 bg-white shadow-none sm:max-w-[640px]">
                     <DialogHeader>
-                        <DialogTitle className="text-lg font-semibold tracking-tight text-slate-900">
-                            Show Interest In This Property
+                        <DialogTitle className="text-xl font-semibold tracking-tight text-slate-900">
+                            Submit lease interest
                         </DialogTitle>
                     </DialogHeader>
+
+                    <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-4">
+                        <p className="text-sm font-semibold text-slate-900">{property.propertyName}</p>
+                        <p className="mt-1 text-xs leading-5 text-slate-600">
+                            Choose the unit that fits best, add your preferred leasing window, and the team can respond with the right next step.
+                        </p>
+                    </div>
 
                     <form className="space-y-4" onSubmit={submitInterest}>
                         <div className="grid gap-3 sm:grid-cols-2">
@@ -957,7 +1185,7 @@ function PropertyDetailsSheet({ property, locationName, children }: { property: 
                                 <select
                                     value={selectedUnitId}
                                     onChange={(e) => setSelectedUnitId(e.target.value)}
-                                    className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-300"
+                                    className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-300"
                                     required
                                 >
                                     <option value="" disabled>
@@ -972,16 +1200,16 @@ function PropertyDetailsSheet({ property, locationName, children }: { property: 
                             </div>
 
                             <div className="space-y-1.5">
-                                <label className="text-xs font-semibold text-slate-700">Payment Frequency</label>
+                                <label className="text-xs font-semibold text-slate-700">Payment frequency</label>
                                 <select
                                     value={paymentFrequencyId}
                                     onChange={(e) => setPaymentFrequencyId(e.target.value)}
-                                    className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-300 disabled:bg-slate-100"
+                                    className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-300 disabled:bg-slate-100"
                                     disabled={isLoadingPaymentFrequency}
                                     required
                                 >
                                     <option value="" disabled>
-                                        {isLoadingPaymentFrequency ? "Loading frequencies..." : "Select payment frequency"}
+                                        {isLoadingPaymentFrequency ? "Loading payment frequencies" : "Select payment frequency"}
                                     </option>
                                     {paymentFrequencyOptions.map((option) => (
                                         <option key={option.id} value={option.id}>
@@ -992,37 +1220,57 @@ function PropertyDetailsSheet({ property, locationName, children }: { property: 
                             </div>
                         </div>
 
+                        {selectedUnit ? (
+                            <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Selected space</p>
+                                <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-700">
+                                    <span className="font-semibold text-slate-900">{selectedUnit.unitCode}</span>
+                                    <span>•</span>
+                                    <span>{selectedUnit.blockName}</span>
+                                    <span>•</span>
+                                    <span>{selectedUnit.floorLabel}</span>
+                                </div>
+                            </div>
+                        ) : null}
+
                         <div className="grid gap-3 sm:grid-cols-2">
                             <div className="space-y-1.5">
-                                <label className="text-xs font-semibold text-slate-700">Interested Start Date</label>
+                                <label className="text-xs font-semibold text-slate-700">Interested start date</label>
                                 <input
                                     type="date"
                                     value={startDate}
+                                    min={today}
                                     onChange={(e) => setStartDate(e.target.value)}
-                                    className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-300"
+                                    className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-300"
                                     required
                                 />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs font-semibold text-slate-700">Interested End Date</label>
+                                <label className="text-xs font-semibold text-slate-700">Interested end date</label>
                                 <input
                                     type="date"
                                     value={endDate}
+                                    min={startDate || today}
                                     onChange={(e) => setEndDate(e.target.value)}
-                                    className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-300"
+                                    className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-300"
                                     required
                                 />
                             </div>
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-slate-700">Additional Information</label>
+                            <label className="text-xs font-semibold text-slate-700">Additional information</label>
                             <textarea
                                 value={additionalInformation}
                                 onChange={(e) => setAdditionalInformation(e.target.value)}
-                                placeholder="I want this unit for 12 months"
-                                className="min-h-[88px] w-full rounded-lg border border-slate-200 bg-white p-3 text-sm outline-none focus:border-blue-300"
+                                placeholder="Tell the leasing team your use case, preferred term, or move-in expectations"
+                                className="min-h-[104px] w-full rounded-xl border border-slate-200 bg-white p-3 text-sm outline-none focus:border-blue-300"
                             />
+                        </div>
+
+                        <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3 text-xs text-slate-600">
+                            <span>No commitment is created at this step.</span>
+                            <span className="font-semibold text-slate-900">Response-ready submission</span>
                         </div>
 
                         <div className="flex items-center justify-end gap-2 pt-2">
@@ -1040,7 +1288,7 @@ function PropertyDetailsSheet({ property, locationName, children }: { property: 
                                 className="h-10 rounded-lg bg-blue-600 px-4 text-xs font-semibold text-white hover:bg-blue-700"
                                 disabled={isSubmittingInterest || !accessToken}
                             >
-                                {isSubmittingInterest ? "Submitting..." : "Submit Interest"}
+                                {isSubmittingInterest ? <><Spinner className="mr-1.5 h-4 w-4" />Submitting interest</> : "Send interest"}
                             </Button>
                         </div>
                     </form>
