@@ -23,6 +23,418 @@ import {
     type CodeDetail,
 } from "@/lib/api/lease-interests"
 
+type PropertyStats = {
+    totalUnits: number
+    vacantUnits: number
+    occupiedUnits: number
+    totalBlocks: number
+    totalFloors: number
+    vacancyRate: number
+}
+
+function getPropertyStats(property: Property): PropertyStats {
+    let totalUnits = 0
+    let vacantUnits = 0
+    let totalFloors = 0
+
+    const blocks = property.blocks ?? []
+
+    blocks.forEach((block) => {
+        totalFloors += block.floors?.length ?? 0
+        block.floors?.forEach((floor) => {
+            floor.units?.forEach((unit) => {
+                totalUnits += 1
+                if (String(unit.availabilityLabel || "").toLowerCase() === "vacant") {
+                    vacantUnits += 1
+                }
+            })
+        })
+    })
+
+    const occupiedUnits = Math.max(totalUnits - vacantUnits, 0)
+
+    return {
+        totalUnits,
+        vacantUnits,
+        occupiedUnits,
+        totalBlocks: blocks.length,
+        totalFloors,
+        vacancyRate: totalUnits > 0 ? Math.round((vacantUnits / totalUnits) * 100) : 0,
+    }
+}
+
+function getPropertyLead(stats: PropertyStats) {
+    if (stats.vacantUnits >= 5) return "High-availability spaces ready for immediate enquiries"
+    if (stats.vacantUnits > 0) return "Move-in-ready units with active availability"
+    return "Currently fully occupied, but still open for planning interest"
+}
+
+function getAvailabilityTone(stats: PropertyStats) {
+    if (stats.vacantUnits > 0) {
+        return "bg-emerald-500/95 text-white border-none"
+    }
+
+    return "bg-slate-900/90 text-white border-none"
+}
+
+function resolveImageUrl(input: unknown): string | null {
+    if (!input || typeof input !== "object") return null
+
+    const node = input as Record<string, unknown>
+    const directKeys = [
+        "imageUrl",
+        "image_url",
+        "image",
+        "coverImage",
+        "cover_image",
+        "banner",
+        "bannerUrl",
+        "photo",
+        "thumbnail",
+        "thumbnailUrl",
+        "url",
+    ]
+
+    for (const key of directKeys) {
+        const value = node[key]
+        if (typeof value === "string" && value.trim()) return value.trim()
+    }
+
+    const collectionKeys = ["media", "gallery", "images", "photos", "attachments"]
+    for (const key of collectionKeys) {
+        const value = node[key]
+        if (!Array.isArray(value)) continue
+
+        for (const item of value) {
+            const candidate = resolveImageUrl(item)
+            if (candidate) return candidate
+        }
+    }
+
+    return null
+}
+
+function escapeHtml(value: string) {
+    return value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;")
+}
+
+function openPrintablePropertySummary({
+    property,
+    locationName,
+    stats,
+    imageUrl,
+}: {
+    property: Property
+    locationName: string
+    stats: PropertyStats
+    imageUrl?: string | null
+}) {
+    if (typeof window === "undefined") return
+
+    const printWindow = window.open("", "_blank", "noopener,noreferrer,width=1080,height=920")
+    if (!printWindow) {
+        toast.error("Unable to open printable summary. Please allow pop-ups and try again.")
+        return
+    }
+
+    const structureMarkup = (property.blocks || [])
+        .map((block) => {
+            const floors = block.floors || []
+            const floorMarkup = floors
+                .map((floor) => {
+                    const units = floor.units || []
+                    const unitMarkup = units
+                        .map((unit) => {
+                            const status = String(unit.availabilityLabel || "Unknown")
+                            return `
+                                <tr>
+                                    <td>${escapeHtml(unit.unitCode)}</td>
+                                    <td>${escapeHtml(floor.floorLabel)}</td>
+                                    <td>${escapeHtml(String(unit.unitSize ?? "-"))} sq ft</td>
+                                    <td>${escapeHtml(status)}</td>
+                                </tr>
+                            `
+                        })
+                        .join("")
+
+                    return `
+                        <section class="floor-card">
+                            <h4>${escapeHtml(floor.floorLabel)}</h4>
+                            <p>${units.length} unit${units.length === 1 ? "" : "s"}</p>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Unit</th>
+                                        <th>Floor</th>
+                                        <th>Size</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${unitMarkup}
+                                </tbody>
+                            </table>
+                        </section>
+                    `
+                })
+                .join("")
+
+            return `
+                <section class="block-section">
+                    <div class="section-head">
+                        <div>
+                            <h3>${escapeHtml(block.blockName)}</h3>
+                            <p>${floors.length} floor${floors.length === 1 ? "" : "s"}</p>
+                        </div>
+                    </div>
+                    <div class="floor-grid">
+                        ${floorMarkup}
+                    </div>
+                </section>
+            `
+        })
+        .join("")
+
+    const doc = `
+        <!doctype html>
+        <html>
+            <head>
+                <meta charset="utf-8" />
+                <title>${escapeHtml(property.propertyName)} Summary</title>
+                <style>
+                    :root {
+                        color-scheme: light;
+                        --ink: #0f172a;
+                        --muted: #475569;
+                        --line: #dbe5f0;
+                        --soft: #f8fbff;
+                        --brand: #2563eb;
+                        --brand-soft: #dbeafe;
+                        --success: #047857;
+                    }
+                    * { box-sizing: border-box; }
+                    body {
+                        margin: 0;
+                        font-family: "Segoe UI", Arial, sans-serif;
+                        color: var(--ink);
+                        background: white;
+                    }
+                    .page {
+                        padding: 32px;
+                    }
+                    .hero {
+                        border: 1px solid var(--line);
+                        border-radius: 24px;
+                        overflow: hidden;
+                        background: linear-gradient(135deg, #eff6ff 0%, #ffffff 50%, #f8fafc 100%);
+                        margin-bottom: 24px;
+                    }
+                    .hero-grid {
+                        display: grid;
+                        grid-template-columns: 1.1fr 0.9fr;
+                        gap: 24px;
+                        padding: 24px;
+                        align-items: stretch;
+                    }
+                    .eyebrow {
+                        display: inline-block;
+                        border: 1px solid #bfdbfe;
+                        background: white;
+                        color: var(--brand);
+                        border-radius: 999px;
+                        padding: 6px 10px;
+                        font-size: 11px;
+                        font-weight: 700;
+                        letter-spacing: .16em;
+                        text-transform: uppercase;
+                    }
+                    h1 { font-size: 30px; line-height: 1.15; margin: 14px 0 10px; }
+                    p { margin: 0; }
+                    .lead { color: var(--muted); line-height: 1.7; max-width: 54ch; }
+                    .meta { margin-top: 18px; color: var(--muted); font-size: 14px; }
+                    .media {
+                        min-height: 240px;
+                        border: 1px solid rgba(219,229,240,.9);
+                        border-radius: 20px;
+                        overflow: hidden;
+                        background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+                    }
+                    .media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+                    .media-fallback {
+                        height: 100%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        color: var(--brand);
+                        font-size: 15px;
+                        font-weight: 600;
+                        background: radial-gradient(circle at top left, rgba(37,99,235,.12), transparent 35%), linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+                    }
+                    .stats {
+                        display: grid;
+                        grid-template-columns: repeat(4, minmax(0, 1fr));
+                        gap: 12px;
+                        margin-bottom: 24px;
+                    }
+                    .stat {
+                        border: 1px solid var(--line);
+                        border-radius: 18px;
+                        padding: 16px;
+                        background: var(--soft);
+                    }
+                    .stat label {
+                        display: block;
+                        color: var(--muted);
+                        font-size: 11px;
+                        font-weight: 700;
+                        letter-spacing: .14em;
+                        text-transform: uppercase;
+                        margin-bottom: 10px;
+                    }
+                    .stat strong { font-size: 26px; }
+                    .stat span { display: block; margin-top: 8px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+                    .section {
+                        border: 1px solid var(--line);
+                        border-radius: 24px;
+                        padding: 20px;
+                        margin-bottom: 20px;
+                    }
+                    .section-title {
+                        font-size: 12px;
+                        text-transform: uppercase;
+                        letter-spacing: .16em;
+                        color: var(--muted);
+                        font-weight: 700;
+                        margin-bottom: 14px;
+                    }
+                    .section p { color: var(--muted); line-height: 1.7; }
+                    .block-section + .block-section { margin-top: 18px; }
+                    .section-head {
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        margin-bottom: 14px;
+                    }
+                    .section-head h3 { margin: 0 0 6px; font-size: 20px; }
+                    .section-head p { font-size: 13px; color: var(--muted); }
+                    .floor-grid { display: grid; gap: 14px; }
+                    .floor-card {
+                        border: 1px solid var(--line);
+                        border-radius: 18px;
+                        padding: 14px;
+                        background: #fff;
+                    }
+                    .floor-card h4 { margin: 0 0 4px; font-size: 15px; }
+                    .floor-card p { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+                    table { width: 100%; border-collapse: collapse; }
+                    th, td { text-align: left; padding: 10px 8px; border-top: 1px solid var(--line); font-size: 12px; }
+                    th { color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+                    .footer {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-top: 24px;
+                        color: var(--muted);
+                        font-size: 12px;
+                    }
+                    @media print {
+                        body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+                        .page { padding: 16px; }
+                    }
+                </style>
+            </head>
+            <body>
+                <main class="page">
+                    <section class="hero">
+                        <div class="hero-grid">
+                            <div>
+                                <span class="eyebrow">Property Summary</span>
+                                <h1>${escapeHtml(property.propertyName)}</h1>
+                                <p class="lead">${escapeHtml(property.propertyDescription || "Commercial property summary generated from the current registry listing.")}</p>
+                                <p class="meta">${escapeHtml(locationName)} • ${escapeHtml(property.propertyCode)}</p>
+                            </div>
+                            <div class="media">
+                                ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(property.propertyName)}" />` : `<div class="media-fallback">Property image unavailable in current feed</div>`}
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="stats">
+                        <div class="stat"><label>Vacant now</label><strong>${stats.vacantUnits}</strong><span>Units currently open for interest</span></div>
+                        <div class="stat"><label>Total units</label><strong>${stats.totalUnits}</strong><span>Inventory across the full property</span></div>
+                        <div class="stat"><label>Blocks</label><strong>${stats.totalBlocks}</strong><span>Distinct structural sections</span></div>
+                        <div class="stat"><label>Vacancy rate</label><strong>${stats.vacancyRate}%</strong><span>Share of current available stock</span></div>
+                    </section>
+
+                    <section class="section">
+                        <div class="section-title">Overview</div>
+                        <p>${escapeHtml(getPropertyLead(stats))}</p>
+                    </section>
+
+                    <section class="section">
+                        <div class="section-title">Property Structure</div>
+                        ${structureMarkup}
+                    </section>
+
+                    <div class="footer">
+                        <span>Generated from ThirdParty Portal on ${escapeHtml(new Date().toLocaleString())}</span>
+                        <span>Printable property summary</span>
+                    </div>
+                </main>
+            </body>
+        </html>
+    `
+
+    printWindow.document.open()
+    printWindow.document.write(doc)
+    printWindow.document.close()
+    printWindow.focus()
+    printWindow.print()
+}
+
+function PropertyVisual({
+    title,
+    imageUrl,
+    className,
+    children,
+}: {
+    title: string
+    imageUrl?: string | null
+    className?: string
+    children?: React.ReactNode
+}) {
+    const [hasError, setHasError] = useState(false)
+    const showImage = Boolean(imageUrl && !hasError)
+
+    return (
+        <div className={cn("relative overflow-hidden", className)}>
+            {showImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                    src={String(imageUrl)}
+                    alt={title}
+                    className="h-full w-full object-cover"
+                    onError={() => setHasError(true)}
+                />
+            ) : (
+                <>
+                    <div className="absolute inset-0 bg-[linear-gradient(135deg,_#eff6ff_0%,_#f8fafc_45%,_#ffffff_100%)]" />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.18),_transparent_35%)]" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <Building2 className="h-20 w-20 text-slate-200 transition-all duration-500 group-hover/card:scale-110 group-hover/card:text-blue-200" strokeWidth={1} />
+                    </div>
+                </>
+            )}
+            {children}
+        </div>
+    )
+}
+
 export function RentablePropertiesList({
     initialData,
     searchQuery,
