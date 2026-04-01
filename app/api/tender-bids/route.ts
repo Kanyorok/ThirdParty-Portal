@@ -696,6 +696,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Missing ID or Configuration" }, { status: 400 })
     }
 
+    const actorId = session.user.userId ?? session.user.thirdPartyId ?? null
+
     const response = await fetch(`${EXTERNAL_API_URL}/api/tender-bids/${bidId}`, {
       method: 'PUT',
       headers: {
@@ -705,7 +707,7 @@ export async function PUT(request: NextRequest) {
       },
       body: JSON.stringify({
         ...updateData,
-        modifiedBy: session.user.id,
+        modifiedBy: actorId,
         modifiedOn: new Date().toISOString(),
       }),
     })

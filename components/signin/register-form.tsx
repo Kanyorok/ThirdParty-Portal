@@ -202,7 +202,7 @@ export default function RegisterForm() {
 
     try {
       setSubmitState("posting")
-      setSubmitNotice("Submitting...")
+      setSubmitNotice("Submitting registration")
       const values = form.getValues()
       const registerResponse = await registerThirdParty(values)
       if (registerResponse?.success) handleRegistrationSuccess(values, registerResponse)
@@ -214,7 +214,7 @@ export default function RegisterForm() {
   }
 
   const getSubmitButtonLabel = (defaultLabel: string) => {
-    if (submitState === "posting") return "Submitting..."
+    if (submitState === "posting") return "Submitting registration"
     if (submitState === "success") return "Submitted"
     if (submitState === "error") return "Try Again"
     return defaultLabel

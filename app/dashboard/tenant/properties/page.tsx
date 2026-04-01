@@ -11,6 +11,36 @@ import { AlertCircle, RefreshCw, Building2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useSession } from "next-auth/react"
 import { resolveSessionAccessToken } from "@/lib/auth/server-token"
+import type { PropertyLocality } from "@/types/property"
+
+async function getPropertyLocalities(baseUrl: string): Promise<PropertyLocality[]> {
+    const response = await fetch(`${baseUrl}/api/v1/countries/KE/localities`, {
+        cache: "no-store",
+    })
+
+    if (!response.ok) {
+        throw new Error("Failed to fetch localities")
+    }
+
+    const payload = await response.json().catch(() => ({}))
+    const raw = Array.isArray(payload?.data) ? payload.data : []
+
+    return raw
+        .map((locality: unknown, index: number): PropertyLocality | null => {
+            if (!locality || typeof locality !== "object") return null
+
+            const item = locality as Record<string, unknown>
+            const parsedId = Number(item.id ?? item.ID ?? item.Id ?? item.iD)
+            const id = Number.isFinite(parsedId) ? parsedId : index + 1
+            const name =
+                (typeof item.name === "string" && item.name.trim()) ||
+                (typeof item.Name === "string" && item.Name.trim()) ||
+                `Locality ${index + 1}`
+
+            return { id, name }
+        })
+        .filter((locality): locality is PropertyLocality => locality !== null)
+}
 
 export default function PropertyRegistry() {
     const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : "")
@@ -19,12 +49,20 @@ export default function PropertyRegistry() {
     const { data: session, status } = useSession()
     const accessToken = resolveSessionAccessToken(session as any)
     const isSessionLoading = status === "loading"
+    const externalApiBaseUrl = process.env.NEXT_PUBLIC_EXTERNAL_API_URL
 
     const { data, isLoading, isError, refetch, isFetching } = useQuery({
         queryKey: ['rentable-properties', page, accessToken],
         queryFn: () => getRentableProperties(page, accessToken),
         enabled: Boolean(accessToken),
         placeholderData: (previousData) => previousData,
+    })
+
+    const { data: localities = [] } = useQuery({
+        queryKey: ['property-localities', externalApiBaseUrl],
+        queryFn: () => getPropertyLocalities(String(externalApiBaseUrl)),
+        enabled: Boolean(externalApiBaseUrl),
+        staleTime: 1000 * 60 * 30,
     })
 
     if (isError) return (
@@ -85,6 +123,7 @@ export default function PropertyRegistry() {
                                 initialData={data}
                                 searchQuery={searchQuery}
                                 setSearchQuery={setSearchQuery}
+                                localities={localities}
                             />
                         </div>
 

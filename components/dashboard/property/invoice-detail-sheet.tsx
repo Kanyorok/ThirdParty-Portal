@@ -171,7 +171,7 @@ export function InvoiceDetailSheet({ id, onClose, tenantId, accessToken }: Invoi
   const invoice = response?.data
   const statusMeta = resolveStatusMeta(invoice?.status)
   const StatusIcon = statusMeta.Icon
-  const currencyCode = resolveCurrencyCode(invoice?.currency)
+  const currencyCode = resolveCurrencyCode(invoice?.currency ?? "")
   const totals = invoice ? calculateInvoiceTotals(invoice) : null
 
   const handleEmail = () => {

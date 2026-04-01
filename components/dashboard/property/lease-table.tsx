@@ -18,8 +18,8 @@ export default function LeaseTable({ tenantId }: { tenantId?: number }) {
     const pathname = usePathname()
     const searchParams = useSearchParams()
 
-    const page = Number(searchParams.get("page")) || 1
-    const currentStatus = searchParams.get("status") || "all"
+    const page = Number(searchParams?.get("page")) || 1
+    const currentStatus = searchParams?.get("status") || "all"
     const { data: session } = useSession()
     const accessToken = resolveSessionAccessToken(session as any)
 
@@ -32,7 +32,7 @@ export default function LeaseTable({ tenantId }: { tenantId?: number }) {
     }, [page, tenantId, currentStatus, accessToken, fetchLeases])
 
     const handleStatusChange = (value: string) => {
-        const params = new URLSearchParams(searchParams.toString())
+        const params = new URLSearchParams(searchParams?.toString() ?? "")
         if (value === "all") {
             params.delete("status")
         } else {

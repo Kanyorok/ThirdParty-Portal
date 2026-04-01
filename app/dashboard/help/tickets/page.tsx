@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/c
 import { Input } from "@/components/common/input"
 import { Label } from "@/components/common/label"
 import { NativeSelect, NativeSelectOption } from "@/components/common/native-select"
+import { Spinner } from "@/components/common/spinner"
 import { Textarea } from "@/components/common/textarea"
 import { useDebounce } from "@/hooks/use-debounce"
 import { cn } from "@/lib/utils"
@@ -131,11 +132,11 @@ function normalizeMentionCandidate(input: unknown): MentionCandidate | null {
   const row = input as Record<string, unknown>
   const mentionId = toPositiveInt(
     row.id ??
-      row.Id ??
-      row.user_id ??
-      row.userId ??
-      row.third_party_user_id ??
-      row.thirdPartyUserId,
+    row.Id ??
+    row.user_id ??
+    row.userId ??
+    row.third_party_user_id ??
+    row.thirdPartyUserId,
   )
 
   const label =
@@ -731,7 +732,7 @@ export default function TicketsPage() {
               onClick={() => void loadTickets(page, filters.status, filters.severity, debouncedSearch)}
               disabled={loading}
             >
-              {loading ? "Refreshing..." : <><RefreshCw className="mr-1.5 h-4 w-4" />Refresh</>}
+              {loading ? <><Spinner className="mr-1.5 h-4 w-4" />Refreshing</> : <><RefreshCw className="mr-1.5 h-4 w-4" />Refresh</>}
             </Button>
             <Button
               type="button"
@@ -1008,7 +1009,7 @@ export default function TicketsPage() {
                 className="h-10 rounded-full border border-blue-600 bg-blue-600 px-4 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
                 disabled={createBusy}
               >
-                {createBusy ? "Submitting..." : <><Send className="mr-1.5 h-4 w-4" />Submit ticket</>}
+                {createBusy ? <><Spinner className="mr-1.5 h-4 w-4" />Submitting ticket</> : <><Send className="mr-1.5 h-4 w-4" />Submit ticket</>}
               </Button>
             </div>
           </form>

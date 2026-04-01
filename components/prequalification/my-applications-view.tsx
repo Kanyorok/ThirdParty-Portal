@@ -23,6 +23,8 @@ import {
     ChevronDown,
     Clock,
     ChevronsUpDown,
+    Layers3,
+    FileText,
     Info,
     RefreshCw,
     ShieldCheck,
@@ -32,6 +34,7 @@ import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import Loading from "@/components/common/custom-loader"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/common/select"
 import { parseSubmissionDeadline } from "@/lib/deadline"
 import {
     isRfqAwardedStatus,
@@ -72,6 +75,28 @@ type MyApplicationsViewProps = {
     breadcrumbLabel?: string
     title?: string
 }
+
+const FILTER_OPTIONS: Array<{
+    value: ApplicationsFilter
+    label: string
+    icon: typeof Layers3
+}> = [
+        {
+            value: "all",
+            label: "All applications",
+            icon: Layers3,
+        },
+        {
+            value: "prequalification",
+            label: "Prequalification",
+            icon: ShieldCheck,
+        },
+        {
+            value: "rfq",
+            label: "RFQs",
+            icon: FileText,
+        },
+    ]
 
 const STATUS: Record<string, { label: string; text: string; dot: string; ring: string }> = {
     NOT_APPLIED: { label: "Not applied", text: "text-muted-foreground", dot: "bg-muted-foreground/40", ring: "ring-muted-foreground/20" },
@@ -172,12 +197,17 @@ export default function MyApplicationsView({
     const totalPrequalification = useMemo(
         () => rounds.reduce((s, r) => s + (r.categories?.length ?? 0), 0), [rounds]
     )
+    const approvedPrequalification = useMemo(
+        () => rounds.reduce((sum, round) => sum + (round.categories?.filter((category) => category.status?.toUpperCase() === "APPROVED").length ?? 0), 0),
+        [rounds],
+    )
     const submittedRfqs = useMemo(
         () => rfqs.filter((rfq) => resolveRfqStatusKey(rfq) === "SUBMITTED").length,
         [rfqs]
     )
     const showPrequalification = applicationsFilter === "all" || applicationsFilter === "prequalification"
     const showRfqs = applicationsFilter === "all" || applicationsFilter === "rfq"
+    const totalApplications = totalPrequalification + rfqs.length
 
     useEffect(() => {
         if (forcedFilter) {
@@ -213,35 +243,65 @@ export default function MyApplicationsView({
         router.replace(nextUrl, { scroll: false })
     }
 
+    const openPrequalificationRound = (roundId: string | number) => {
+        router.push(`/dashboard/supplier/prequalification/application?roundId=${encodeURIComponent(String(roundId))}`)
+    }
+
+    const openRfqQuotation = (rfqId: string | number) => {
+        router.push(`/dashboard/supplier/rfqs/${encodeURIComponent(String(rfqId))}/quotation`)
+    }
+
     const header = (
-        <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-                <Link
-                    href="/dashboard/supplier/prequalification"
-                    className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition hover:text-foreground"
-                >
-                    <ArrowLeft className="h-4 w-4" />
-                </Link>
-                <div>
-                    {breadcrumbLabel && (
-                        <p className="text-[11px] font-medium leading-none text-muted-foreground">{breadcrumbLabel}</p>
-                    )}
-                    <h1 className="text-base font-semibold text-foreground">{title || "My Applications"}</h1>
-                    {!loading && (
-                        <p className="text-[11px] leading-none text-muted-foreground">
-                            {rounds.length} prequalification round{rounds.length !== 1 ? "s" : ""} · {totalPrequalification} categor{totalPrequalification !== 1 ? "ies" : "y"} · {rfqs.length} RFQ application{rfqs.length !== 1 ? "s" : ""}
-                        </p>
-                    )}
+        <div className="relative overflow-hidden rounded-[1.75rem] border border-border/70 bg-gradient-to-br from-background via-card to-blue-50/40 p-4 sm:p-6 dark:to-blue-950/10">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.12),transparent_38%)]" />
+            <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                <div className="flex items-start gap-3">
+                    <Link
+                        href="/dashboard/supplier/prequalification"
+                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-border/70 bg-background/85 text-muted-foreground transition hover:border-blue-500/25 hover:text-foreground"
+                    >
+                        <ArrowLeft className="h-4 w-4" />
+                    </Link>
+                    <div className="space-y-2">
+                        {breadcrumbLabel && (
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{breadcrumbLabel}</p>
+                        )}
+                        <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">{title || "My Applications"}</h1>
+                        {!loading && (
+                            <div className="flex flex-wrap items-center gap-2 text-[11px] font-medium text-muted-foreground">
+                                <span className="rounded-full border border-blue-200/70 bg-blue-50/70 px-2.5 py-1 text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/20 dark:text-blue-300">
+                                    {totalApplications} tracked
+                                </span>
+                                <span className="rounded-full border border-border/70 bg-background/75 px-2.5 py-1">
+                                    {rounds.length} prequalification round{rounds.length !== 1 ? "s" : ""}
+                                </span>
+                                <span className="rounded-full border border-border/70 bg-background/75 px-2.5 py-1">
+                                    {totalPrequalification} categor{totalPrequalification !== 1 ? "ies" : "y"}
+                                </span>
+                                <span className="rounded-full border border-emerald-200/70 bg-emerald-50/70 px-2.5 py-1 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-emerald-300">
+                                    {approvedPrequalification} approved
+                                </span>
+                                <span className="rounded-full border border-border/70 bg-background/75 px-2.5 py-1">
+                                    {rfqs.length} RFQ application{rfqs.length !== 1 ? "s" : ""}
+                                </span>
+                                <span className="rounded-full border border-blue-200/70 bg-blue-50/70 px-2.5 py-1 text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/20 dark:text-blue-300">
+                                    {submittedRfqs} submitted RFQ{submittedRfqs !== 1 ? "s" : ""}
+                                </span>
+                            </div>
+                        )}
+                    </div>
                 </div>
+                {!loading && (
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={load}
+                        className="h-10 rounded-xl border-border/70 bg-background/80 px-4 text-xs"
+                    >
+                        <RefreshCw className="h-3.5 w-3.5" /> Refresh data
+                    </Button>
+                )}
             </div>
-            {!loading && (
-                <button
-                    onClick={load}
-                    className="inline-flex items-center gap-1 text-[11px] text-muted-foreground transition hover:text-foreground"
-                >
-                    <RefreshCw className="h-3 w-3" /> Refresh
-                </button>
-            )}
         </div>
     )
 
@@ -287,43 +347,80 @@ export default function MyApplicationsView({
             {header}
 
             {!forcedFilter && (
-                <div className="inline-flex items-center rounded-lg border border-border bg-muted/30 p-1 text-xs">
-                    <button
-                        type="button"
-                        onClick={() => setFilterWithUrl("all")}
-                        className={cn(
-                            "rounded-md px-3 py-1.5 font-medium transition-colors",
-                            applicationsFilter === "all"
-                                ? "bg-card text-foreground shadow-sm"
-                                : "text-muted-foreground hover:text-foreground"
-                        )}
-                    >
-                        All ({totalPrequalification + rfqs.length})
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setFilterWithUrl("prequalification")}
-                        className={cn(
-                            "rounded-md px-3 py-1.5 font-medium transition-colors",
-                            applicationsFilter === "prequalification"
-                                ? "bg-card text-foreground shadow-sm"
-                                : "text-muted-foreground hover:text-foreground"
-                        )}
-                    >
-                        Prequalification ({totalPrequalification})
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setFilterWithUrl("rfq")}
-                        className={cn(
-                            "rounded-md px-3 py-1.5 font-medium transition-colors",
-                            applicationsFilter === "rfq"
-                                ? "bg-card text-foreground shadow-sm"
-                                : "text-muted-foreground hover:text-foreground"
-                        )}
-                    >
-                        RFQ ({rfqs.length})
-                    </button>
+                <div className="rounded-[1.4rem] border border-border/70 bg-card p-3 sm:p-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="sm:hidden">
+                            <Select value={applicationsFilter} onValueChange={(value) => setFilterWithUrl(value as ApplicationsFilter)}>
+                                <SelectTrigger className="h-11 w-full min-w-[14rem] rounded-2xl border-border/70 bg-background/90 px-4 text-sm font-semibold">
+                                    <SelectValue placeholder="Choose a view" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">
+                                        <span className="flex items-center gap-2">
+                                            <Layers3 className="size-4" />
+                                            <span>All applications ({totalApplications})</span>
+                                        </span>
+                                    </SelectItem>
+                                    <SelectItem value="prequalification">
+                                        <span className="flex items-center gap-2">
+                                            <ShieldCheck className="size-4" />
+                                            <span>Prequalification ({totalPrequalification})</span>
+                                        </span>
+                                    </SelectItem>
+                                    <SelectItem value="rfq">
+                                        <span className="flex items-center gap-2">
+                                            <FileText className="size-4" />
+                                            <span>RFQs ({rfqs.length})</span>
+                                        </span>
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="hidden sm:inline-flex sm:flex-1 sm:items-center sm:justify-start rounded-[1.2rem] border border-border/70 bg-background/80 p-1">
+                            {FILTER_OPTIONS.map((option) => {
+                                const isActive = applicationsFilter === option.value
+                                const count = option.value === "all"
+                                    ? totalApplications
+                                    : option.value === "prequalification"
+                                        ? totalPrequalification
+                                        : rfqs.length
+                                const Icon = option.icon
+
+                                return (
+                                    <button
+                                        key={option.value}
+                                        type="button"
+                                        onClick={() => setFilterWithUrl(option.value)}
+                                        className={cn(
+                                            "flex min-w-[9.75rem] items-center justify-between gap-2 rounded-[0.95rem] px-3 py-2.5 text-left transition-all",
+                                            isActive
+                                                ? "bg-blue-600 text-white"
+                                                : "text-foreground hover:bg-muted/50"
+                                        )}
+                                    >
+                                        <span className="flex items-center gap-2 min-w-0">
+                                            <span className={cn(
+                                                "flex size-7 shrink-0 items-center justify-center rounded-full border transition-colors",
+                                                isActive
+                                                    ? "border-white/20 bg-white/12 text-white"
+                                                    : "border-border/70 bg-background text-muted-foreground"
+                                            )}>
+                                                <Icon className="size-3.5" />
+                                            </span>
+                                            <span className="truncate text-sm font-semibold tracking-tight">{option.label}</span>
+                                        </span>
+                                        <span className={cn(
+                                            "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                                            isActive ? "bg-white/18 text-white" : "bg-muted text-muted-foreground"
+                                        )}>
+                                            {count}
+                                        </span>
+                                    </button>
+                                )
+                            })}
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -344,7 +441,7 @@ export default function MyApplicationsView({
                                 <button
                                     type="button"
                                     className={cn(
-                                        "group flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors",
+                                        "group flex w-full items-start gap-3 rounded-[1.35rem] border px-4 py-4 text-left transition-colors sm:items-center",
                                         isOpen
                                             ? "border-blue-200 bg-blue-50 dark:border-blue-900/60 dark:bg-blue-950/30"
                                             : "border-border bg-card hover:bg-muted/50"
@@ -355,21 +452,25 @@ export default function MyApplicationsView({
                                         isOpen ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground"
                                     )} />
 
-                                    <span className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
-                                        {round.title}
-                                    </span>
+                                    <div className="min-w-0 flex-1">
+                                        <div className="truncate text-sm font-semibold text-foreground sm:text-[15px]">
+                                            {round.title}
+                                        </div>
+                                        <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                                            {round.startDate && round.endDate && (
+                                                <span className="inline-flex items-center gap-1 rounded-full bg-background/70 px-2 py-1">
+                                                    <Calendar className="h-3 w-3 opacity-50" />
+                                                    {fmt(round.startDate)} - {fmt(round.endDate)}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
 
                                     <span className="inline-flex shrink-0 items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
                                         Prequalification
                                     </span>
 
                                     <span className="flex shrink-0 items-center gap-3 text-[11px] text-muted-foreground">
-                                        {round.startDate && round.endDate && (
-                                            <span className="hidden items-center gap-1 sm:flex">
-                                                <Calendar className="h-3 w-3 opacity-40" />
-                                                {fmt(round.startDate)} – {fmt(round.endDate)}
-                                            </span>
-                                        )}
                                         {approved > 0 && (
                                             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
                                                 <CheckCircle2 className="h-3 w-3" />{approved}/{cats.length}
@@ -390,86 +491,128 @@ export default function MyApplicationsView({
                             {/* Categories table */}
                             <CollapsibleContent>
                                 {cats.length > 0 && (
-                                    <div className="rounded-b-lg border border-t-0 border-border bg-card">
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow className="text-[10px] uppercase tracking-wider [&>th]:py-2 [&>th]:text-muted-foreground/60">
-                                                    <TableHead>Category</TableHead>
-                                                    <TableHead className="hidden sm:table-cell">Applied</TableHead>
-                                                    <TableHead>Progress</TableHead>
-                                                    <TableHead className="hidden sm:table-cell">Stage</TableHead>
-                                                    <TableHead className="text-right">Status</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {cats.map((app) => {
-                                                    const s = getS(app.status)
-                                                    const pct = app.progressPercent ?? 0
-                                                    return (
-                                                        <TableRow
-                                                            key={app.applicationId}
-                                                            className="cursor-pointer focus-visible:bg-muted/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 [&>td]:py-2.5 hover:bg-muted/10"
-                                                            role="button"
-                                                            tabIndex={0}
-                                                            aria-label={`Open prequalification application for ${app.name}`}
-                                                            onClick={() => {
-                                                                const roundId = String(round.id)
-                                                                router.push(`/dashboard/supplier/prequalification/application?roundId=${encodeURIComponent(roundId)}`)
-                                                            }}
-                                                            onKeyDown={(e) => {
-                                                                if (e.key === "Enter" || e.key === " ") {
-                                                                    e.preventDefault()
-                                                                    const roundId = String(round.id)
-                                                                    router.push(`/dashboard/supplier/prequalification/application?roundId=${encodeURIComponent(roundId)}`)
-                                                                }
-                                                            }}
-                                                        >
-                                                            <TableCell className="min-w-0">
-                                                                <p className="truncate text-[13px] text-foreground">{app.name}</p>
-                                                                {app.resultScore != null && (
-                                                                    <span className="text-[10px] text-muted-foreground">Score {app.resultScore}%</span>
-                                                                )}
-                                                            </TableCell>
+                                    <div className="overflow-hidden rounded-b-[1.35rem] border border-t-0 border-border bg-card">
+                                        <div className="sm:hidden">
+                                            {cats.map((app) => {
+                                                const s = getS(app.status)
+                                                const pct = app.progressPercent ?? 0
 
-                                                            <TableCell className="hidden text-[11px] text-muted-foreground sm:table-cell">
-                                                                {app.applicationDate ? (
-                                                                    <span className="flex items-center gap-1">
-                                                                        <Calendar className="h-3 w-3 shrink-0 opacity-40" />{fmt(app.applicationDate)}
-                                                                    </span>
-                                                                ) : "—"}
-                                                            </TableCell>
-
-                                                            <TableCell>
-                                                                <div className="flex items-center gap-1.5">
-                                                                    <div className="h-1.5 w-14 overflow-hidden rounded-full bg-blue-100 dark:bg-blue-950/40">
-                                                                        <div
-                                                                            className="h-full rounded-full bg-blue-500 transition-all"
-                                                                            style={{ width: `${Math.min(pct, 100)}%` }}
-                                                                        />
-                                                                    </div>
-                                                                    <span className="text-[10px] tabular-nums text-muted-foreground">{pct}%</span>
+                                                return (
+                                                    <button
+                                                        key={app.applicationId}
+                                                        type="button"
+                                                        className="w-full border-b border-border/60 px-4 py-4 text-left last:border-b-0"
+                                                        onClick={() => openPrequalificationRound(round.id)}
+                                                    >
+                                                        <div className="flex items-start justify-between gap-3">
+                                                            <div className="min-w-0 flex-1">
+                                                                <p className="truncate text-[13px] font-semibold text-foreground">{app.name}</p>
+                                                                <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                                                                    {app.applicationDate && <span>Applied {fmt(app.applicationDate)}</span>}
+                                                                    {app.stageLabel && <span>{app.stageLabel}</span>}
                                                                 </div>
-                                                            </TableCell>
+                                                            </div>
+                                                            <span className="inline-flex items-center gap-1.5 rounded-full bg-background px-2 py-1 text-[11px] font-medium">
+                                                                <span className={cn("h-1.5 w-1.5 rounded-full ring-2", s.dot, s.ring)} />
+                                                                <span className={s.text}>{s.label}</span>
+                                                            </span>
+                                                        </div>
 
-                                                            <TableCell className="hidden text-[11px] text-muted-foreground sm:table-cell">
-                                                                {app.stageLabel ? (
-                                                                    <span className="flex items-center gap-1">
-                                                                        <Clock className="h-3 w-3 shrink-0 opacity-40" />{app.stageLabel}
+                                                        <div className="mt-3 flex items-center gap-2">
+                                                            <div className="h-2 flex-1 overflow-hidden rounded-full bg-blue-100 dark:bg-blue-950/40">
+                                                                <div
+                                                                    className="h-full rounded-full bg-blue-500 transition-all"
+                                                                    style={{ width: `${Math.min(pct, 100)}%` }}
+                                                                />
+                                                            </div>
+                                                            <span className="text-[11px] font-medium tabular-nums text-muted-foreground">{pct}%</span>
+                                                        </div>
+
+                                                        {app.resultScore != null && (
+                                                            <p className="mt-2 text-[11px] text-muted-foreground">Score {app.resultScore}%</p>
+                                                        )}
+                                                    </button>
+                                                )
+                                            })}
+                                        </div>
+
+                                        <div className="hidden sm:block">
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow className="text-[10px] uppercase tracking-wider [&>th]:py-2 [&>th]:text-muted-foreground/60">
+                                                        <TableHead>Category</TableHead>
+                                                        <TableHead className="hidden sm:table-cell">Applied</TableHead>
+                                                        <TableHead>Progress</TableHead>
+                                                        <TableHead className="hidden sm:table-cell">Stage</TableHead>
+                                                        <TableHead className="text-right">Status</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {cats.map((app) => {
+                                                        const s = getS(app.status)
+                                                        const pct = app.progressPercent ?? 0
+                                                        return (
+                                                            <TableRow
+                                                                key={app.applicationId}
+                                                                className="cursor-pointer focus-visible:bg-muted/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 [&>td]:py-2.5 hover:bg-muted/10"
+                                                                role="button"
+                                                                tabIndex={0}
+                                                                aria-label={`Open prequalification application for ${app.name}`}
+                                                                onClick={() => openPrequalificationRound(round.id)}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === "Enter" || e.key === " ") {
+                                                                        e.preventDefault()
+                                                                        openPrequalificationRound(round.id)
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <TableCell className="min-w-0">
+                                                                    <p className="truncate text-[13px] text-foreground">{app.name}</p>
+                                                                    {app.resultScore != null && (
+                                                                        <span className="text-[10px] text-muted-foreground">Score {app.resultScore}%</span>
+                                                                    )}
+                                                                </TableCell>
+
+                                                                <TableCell className="hidden text-[11px] text-muted-foreground sm:table-cell">
+                                                                    {app.applicationDate ? (
+                                                                        <span className="flex items-center gap-1">
+                                                                            <Calendar className="h-3 w-3 shrink-0 opacity-40" />{fmt(app.applicationDate)}
+                                                                        </span>
+                                                                    ) : "—"}
+                                                                </TableCell>
+
+                                                                <TableCell>
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        <div className="h-1.5 w-14 overflow-hidden rounded-full bg-blue-100 dark:bg-blue-950/40">
+                                                                            <div
+                                                                                className="h-full rounded-full bg-blue-500 transition-all"
+                                                                                style={{ width: `${Math.min(pct, 100)}%` }}
+                                                                            />
+                                                                        </div>
+                                                                        <span className="text-[10px] tabular-nums text-muted-foreground">{pct}%</span>
+                                                                    </div>
+                                                                </TableCell>
+
+                                                                <TableCell className="hidden text-[11px] text-muted-foreground sm:table-cell">
+                                                                    {app.stageLabel ? (
+                                                                        <span className="flex items-center gap-1">
+                                                                            <Clock className="h-3 w-3 shrink-0 opacity-40" />{app.stageLabel}
+                                                                        </span>
+                                                                    ) : "—"}
+                                                                </TableCell>
+
+                                                                <TableCell className="text-right">
+                                                                    <span className="inline-flex items-center gap-1.5">
+                                                                        <span className={cn("h-1.5 w-1.5 rounded-full ring-2", s.dot, s.ring)} />
+                                                                        <span className={cn("text-[11px] font-medium", s.text)}>{s.label}</span>
                                                                     </span>
-                                                                ) : "—"}
-                                                            </TableCell>
-
-                                                            <TableCell className="text-right">
-                                                                <span className="inline-flex items-center gap-1.5">
-                                                                    <span className={cn("h-1.5 w-1.5 rounded-full ring-2", s.dot, s.ring)} />
-                                                                    <span className={cn("text-[11px] font-medium", s.text)}>{s.label}</span>
-                                                                </span>
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    )
-                                                })}
-                                            </TableBody>
-                                        </Table>
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        )
+                                                    })}
+                                                </TableBody>
+                                            </Table>
+                                        </div>
 
                                         {/* Result remarks */}
                                         {cats.some((a) => a.resultRemarks) && (
@@ -499,7 +642,7 @@ export default function MyApplicationsView({
                             <button
                                 type="button"
                                 className={cn(
-                                    "group flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors",
+                                    "group flex w-full items-start gap-3 rounded-[1.35rem] border px-4 py-4 text-left transition-colors sm:items-center",
                                     open.rfqApplications
                                         ? "border-blue-200 bg-blue-50 dark:border-blue-900/60 dark:bg-blue-950/30"
                                         : "border-border bg-card hover:bg-muted/50"
@@ -510,9 +653,11 @@ export default function MyApplicationsView({
                                     open.rfqApplications ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground"
                                 )} />
 
-                                <span className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
-                                    RFQ applications
-                                </span>
+                                <div className="min-w-0 flex-1">
+                                    <div className="truncate text-sm font-semibold text-foreground sm:text-[15px]">
+                                        RFQ applications
+                                    </div>
+                                </div>
 
                                 <span className="inline-flex shrink-0 items-center rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-700">
                                     RFQ
@@ -537,66 +682,103 @@ export default function MyApplicationsView({
 
                         <CollapsibleContent>
                             {rfqs.length > 0 ? (
-                                <div className="rounded-b-lg border border-t-0 border-border bg-card">
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow className="text-[10px] uppercase tracking-wider [&>th]:py-2 [&>th]:text-muted-foreground/60">
-                                                <TableHead>RFQ</TableHead>
-                                                <TableHead className="hidden sm:table-cell">Deadline</TableHead>
-                                                <TableHead className="hidden sm:table-cell">Response</TableHead>
-                                                <TableHead className="text-right">Status</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {rfqs.map((rfq) => {
-                                                const responseStatus = rfq.myResponse?.status
-                                                const status = getS(resolveRfqStatusKey(rfq))
-                                                return (
-                                                    <TableRow
-                                                        key={rfq.rfqId}
-                                                        className="cursor-pointer focus-visible:bg-muted/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 [&>td]:py-2.5 hover:bg-muted/10"
-                                                        role="button"
-                                                        tabIndex={0}
-                                                        aria-label={`Open RFQ application ${rfq.rfqNumber || `RFQ-${rfq.rfqId}`}`}
-                                                        onClick={() => {
-                                                            router.push(`/dashboard/supplier/rfqs/${encodeURIComponent(String(rfq.rfqId))}/quotation`)
-                                                        }}
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === "Enter" || e.key === " ") {
-                                                                e.preventDefault()
-                                                                router.push(`/dashboard/supplier/rfqs/${encodeURIComponent(String(rfq.rfqId))}/quotation`)
-                                                            }
-                                                        }}
-                                                    >
-                                                        <TableCell className="min-w-0">
-                                                            <p className="truncate text-[13px] text-foreground">{rfq.comments || "Request for Quotation"}</p>
-                                                            <span className="font-mono text-[10px] text-muted-foreground">{rfq.rfqNumber || `RFQ-${rfq.rfqId}`}</span>
-                                                        </TableCell>
+                                <div className="overflow-hidden rounded-b-[1.35rem] border border-t-0 border-border bg-card">
+                                    <div className="sm:hidden">
+                                        {rfqs.map((rfq) => {
+                                            const responseStatus = rfq.myResponse?.status
+                                            const status = getS(resolveRfqStatusKey(rfq))
 
-                                                        <TableCell className="hidden text-[11px] text-muted-foreground sm:table-cell">
-                                                            {rfq.submissionDeadline ? (
-                                                                <span className="flex items-center gap-1">
-                                                                    <Calendar className="h-3 w-3 shrink-0 opacity-40" />
-                                                                    {fmt(rfq.submissionDeadline) || "—"}
+                                            return (
+                                                <button
+                                                    key={rfq.rfqId}
+                                                    type="button"
+                                                    className="w-full border-b border-border/60 px-4 py-4 text-left last:border-b-0"
+                                                    onClick={() => openRfqQuotation(rfq.rfqId)}
+                                                >
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className="truncate text-[13px] font-semibold text-foreground">{rfq.comments || "Request for Quotation"}</p>
+                                                            <p className="mt-1 font-mono text-[10px] text-muted-foreground">{rfq.rfqNumber || `RFQ-${rfq.rfqId}`}</p>
+                                                        </div>
+                                                        <span className="inline-flex items-center gap-1.5 rounded-full bg-background px-2 py-1 text-[11px] font-medium">
+                                                            <span className={cn("h-1.5 w-1.5 rounded-full ring-2", status.dot, status.ring)} />
+                                                            <span className={status.text}>{status.label}</span>
+                                                        </span>
+                                                    </div>
+                                                    <div className="mt-3 grid gap-2 text-[11px] text-muted-foreground">
+                                                        <div className="flex items-center justify-between gap-3">
+                                                            <span>Deadline</span>
+                                                            <span className="font-medium text-foreground/80">{fmt(rfq.submissionDeadline) || "—"}</span>
+                                                        </div>
+                                                        <div className="flex items-center justify-between gap-3">
+                                                            <span>Response</span>
+                                                            <span className="font-medium text-foreground/80">{responseStatus || "Not started"}</span>
+                                                        </div>
+                                                    </div>
+                                                </button>
+                                            )
+                                        })}
+                                    </div>
+
+                                    <div className="hidden sm:block">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow className="text-[10px] uppercase tracking-wider [&>th]:py-2 [&>th]:text-muted-foreground/60">
+                                                    <TableHead>RFQ</TableHead>
+                                                    <TableHead className="hidden sm:table-cell">Deadline</TableHead>
+                                                    <TableHead className="hidden sm:table-cell">Response</TableHead>
+                                                    <TableHead className="text-right">Status</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {rfqs.map((rfq) => {
+                                                    const responseStatus = rfq.myResponse?.status
+                                                    const status = getS(resolveRfqStatusKey(rfq))
+                                                    return (
+                                                        <TableRow
+                                                            key={rfq.rfqId}
+                                                            className="cursor-pointer focus-visible:bg-muted/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 [&>td]:py-2.5 hover:bg-muted/10"
+                                                            role="button"
+                                                            tabIndex={0}
+                                                            aria-label={`Open RFQ application ${rfq.rfqNumber || `RFQ-${rfq.rfqId}`}`}
+                                                            onClick={() => openRfqQuotation(rfq.rfqId)}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === "Enter" || e.key === " ") {
+                                                                    e.preventDefault()
+                                                                    openRfqQuotation(rfq.rfqId)
+                                                                }
+                                                            }}
+                                                        >
+                                                            <TableCell className="min-w-0">
+                                                                <p className="truncate text-[13px] text-foreground">{rfq.comments || "Request for Quotation"}</p>
+                                                                <span className="font-mono text-[10px] text-muted-foreground">{rfq.rfqNumber || `RFQ-${rfq.rfqId}`}</span>
+                                                            </TableCell>
+
+                                                            <TableCell className="hidden text-[11px] text-muted-foreground sm:table-cell">
+                                                                {rfq.submissionDeadline ? (
+                                                                    <span className="flex items-center gap-1">
+                                                                        <Calendar className="h-3 w-3 shrink-0 opacity-40" />
+                                                                        {fmt(rfq.submissionDeadline) || "—"}
+                                                                    </span>
+                                                                ) : "—"}
+                                                            </TableCell>
+
+                                                            <TableCell className="hidden text-[11px] text-muted-foreground sm:table-cell">
+                                                                {responseStatus || "Not started"}
+                                                            </TableCell>
+
+                                                            <TableCell className="text-right">
+                                                                <span className="inline-flex items-center gap-1.5">
+                                                                    <span className={cn("h-1.5 w-1.5 rounded-full ring-2", status.dot, status.ring)} />
+                                                                    <span className={cn("text-[11px] font-medium", status.text)}>{status.label}</span>
                                                                 </span>
-                                                            ) : "—"}
-                                                        </TableCell>
-
-                                                        <TableCell className="hidden text-[11px] text-muted-foreground sm:table-cell">
-                                                            {responseStatus || "Not started"}
-                                                        </TableCell>
-
-                                                        <TableCell className="text-right">
-                                                            <span className="inline-flex items-center gap-1.5">
-                                                                <span className={cn("h-1.5 w-1.5 rounded-full ring-2", status.dot, status.ring)} />
-                                                                <span className={cn("text-[11px] font-medium", status.text)}>{status.label}</span>
-                                                            </span>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                )
-                                            })}
-                                        </TableBody>
-                                    </Table>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    )
+                                                })}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
 
                                     <div className="border-t border-border/40 px-4 py-2">
                                         <Link href="/dashboard/supplier/rfqs" className="inline-flex items-center gap-1 text-[11px] text-muted-foreground transition hover:text-foreground">

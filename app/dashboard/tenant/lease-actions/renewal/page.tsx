@@ -7,7 +7,7 @@ import Link from "next/link"
 
 export default function LeaseRenewal() {
     const searchParams = useSearchParams()
-    const leaseId = searchParams.get('id')
+    const leaseId = searchParams?.get('id')
 
     return (
         <div className="max-w-3xl mx-auto py-12 px-6 space-y-10 antialiased">

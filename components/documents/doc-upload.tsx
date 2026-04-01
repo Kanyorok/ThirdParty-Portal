@@ -233,7 +233,7 @@ async function uploadDocument({
     } catch { }
 
     if (!res.ok) {
-        throw new Error(json?.error || json?.message || `Upload failed (HTTP ${res.status})`)
+        throw new Error(json?.error || json?.message || `Unable to upload document (HTTP ${res.status})`)
     }
 
     return json ?? { raw: text }
@@ -335,7 +335,7 @@ export default function DocsUpload() {
         let failCount = 0
 
         for (const row of targets) {
-            dispatch({ type: "setUploadState", id: row.id, status: "uploading", message: "Uploading..." })
+            dispatch({ type: "setUploadState", id: row.id, status: "uploading", message: "Uploading document" })
             try {
                 const result = await uploadDocument({
                     category: state.category,
@@ -344,21 +344,21 @@ export default function DocsUpload() {
                 })
                 const docId = resolveDocId(result?.data ?? result)
                 okCount++
-                dispatch({ type: "setUploadState", id: row.id, status: "success", message: "Uploaded", documentId: docId })
+                dispatch({ type: "setUploadState", id: row.id, status: "success", message: "Document uploaded", documentId: docId })
             } catch (e: any) {
                 failCount++
-                dispatch({ type: "setUploadState", id: row.id, status: "error", message: e?.message || "Upload failed" })
+                dispatch({ type: "setUploadState", id: row.id, status: "error", message: e?.message || "Unable to upload document" })
             }
         }
 
         dispatch({ type: "saved", keepDirty: failCount > 0 })
 
         if (okCount > 0) {
-            toast.success(`Uploaded ${okCount} document${okCount === 1 ? "" : "s"}`)
+            toast.success(`${okCount} document${okCount === 1 ? "" : "s"} uploaded.`)
             mutateDocs()
         }
         if (failCount > 0) {
-            toast.error(`${failCount} upload${failCount === 1 ? "" : "s"} failed`)
+            toast.error(`${failCount} document${failCount === 1 ? "" : "s"} failed to upload.`)
         }
     }, [state.category, state.rows, mutateDocs])
 
@@ -481,17 +481,17 @@ export default function DocsUpload() {
                                                 {row.uploadStatus === "uploading" ? (
                                                     <span className="hidden lg:inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-blue-600">
                                                         <Loader2 className="h-3 w-3 animate-spin" />
-                                                        Uploading
+                                                        Uploading document
                                                     </span>
                                                 ) : row.uploadStatus === "success" ? (
                                                     <span className="hidden lg:inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-600">
                                                         <Check className="h-3 w-3" />
-                                                        Uploaded
+                                                        Document uploaded
                                                     </span>
                                                 ) : row.uploadStatus === "error" ? (
                                                     <span className="hidden lg:inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-rose-600">
                                                         <Trash2 className="h-3 w-3" />
-                                                        Failed
+                                                        Upload failed
                                                     </span>
                                                 ) : null}
                                                 {state.rows.length > 1 && (

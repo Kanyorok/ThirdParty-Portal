@@ -85,6 +85,22 @@ function buildWritePayload(input: unknown, thirdPartyId: number): BankDetailsWri
   }
 }
 
+function validateWritePayload(payload: BankDetailsWritePayload) {
+  if (!payload.BranchID) {
+    return "Branch is required."
+  }
+
+  if (!payload.AccountNumber) {
+    return "Account number is required."
+  }
+
+  if (!payload.CurrencyId) {
+    return "Currency is required."
+  }
+
+  return null
+}
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -102,6 +118,11 @@ export async function PUT(
 
     const requestBody = await request.json().catch(() => ({}))
     const payload = buildWritePayload(requestBody, context.thirdPartyId)
+    const validationError = validateWritePayload(payload)
+
+    if (validationError) {
+      return NextResponse.json({ message: validationError }, { status: 400 })
+    }
 
     const requestUrl = new URL(`${getBaseApiUrl()}${BANK_DETAILS_ENDPOINT}/${encodeURIComponent(id)}`)
     requestUrl.searchParams.set("ThirdPartyId", String(context.thirdPartyId))

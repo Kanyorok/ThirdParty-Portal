@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/common/dialog"
 import { Button } from "@/components/common/button"
+import { Spinner } from "@/components/common/spinner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/common/tabs"
 import { Badge } from "@/components/common/badge"
 import {
@@ -12,7 +13,6 @@ import {
   MessageSquare,
   Download,
   RefreshCw,
-  Loader2,
 } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
@@ -690,7 +690,7 @@ export default function TenderDetailModal({
                       disabled={docsLoading}
                     >
                       {docsLoading ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        <Spinner className="h-3.5 w-3.5" />
                       ) : (
                         <RefreshCw className="h-3.5 w-3.5" />
                       )}

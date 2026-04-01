@@ -58,15 +58,15 @@ export const ProfilePictureModal: React.FC<ProfilePictureModalProps> = ({
                     };
                 }, { revalidate: true });
 
-                toast.success("Profile picture updated successfully!");
+                toast.success("Profile picture updated successfully.");
                 onClose();
                 setSelectedFile(null);
                 if (fileInputRef.current) fileInputRef.current.value = "";
             } catch (error: any) {
-                toast.error(error.message || "Failed to upload profile picture.");
+                toast.error(error.message || "Unable to upload profile picture.");
             }
         });
-    }, [selectedFile, accessToken, mutateUser, onClose]);
+    }, [selectedFile, mutateUser, onClose]);
 
     const removeSelectedFile = useCallback(() => {
         setSelectedFile(null);
@@ -101,7 +101,7 @@ export const ProfilePictureModal: React.FC<ProfilePictureModalProps> = ({
                                     className="object-cover"
                                 />
                                 <AvatarFallback className="text-2xl font-bold bg-muted text-muted-foreground uppercase">
-                                    {getInitials(user.first_name, user.last_name)}
+                                    {getInitials(user.first_name ?? undefined, user.last_name ?? undefined)}
                                 </AvatarFallback>
                             </Avatar>
 
@@ -157,7 +157,7 @@ export const ProfilePictureModal: React.FC<ProfilePictureModalProps> = ({
                             {isPending ? (
                                 <>
                                     <Spinner className="mr-2 h-4 w-4" />
-                                    Uploading...
+                                    Uploading image
                                 </>
                             ) : (
                                 "Save Changes"

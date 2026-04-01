@@ -20,6 +20,15 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>
 
+const AUTH_ERROR_MESSAGES: Record<string, string> = {
+    INVALID_CREDENTIALS: "Invalid email or password.",
+    EMAIL_NOT_VERIFIED: "Your email address is not verified yet.",
+    ACCOUNT_DISABLED: "Your account is disabled.",
+    ACCOUNT_NOT_APPROVED: "Your account is pending approval.",
+    PROFILE_NOT_AUTHORIZED: "This account is not authorized for the selected portal profile.",
+    SERVER_ERROR: "An unexpected error occurred. Please try again later.",
+}
+
 const fieldIconClass = "pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2"
 const inputBaseClass = "h-12 bg-transparent pl-10 pr-10"
 const inputErrorClass = "border-rose-400 focus-visible:border-rose-500 focus-visible:ring-rose-200"
@@ -109,11 +118,14 @@ export default function LoginPage() {
             })
 
             if (result?.error) {
-                if (result.error === "EMAIL_NOT_VERIFIED") {
+                const errorCode = result.error.split(":")[0]?.trim() || "SERVER_ERROR"
+
+                if (errorCode === "EMAIL_NOT_VERIFIED") {
                     router.push(`/verify-email/expired?email=${encodeURIComponent(data.email)}`)
                     return
                 }
-                setAuthError("Invalid email or password.")
+
+                setAuthError(AUTH_ERROR_MESSAGES[errorCode] || AUTH_ERROR_MESSAGES.SERVER_ERROR)
                 return
             }
 

@@ -77,6 +77,8 @@ export async function POST(req: NextRequest) {
     return jsonError("Tender ID and question are required", 400)
   }
 
+  const actorId = session.user.userId ?? session.user.thirdPartyId ?? null
+
   const payload = {
     tender_id: Number(tenderId),
     question,
@@ -117,13 +119,15 @@ export async function PUT(req: NextRequest) {
     return jsonError("Clarification ID and response are required", 400)
   }
 
+  const actorId = session.user.userId ?? session.user.thirdPartyId ?? null
+
   const payload = {
     response: responseText,
     response_by: body.responseBy ?? "Procurement Team",
     response_date: new Date().toISOString(),
     status: body.status ?? "answered",
     is_public: Boolean(body.publishToAll),
-    modified_by: session.user.id,
+    modified_by: actorId,
     modified_on: new Date().toISOString()
   }
 

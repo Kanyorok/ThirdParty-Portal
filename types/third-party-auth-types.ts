@@ -68,6 +68,7 @@ export interface NavMainProps {
     readonly items: readonly NavGroup[]
     readonly onItemClick?: (item: NavMainItem | NavSubItem) => void
     readonly className?: string
+    readonly variant?: "primary" | "secondary"
 }
 
 export interface SearchableNavItem {

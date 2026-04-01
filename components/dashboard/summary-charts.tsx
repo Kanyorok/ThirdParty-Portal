@@ -209,8 +209,8 @@ const BarChartCard = ({
             No data yet
           </div>
         ) : (
-          <div style={{ height: chartHeight, minWidth: 0 }}>
-            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+          <div style={{ minWidth: 0 }}>
+            <ResponsiveContainer width="100%" height={chartHeight} minWidth={0} debounce={50}>
               <BarChart
                 data={chartData}
                 barCategoryGap={isCompact ? 12 : 20}
@@ -273,7 +273,11 @@ const BarChartCard = ({
                     <LabelList
                       dataKey="value"
                       position="insideTop"
-                      formatter={(value) => typeof value === 'boolean' ? '' : formatLabelValue(value, valueFormatter)}
+                      formatter={(value) =>
+                        typeof value === "boolean"
+                          ? ""
+                          : formatLabelValue(value, valueFormatter)
+                      }
                       fill="hsl(var(--foreground))"
                       fontSize={isCompact ? 10 : 11}
                       fontWeight={600}

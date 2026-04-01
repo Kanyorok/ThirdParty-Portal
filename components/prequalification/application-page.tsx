@@ -7,7 +7,7 @@ import ApplicationForm from "./application-form"
 export default function ApplicationPageClient() {
     const searchParams = useSearchParams()
     const router = useRouter()
-    const roundId = useMemo(() => searchParams.get("roundId") ?? undefined, [searchParams])
+    const roundId = useMemo(() => searchParams?.get("roundId") ?? undefined, [searchParams])
     const [open, setOpen] = useState(true)
 
     useEffect(() => {

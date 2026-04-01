@@ -1,9 +1,8 @@
 import { FieldErrors, FieldValues, DeepRequired } from "react-hook-form";
 import {
-    RegisterFormInputs,
     ThirdPartyDetailsFormInputs,
-    mapUserTypeToApi,
 } from "@/lib/validation";
+import type { RegisterFormInputs, RegisterRole } from "@/hooks/use-register"
 
 type TouchedFields<T> = {
     [K in keyof T]?: T[K] extends object ? TouchedFields<T[K]> : boolean;
@@ -42,14 +41,20 @@ export const normalizeToE164 = (input: string): string => {
 };
 
 export const transformRegisterFormDataForApi = (formData: RegisterFormInputs) => {
+    const primaryRole: Record<RegisterRole, "S" | "T" | "C"> = {
+        SU: "S",
+        TN: "T",
+        CU: "C",
+    }
+    const firstRole = formData.types[0]
     return {
-        ThirdPartyType: mapUserTypeToApi(formData.userType),
-        FirstName: formData.firstName,
-        LastName: formData.lastName,
-        Email: formData.email,
-        Phone: normalizeToE164(formData.phone),
-        Password: formData.password,
-        Password_confirmation: formData.confirmPassword,
+        ThirdPartyType: firstRole ? primaryRole[firstRole] : undefined,
+        FirstName: formData.user_FirstName,
+        LastName: formData.user_LastName,
+        Email: formData.user_Email || formData.Email,
+        Phone: normalizeToE164(formData.user_Phone || formData.Phone),
+        Password: formData.user_Password,
+        Password_confirmation: formData.user_Password_confirmation,
     };
 };
 
@@ -66,7 +71,7 @@ export const transformThirdPartyDetailsForApi = (formData: ThirdPartyDetailsForm
         Email: formData.email,
         Phone: normalizeToE164(formData.phone),
         Website: formData.website,
-        ThirdPartyType: mapUserTypeToApi(formData.userType),
+        ThirdPartyType: formData.userType === "supplier" ? "S" : formData.userType === "tenant" ? "T" : "C",
     };
 };
 
@@ -96,13 +101,13 @@ const createErrorMapper = <T extends Record<string, any>>(
 };
 
 const registerFieldMap: ServerErrorMap<RegisterFormInputs> = {
-    FirstName: "firstName",
-    LastName: "lastName",
-    Email: "email",
-    Phone: "phone",
-    Password: "password",
-    Password_confirmation: "confirmPassword",
-    ThirdPartyType: "userType",
+    FirstName: "user_FirstName",
+    LastName: "user_LastName",
+    Email: "user_Email",
+    Phone: "user_Phone",
+    Password: "user_Password",
+    Password_confirmation: "user_Password_confirmation",
+    ThirdPartyType: "types",
 };
 
 const thirdPartyFieldMap: ServerErrorMap<ThirdPartyDetailsFormInputs> = {

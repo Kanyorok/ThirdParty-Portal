@@ -1,8 +1,8 @@
 import React from "react"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
+import { Label } from "@/components/common/label"
+import { Input } from "@/components/common/input"
 import { Eye, EyeOff, AlertCircle, Check, X } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/common/button"
 
 interface PasswordFieldProps {
   id: string
@@ -33,7 +33,7 @@ export function PasswordField({
   passwordsMatch,
   onPaste,
 }: PasswordFieldProps) {
-  
+
   const getInputStyles = (hasError: boolean, isSuccess: boolean) => {
     if (hasError) {
       return "border-red-300 focus:border-red-500 focus:ring-red-500/20 bg-red-50 pr-10"
@@ -53,12 +53,11 @@ export function PasswordField({
         <Label htmlFor={id} className="text-gray-700 font-medium">
           {label} <span className="text-red-500">*</span>
         </Label>
-        
+
         {showMatchIndicator && value && (
           <span
-            className={`text-xs font-medium flex items-center gap-1 animate-in fade-in ${
-              passwordsMatch ? "text-green-600" : "text-red-500"
-            }`}
+            className={`text-xs font-medium flex items-center gap-1 animate-in fade-in ${passwordsMatch ? "text-green-600" : "text-red-500"
+              }`}
           >
             {passwordsMatch ? (
               <>
@@ -83,7 +82,7 @@ export function PasswordField({
           className={getInputStyles(isError, isSuccess)}
           onPaste={onPaste}
         />
-        
+
         <Button
           type="button"
           variant="ghost"

@@ -40,12 +40,14 @@ export async function PATCH(req: NextRequest) {
   const publishToAll = body.publishToAll !== false
   const notifySuppliers = body.notifySuppliers !== false
 
+  const actorId = session.user.userId ?? session.user.thirdPartyId ?? null
+
   const payload = {
     is_public: publishToAll,
     notify_suppliers: notifySuppliers,
     published_by: body.publishedBy ?? "Procurement Team",
     published_on: new Date().toISOString(),
-    modified_by: session.user.id,
+    modified_by: actorId,
     modified_on: new Date().toISOString()
   }
 
