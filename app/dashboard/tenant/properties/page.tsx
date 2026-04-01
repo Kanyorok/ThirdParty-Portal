@@ -39,7 +39,7 @@ async function getPropertyLocalities(baseUrl: string): Promise<PropertyLocality[
 
             return { id, name }
         })
-        .filter((locality): locality is PropertyLocality => locality !== null)
+        .filter((locality: PropertyLocality | null): locality is PropertyLocality => locality !== null)
 }
 
 export default function PropertyRegistry() {
