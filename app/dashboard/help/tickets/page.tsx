@@ -647,14 +647,13 @@ export default function TicketsPage() {
       )]
 
       const payload: Record<string, unknown> = {
-        subject: check.cleanSubject,
-        title: check.cleanSubject,
-        message: check.cleanMessage,
-        description: check.cleanMessage,
-        priority: createSeverity,
-        severity: createSeverity,
+        ticket_title: check.cleanSubject,
+        ticket_description: check.cleanMessage,
+        ticket_priority: createSeverity,
+        ticket_source: "portal",
+        ticket_category: "general",
       }
-      if (mentionIds.length > 0) payload.mentions = mentionIds
+      if (mentionIds.length > 0) payload.ticket_watchers = mentionIds
 
       const res = await fetch("/api/v1/portal/help/tickets", {
         method: "POST",
@@ -665,8 +664,8 @@ export default function TicketsPage() {
       const body = await res.json().catch(() => ({}))
       if (!res.ok || body?.success === false) {
         const errors = body?.errors ?? {}
-        const subjectErr = readText(errors?.subject?.[0] ?? errors?.title?.[0] ?? errors?.label?.[0])
-        const messageErr = readText(errors?.message?.[0] ?? errors?.description?.[0] ?? errors?.content?.[0] ?? errors?.body?.[0])
+        const subjectErr = readText(errors?.ticket_title?.[0] ?? errors?.subject?.[0] ?? errors?.title?.[0] ?? errors?.label?.[0])
+        const messageErr = readText(errors?.ticket_description?.[0] ?? errors?.message?.[0] ?? errors?.description?.[0] ?? errors?.content?.[0] ?? errors?.body?.[0])
 
         if (subjectErr || messageErr) {
           setCreateFieldErrors((prev) => ({
