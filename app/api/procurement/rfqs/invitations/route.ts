@@ -26,23 +26,31 @@ export async function GET(req: NextRequest) {
 
     const upstreamUrl = `${API_BASE.replace(/\/+$/, "")}/api/v1/supplier/rfqs`
 
-    const res = await fetch(upstreamUrl, {
-        method: "GET",
-        headers: {
-            Accept: "application/json",
-            Authorization: `Bearer ${session.accessToken}`,
-        },
-        cache: "no-store",
-    })
+    try {
+        const res = await fetch(upstreamUrl, {
+            method: "GET",
+            headers: {
+                Accept: "application/json",
+                Authorization: `Bearer ${session.accessToken}`,
+            },
+            cache: "no-store",
+        })
 
-    const data = await res.json().catch(() => ({}))
+        const data = await res.json().catch(() => ({}))
 
-    if (!res.ok) {
+        if (!res.ok) {
+            return NextResponse.json(
+                { message: (data as Record<string, unknown>)?.message ?? "Failed to fetch RFQs" },
+                { status: res.status }
+            )
+        }
+
+        return NextResponse.json(data, { status: res.status })
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown upstream error"
         return NextResponse.json(
-            { message: (data as Record<string, unknown>)?.message ?? "Failed to fetch RFQs" },
-            { status: res.status }
+            { message: "Failed to fetch RFQs", error: message },
+            { status: 502 }
         )
     }
-
-    return NextResponse.json(data, { status: res.status })
 }

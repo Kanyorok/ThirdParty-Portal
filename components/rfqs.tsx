@@ -242,8 +242,8 @@ export function RfqInvitations() {
         headers: { Accept: "application/json" },
         cache: "no-store",
       })
-      if (!res.ok) throw new Error("Failed to load RFQ invitations")
-      const json = (await res.json()) as RfqListResponse
+      const json = (await res.json()) as RfqListResponse & { message?: string }
+      if (!res.ok) throw new Error(json.message || "Failed to load RFQ invitations")
       const list = Array.isArray(json.data) ? json.data : []
       setData(list)
     } catch (e) {
