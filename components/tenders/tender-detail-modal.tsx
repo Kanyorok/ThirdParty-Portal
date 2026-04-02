@@ -16,7 +16,6 @@ import {
 } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
-import { getBaseUrl } from "@/lib/api-base"
 import { resolveBidStatus } from "@/lib/bids/status"
 import { toast } from "sonner"
 import TenderResponseForm from "./tender-response-form"
@@ -273,7 +272,7 @@ export default function TenderDetailModal({
       const params = new URLSearchParams()
       if (tenderNo) params.set("search", tenderNo)
       const res = await fetch(
-        `${getBaseUrl()}/api/tenders${params.toString() ? `?${params.toString()}` : ""}`,
+        `/api/tenders${params.toString() ? `?${params.toString()}` : ""}`,
         { headers: { Accept: "application/json" } }
       )
       const json = await res.json().catch(() => null)

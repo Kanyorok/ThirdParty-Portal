@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/common/ca
 import { Button } from "@/components/common/button";
 import { Textarea } from "@/components/common/textarea";
 import { toast } from "sonner";
-import { getBaseUrl } from "@/lib/api-base";
 import {
   CheckCircle,
   XCircle,
@@ -64,9 +63,7 @@ export default function TenderResponseForm({
         decline_reason: status === 'declined' ? declineReason : null,
       };
 
-      const apiUrl = `${getBaseUrl()}/api/tender-invitations`;
-
-      const response = await fetch(apiUrl, {
+      const response = await fetch("/api/tender-invitations", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
