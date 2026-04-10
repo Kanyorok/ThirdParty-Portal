@@ -17,6 +17,7 @@ type LookupItem = {
 const ROLE_VALUES = ["SU", "TN", "CU"] as const
 type RoleValue = (typeof ROLE_VALUES)[number]
 const PHONE_REGEX = /^\+?[0-9]{8,15}$/
+const COMPANY_LIKE_BUSINESS_TYPES = new Set(["company", "partnership", "limited company", "llp"])
 const GENERIC_REGISTRATION_ERROR = "We couldn't complete registration. Please correct the highlighted fields and try again."
 const SENSITIVE_ERROR_PATTERN = /(exception|stack|trace|sql|syntax|internal server|undefined|vendor|route|line\s+\d+)/i
 
@@ -27,6 +28,10 @@ const SERVER_FIELD_FALLBACK_MESSAGES: Record<string, string> = {
     RegistrationNumber: "Please enter a valid registration number.",
     TaxPIN: "Please enter a valid tax PIN.",
     VATNumber: "Please enter a valid VAT number.",
+    legalForm: "Please select a valid business type.",
+    contactPersonName: "Please enter the contact person's name.",
+    contactPersonEmail: "Please enter a valid contact person email address.",
+    contactPersonPhone: "Please enter a valid contact person phone number.",
     Country: "Please select a valid country.",
     Location: "Please select a valid location.",
     Email: "Please enter a valid business email address.",
@@ -134,6 +139,7 @@ const optionalPhoneField = (requiredMessage: string) =>
     z.preprocess(emptyToUndefined, phoneField(requiredMessage)).optional()
 
 const hasRole = (types: RoleValue[] | undefined, flag: RoleValue) => types?.includes(flag)
+const isCompanyLikeBusinessType = (value: string | undefined | null) => COMPANY_LIKE_BUSINESS_TYPES.has(String(value || "").trim().toLowerCase())
 
 const VERIFY_EMAIL_LINK_REGEX = /https?:\/\/[^"'<>\s]+\/verify-email\?[^"'<>\s]+/i
 
@@ -179,7 +185,13 @@ const registerSchema = z.object({
         .trim()
         .min(2, "Tax PIN is required")
         .max(50, "Tax PIN must be 50 characters or fewer"),
-    VATNumber: optionalTextField("VAT number", 50),
+    VATNumber: z.preprocess(
+        emptyToUndefined,
+        z
+            .string()
+            .trim()
+            .max(50, "VAT number must be 50 characters or fewer")
+    ).optional(),
     Country: z
         .string()
         .trim()
@@ -197,6 +209,9 @@ const registerSchema = z.object({
     Website: optionalUrlField("Website URL", 255),
     types: z.array(z.enum(ROLE_VALUES)).min(1, "Select at least one business role"),
     supplier_category_id: z.preprocess(v => (v === "" ? null : v), z.coerce.number().nullable().optional()),
+    contactPersonName: optionalNameField("Contact person name"),
+    contactPersonEmail: optionalEmailField("Contact person email"),
+    contactPersonPhone: optionalPhoneField("Contact person phone is required"),
     user_Remarks: optionalTextField("Remarks", 500),
     user_DateOfBirth: optionalTextField("Date of birth", 25),
     user_MaritalStatus: optionalLookupField("Marital status", 100),
@@ -210,8 +225,21 @@ const registerSchema = z.object({
     user_Password: optionalPasswordField("Password"),
     user_Password_confirmation: optionalPasswordField("Confirm password")
 }).superRefine((data, ctx) => {
-    if (hasRole(data.types, "SU") && !data.supplier_category_id) {
+    const supplierFlow = hasRole(data.types, "SU")
+
+    if (supplierFlow && !data.supplier_category_id) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["supplier_category_id"], message: "Select a supplier category." })
+    }
+    if (supplierFlow && !data.VATNumber) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["VATNumber"], message: "VAT number is required for suppliers." })
+    }
+    if (supplierFlow && !data.BusinessType) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["BusinessType"], message: "Business type is required for suppliers." })
+    }
+    if (supplierFlow && isCompanyLikeBusinessType(data.BusinessType)) {
+        if (!data.contactPersonName) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contactPersonName"], message: "Contact person name is required." })
+        if (!data.contactPersonEmail) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contactPersonEmail"], message: "Contact person email is required." })
+        if (!data.contactPersonPhone) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contactPersonPhone"], message: "Contact person phone is required." })
     }
     if (hasRole(data.types, "TN") && !(data.user_Remarks ?? "").trim()) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Remarks"], message: "Remarks are required for tenant access." })
@@ -267,7 +295,7 @@ export const useRegisterForm = () => {
             Name: "", TradingName: "", BusinessType: "", RegistrationNumber: "",
             TaxPIN: "", VATNumber: "", Country: "KE", Location: undefined,
             Email: "", Phone: "", PhysicalAddress: "", Website: "",
-            types: [], supplier_category_id: null, user_Remarks: "",
+            types: [], supplier_category_id: null, contactPersonName: "", contactPersonEmail: "", contactPersonPhone: "", user_Remarks: "",
             user_DateOfBirth: "", user_MaritalStatus: "", user_Occupation: "",
             createUser: true, user_FirstName: "", user_LastName: "",
             user_Email: "", user_Phone: "", user_Gender: "",
@@ -280,18 +308,31 @@ export const useRegisterForm = () => {
 
     const fetchInitialMetadata = useCallback(async () => {
         setIsLoadingMetadata(true)
+        setMetadataError(null)
         try {
-            const [countries, categories, lookups] = await Promise.all([
-                apiFetch<{ data?: any[] }>(`/api/v1/portal/auth/metadata/countries`),
-                apiFetch<{ data?: any[] }>(`/api/v1/portal/auth/metadata/supplier-categories`),
+            const [countriesResult, categoriesResult, lookupsResult] = await Promise.allSettled([
+                apiFetch<{ data?: any[] }>(`/api/countries`, { allowError: true }),
+                apiFetch<{ data?: any[] }>(`/portal/metadata/supplier-categories`, { allowError: true }),
                 apiFetch<Record<string, any>>(`/api/v1/portal/auth/lookups/bulk?codes=Gender,BusinessType,MaritalStatus,Occupation`, { allowError: true })
             ])
+
+            const countries = countriesResult.status === "fulfilled" ? countriesResult.value : { data: [] }
+            const categories = categoriesResult.status === "fulfilled" ? categoriesResult.value : { data: [] }
+            const lookups = lookupsResult.status === "fulfilled" ? lookupsResult.value : {}
+
             const data = lookups?.data ?? lookups?.Data ?? {}
             const pick = (key: string) => data?.[key] ?? data?.[key.toLowerCase()] ?? data?.[(key[0].toLowerCase() + key.slice(1))] ?? []
 
+            const countryRows = Array.isArray(countries?.data) ? countries.data : []
+            const categoryRows = Array.isArray(categories?.data) ? categories.data : []
+
+            if (countryRows.length === 0) {
+                setMetadataError("We couldn't load registration metadata right now. Please refresh and try again.")
+            }
+
             setMetadata({
-                countries: countries.data || [],
-                supplierCategories: categories.data || [],
+                countries: countryRows,
+                supplierCategories: categoryRows,
                 localities: [],
                 businessTypes: pick("BusinessType"),
                 genders: pick("Gender"),
@@ -299,7 +340,16 @@ export const useRegisterForm = () => {
                 occupations: pick("Occupation")
             })
         } catch {
-            setMetadataError("Initialization failed")
+            setMetadata({
+                countries: [],
+                supplierCategories: [],
+                localities: [],
+                businessTypes: [],
+                genders: [],
+                maritalStatuses: [],
+                occupations: []
+            })
+            setMetadataError("We couldn't load registration metadata right now. Please refresh and try again.")
         } finally {
             setIsLoadingMetadata(false)
         }
@@ -307,16 +357,16 @@ export const useRegisterForm = () => {
 
     const fetchLocalities = useCallback(async (countryCode: string) => {
         if (!countryCode) return
-        const country = metadata.countries.find(c => c.code === countryCode)
-        if (!country?.id) return
         setIsLoadingLocalities(true)
         try {
-            const result = await apiFetch<{ data?: any[] }>(`/api/v1/portal/auth/metadata/localities/${country.id}`, { allowError: true })
+            const result = await apiFetch<{ data?: any[] }>(`/api/countries/${encodeURIComponent(countryCode)}/localities`, { allowError: true })
             setMetadata(prev => ({ ...prev, localities: result?.data || [] }))
+        } catch {
+            setMetadata(prev => ({ ...prev, localities: [] }))
         } finally {
             setIsLoadingLocalities(false)
         }
-    }, [metadata.countries])
+    }, [])
 
     useEffect(() => { fetchInitialMetadata() }, [fetchInitialMetadata])
 
@@ -340,6 +390,17 @@ export const useRegisterForm = () => {
         }
         if (!isSupplier) {
             delete payload.supplier_category_id
+            delete payload.contactPersonName
+            delete payload.contactPersonEmail
+            delete payload.contactPersonPhone
+        } else {
+            payload.legalForm = values.BusinessType
+        }
+
+        if (!isSupplier || !isCompanyLikeBusinessType(values.BusinessType)) {
+            delete payload.contactPersonName
+            delete payload.contactPersonEmail
+            delete payload.contactPersonPhone
         }
 
         Object.keys(payload).forEach(key => {
@@ -361,8 +422,9 @@ export const useRegisterForm = () => {
             if (result?.errors && typeof result.errors === "object" && !Array.isArray(result.errors)) {
                 Object.entries(result.errors).forEach(([key, value]) => {
                     const first = Array.isArray(value) ? value[0] : value
-                    const safeMessage = getSafeServerFieldMessage(key, first)
-                    form.setError(key as any, { message: safeMessage })
+                    const fieldKey = key === "legalForm" ? "BusinessType" : key
+                    const safeMessage = getSafeServerFieldMessage(fieldKey, first)
+                    form.setError(fieldKey as any, { message: safeMessage })
                     hasFieldErrors = true
                 })
             }

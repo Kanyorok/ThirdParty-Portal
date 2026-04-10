@@ -4,6 +4,7 @@ import { useProcurementStore } from "@/store/use-procurement-store"
 import { Badge } from "@/components/common/badge"
 import { FileText, ExternalLink, Clock, AlertCircle } from "lucide-react"
 import { format } from "date-fns"
+import { resolveProcurementDocumentName } from "@/lib/procurement-document-name"
 
 export default function ApplicationTracking() {
     const { applicationStatus, rounds } = useProcurementStore()
@@ -69,9 +70,16 @@ export default function ApplicationTracking() {
                                         >
                                             <div className="flex items-center gap-3">
                                                 <FileText className="h-4 w-4" />
-                                                <span className="text-[10px] font-black uppercase truncate max-w-[150px]">
-                                                    {doc.Description || doc.FileName}
-                                                </span>
+                                                <div className="min-w-0">
+                                                    <span className="block max-w-[150px] truncate text-[10px] font-black uppercase">
+                                                        {resolveProcurementDocumentName(doc)}
+                                                    </span>
+                                                    {doc.Description ? (
+                                                        <span className="block max-w-[150px] truncate text-[9px] font-bold text-zinc-500">
+                                                            {String(doc.Description).trim()}
+                                                        </span>
+                                                    ) : null}
+                                                </div>
                                             </div>
                                             <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                                         </a>

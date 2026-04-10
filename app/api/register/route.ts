@@ -10,6 +10,10 @@ const FIELD_FALLBACK_MESSAGES: Record<string, string> = {
     RegistrationNumber: "Please enter a valid registration number.",
     TaxPIN: "Please enter a valid tax PIN.",
     VATNumber: "Please enter a valid VAT number.",
+    legalForm: "Please select a legal form.",
+    contactPersonName: "Please enter the contact person's name.",
+    contactPersonEmail: "Please enter a valid contact person email address.",
+    contactPersonPhone: "Please enter a valid contact person phone number.",
     Country: "Please select a valid country.",
     Location: "Please select a valid location.",
     Email: "Please enter a valid business email address.",
@@ -85,6 +89,13 @@ export async function POST(request: Request) {
             const adminPhoneIssues = validatePhone(body?.user_Phone, true, "Admin phone");
             if (adminPhoneIssues.length > 0) {
                 errors.user_Phone = adminPhoneIssues;
+            }
+        }
+
+        if (typeof body?.contactPersonPhone === "string" && body.contactPersonPhone.trim()) {
+            const contactPhoneIssues = validatePhone(body.contactPersonPhone, false, "Contact person phone");
+            if (contactPhoneIssues.length > 0) {
+                errors.contactPersonPhone = contactPhoneIssues;
             }
         }
 

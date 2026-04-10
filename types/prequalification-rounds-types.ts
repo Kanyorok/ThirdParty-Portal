@@ -91,6 +91,13 @@ export type SupplierCategory = {
     id: number | string
     name: string
     is_active: boolean
+    documentRules?: Array<{
+        id?: number | string
+        label: string
+        required: boolean
+        description?: string
+        maxFileSizeMb?: number | null
+    }>
 }
 
 export type RoundSection = {

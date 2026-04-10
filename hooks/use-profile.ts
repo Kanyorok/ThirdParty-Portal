@@ -88,6 +88,10 @@ export function useProfile() {
       registrationNumber: thirdParty?.registrationNumber ?? profile?.registrationNumber ?? null,
       taxPIN: thirdParty?.taxPIN ?? thirdParty?.taxPin ?? profile?.taxPIN ?? profile?.taxPin ?? null,
       vatNumber: thirdParty?.vatNumber ?? profile?.vatNumber ?? null,
+      legalForm: thirdParty?.legalForm ?? profile?.legalForm ?? null,
+      primaryCategoryId: thirdParty?.primaryCategoryId ?? profile?.primaryCategoryId ?? null,
+      primaryCategory: thirdParty?.primaryCategory ?? profile?.primaryCategory ?? null,
+      contactPerson: thirdParty?.contactPerson ?? profile?.contactPerson ?? null,
       countryId: thirdParty?.countryId ?? profile?.countryId ?? null,
       physicalAddress: thirdParty?.physicalAddress ?? profile?.physicalAddress ?? null,
       website: thirdParty?.website ?? profile?.website ?? null,
@@ -142,6 +146,37 @@ export function useProfile() {
       profile?.taxPIN ??
       profile?.TaxPIN ??
       profile?.taxPin ??
+      null,
+    vatNumber:
+      rawDetails?.vatNumber ??
+      rawDetails?.VatNumber ??
+      rawDetails?.vat_number ??
+      profile?.vatNumber ??
+      null,
+    legalForm:
+      rawDetails?.legalForm ??
+      rawDetails?.LegalForm ??
+      rawDetails?.legal_form ??
+      profile?.legalForm ??
+      thirdParty?.legalForm ??
+      null,
+    primaryCategoryId:
+      rawDetails?.primaryCategoryId ??
+      rawDetails?.primary_category_id ??
+      profile?.primaryCategoryId ??
+      thirdParty?.primaryCategoryId ??
+      null,
+    primaryCategory:
+      rawDetails?.primaryCategory ??
+      rawDetails?.primary_category ??
+      profile?.primaryCategory ??
+      thirdParty?.primaryCategory ??
+      null,
+    contactPerson:
+      rawDetails?.contactPerson ??
+      rawDetails?.contact_person ??
+      profile?.contactPerson ??
+      thirdParty?.contactPerson ??
       null,
     physicalAddress:
       rawDetails?.physicalAddress ??

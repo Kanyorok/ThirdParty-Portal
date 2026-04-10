@@ -31,7 +31,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/common/table"
-import Loading from "@/components/common/custom-loader"
+import { DocumentsLoadingState } from "@/components/documents/documents-loading-state"
 import { cn } from "@/lib/utils"
 
 /* ── Types ─────────────────────────────────────────────────────── */
@@ -253,7 +253,7 @@ export default function AllDocuments() {
     if (loading) return (
         <div className="space-y-5">
             {header}
-            <Loading />
+            <DocumentsLoadingState />
         </div>
     )
 

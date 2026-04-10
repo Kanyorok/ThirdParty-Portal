@@ -20,6 +20,7 @@ import useSWR from "swr"
 import { Button } from "@/components/common/button"
 import { Input } from "@/components/common/input"
 import { Label } from "@/components/common/label"
+import { DocumentsLoadingState } from "@/components/documents/documents-loading-state"
 import {
     Select,
     SelectContent,
@@ -581,7 +582,7 @@ export default function DocsUpload() {
                                 {(docsError as any)?.message || "Failed to load documents"}
                             </div>
                         ) : isFetchingDocs && normalizedDocs.items.length === 0 ? (
-                            <div className="p-4 sm:p-6 text-sm text-slate-600">Loading documents…</div>
+                            <DocumentsLoadingState inline className="py-8" />
                         ) : normalizedDocs.items.length === 0 ? (
                             <div className="p-4 sm:p-6 text-sm text-slate-600">No documents found.</div>
                         ) : (

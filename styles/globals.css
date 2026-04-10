@@ -22,7 +22,8 @@
   --color-muted: #EDF2F9;
   --color-muted-foreground: #5B6B84;
 
-  --color-accent: #0F9F78;
+  /* Craft Silicon accent (blue, not green) */
+  --color-accent: #4586B2;
   --color-accent-foreground: #FFFFFF;
 
   --color-destructive: #dc2626;
@@ -32,13 +33,13 @@
   --color-input: #CFD9E8;
   --color-ring: var(--primary);
 
-  --color-sidebar: #EDF4FF;
+  --color-sidebar: #F2F6FB;
   --color-sidebar-foreground: #0E1F3D;
   --color-sidebar-primary: var(--primary);
   --color-sidebar-primary-foreground: #FFFFFF;
-  --color-sidebar-accent: #DCE8FF;
+  --color-sidebar-accent: #E3EDF7;
   --color-sidebar-accent-foreground: #0E2A63;
-  --color-sidebar-border: #BED2F4;
+  --color-sidebar-border: #C7D8EB;
   --color-sidebar-ring: var(--primary);
 
   --radius-sm: 0.5rem;
@@ -50,40 +51,45 @@
   --spacing-sidebar-width-icon: 4.25rem;
 }
 
+/* Craft Silicon Primary */
 :root {
-  --primary: #0E63F4;
-  --primary-hover: #0A54D1;
-  --primary-soft: #EAF1FF;
-  --success: #059669;
-  --warning: #D97706;
-  --danger: #DC2626;
-  --loader-primary-rgb: 14 99 244;
-  --loader-accent-rgb: 15 159 120;
+  --primary: #005C90;
+  --primary-hover: #004A73;
+  --primary-soft: #E6F2F8;
+
+  --success: #0F766E;
+  --warning: #B45309;
+  --danger: #B91C1C;
+
+  --loader-primary-rgb: 0 92 144;
+  --loader-accent-rgb: 69 134 178;
+
   --sidebar-width: var(--spacing-sidebar-width);
   --sidebar-width-icon: var(--spacing-sidebar-width-icon);
 }
 
 .theme-base {
-  --loader-primary-rgb: 14 99 244;
-  --loader-accent-rgb: 15 159 120;
+  --loader-primary-rgb: 0 92 144;
+  --loader-accent-rgb: 69 134 178;
 }
 
+/* Tone variations only  */
 .theme-supplier {
-  --primary: #2563EB;
-  --loader-primary-rgb: 37 99 235;
-  --loader-accent-rgb: 245 158 11;
+  --primary: #0A6AA3;
+  --loader-primary-rgb: 10 106 163;
+  --loader-accent-rgb: 96 165 250;
 }
 
 .theme-tenant {
-  --primary: #0E63F4;
-  --loader-primary-rgb: 14 99 244;
-  --loader-accent-rgb: 15 159 120;
+  --primary: #005C90;
+  --loader-primary-rgb: 0 92 144;
+  --loader-accent-rgb: 69 134 178;
 }
 
 .theme-customer {
-  --primary: #0284C7;
-  --loader-primary-rgb: 2 132 199;
-  --loader-accent-rgb: 124 58 237;
+  --primary: #1C78B0;
+  --loader-primary-rgb: 28 120 176;
+  --loader-accent-rgb: 147 197 253;
 }
 
 .dark {
@@ -97,8 +103,11 @@
   --color-secondary-foreground: #E5EDF8;
   --color-muted: #14233F;
   --color-muted-foreground: #8EA2C0;
-  --color-accent: #0D9F76;
+
+  /* Dark accent aligned */
+  --color-accent: #3A7CA8;
   --color-accent-foreground: #E5EDF8;
+
   --color-border: #22314D;
   --color-input: #253652;
   --color-sidebar: #0B1830;
@@ -128,8 +137,8 @@
   body {
     @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary;
     background-image:
-      radial-gradient(circle at 15% -10%, rgba(14, 99, 244, 0.08), transparent 34%),
-      radial-gradient(circle at 90% 0%, rgba(15, 159, 120, 0.05), transparent 30%);
+      radial-gradient(circle at 15% -10%, rgba(0, 92, 144, 0.08), transparent 34%),
+      radial-gradient(circle at 90% 0%, rgba(69, 134, 178, 0.05), transparent 30%);
     background-attachment: fixed;
   }
 

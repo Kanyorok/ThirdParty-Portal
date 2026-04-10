@@ -20,9 +20,7 @@ import {
     ArrowLeft,
     Calendar,
     CheckCircle2,
-    ChevronDown,
     Clock,
-    ChevronsUpDown,
     Layers3,
     FileText,
     Info,
@@ -33,7 +31,6 @@ import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import Loading from "@/components/common/custom-loader"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/common/select"
 import { parseSubmissionDeadline } from "@/lib/deadline"
 import {
@@ -42,6 +39,8 @@ import {
     isRfqSubmittedResponseStatus,
 } from "@/lib/rfq-status"
 import type { RfqInvitation, RfqListResponse } from "@/types/rfq"
+import { ProcurementCollectionLoading, ProcurementCollectionState } from "@/components/procurement/shared/collection-state"
+import { ProcurementSectionTrigger } from "@/components/procurement/shared/section-trigger"
 
 type CategoryApplication = {
     id: number | string
@@ -74,6 +73,7 @@ type MyApplicationsViewProps = {
     forcedFilter?: ApplicationsFilter
     breadcrumbLabel?: string
     title?: string
+    embedded?: boolean
 }
 
 const FILTER_OPTIONS: Array<{
@@ -141,6 +141,7 @@ export default function MyApplicationsView({
     forcedFilter,
     breadcrumbLabel,
     title,
+    embedded = false,
 }: MyApplicationsViewProps) {
     const router = useRouter()
     const pathname = usePathname()
@@ -243,8 +244,12 @@ export default function MyApplicationsView({
         router.replace(nextUrl, { scroll: false })
     }
 
-    const openPrequalificationRound = (roundId: string | number) => {
-        router.push(`/dashboard/supplier/prequalification/application?roundId=${encodeURIComponent(String(roundId))}`)
+    const openPrequalificationRound = (roundId: string | number, categoryId?: string | number) => {
+        const params = new URLSearchParams({ roundId: String(roundId) })
+        if (categoryId !== undefined && categoryId !== null) {
+            params.set("categoryId", String(categoryId))
+        }
+        router.push(`/dashboard/supplier/prequalification/application?${params.toString()}`)
     }
 
     const openRfqQuotation = (rfqId: string | number) => {
@@ -256,12 +261,14 @@ export default function MyApplicationsView({
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.12),transparent_38%)]" />
             <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div className="flex items-start gap-3">
-                    <Link
-                        href="/dashboard/supplier/prequalification"
-                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-border/70 bg-background/85 text-muted-foreground transition hover:border-blue-500/25 hover:text-foreground"
-                    >
-                        <ArrowLeft className="h-4 w-4" />
-                    </Link>
+                    {!embedded && (
+                        <Link
+                            href="/dashboard/supplier/prequalification"
+                            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-border/70 bg-background/85 text-muted-foreground transition hover:border-blue-500/25 hover:text-foreground"
+                        >
+                            <ArrowLeft className="h-4 w-4" />
+                        </Link>
+                    )}
                     <div className="space-y-2">
                         {breadcrumbLabel && (
                             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{breadcrumbLabel}</p>
@@ -307,30 +314,28 @@ export default function MyApplicationsView({
 
     if (loading) return (
         <div className="space-y-5">
-            {header}
-            <Loading />
+            {!embedded && header}
+            <ProcurementCollectionLoading />
         </div>
     )
 
     if (error) return (
         <div className="space-y-5">
-            {header}
-            <div className="flex flex-col items-center py-16 text-center">
-                <AlertTriangle className="mb-2 h-5 w-5 text-destructive/60" />
-                <p className="text-sm text-destructive/80">{error}</p>
-                <Button variant="ghost" size="sm" className="mt-3 text-xs" onClick={load}>Retry</Button>
-            </div>
+            {!embedded && header}
+            <ProcurementCollectionState icon={AlertTriangle} title={error} actionLabel="Retry" onAction={load} />
         </div>
     )
 
     if (rounds.length === 0 && rfqs.length === 0) return (
         <div className="space-y-5">
-            {header}
-            <div className="flex flex-col items-center py-20 text-center">
-                <ShieldCheck className="mb-2 h-6 w-6 text-muted-foreground/40" />
-                <p className="text-sm font-medium text-muted-foreground">No applications yet</p>
-                <p className="mt-0.5 text-xs text-muted-foreground/60">Browse prequalification rounds or RFQs to get started.</p>
-                <div className="mt-3 flex items-center gap-2">
+            {!embedded && header}
+            <div>
+                <ProcurementCollectionState
+                    icon={ShieldCheck}
+                    title="No applications yet"
+                    description="Browse prequalification rounds or RFQs to get started."
+                />
+                <div className="-mt-10 flex items-center justify-center gap-2">
                     <Link href="/dashboard/supplier/prequalification">
                         <Button variant="outline" size="sm" className="h-7 text-xs">Browse rounds</Button>
                     </Link>
@@ -344,7 +349,7 @@ export default function MyApplicationsView({
 
     return (
         <div className="space-y-5">
-            {header}
+            {!embedded && header}
 
             {!forcedFilter && (
                 <div className="rounded-[1.4rem] border border-border/70 bg-card p-3 sm:p-4">
@@ -438,54 +443,35 @@ export default function MyApplicationsView({
                         >
                             {/* Round header / trigger */}
                             <CollapsibleTrigger asChild>
-                                <button
-                                    type="button"
-                                    className={cn(
-                                        "group flex w-full items-start gap-3 rounded-[1.35rem] border px-4 py-4 text-left transition-colors sm:items-center",
-                                        isOpen
-                                            ? "border-blue-200 bg-blue-50 dark:border-blue-900/60 dark:bg-blue-950/30"
-                                            : "border-border bg-card hover:bg-muted/50"
+                                <ProcurementSectionTrigger
+                                    open={isOpen}
+                                    title={round.title}
+                                    titleClassName="sm:text-[15px]"
+                                    subtitle={round.startDate && round.endDate ? (
+                                        <span className="inline-flex items-center gap-1 rounded-full bg-background/70 px-2 py-1">
+                                            <Calendar className="h-3 w-3 opacity-50" />
+                                            {fmt(round.startDate)} - {fmt(round.endDate)}
+                                        </span>
+                                    ) : undefined}
+                                    leadingBadge={
+                                        <span className="inline-flex shrink-0 items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
+                                            Prequalification
+                                        </span>
+                                    }
+                                    trailingMeta={approved > 0 ? (
+                                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
+                                            <CheckCircle2 className="h-3 w-3" />{approved}/{cats.length}
+                                        </span>
+                                    ) : (
+                                        <span>{cats.length} categor{cats.length !== 1 ? "ies" : "y"}</span>
                                     )}
-                                >
-                                    <ChevronsUpDown className={cn(
-                                        "h-4 w-4 shrink-0",
-                                        isOpen ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground"
-                                    )} />
-
-                                    <div className="min-w-0 flex-1">
-                                        <div className="truncate text-sm font-semibold text-foreground sm:text-[15px]">
-                                            {round.title}
-                                        </div>
-                                        <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
-                                            {round.startDate && round.endDate && (
-                                                <span className="inline-flex items-center gap-1 rounded-full bg-background/70 px-2 py-1">
-                                                    <Calendar className="h-3 w-3 opacity-50" />
-                                                    {fmt(round.startDate)} - {fmt(round.endDate)}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <span className="inline-flex shrink-0 items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
-                                        Prequalification
-                                    </span>
-
-                                    <span className="flex shrink-0 items-center gap-3 text-[11px] text-muted-foreground">
-                                        {approved > 0 && (
-                                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
-                                                <CheckCircle2 className="h-3 w-3" />{approved}/{cats.length}
-                                            </span>
-                                        )}
-                                        {approved === 0 && (
-                                            <span>{cats.length} categor{cats.length !== 1 ? "ies" : "y"}</span>
-                                        )}
-                                    </span>
-
-                                    <ChevronDown className={cn(
-                                        "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200",
-                                        isOpen && "rotate-180"
-                                    )} />
-                                </button>
+                                    openClassName="border-blue-200 bg-blue-50 dark:border-blue-900/60 dark:bg-blue-950/30"
+                                    closedClassName="border-border bg-card hover:bg-muted/50"
+                                    accentTextClassName="text-blue-600 dark:text-blue-400"
+                                    roundedClassName="rounded-[1.35rem]"
+                                    alignStart
+                                    triggerClassName="py-4"
+                                />
                             </CollapsibleTrigger>
 
                             {/* Categories table */}
@@ -502,7 +488,7 @@ export default function MyApplicationsView({
                                                         key={app.applicationId}
                                                         type="button"
                                                         className="w-full border-b border-border/60 px-4 py-4 text-left last:border-b-0"
-                                                        onClick={() => openPrequalificationRound(round.id)}
+                                                        onClick={() => openPrequalificationRound(round.id, app.id)}
                                                     >
                                                         <div className="flex items-start justify-between gap-3">
                                                             <div className="min-w-0 flex-1">
@@ -558,11 +544,11 @@ export default function MyApplicationsView({
                                                                 role="button"
                                                                 tabIndex={0}
                                                                 aria-label={`Open prequalification application for ${app.name}`}
-                                                                onClick={() => openPrequalificationRound(round.id)}
+                                                                onClick={() => openPrequalificationRound(round.id, app.id)}
                                                                 onKeyDown={(e) => {
                                                                     if (e.key === "Enter" || e.key === " ") {
                                                                         e.preventDefault()
-                                                                        openPrequalificationRound(round.id)
+                                                                        openPrequalificationRound(round.id, app.id)
                                                                     }
                                                                 }}
                                                             >
@@ -639,45 +625,29 @@ export default function MyApplicationsView({
                         onOpenChange={(v) => setOpen((prev) => ({ ...prev, rfqApplications: v }))}
                     >
                         <CollapsibleTrigger asChild>
-                            <button
-                                type="button"
-                                className={cn(
-                                    "group flex w-full items-start gap-3 rounded-[1.35rem] border px-4 py-4 text-left transition-colors sm:items-center",
-                                    open.rfqApplications
-                                        ? "border-blue-200 bg-blue-50 dark:border-blue-900/60 dark:bg-blue-950/30"
-                                        : "border-border bg-card hover:bg-muted/50"
+                            <ProcurementSectionTrigger
+                                open={!!open.rfqApplications}
+                                title="RFQ applications"
+                                titleClassName="sm:text-[15px]"
+                                leadingBadge={
+                                    <span className="inline-flex shrink-0 items-center rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-700">
+                                        RFQ
+                                    </span>
+                                }
+                                trailingMeta={submittedRfqs > 0 ? (
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-950/40 dark:text-blue-400">
+                                        <CheckCircle2 className="h-3 w-3" />{submittedRfqs}/{rfqs.length} submitted
+                                    </span>
+                                ) : (
+                                    <span>{rfqs.length} RFQ{rfqs.length !== 1 ? "s" : ""}</span>
                                 )}
-                            >
-                                <ChevronsUpDown className={cn(
-                                    "h-4 w-4 shrink-0",
-                                    open.rfqApplications ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground"
-                                )} />
-
-                                <div className="min-w-0 flex-1">
-                                    <div className="truncate text-sm font-semibold text-foreground sm:text-[15px]">
-                                        RFQ applications
-                                    </div>
-                                </div>
-
-                                <span className="inline-flex shrink-0 items-center rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-700">
-                                    RFQ
-                                </span>
-
-                                <span className="flex shrink-0 items-center gap-3 text-[11px] text-muted-foreground">
-                                    {submittedRfqs > 0 ? (
-                                        <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-950/40 dark:text-blue-400">
-                                            <CheckCircle2 className="h-3 w-3" />{submittedRfqs}/{rfqs.length} submitted
-                                        </span>
-                                    ) : (
-                                        <span>{rfqs.length} RFQ{rfqs.length !== 1 ? "s" : ""}</span>
-                                    )}
-                                </span>
-
-                                <ChevronDown className={cn(
-                                    "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200",
-                                    open.rfqApplications && "rotate-180"
-                                )} />
-                            </button>
+                                openClassName="border-blue-200 bg-blue-50 dark:border-blue-900/60 dark:bg-blue-950/30"
+                                closedClassName="border-border bg-card hover:bg-muted/50"
+                                accentTextClassName="text-blue-600 dark:text-blue-400"
+                                roundedClassName="rounded-[1.35rem]"
+                                alignStart
+                                triggerClassName="py-4"
+                            />
                         </CollapsibleTrigger>
 
                         <CollapsibleContent>

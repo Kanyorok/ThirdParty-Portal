@@ -44,6 +44,8 @@ const ROLE_OPTIONS: Array<{ id: RegisterRole; label: string }> = [
   { id: "CU", label: "Customer" },
 ]
 
+const COMPANY_LIKE_BUSINESS_TYPES = new Set(["company", "partnership", "limited company", "llp"])
+
 const labelStyle = "mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-600"
 const inputStyle = "h-11 rounded-lg border-slate-300 bg-white text-slate-900 transition-colors focus-visible:border-slate-900 focus-visible:ring-slate-200"
 const selectStyle = "h-11 w-full rounded-lg border-slate-300 bg-white text-slate-900 transition-colors focus:border-slate-900 focus:ring-slate-200"
@@ -108,17 +110,21 @@ export default function RegisterForm() {
   const countryValue = form.watch("Country")
   const locationValue = form.watch("Location")
   const genderValue = form.watch("user_Gender")
+  const showContactPersonFields = isSupplier && COMPANY_LIKE_BUSINESS_TYPES.has((businessTypeValue || "").toLowerCase())
 
   const isPosting = submitState === "posting"
   const isBusy = isSubmitting || isPosting
 
   const getFieldsToValidate = React.useCallback(() => {
     const fields = [...ORGANIZATION_FIELDS] as string[]
-    if (isSupplier) fields.push("supplier_category_id")
+    if (isSupplier) {
+      fields.push("VATNumber", "supplier_category_id")
+      if (showContactPersonFields) fields.push("contactPersonName", "contactPersonEmail", "contactPersonPhone")
+    }
     if (isTenant) fields.push("user_Remarks")
     if (createUser) fields.push(...ADMIN_FIELDS)
     return fields
-  }, [createUser, isSupplier, isTenant])
+  }, [createUser, isSupplier, isTenant, showContactPersonFields])
 
   const getFirstFieldError = React.useCallback((fields: string[]) => {
     const errorsMap = form.formState.errors as Record<string, { message?: string }>
@@ -386,26 +392,56 @@ export default function RegisterForm() {
                 <FieldError message={errors.TaxPIN?.message as string | undefined} />
               </div>
 
+              <div>
+                <FieldLabel required={isSupplier}>VAT Number</FieldLabel>
+                <Input required={isSupplier} {...form.register("VATNumber")} placeholder="VAT-00991" className={inputStyle} />
+                <FieldError message={errors.VATNumber?.message as string | undefined} />
+              </div>
+
               {isSupplier ? (
-                <div className="md:col-span-2">
-                  <FieldLabel required>Supplier Category</FieldLabel>
-                  <Select
-                    value={supplierCategoryValue != null ? String(supplierCategoryValue) : undefined}
-                    onValueChange={(value) => form.setValue("supplier_category_id", Number(value), { shouldDirty: true, shouldValidate: true })}
-                  >
-                    <SelectTrigger className={selectStyle} aria-required="true">
-                      <SelectValue placeholder="Select supplier category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {metadata.supplierCategories.map((cat) => (
-                        <SelectItem key={cat.id} value={String(cat.id)}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FieldError message={errors.supplier_category_id?.message as string | undefined} />
-                </div>
+                <>
+                  <div>
+                    <FieldLabel required>Supplier Category</FieldLabel>
+                    <Select
+                      value={supplierCategoryValue != null ? String(supplierCategoryValue) : undefined}
+                      onValueChange={(value) => form.setValue("supplier_category_id", Number(value), { shouldDirty: true, shouldValidate: true })}
+                    >
+                      <SelectTrigger className={selectStyle} aria-required="true">
+                        <SelectValue placeholder="Select supplier category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {metadata.supplierCategories.map((cat) => (
+                          <SelectItem key={cat.id ?? cat.supplierCategoryID} value={String(cat.id ?? cat.supplierCategoryID)}>
+                            {cat.name ?? cat.categoryName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FieldError message={errors.supplier_category_id?.message as string | undefined} />
+                  </div>
+
+                  {showContactPersonFields ? (
+                    <>
+                      <div>
+                        <FieldLabel required>Contact Person Name</FieldLabel>
+                        <Input required {...form.register("contactPersonName")} placeholder="Jane Doe" className={inputStyle} />
+                        <FieldError message={errors.contactPersonName?.message as string | undefined} />
+                      </div>
+
+                      <div>
+                        <FieldLabel required>Contact Person Email</FieldLabel>
+                        <Input type="email" required {...form.register("contactPersonEmail")} placeholder="jane@company.com" className={inputStyle} />
+                        <FieldError message={errors.contactPersonEmail?.message as string | undefined} />
+                      </div>
+
+                      <div>
+                        <FieldLabel required>Contact Person Phone</FieldLabel>
+                        <Input type="tel" inputMode="tel" pattern="[+]?[0-9]{8,15}" required {...form.register("contactPersonPhone")} placeholder="+254711111111" className={inputStyle} />
+                        <FieldError message={errors.contactPersonPhone?.message as string | undefined} />
+                      </div>
+                    </>
+                  ) : null}
+                </>
               ) : null}
             </div>
           </section>

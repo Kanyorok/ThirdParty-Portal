@@ -4,27 +4,22 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { format } from "date-fns"
 import {
   AlertTriangle,
+  ArrowUpRight,
   Calendar,
   CheckCircle2,
-  ChevronDown,
-  ChevronsUpDown,
   Mail,
-  RefreshCw,
   Search,
   Timer,
   X,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { useDebounce } from "@/hooks/use-debounce"
 import { parseSubmissionDeadline } from "@/lib/deadline"
 import {
   isRfqAwardedStatus,
   isRfqClosedStatus,
   isRfqSubmittedResponseStatus,
 } from "@/lib/rfq-status"
-import Loading from "@/components/common/custom-loader"
-import { Button } from "@/components/common/button"
 import {
   Collapsible,
   CollapsibleContent,
@@ -51,6 +46,11 @@ import type {
   RfqInvitation,
   RfqListResponse,
 } from "@/types/rfq"
+import { useUrlSyncedSearch } from "@/hooks/use-url-synced-search"
+import { groupRfqInvitations } from "@/lib/rfq-response"
+import { ProcurementCollectionHeader } from "@/components/procurement/shared/collection-header"
+import { ProcurementCollectionLoading, ProcurementCollectionState } from "@/components/procurement/shared/collection-state"
+import { ProcurementSectionTrigger } from "@/components/procurement/shared/section-trigger"
 
 /* ── Filters ─────────────────────────────────────── */
 
@@ -75,12 +75,6 @@ function getStatusTheme(key: string) {
 }
 
 /* ── Helpers ─────────────────────────────────────── */
-
-function normalizeStatus(status?: string | null) {
-  if (!status) return "Unknown"
-  if (status.toLowerCase() === "pub") return "Published"
-  return status
-}
 
 function fmt(value?: string | null) {
   if (!value) return null
@@ -172,6 +166,17 @@ const SECTION_THEME = {
   },
 } as const
 
+const RESPONSE_THEME = {
+  submitted: {
+    label: "Submitted",
+    className: "border-emerald-200/80 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-400",
+  },
+  pending: {
+    label: "Awaiting response",
+    className: "border-slate-200/80 bg-slate-50 text-slate-600 dark:border-slate-800 dark:bg-slate-950/30 dark:text-slate-300",
+  },
+} as const
+
 /* ── Row with modal trigger ──────────────────────── */
 
 function RfqRow({ rfq }: { rfq: RfqInvitation }) {
@@ -182,19 +187,48 @@ function RfqRow({ rfq }: { rfq: RfqInvitation }) {
     : null
   const sKey = resolveStatusKey(rfq)
   const sTheme = getStatusTheme(sKey)
+  const responseState = resolveRfqResponseState(rfq)
+  const responseTheme = RESPONSE_THEME[responseState]
+  const secondaryText = rfq.invitationStatus || detail?.status || rfq.status
+  const supplierCount = rfq.supplierOptions?.length ?? 1
 
   const row = (
-    <TableRow className="cursor-pointer hover:bg-muted/10 [&>td]:py-2.5">
+    <TableRow className="cursor-pointer border-b border-border/70 transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-950/20 [&>td]:py-3">
       <TableCell className="min-w-0">
-        <p className="truncate text-[13px] font-medium text-foreground">
-          {rfq.comments || detail?.comments || "Request for Quotation"}
-        </p>
-        <span className="font-mono text-[10px] text-muted-foreground">{rfq.rfqNumber}</span>
+        <div className="flex min-w-0 items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="truncate text-[13px] font-semibold text-foreground">
+              {rfq.comments || detail?.comments || "Request for Quotation"}
+            </p>
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
+              <span className="font-mono uppercase tracking-[0.14em]">{rfq.rfqNumber}</span>
+              {secondaryText ? (
+                <>
+                  <span className="h-1 w-1 rounded-full bg-border" />
+                  <span>{secondaryText}</span>
+                </>
+              ) : null}
+              {supplierCount > 1 ? (
+                <>
+                  <span className="h-1 w-1 rounded-full bg-border" />
+                  <span>{supplierCount} supplier records</span>
+                </>
+              ) : null}
+            </div>
+          </div>
+
+          <span className={cn(
+            "inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10px] font-medium",
+            responseTheme.className
+          )}>
+            {responseTheme.label}
+          </span>
+        </div>
       </TableCell>
 
       <TableCell className="hidden text-[11px] text-muted-foreground sm:table-cell">
         {parsedDeadline ? (
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1.5">
             <Calendar className="h-3 w-3 shrink-0 opacity-40" />
             {fmt(rfq.submissionDeadline)}
           </span>
@@ -202,10 +236,13 @@ function RfqRow({ rfq }: { rfq: RfqInvitation }) {
       </TableCell>
 
       <TableCell className="hidden sm:table-cell">
-        <span className={cn("inline-flex items-center gap-1 text-[11px] font-medium", urgency.tone)}>
-          <Timer className="h-3 w-3" />
-          {urgency.label}
-        </span>
+        <div className="flex items-center justify-between gap-2">
+          <span className={cn("inline-flex items-center gap-1 text-[11px] font-medium", urgency.tone)}>
+            <Timer className="h-3 w-3" />
+            {urgency.label}
+          </span>
+          <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground/50" />
+        </div>
       </TableCell>
 
       <TableCell className="text-right">
@@ -223,15 +260,13 @@ function RfqRow({ rfq }: { rfq: RfqInvitation }) {
 /* ── Main list ───────────────────────────────────── */
 
 export function RfqInvitations() {
-  const [search, setSearch] = useState("")
+  const { search, setSearch, debouncedSearch } = useUrlSyncedSearch()
   const [statusFilter, setStatusFilter] = useState<RfqStatusFilter>("all")
   const [responseFilter, setResponseFilter] = useState<RfqResponseFilter>("all")
   const [data, setData] = useState<RfqInvitation[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({})
-
-  const debounced = useDebounce(search, 300)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -245,7 +280,7 @@ export function RfqInvitations() {
       if (!res.ok) throw new Error("Failed to load RFQ invitations")
       const json = (await res.json()) as RfqListResponse
       const list = Array.isArray(json.data) ? json.data : []
-      setData(list)
+      setData(groupRfqInvitations(list))
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load RFQ invitations")
     } finally {
@@ -259,8 +294,8 @@ export function RfqInvitations() {
   const filtered = useMemo(() => {
     let items = data
 
-    if (debounced) {
-      const needle = debounced.toLowerCase()
+    if (debouncedSearch) {
+      const needle = debouncedSearch.toLowerCase()
       items = items.filter((rfq) => {
         const haystack = `${rfq.rfqNumber} ${rfq.comments} ${rfq.invitationStatus} ${rfq.status}`.toLowerCase()
         return haystack.includes(needle)
@@ -276,7 +311,7 @@ export function RfqInvitations() {
     }
 
     return items
-  }, [data, debounced, statusFilter, responseFilter])
+  }, [data, debouncedSearch, statusFilter, responseFilter])
 
   const stats = useMemo(() => {
     let open = 0, closed = 0, submitted = 0, pending = 0
@@ -290,7 +325,7 @@ export function RfqInvitations() {
   }, [data])
 
   const sections = useMemo(() => {
-    if (statusFilter !== "all" || responseFilter !== "all" || debounced) {
+    if (statusFilter !== "all" || responseFilter !== "all" || debouncedSearch) {
       return [{ id: "matching", title: "Matching invitations", items: filtered }]
     }
 
@@ -307,7 +342,7 @@ export function RfqInvitations() {
     if (openItems.length) grouped.push({ id: "open", title: "Open invitations", items: openItems })
     if (closedItems.length) grouped.push({ id: "closed", title: "Closed", items: closedItems })
     return grouped
-  }, [filtered, statusFilter, responseFilter, debounced])
+  }, [filtered, statusFilter, responseFilter, debouncedSearch])
 
   // Auto-expand sections on first load
   useEffect(() => {
@@ -329,30 +364,13 @@ export function RfqInvitations() {
   /* ── Header (mirrors my-applications) ── */
 
   const header = (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2.5">
-        <div className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground">
-          <Mail className="h-4 w-4" />
-        </div>
-        <div>
-          <h1 className="text-base font-semibold text-foreground">RFQ Invitations</h1>
-          {!loading && (
-            <p className="text-[11px] leading-none text-muted-foreground">
-              {stats.total} invitation{stats.total !== 1 ? "s" : ""} · {stats.open} open · {stats.submitted} responded
-            </p>
-          )}
-        </div>
-      </div>
-      {!loading && (
-        <button
-          type="button"
-          onClick={load}
-          className="inline-flex items-center gap-1 text-[11px] text-muted-foreground transition hover:text-foreground"
-        >
-          <RefreshCw className="h-3 w-3" /> Refresh
-        </button>
-      )}
-    </div>
+    <ProcurementCollectionHeader
+      icon={Mail}
+      title="RFQ Invitations"
+      summary={!loading ? `${stats.total} invitation${stats.total !== 1 ? "s" : ""} · ${stats.open} open · ${stats.submitted} responded` : undefined}
+      actionLabel="Refresh feed"
+      onAction={!loading ? load : undefined}
+    />
   )
 
   /* ── Loading state ── */
@@ -360,7 +378,7 @@ export function RfqInvitations() {
   if (loading) return (
     <div className="space-y-5">
       {header}
-      <Loading />
+      <ProcurementCollectionLoading />
     </div>
   )
 
@@ -369,11 +387,7 @@ export function RfqInvitations() {
   if (error) return (
     <div className="space-y-5">
       {header}
-      <div className="flex flex-col items-center py-16 text-center">
-        <AlertTriangle className="mb-2 h-5 w-5 text-destructive/60" />
-        <p className="text-sm text-destructive/80">{error}</p>
-        <Button variant="ghost" size="sm" className="mt-3 text-xs" onClick={load}>Retry</Button>
-      </div>
+      <ProcurementCollectionState icon={AlertTriangle} title={error} actionLabel="Retry" onAction={load} />
     </div>
   )
 
@@ -382,13 +396,11 @@ export function RfqInvitations() {
   if (data.length === 0) return (
     <div className="space-y-5">
       {header}
-      <div className="flex flex-col items-center py-20 text-center">
-        <Mail className="mb-2 h-6 w-6 text-muted-foreground/40" />
-        <p className="text-sm font-medium text-muted-foreground">No RFQ invitations yet</p>
-        <p className="mt-0.5 text-xs text-muted-foreground/60">
-          You will receive invitations here when procurement teams send RFQs your way.
-        </p>
-      </div>
+      <ProcurementCollectionState
+        icon={Mail}
+        title="No RFQ invitations yet"
+        description="You will receive invitations here when procurement teams send RFQs your way."
+      />
     </div>
   )
 
@@ -398,67 +410,76 @@ export function RfqInvitations() {
     <div className="space-y-5">
       {header}
 
-      {/* Search & Filters */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <div className="relative max-w-xs flex-1">
-          <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/50" />
-          <Input
-            placeholder="Search RFQ ref or title…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="h-8 pl-9 text-xs"
-          />
-          {search && (
-            <button
-              type="button"
-              onClick={() => setSearch("")}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
-        </div>
+      <div className="rounded-[1.35rem] border border-border/70 bg-background p-3 shadow-none sm:p-4">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative min-w-0 flex-1 lg:max-w-xl">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
+              <Input
+                placeholder="Search RFQ ref or title…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="h-10 rounded-xl border-border/70 bg-background pl-10 pr-10 text-sm"
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
 
-        <div className="flex items-center gap-2">
-          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as RfqStatusFilter)}>
-            <SelectTrigger className="h-8 w-[130px] text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All ({stats.total})</SelectItem>
-              <SelectItem value="open">Open ({stats.open})</SelectItem>
-              <SelectItem value="closed">Closed ({stats.closed})</SelectItem>
-            </SelectContent>
-          </Select>
+            <div className="flex items-center gap-2">
+              <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as RfqStatusFilter)}>
+                <SelectTrigger className="h-10 min-w-[145px] rounded-xl border-border/70 bg-background text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All ({stats.total})</SelectItem>
+                  <SelectItem value="open">Open ({stats.open})</SelectItem>
+                  <SelectItem value="closed">Closed ({stats.closed})</SelectItem>
+                </SelectContent>
+              </Select>
 
-          <Select value={responseFilter} onValueChange={(v) => setResponseFilter(v as RfqResponseFilter)}>
-            <SelectTrigger className="h-8 w-[150px] text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All responses ({stats.total})</SelectItem>
-              <SelectItem value="submitted">Submitted ({stats.submitted})</SelectItem>
-              <SelectItem value="pending">Pending ({stats.pending})</SelectItem>
-            </SelectContent>
-          </Select>
+              <Select value={responseFilter} onValueChange={(v) => setResponseFilter(v as RfqResponseFilter)}>
+                <SelectTrigger className="h-10 min-w-[165px] rounded-xl border-border/70 bg-background text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All responses ({stats.total})</SelectItem>
+                  <SelectItem value="submitted">Submitted ({stats.submitted})</SelectItem>
+                  <SelectItem value="pending">Pending ({stats.pending})</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+            <span className="inline-flex items-center rounded-full border border-border/70 bg-muted/30 px-2.5 py-1">
+              {stats.open} open
+            </span>
+            <span className="inline-flex items-center rounded-full border border-amber-200/80 bg-amber-50/80 px-2.5 py-1 text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-400">
+              {stats.pending} awaiting response
+            </span>
+            <span className="inline-flex items-center rounded-full border border-emerald-200/80 bg-emerald-50/80 px-2.5 py-1 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-400">
+              {stats.submitted} submitted
+            </span>
+          </div>
         </div>
       </div>
 
       {/* No results after search */}
       {filtered.length === 0 && (
-        <div className="flex flex-col items-center py-16 text-center">
-          <Mail className="mb-2 h-5 w-5 text-muted-foreground/40" />
-          <p className="text-sm font-medium text-muted-foreground">No matches</p>
-          <p className="mt-0.5 text-xs text-muted-foreground/60">Try a different search or filter.</p>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mt-3 text-xs"
-            onClick={() => { setSearch(""); setStatusFilter("all"); setResponseFilter("all") }}
-          >
-            Clear filters
-          </Button>
-        </div>
+        <ProcurementCollectionState
+          icon={Mail}
+          title="No matches"
+          description="Try a different search or filter."
+          actionLabel="Clear filters"
+          onAction={() => { setSearch(""); setStatusFilter("all"); setResponseFilter("all") }}
+        />
       )}
 
       {/* Collapsible sections */}
@@ -475,29 +496,29 @@ export function RfqInvitations() {
               onOpenChange={(v) => setOpenSections((prev) => ({ ...prev, [section.id]: v }))}
             >
               <CollapsibleTrigger asChild>
-                <button
-                  type="button"
-                  className={cn(
-                    "group flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors",
-                    isOpen ? theme.triggerOpen : theme.trigger
-                  )}
-                >
-                  <ChevronsUpDown className={cn(
-                    "h-4 w-4 shrink-0",
-                    isOpen ? theme.text : "text-muted-foreground"
-                  )} />
-
-                  <span className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
-                    {section.title}
-                  </span>
-
-                  <span className="flex shrink-0 items-center gap-3 text-[11px] text-muted-foreground">
-                    {submittedCount > 0 && (
+                <ProcurementSectionTrigger
+                  open={isOpen}
+                  title={section.title}
+                  subtitle={
+                    section.id === "priority"
+                      ? "Deadlines are tightening. Open and quote now."
+                      : section.id === "open"
+                        ? "Active opportunities still accepting supplier responses."
+                        : section.id === "closed"
+                          ? "Reference completed or expired RFQs without mixing them into active work."
+                          : "Filtered results based on your current view."
+                  }
+                  openClassName={theme.triggerOpen}
+                  closedClassName={theme.trigger}
+                  accentTextClassName={theme.text}
+                  roundedClassName="rounded-t-[1.25rem] rounded-b-none"
+                  triggerClassName="px-5 py-4"
+                  trailingMeta={
+                    submittedCount > 0 ? (
                       <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
                         <CheckCircle2 className="h-3 w-3" />{submittedCount}/{section.items.length}
                       </span>
-                    )}
-                    {submittedCount === 0 && (
+                    ) : (
                       <span className={cn(
                         "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium",
                         theme.badge
@@ -505,21 +526,16 @@ export function RfqInvitations() {
                         <Mail className="h-3 w-3" />
                         {section.items.length} RFQ{section.items.length !== 1 ? "s" : ""}
                       </span>
-                    )}
-                  </span>
-
-                  <ChevronDown className={cn(
-                    "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200",
-                    isOpen && "rotate-180"
-                  )} />
-                </button>
+                    )
+                  }
+                />
               </CollapsibleTrigger>
 
               <CollapsibleContent>
-                <div className="rounded-b-lg border border-t-0 border-border bg-card">
+                <div className="overflow-hidden rounded-b-[1.25rem] border border-t-0 border-border/70 bg-background shadow-none">
                   <Table>
                     <TableHeader>
-                      <TableRow className="text-[10px] uppercase tracking-wider [&>th]:py-2 [&>th]:text-muted-foreground/60">
+                      <TableRow className="bg-muted/25 text-[10px] uppercase tracking-[0.18em] [&>th]:py-3 [&>th]:text-muted-foreground/70">
                         <TableHead>RFQ</TableHead>
                         <TableHead className="hidden sm:table-cell">Deadline</TableHead>
                         <TableHead className="hidden sm:table-cell">Time left</TableHead>

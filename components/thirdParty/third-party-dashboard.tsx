@@ -14,11 +14,18 @@ import { AnimatePresence, motion } from "framer-motion"
 
 const fetcher = (url: string) => fetch(url, { cache: "no-store" }).then(res => res.json())
 
+type SupplierCategoryOption = {
+    id: number | string
+    name: string
+}
+
 export default function ThirdPartyDashboard() {
     const [isModalOpen, setIsModalOpen] = useState(false)
     const { profile, updateProfile, createProfile, isLoading } = useThirdPartyProfile()
     const { data: countriesData } = useSWR<{ data: CountryOption[] }>("/api/countries", fetcher)
+    const { data: supplierCategoriesData } = useSWR<{ data: SupplierCategoryOption[] }>("/portal/metadata/supplier-categories", fetcher)
     const countries = useMemo(() => countriesData?.data ?? [], [countriesData?.data])
+    const supplierCategories = useMemo(() => supplierCategoriesData?.data ?? [], [supplierCategoriesData?.data])
 
     const form = useForm<ThirdPartyInputs>({
         defaultValues: profile ?? {}
@@ -30,13 +37,21 @@ export default function ThirdPartyDashboard() {
     }, [isLoading, profile])
 
     const countryName = useMemo(() => countries.find(c => c.id === profile?.countryId)?.name ?? "N/A", [countries, profile?.countryId])
+    const businessTypeLabel = useMemo(() => profile?.businessType ?? profile?.legalForm ?? null, [profile?.businessType, profile?.legalForm])
+    const contactPerson = useMemo(() => profile?.contactPerson ?? null, [profile?.contactPerson])
 
     const handleSubmit = async (values: ThirdPartyInputs) => {
+        const payload: ThirdPartyInputs = {
+            ...values,
+            primaryCategoryId: values.primaryCategoryId ?? null,
+            primary_category_id: values.primaryCategoryId ?? null,
+        }
+
         try {
             if (profile) {
-                await updateProfile(values)
+                await updateProfile(payload)
             } else {
-                await createProfile(values)
+                await createProfile(payload)
             }
             setIsModalOpen(false)
         } catch { }
@@ -67,12 +82,18 @@ export default function ThirdPartyDashboard() {
                                     <h2 className="text-lg font-semibold mb-2">General Information</h2>
                                     <FieldRow label="Legal Name" value={profile.thirdPartyName ?? null} icon={Building2} />
                                     <FieldRow label="Trading Name" value={profile.tradingName ?? null} icon={Building2} />
-                                    <FieldRow label="Business Type" value={profile.businessType ?? null} icon={FileText} />
+                                    <FieldRow label="Business Type" value={businessTypeLabel ?? null} icon={FileText} />
 
                                     <h2 className="text-lg font-semibold mt-4 mb-2">Registration & Tax</h2>
                                     <FieldRow label="Registration Number" value={profile.registrationNumber ?? null} icon={FileText} />
                                     <FieldRow label="Tax PIN" value={profile.taxPIN ?? null} icon={Percent} />
                                     <FieldRow label="VAT Number" value={profile.vatNumber ?? null} icon={Percent} />
+                                    <FieldRow label="Primary Category" value={profile.primaryCategory ?? null} icon={FileText} />
+
+                                    <h2 className="text-lg font-semibold mt-4 mb-2">Contact Person</h2>
+                                    <FieldRow label="Contact Person Name" value={contactPerson?.name ?? null} icon={Building2} />
+                                    <FieldRow label="Contact Person Email" value={contactPerson?.email ?? null} icon={Mail} />
+                                    <FieldRow label="Contact Person Phone" value={contactPerson?.phone ?? null} icon={Phone} />
 
                                     <h2 className="text-lg font-semibold mt-4 mb-2">Contact & Location</h2>
                                     <FieldRow label="Country" value={countryName ?? null} icon={MapPin} />
@@ -102,6 +123,7 @@ export default function ThirdPartyDashboard() {
                 onOpenChange={setIsModalOpen}
                 form={form}
                 countries={countries}
+                supplierCategories={supplierCategories}
                 isEditing={!!profile}
                 onSubmit={handleSubmit}
             />
