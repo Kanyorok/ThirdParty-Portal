@@ -41,7 +41,6 @@ import {
   TableRow,
 } from "@/components/common/table"
 import TenderDetailModal from "./tenders/tender-detail-modal"
-import { getBaseUrl } from "@/lib/api-base"
 
 /* ── Helpers ─────────────────────────────────────── */
 
@@ -291,7 +290,7 @@ export default function TendersFilter() {
 
   const fetchInvitations = useCallback(async (signal?: AbortSignal) => {
     try {
-      const res = await fetch(`${getBaseUrl()}/api/tender-invitations`, {
+      const res = await fetch("/api/tender-invitations", {
         signal,
         headers: { Accept: "application/json" },
       })
@@ -318,7 +317,7 @@ export default function TendersFilter() {
       const params = new URLSearchParams()
       if (debounced) params.set("search", debounced)
       const res = await fetch(
-        `${getBaseUrl()}/api/tenders${params.toString() ? `?${params}` : ""}`,
+        `/api/tenders${params.toString() ? `?${params}` : ""}`,
         { signal, headers: { Accept: "application/json" } }
       )
       const json = await res.json().catch(() => null)

@@ -115,6 +115,7 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        profile_type: { label: "Profile Type", type: "text" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -131,17 +132,30 @@ export const authOptions: NextAuthOptions = {
           body: JSON.stringify({
             email: credentials.email,
             password: credentials.password,
+            profile_type: credentials.profile_type,
           }),
         })
 
-        if (!res.ok) {
-          return null
+        const text = await res.text()
+        let data: any = null
+
+        try {
+          data = text ? JSON.parse(text) : null
+        } catch {
+          data = null
         }
 
-        const data = await res.json()
+        if (!res.ok) {
+          const errorCode =
+            typeof data?.error === "string" && data.error.trim()
+              ? data.error.trim()
+              : "SERVER_ERROR"
+
+          throw new Error(errorCode)
+        }
 
         if (data?.success !== true || !data?.user || !data?.token) {
-          return null
+          throw new Error(typeof data?.error === "string" ? data.error : "SERVER_ERROR")
         }
 
         const u = data.user

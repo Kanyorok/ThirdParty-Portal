@@ -39,7 +39,7 @@ async function getPropertyLocalities(baseUrl: string): Promise<PropertyLocality[
 
             return { id, name }
         })
-        .filter((locality): locality is PropertyLocality => locality !== null)
+        .filter((locality: PropertyLocality | null): locality is PropertyLocality => locality !== null)
 }
 
 export default function PropertyRegistry() {
@@ -101,7 +101,7 @@ export default function PropertyRegistry() {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-12">
-                        {[...Array(8)].map((_, i) => (
+                        {[...Array(8)].map((_: unknown, i: number) => (
                             <div key={i} className="space-y-6">
                                 <Skeleton className="aspect-[4/5] w-full rounded-[2.5rem]" />
                                 <div className="space-y-3 px-2">

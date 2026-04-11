@@ -9,9 +9,9 @@
     if (!window.__ENV__) {
       window.__ENV__ = {
         // Default empty values meaning use relative paths.
-        NEXT_PUBLIC_API_URL: '',
-        API_BASE_URL: '',
-        EXTERNAL_API_URL: ''
+        NEXT_PUBLIC_API_URL: 'http://172.17.22.10',
+        API_BASE_URL: 'http://172.17.22.10',
+        EXTERNAL_API_URL: 'http://172.17.22.10'
       }
     }
   } catch {
