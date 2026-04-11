@@ -136,10 +136,6 @@
 
   body {
     @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary;
-    background-image:
-      radial-gradient(circle at 15% -10%, rgba(0, 92, 144, 0.08), transparent 34%),
-      radial-gradient(circle at 90% 0%, rgba(69, 134, 178, 0.05), transparent 30%);
-    background-attachment: fixed;
   }
 
   a,

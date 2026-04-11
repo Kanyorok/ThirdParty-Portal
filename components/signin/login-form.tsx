@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { useForm, useWatch, type UseFormRegisterReturn } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Mail, Lock, Loader2, AlertCircle, Eye, X, EyeClosed, type LucideIcon } from "lucide-react"
+import { Mail, Lock, AlertCircle, Eye, X, EyeClosed, CircleCheck, type LucideIcon } from "lucide-react"
 import { signIn } from "next-auth/react"
 
 import { Button } from "@/components/common/button"
@@ -29,14 +29,16 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
     SERVER_ERROR: "An unexpected error occurred. Please try again later.",
 }
 
-const fieldIconClass = "pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2"
-const inputBaseClass = "h-12 bg-transparent pl-10 pr-10"
+const fieldIconClass = "h-4 w-4 text-slate-700"
+const inputBaseClass = "h-12 rounded-[6px] border-slate-300 bg-white px-3.5 pr-10 text-[15px] font-semibold text-slate-950 caret-primary transition-[border-color,background-color,box-shadow] placeholder:text-sm placeholder:font-medium placeholder:text-slate-500 hover:border-slate-400 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/14 focus-visible:shadow-[0_0_0_1px_rgba(0,92,144,0.14)]"
 const inputErrorClass = "border-rose-400 focus-visible:border-rose-500 focus-visible:ring-rose-200"
-const endButtonClass = "absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+const endButtonClass = "absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-500 hover:text-slate-800"
+const submitButtonClass = "group h-12 w-full rounded-[6px] bg-primary text-sm font-bold tracking-[0.08em] uppercase shadow-[0_16px_28px_-18px_rgba(0,92,144,0.42)] ring-1 ring-primary/20 transition-[transform,background-color,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:bg-[var(--primary-hover)] hover:shadow-[0_18px_30px_-18px_rgba(0,92,144,0.48)] active:translate-y-0 active:shadow-[0_10px_16px_-14px_rgba(0,92,144,0.34)] disabled:translate-y-0 disabled:bg-primary/70 disabled:shadow-none"
+const linkClass = "transition-[color,opacity,transform,text-decoration-color] duration-200 ease-out hover:text-primary hover:underline hover:underline-offset-4"
 
-function AuthAlert({ message }: { message: string }) {
+function AuthAlert({ id, message }: { id: string, message: string }) {
     return (
-        <div className="flex items-start gap-2 rounded-xl border border-rose-300/70 bg-rose-50/90 px-3.5 py-3 text-rose-700">
+        <div id={id} role="alert" aria-live="polite" className="flex items-start gap-2 rounded-[6px] border border-rose-300/80 bg-rose-50/95 px-3.5 py-3 text-rose-700">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
             <p className="text-sm font-medium">{message}</p>
         </div>
@@ -49,6 +51,7 @@ interface FormFieldProps {
     icon: LucideIcon
     type: string
     autoComplete: string
+    inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"]
     placeholder: string
     disabled: boolean
     hasError: boolean
@@ -58,36 +61,43 @@ interface FormFieldProps {
 }
 
 function FormField({
-    id, label, icon: Icon, type, autoComplete, placeholder,
+    id, label, icon: Icon, type, autoComplete, inputMode, placeholder,
     disabled, hasError, errorMessage, registration, endAction,
 }: FormFieldProps) {
+    const errorId = `${id}-error`
+
     return (
-        <div className="space-y-1.5">
-            <label htmlFor={id} className="text-[11px] font-semibold tracking-wide text-slate-600">
-                {label}
+        <div className="grid gap-2.5">
+            <label htmlFor={id} className="flex items-center gap-2 text-[15px] font-semibold tracking-[0.01em] text-slate-950">
+                <Icon className={cn(fieldIconClass, hasError && "text-rose-500")} />
+                <span>{label}</span>
             </label>
             <div className="relative">
-                <Icon className={cn(fieldIconClass, hasError ? "text-rose-500" : "text-muted-foreground")} />
                 <Input
                     id={id}
                     type={type}
                     autoComplete={autoComplete}
+                    inputMode={inputMode}
+                    aria-describedby={hasError && errorMessage ? errorId : undefined}
+                    aria-invalid={hasError || undefined}
+                    autoCapitalize={type === "email" ? "none" : undefined}
                     placeholder={placeholder}
                     disabled={disabled}
+                    spellCheck={false}
                     className={cn(inputBaseClass, hasError && inputErrorClass)}
                     {...registration}
                 />
                 {endAction}
             </div>
-            {hasError && errorMessage && (
-                <p className="text-xs font-medium text-rose-600">{errorMessage}</p>
-            )}
+            {hasError && errorMessage ? <p id={errorId} className="sr-only">{errorMessage}</p> : null}
         </div>
     )
 }
 
 export default function LoginPage() {
     const router = useRouter()
+    const authInfoId = React.useId()
+    const authErrorId = React.useId()
     const [authError, setAuthError] = React.useState<string | null>(null)
     const [showPassword, setShowPassword] = React.useState(false)
 
@@ -129,94 +139,118 @@ export default function LoginPage() {
                 return
             }
 
-            router.push("/dashboard")
+            router.replace("/dashboard")
         } catch {
             setAuthError("An unexpected error occurred. Please try again later.")
         }
     }
 
+    const formDescriptionIds = [authInfoId, authError ? authErrorId : null].filter(Boolean).join(" ")
+
     return (
-        <main className="min-h-[100dvh] px-4 sm:px-6 lg:px-8">
-            <div className="mx-auto flex min-h-[100dvh] w-full max-w-7xl items-center justify-center py-8 sm:py-10">
-                <div className="mx-auto w-full max-w-[620px] space-y-8">
-                    <header className="space-y-3 text-center">
-                        <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">Welcome back</h1>
-                        <p className="text-sm font-medium text-muted-foreground">Sign in to continue to your portal.</p>
-                    </header>
+        <main className="relative flex min-h-dvh items-center bg-slate-50 px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+            <div className="relative mx-auto flex w-full max-w-5xl items-center justify-center">
+                <section className="w-full max-w-[560px] rounded-[10px] border border-slate-300 bg-white px-5 py-7 shadow-[0_18px_36px_-30px_rgba(15,23,42,0.16)] sm:rounded-[12px] sm:px-8 sm:py-9 lg:px-10 lg:py-10">
+                    <div className="mx-auto w-full max-w-md space-y-8">
+                        <header className="space-y-5 border-b border-slate-300 pb-6 text-center">
+                            <div className="space-y-3">
+                                <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-[2rem]">Authorization Required</h1>
+                                <p id={authInfoId} className="mx-auto max-w-md rounded-[6px] bg-slate-100 px-4 py-2.5 text-sm font-medium leading-6 text-slate-600">Please sign in to continue.</p>
+                            </div>
+                            <div className="mx-auto h-px w-16 bg-primary/70" />
+                        </header>
 
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-                        {authError && <AuthAlert message={authError} />}
+                        <div className="grid gap-6">
+                            <form noValidate aria-busy={isSubmitting} aria-describedby={formDescriptionIds || undefined} onSubmit={handleSubmit(onSubmit)} className="grid gap-6">
+                                {authError && <AuthAlert id={authErrorId} message={authError} />}
 
-                        <FormField
-                            id="email"
-                            label="Email"
-                            icon={Mail}
-                            type="email"
-                            autoComplete="email"
-                            placeholder="youremail@gmail.com"
-                            disabled={isSubmitting}
-                            hasError={hasFieldError("email")}
-                            errorMessage={errors.email?.message}
-                            registration={register("email")}
-                            endAction={emailValue ? (
-                                <button
-                                    type="button"
-                                    onClick={() => setValue("email", "", { shouldValidate: true })}
-                                    className={endButtonClass}
-                                    aria-label="Clear email"
-                                >
-                                    <X className="h-4 w-4" />
-                                </button>
-                            ) : null}
-                        />
+                                <div className="grid gap-5">
+                                    <FormField
+                                        id="email"
+                                        label="Email"
+                                        icon={Mail}
+                                        type="email"
+                                        autoComplete="username"
+                                        inputMode="email"
+                                        placeholder="Enter your email address"
+                                        disabled={isSubmitting}
+                                        hasError={hasFieldError("email")}
+                                        errorMessage={errors.email?.message}
+                                        registration={register("email")}
+                                        endAction={emailValue ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => setValue("email", "", { shouldValidate: true })}
+                                                className={endButtonClass}
+                                                aria-label="Clear email"
+                                            >
+                                                <X className="h-4 w-4" />
+                                            </button>
+                                        ) : null}
+                                    />
 
-                        <FormField
-                            id="password"
-                            label="Password"
-                            icon={Lock}
-                            type={showPassword ? "text" : "password"}
-                            autoComplete="current-password"
-                            placeholder="Enter your password"
-                            disabled={isSubmitting}
-                            hasError={hasFieldError("password")}
-                            errorMessage={errors.password?.message}
-                            registration={register("password")}
-                            endAction={
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(prev => !prev)}
-                                    className={endButtonClass}
-                                    aria-label={showPassword ? "Hide password" : "Show password"}
-                                >
-                                    {showPassword ? <EyeClosed className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                </button>
-                            }
-                        />
+                                    <FormField
+                                        id="password"
+                                        label="Password"
+                                        icon={Lock}
+                                        type={showPassword ? "text" : "password"}
+                                        autoComplete="current-password"
+                                        placeholder="Enter your password"
+                                        disabled={isSubmitting}
+                                        hasError={hasFieldError("password")}
+                                        errorMessage={errors.password?.message}
+                                        registration={register("password")}
+                                        endAction={
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(prev => !prev)}
+                                                className={endButtonClass}
+                                                aria-label={showPassword ? "Hide password" : "Show password"}
+                                            >
+                                                {showPassword ? <EyeClosed className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                            </button>
+                                        }
+                                    />
+                                </div>
 
-                        <Button type="submit" disabled={isSubmitting} className="h-12 w-full rounded-xl text-sm font-semibold">
-                            {isSubmitting ? (
-                                <>
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                    Signing in...
-                                </>
-                            ) : (
-                                "Sign in"
-                            )}
-                        </Button>
-                    </form>
+                                <div className="grid gap-3">
+                                    <Button type="submit" disabled={isSubmitting} className={submitButtonClass}>
+                                        {isSubmitting ? (
+                                            <span className="inline-flex items-center gap-2.5">
+                                                <span className="loader-bars loader-bars--inline [&>span]:bg-white [&>span]:shadow-none" aria-hidden="true">
+                                                    <span />
+                                                    <span />
+                                                    <span />
+                                                </span>
+                                                <span>Signing in...</span>
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center gap-2.5">
+                                                <CircleCheck className="h-4 w-4 transition-transform duration-200 group-hover:scale-105" />
+                                                <span>Sign in</span>
+                                            </span>
+                                        )}
+                                    </Button>
+                                    <p className="text-center text-xs font-medium tracking-[0.01em] text-slate-500">Powered by <span className="font-bold text-slate-900">Craft Silicon</span></p>
+                                </div>
+                            </form>
 
-                    <div className="space-y-4 text-center">
-                        <Link href="/forgot-password" className="text-sm font-medium text-primary hover:text-[var(--primary-hover)]">
-                            Forgot your password?
-                        </Link>
-                        <p className="text-sm text-muted-foreground">
-                            Don&apos;t have an account?{" "}
-                            <Link href="/signup" className="font-semibold text-primary hover:text-[var(--primary-hover)]">
-                                Sign up
-                            </Link>
-                        </p>
+                            <div className="grid gap-4 border-t border-slate-300 pt-6 text-left">
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <Link href="/forgot-password" className={cn("inline-flex items-center text-sm font-semibold text-slate-700", linkClass)}>
+                                        Reset your password
+                                    </Link>
+                                    <p className="text-sm text-slate-600">
+                                        New here?{" "}
+                                        <Link href="/signup" className={cn("font-semibold text-primary", linkClass)}>
+                                            Create an account
+                                        </Link>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                </section>
             </div>
         </main>
     )
