@@ -38,9 +38,9 @@ const linkClass = "transition-[color,opacity,transform,text-decoration-color] du
 
 function AuthAlert({ id, message }: { id: string, message: string }) {
     return (
-        <div id={id} role="alert" aria-live="polite" className="flex items-start gap-2 rounded-[6px] border border-rose-300/80 bg-rose-50/95 px-3.5 py-3 text-rose-700">
-            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-            <p className="text-sm font-medium">{message}</p>
+        <div id={id} role="alert" aria-live="polite" className="flex flex-col items-center justify-center gap-2 rounded-[6px] border border-rose-300/80 bg-rose-50/95 px-4 py-3 text-center text-rose-700">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <p className="text-sm font-medium leading-6">{message}</p>
         </div>
     )
 }
