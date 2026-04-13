@@ -1,25 +1,32 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
-import { apiFetch } from "../lib/api-base"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 
-type LookupItem = {
-    id: string
-    name: string
-    label: string
-    value: string
-    description: string
-}
+import {
+    emptyRegistrationMetadata,
+    fetchLocalJson,
+    isCompanyLikeBusinessType,
+    normalizeLookupItems,
+    pickLookupItems,
+    type CountryItem,
+    type LocalityItem,
+    type RegistrationMetadata,
+    type SupplierCategoryItem,
+    type SupplierDocumentRequirement,
+} from "@/lib/register-shared"
 
 const ROLE_VALUES = ["SU", "TN", "CU"] as const
 type RoleValue = (typeof ROLE_VALUES)[number]
+
 const PHONE_REGEX = /^\+?[0-9]{8,15}$/
-const COMPANY_LIKE_BUSINESS_TYPES = new Set(["company", "partnership", "limited company", "llp"])
 const GENERIC_REGISTRATION_ERROR = "We couldn't complete registration. Please correct the highlighted fields and try again."
 const SENSITIVE_ERROR_PATTERN = /(exception|stack|trace|sql|syntax|internal server|undefined|vendor|route|line\s+\d+)/i
+const DOCUMENT_KEY_PATTERN = /^registration_documents\.(\d+)$/
+const DOCUMENT_NOTE_KEY_PATTERN = /^registration_document_notes\.(\d+)$/
+const VERIFY_EMAIL_LINK_REGEX = /https?:\/\/[^"'<>\s]+\/(?:email\/verify|verify-email)[^"'<>\s]*/i
 
 const SERVER_FIELD_FALLBACK_MESSAGES: Record<string, string> = {
     Name: "Please enter a valid legal company name.",
@@ -51,54 +58,25 @@ const SERVER_FIELD_FALLBACK_MESSAGES: Record<string, string> = {
     user_Gender: "Please select a valid gender.",
     user_Password: "Please enter a valid password.",
     user_Password_confirmation: "Please confirm your password.",
-}
-
-const getSafeServerFieldMessage = (field: string, candidate: unknown): string => {
-    const fallback = SERVER_FIELD_FALLBACK_MESSAGES[field] ?? "Please provide a valid value."
-    if (typeof candidate !== "string") return fallback
-
-    const normalized = candidate.replace(/\s+/g, " ").trim()
-    if (!normalized || normalized.length > 140 || SENSITIVE_ERROR_PATTERN.test(normalized)) {
-        return fallback
-    }
-
-    return normalized
+    logo: "Please attach a valid logo image.",
 }
 
 const emptyToUndefined = (value: unknown) => {
     if (typeof value !== "string") return value
     const trimmed = value.trim()
-    return trimmed.length ? trimmed : undefined
+    return trimmed.length > 0 ? trimmed : undefined
+}
+
+const normalizeText = (value: unknown) => {
+    if (typeof value !== "string") return undefined
+    const trimmed = value.trim()
+    return trimmed.length > 0 ? trimmed : undefined
 }
 
 const optionalTextField = (label: string, maxLength: number) =>
     z.preprocess(
         emptyToUndefined,
-        z
-            .string()
-            .trim()
-            .max(maxLength, `${label} must be ${maxLength} characters or fewer`)
-    ).optional()
-
-const optionalUrlField = (label: string, maxLength: number) =>
-    z.preprocess(
-        emptyToUndefined,
-        z
-            .string()
-            .trim()
-            .max(maxLength, `${label} must be ${maxLength} characters or fewer`)
-            .url(`Please enter a valid ${label.toLowerCase()}`)
-    ).optional()
-
-const optionalNameField = (label: string) =>
-    z.preprocess(
-        emptyToUndefined,
-        z
-            .string()
-            .trim()
-            .min(2, `${label} must be at least 2 characters`)
-            .max(50, `${label} must be 50 characters or fewer`)
-            .regex(/^[a-zA-Z\s'-]+$/, `${label} can only contain letters, spaces, apostrophes, and hyphens`)
+        z.string().trim().max(maxLength, `${label} must be ${maxLength} characters or fewer`),
     ).optional()
 
 const optionalEmailField = (label: string) =>
@@ -108,342 +86,649 @@ const optionalEmailField = (label: string) =>
             .string()
             .trim()
             .email(`Please enter a valid ${label.toLowerCase()}`)
-            .max(254, `${label} must be 254 characters or fewer`)
+            .max(254, `${label} must be 254 characters or fewer`),
+    ).optional()
+
+const optionalNameField = (label: string) =>
+    z.preprocess(
+        emptyToUndefined,
+        z.string().trim().min(2, `${label} must be at least 2 characters`).max(50, `${label} must be 50 characters or fewer`),
     ).optional()
 
 const optionalPasswordField = (label: string) =>
     z.preprocess(
         emptyToUndefined,
-        z
-            .string()
-            .min(8, `${label} must be at least 8 characters`)
-            .max(128, `${label} must be 128 characters or fewer`)
+        z.string().min(8, `${label} must be at least 8 characters`).max(128, `${label} must be 128 characters or fewer`),
     ).optional()
 
-const optionalLookupField = (label: string, maxLength: number) =>
+const optionalHttpsUrlField = (label: string, maxLength: number) =>
     z.preprocess(
         emptyToUndefined,
         z
             .string()
             .trim()
             .max(maxLength, `${label} must be ${maxLength} characters or fewer`)
+            .url(`Please enter a valid ${label.toLowerCase()}`)
+            .refine((value) => value.startsWith("https://"), `${label} must start with https://`),
+    ).optional()
+
+const optionalLookupField = (label: string, maxLength: number) =>
+    z.preprocess(
+        emptyToUndefined,
+        z.string().trim().max(maxLength, `${label} must be ${maxLength} characters or fewer`),
     ).optional()
 
 const phoneField = (requiredMessage: string) =>
-    z.string()
-        .trim()
-        .min(1, requiredMessage)
-        .regex(PHONE_REGEX, "Phone number must be 8 to 15 digits and may start with +")
+    z.string().trim().min(1, requiredMessage).regex(PHONE_REGEX, "Phone number must be 8 to 15 digits and may start with +")
 
-const optionalPhoneField = (requiredMessage: string) =>
-    z.preprocess(emptyToUndefined, phoneField(requiredMessage)).optional()
+const optionalPhoneField = (requiredMessage: string) => z.preprocess(emptyToUndefined, phoneField(requiredMessage)).optional()
 
 const hasRole = (types: RoleValue[] | undefined, flag: RoleValue) => types?.includes(flag)
-const isCompanyLikeBusinessType = (value: string | undefined | null) => COMPANY_LIKE_BUSINESS_TYPES.has(String(value || "").trim().toLowerCase())
 
-const VERIFY_EMAIL_LINK_REGEX = /https?:\/\/[^"'<>\s]+\/verify-email\?[^"'<>\s]+/i
+const getSafeServerFieldMessage = (field: string, candidate: unknown): string => {
+    let fallback = SERVER_FIELD_FALLBACK_MESSAGES[field] ?? "Please provide a valid value."
+    if (DOCUMENT_KEY_PATTERN.test(field)) fallback = "Please attach a valid document file."
+    if (DOCUMENT_NOTE_KEY_PATTERN.test(field)) fallback = "Please provide a valid document note."
+    if (typeof candidate !== "string") return fallback
+
+    const normalized = candidate.replace(/\s+/g, " ").trim()
+    if (!normalized || normalized.length > 160 || SENSITIVE_ERROR_PATTERN.test(normalized)) {
+        return fallback
+    }
+
+    return normalized
+}
 
 const extractVerifyEmailUrl = (payload: Record<string, any> | null | undefined): string | null => {
     if (!payload) return null
+
     const candidates = [
-        payload.verify_url, payload.verifyUrl, payload.verificationUrl,
-        payload.data?.verify_url, payload.data?.verifyUrl, payload.data?.verificationUrl,
-        payload.data?.data?.verify_url, payload.data?.data?.verifyUrl, payload.data?.data?.verificationUrl,
+        payload.verification_url,
+        payload.verify_url,
+        payload.verifyUrl,
+        payload.verificationUrl,
+        payload.data?.verification_url,
+        payload.data?.verify_url,
+        payload.data?.verifyUrl,
+        payload.data?.verificationUrl,
     ]
+
     for (const candidate of candidates) {
         if (typeof candidate === "string" && candidate.trim()) return candidate
     }
-    const message = payload.message ?? payload.data?.message ?? payload.data?.data?.message
+
+    const message = payload.message ?? payload.data?.message
     if (typeof message === "string") {
         const match = message.match(VERIFY_EMAIL_LINK_REGEX)
-        if (match && match[0]) return match[0]
+        if (match?.[0]) return match[0]
     }
+
     return null
 }
 
+type LegacyEnumOption = {
+    value?: string | number | null
+    label?: string | null
+    name?: string | null
+}
+
+type LegacyCountryItem = {
+    id?: number | string | null
+    name?: string | null
+    code?: string | null
+}
+
+function normalizeLegacyCountries(rows: unknown): CountryItem[] {
+    if (!Array.isArray(rows)) return []
+
+    return rows
+        .map((row) => {
+            if (!row || typeof row !== "object") return null
+
+            const item = row as Record<string, unknown>
+            const id = Number(item.id ?? item.Id ?? 0)
+            const name = String(item.name ?? item.Name ?? "").trim()
+            const code = String(item.code ?? item.Code ?? "").trim()
+
+            if (!Number.isFinite(id) || id <= 0 || !name) return null
+
+            return {
+                id,
+                name,
+                code: code || name.slice(0, 3).toUpperCase(),
+            }
+        })
+        .filter((item): item is CountryItem => item !== null)
+}
+
+function normalizeLegacyEnumOptions(rows: unknown) {
+    if (!Array.isArray(rows)) return []
+
+    return normalizeLookupItems(
+        rows.map((row) => {
+            const item = row as LegacyEnumOption
+            return {
+                value: item?.value,
+                label: item?.label ?? item?.name,
+                description: item?.label ?? item?.name,
+            }
+        }),
+    )
+}
+
+const registerSchema = z
+    .object({
+        Name: z.string().trim().min(2, "Company name is required").max(100, "Company name must be 100 characters or fewer"),
+        TradingName: optionalTextField("Trading name", 100),
+        BusinessType: z.string().trim().min(1, "Business type is required"),
+        RegistrationNumber: z.string().trim().min(1, "Registration number is required").max(50, "Registration number must be 50 characters or fewer"),
+        TaxPIN: z.string().trim().min(1, "Tax PIN is required").max(50, "Tax PIN must be 50 characters or fewer"),
+        VATNumber: z.string().trim().min(1, "VAT number is required").max(50, "VAT number must be 50 characters or fewer"),
+        Country: z.string().trim().min(2, "Country is required").max(3, "Please select a valid country code"),
+        Location: z.coerce.number().int("Please select a valid location").min(1, "Location is required"),
+        Email: optionalEmailField("Business email"),
+        Phone: phoneField("Phone number is required"),
+        PhysicalAddress: optionalTextField("Physical address", 200),
+        Website: optionalHttpsUrlField("Website", 255),
+        types: z.array(z.enum(ROLE_VALUES)).min(1, "Select at least one business role"),
+        supplier_category_id: z.preprocess((value) => (value === "" ? null : value), z.coerce.number().int().positive().nullable().optional()),
+        contactPersonName: optionalNameField("Contact person name"),
+        contactPersonEmail: optionalEmailField("Contact person email"),
+        contactPersonPhone: optionalPhoneField("Contact person phone is required"),
+        user_Remarks: optionalTextField("Tenant remarks", 500),
+        user_DateOfBirth: optionalTextField("Date of birth", 25),
+        user_MaritalStatus: optionalLookupField("Marital status", 100),
+        user_Occupation: optionalLookupField("Occupation", 100),
+        createUser: z.boolean(),
+        user_FirstName: optionalNameField("First name"),
+        user_LastName: optionalNameField("Last name"),
+        user_Email: optionalEmailField("Admin email"),
+        user_Phone: optionalPhoneField("Admin phone is required"),
+        user_Gender: optionalLookupField("Gender", 50),
+        user_Password: optionalPasswordField("Password"),
+        user_Password_confirmation: optionalPasswordField("Confirm password"),
+    })
+    .superRefine((data, ctx) => {
+        const supplierFlow = hasRole(data.types, "SU")
+        const tenantFlow = hasRole(data.types, "TN")
+        const customerFlow = hasRole(data.types, "CU")
+
+        if (supplierFlow && !data.supplier_category_id) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["supplier_category_id"], message: "Select a supplier category." })
+        }
+
+        if (supplierFlow && isCompanyLikeBusinessType(data.BusinessType)) {
+            if (!data.contactPersonName) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contactPersonName"], message: "Contact person name is required." })
+            if (!data.contactPersonEmail) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contactPersonEmail"], message: "Contact person email is required." })
+            if (!data.contactPersonPhone) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contactPersonPhone"], message: "Contact person phone is required." })
+        }
+
+        if (tenantFlow && !(data.user_Remarks ?? "").trim()) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Remarks"], message: "Tenant remarks are required." })
+        }
+
+        if (customerFlow) {
+            if (!data.user_DateOfBirth) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_DateOfBirth"], message: "Date of birth is required for customers." })
+            if (!data.user_MaritalStatus) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_MaritalStatus"], message: "Marital status is required for customers." })
+            if (!data.user_Occupation) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Occupation"], message: "Occupation is required for customers." })
+            if (!data.user_Gender) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Gender"], message: "Gender is required for customers." })
+        }
+
+        if (!data.createUser) return
+
+        if (!data.user_FirstName) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_FirstName"], message: "First name is required." })
+        if (!data.user_LastName) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_LastName"], message: "Last name is required." })
+        if (!data.user_Email) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Email"], message: "Admin email is required." })
+        if (!data.user_Phone) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Phone"], message: "Admin phone is required." })
+        if (!data.user_Gender) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Gender"], message: "Gender is required." })
+        if (!data.user_Password) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Password"], message: "Password is required." })
+        if (!data.user_Password_confirmation) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Password_confirmation"], message: "Confirm your password." })
+        if (data.user_Password && data.user_Password_confirmation && data.user_Password !== data.user_Password_confirmation) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Password_confirmation"], message: "Passwords do not match." })
+        }
+    })
+
+export type RegisterFormInputs = z.infer<typeof registerSchema>
+export type RegisterRole = RoleValue
 export type RegisterThirdPartyResult = {
     success: boolean
     payload: Record<string, any>
     verifyEmailUrl: string | null
 }
 
-const registerSchema = z.object({
-    Name: z
-        .string()
-        .trim()
-        .min(2, "Company name is required")
-        .max(100, "Company name must be 100 characters or fewer"),
-    TradingName: optionalTextField("Trading name", 100),
-    BusinessType: z.string().trim().min(1, "Business type is required"),
-    RegistrationNumber: z
-        .string()
-        .trim()
-        .min(2, "Registration number is required")
-        .max(50, "Registration number must be 50 characters or fewer"),
-    TaxPIN: z
-        .string()
-        .trim()
-        .min(2, "Tax PIN is required")
-        .max(50, "Tax PIN must be 50 characters or fewer"),
-    VATNumber: z.preprocess(
-        emptyToUndefined,
-        z
-            .string()
-            .trim()
-            .max(50, "VAT number must be 50 characters or fewer")
-    ).optional(),
-    Country: z
-        .string()
-        .trim()
-        .min(2, "Country is required")
-        .max(3, "Please select a valid country code"),
-    Location: z.coerce.number().int("Please select a valid location").min(1, "Location is required"),
-    Email: z
-        .string()
-        .trim()
-        .email("Please enter a valid business email address")
-        .min(1, "Email is required")
-        .max(254, "Email must be 254 characters or fewer"),
-    Phone: phoneField("Phone number is required"),
-    PhysicalAddress: optionalTextField("Physical address", 200),
-    Website: optionalUrlField("Website URL", 255),
-    types: z.array(z.enum(ROLE_VALUES)).min(1, "Select at least one business role"),
-    supplier_category_id: z.preprocess(v => (v === "" ? null : v), z.coerce.number().nullable().optional()),
-    contactPersonName: optionalNameField("Contact person name"),
-    contactPersonEmail: optionalEmailField("Contact person email"),
-    contactPersonPhone: optionalPhoneField("Contact person phone is required"),
-    user_Remarks: optionalTextField("Remarks", 500),
-    user_DateOfBirth: optionalTextField("Date of birth", 25),
-    user_MaritalStatus: optionalLookupField("Marital status", 100),
-    user_Occupation: optionalLookupField("Occupation", 100),
-    createUser: z.boolean(),
-    user_FirstName: optionalNameField("First name"),
-    user_LastName: optionalNameField("Last name"),
-    user_Email: optionalEmailField("Admin email"),
-    user_Phone: optionalPhoneField("Admin phone is required"),
-    user_Gender: optionalLookupField("Gender", 50),
-    user_Password: optionalPasswordField("Password"),
-    user_Password_confirmation: optionalPasswordField("Confirm password")
-}).superRefine((data, ctx) => {
-    const supplierFlow = hasRole(data.types, "SU")
-
-    if (supplierFlow && !data.supplier_category_id) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["supplier_category_id"], message: "Select a supplier category." })
-    }
-    if (supplierFlow && !data.VATNumber) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["VATNumber"], message: "VAT number is required for suppliers." })
-    }
-    if (supplierFlow && !data.BusinessType) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["BusinessType"], message: "Business type is required for suppliers." })
-    }
-    if (supplierFlow && isCompanyLikeBusinessType(data.BusinessType)) {
-        if (!data.contactPersonName) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contactPersonName"], message: "Contact person name is required." })
-        if (!data.contactPersonEmail) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contactPersonEmail"], message: "Contact person email is required." })
-        if (!data.contactPersonPhone) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contactPersonPhone"], message: "Contact person phone is required." })
-    }
-    if (hasRole(data.types, "TN") && !(data.user_Remarks ?? "").trim()) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Remarks"], message: "Remarks are required for tenant access." })
-    }
-    if (hasRole(data.types, "CU")) {
-        if (!data.user_DateOfBirth) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_DateOfBirth"], message: "Customer date of birth is required." })
-        if (!data.user_MaritalStatus) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_MaritalStatus"], message: "Marital status is required." })
-        if (!data.user_Occupation) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Occupation"], message: "Occupation is required." })
-    }
-    if (!data.createUser) return
-    if (!data.user_FirstName) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_FirstName"], message: "First name is required." })
-    if (!data.user_LastName) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_LastName"], message: "Last name is required." })
-    if (!data.user_Email) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Email"], message: "Admin email is required." })
-    if (!data.user_Phone) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Phone"], message: "Admin phone is required." })
-    if (!data.user_Gender) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Gender"], message: "Gender is required." })
-    if (!data.user_Password) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Password"], message: "Password is required." })
-    if (!data.user_Password_confirmation) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Password_confirmation"], message: "Confirm your password." })
-    if (data.user_Password && data.user_Password_confirmation && data.user_Password !== data.user_Password_confirmation) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["user_Password_confirmation"], message: "Passwords do not match." })
-    }
-})
-
-export type RegisterFormInputs = z.infer<typeof registerSchema>
-export type RegisterRole = RoleValue
+type RegisterStepValidationResult = {
+    valid: boolean
+    message?: string
+}
 
 export const useRegisterForm = () => {
-    const [metadata, setMetadata] = useState({
-        countries: [] as any[],
-        supplierCategories: [] as any[],
-        localities: [] as any[],
-        businessTypes: [] as LookupItem[],
-        genders: [] as LookupItem[],
-        maritalStatuses: [] as LookupItem[],
-        occupations: [] as LookupItem[]
-    })
-
+    const [metadata, setMetadata] = useState<RegistrationMetadata>(emptyRegistrationMetadata)
     const [isLoadingMetadata, setIsLoadingMetadata] = useState(true)
     const [isLoadingLocalities, setIsLoadingLocalities] = useState(false)
     const [metadataError, setMetadataError] = useState<string | null>(null)
     const [verifyEmailUrl, setVerifyEmailUrl] = useState<string | null>(null)
+    const [logoFile, setLogoFile] = useState<File | null>(null)
+    const [logoError, setLogoError] = useState<string | null>(null)
+    const [documentFiles, setDocumentFiles] = useState<Record<number, File | null>>({})
+    const [documentNotes, setDocumentNotes] = useState<Record<number, string>>({})
+    const [documentErrors, setDocumentErrors] = useState<Record<number, string>>({})
     const lastVerifyEmailUrlRef = useRef<string | null>(null)
     const lastRegisterResponseRef = useRef<RegisterThirdPartyResult | null>(null)
+
+    const form = useForm<RegisterFormInputs>({
+        resolver: zodResolver(registerSchema) as any,
+        mode: "onBlur",
+        defaultValues: {
+            Name: "",
+            TradingName: "",
+            BusinessType: "",
+            RegistrationNumber: "",
+            TaxPIN: "",
+            VATNumber: "",
+            Country: "KE",
+            Location: undefined,
+            Email: "",
+            Phone: "",
+            PhysicalAddress: "",
+            Website: "",
+            types: [],
+            supplier_category_id: null,
+            contactPersonName: "",
+            contactPersonEmail: "",
+            contactPersonPhone: "",
+            user_Remarks: "",
+            user_DateOfBirth: "",
+            user_MaritalStatus: "",
+            user_Occupation: "",
+            createUser: true,
+            user_FirstName: "",
+            user_LastName: "",
+            user_Email: "",
+            user_Phone: "",
+            user_Gender: "",
+            user_Password: "",
+            user_Password_confirmation: "",
+        },
+    })
+
+    const selectedCountryCode = form.watch("Country")
+    const selectedTypes = form.watch("types")
 
     const resetVerifyEmailUrl = useCallback(() => {
         lastVerifyEmailUrlRef.current = null
         setVerifyEmailUrl(null)
     }, [])
 
-    const form = useForm<RegisterFormInputs>({
-        resolver: zodResolver(registerSchema) as any,
-        mode: "onBlur",
-        defaultValues: {
-            Name: "", TradingName: "", BusinessType: "", RegistrationNumber: "",
-            TaxPIN: "", VATNumber: "", Country: "KE", Location: undefined,
-            Email: "", Phone: "", PhysicalAddress: "", Website: "",
-            types: [], supplier_category_id: null, contactPersonName: "", contactPersonEmail: "", contactPersonPhone: "", user_Remarks: "",
-            user_DateOfBirth: "", user_MaritalStatus: "", user_Occupation: "",
-            createUser: true, user_FirstName: "", user_LastName: "",
-            user_Email: "", user_Phone: "", user_Gender: "",
-            user_Password: "", user_Password_confirmation: ""
-        }
-    })
+    const clearUploadErrors = useCallback(() => {
+        setLogoError(null)
+        setDocumentErrors({})
+    }, [])
 
-    const selectedCountryCode = form.watch("Country")
-    const selectedTypes = form.watch("types")
+    const loadFallbackCountries = useCallback(async () => {
+        const result = await fetchLocalJson<{ data?: LegacyCountryItem[] }>("/api/countries")
+        return normalizeLegacyCountries(result.data ?? [])
+    }, [])
+
+    const loadFallbackEnumOptions = useCallback(async (endpoint: string) => {
+        const result = await fetchLocalJson<LegacyEnumOption[]>(`/api/enums/${encodeURIComponent(endpoint)}`)
+        return normalizeLegacyEnumOptions(result)
+    }, [])
 
     const fetchInitialMetadata = useCallback(async () => {
         setIsLoadingMetadata(true)
         setMetadataError(null)
+
         try {
-            const [countriesResult, categoriesResult, lookupsResult] = await Promise.allSettled([
-                apiFetch<{ data?: any[] }>(`/api/countries`, { allowError: true }),
-                apiFetch<{ data?: any[] }>(`/portal/metadata/supplier-categories`, { allowError: true }),
-                apiFetch<Record<string, any>>(`/api/v1/portal/auth/lookups/bulk?codes=Gender,BusinessType,MaritalStatus,Occupation`, { allowError: true })
-            ])
+            const [countriesResult, businessTypesResult, supplierCategoriesResult, documentRequirementsResult, lookupsResult] =
+                await Promise.allSettled([
+                    fetchLocalJson<{ data?: CountryItem[] }>("/api/portal/auth/metadata/countries"),
+                    fetchLocalJson<{ data?: unknown }>("/api/portal/auth/metadata/business-types"),
+                    fetchLocalJson<{ data?: SupplierCategoryItem[] }>("/api/portal/auth/metadata/supplier-categories"),
+                    fetchLocalJson<{ data?: SupplierDocumentRequirement[] }>("/api/portal/auth/metadata/supplier-registration-document-requirements"),
+                    fetchLocalJson<Record<string, any>>("/api/portal/auth/lookups/bulk?codes=Gender,MaritalStatus,Occupation"),
+                ])
 
-            const countries = countriesResult.status === "fulfilled" ? countriesResult.value : { data: [] }
-            const categories = categoriesResult.status === "fulfilled" ? categoriesResult.value : { data: [] }
-            const lookups = lookupsResult.status === "fulfilled" ? lookupsResult.value : {}
+            let countries = countriesResult.status === "fulfilled" ? countriesResult.value.data ?? [] : []
+            let businessTypes = businessTypesResult.status === "fulfilled" ? normalizeLookupItems(businessTypesResult.value.data) : []
+            const supplierCategories = supplierCategoriesResult.status === "fulfilled" ? supplierCategoriesResult.value.data ?? [] : []
+            const supplierDocumentRequirements = documentRequirementsResult.status === "fulfilled" ? documentRequirementsResult.value.data ?? [] : []
+            const lookupsPayload = lookupsResult.status === "fulfilled" ? lookupsResult.value : {}
+            const lookupGroups = lookupsPayload?.data ?? lookupsPayload?.Data ?? {}
 
-            const data = lookups?.data ?? lookups?.Data ?? {}
-            const pick = (key: string) => data?.[key] ?? data?.[key.toLowerCase()] ?? data?.[(key[0].toLowerCase() + key.slice(1))] ?? []
+            if (countries.length === 0) {
+                countries = await loadFallbackCountries().catch(() => [])
+            }
 
-            const countryRows = Array.isArray(countries?.data) ? countries.data : []
-            const categoryRows = Array.isArray(categories?.data) ? categories.data : []
+            if (businessTypes.length === 0) {
+                businessTypes = await loadFallbackEnumOptions("BusinessType").catch(() => [])
+            }
 
-            if (countryRows.length === 0) {
+            let genders = pickLookupItems(lookupGroups, "Gender")
+            let maritalStatuses = pickLookupItems(lookupGroups, "MaritalStatus")
+            let occupations = pickLookupItems(lookupGroups, "Occupation")
+
+            if (genders.length === 0) {
+                genders = await loadFallbackEnumOptions("Gender").catch(() => [])
+            }
+
+            if (maritalStatuses.length === 0) {
+                maritalStatuses = await loadFallbackEnumOptions("MaritalStatus").catch(() => [])
+            }
+
+            if (occupations.length === 0) {
+                occupations = await loadFallbackEnumOptions("Occupation").catch(() => [])
+            }
+
+            if (countries.length === 0 || businessTypes.length === 0) {
                 setMetadataError("We couldn't load registration metadata right now. Please refresh and try again.")
             }
 
             setMetadata({
-                countries: countryRows,
-                supplierCategories: categoryRows,
+                countries,
+                supplierCategories,
                 localities: [],
-                businessTypes: pick("BusinessType"),
-                genders: pick("Gender"),
-                maritalStatuses: pick("MaritalStatus"),
-                occupations: pick("Occupation")
+                businessTypes,
+                genders,
+                maritalStatuses,
+                occupations,
+                supplierDocumentRequirements,
             })
         } catch {
-            setMetadata({
-                countries: [],
-                supplierCategories: [],
-                localities: [],
-                businessTypes: [],
-                genders: [],
-                maritalStatuses: [],
-                occupations: []
-            })
+            setMetadata(emptyRegistrationMetadata)
             setMetadataError("We couldn't load registration metadata right now. Please refresh and try again.")
         } finally {
             setIsLoadingMetadata(false)
         }
-    }, [])
+    }, [loadFallbackCountries, loadFallbackEnumOptions])
 
-    const fetchLocalities = useCallback(async (countryCode: string) => {
-        if (!countryCode) return
+    const fetchLocalities = useCallback(async (countryId: number) => {
+        if (!countryId) return
         setIsLoadingLocalities(true)
+
         try {
-            const result = await apiFetch<{ data?: any[] }>(`/api/countries/${encodeURIComponent(countryCode)}/localities`, { allowError: true })
-            setMetadata(prev => ({ ...prev, localities: result?.data || [] }))
+            const result = await fetchLocalJson<{ data?: LocalityItem[] }>(`/api/portal/auth/metadata/localities/${countryId}`)
+            const localities = result.data ?? []
+
+            if (localities.length > 0) {
+                setMetadata((prev) => ({ ...prev, localities }))
+                return
+            }
+
+            const selectedCountryCode = form.getValues("Country")
+            if (!selectedCountryCode) {
+                setMetadata((prev) => ({ ...prev, localities: [] }))
+                return
+            }
+
+            const fallback = await fetchLocalJson<{ data?: LocalityItem[] }>(`/api/countries/${encodeURIComponent(selectedCountryCode)}/localities`)
+            setMetadata((prev) => ({ ...prev, localities: fallback.data ?? [] }))
         } catch {
-            setMetadata(prev => ({ ...prev, localities: [] }))
+            const selectedCountryCode = form.getValues("Country")
+            if (!selectedCountryCode) {
+                setMetadata((prev) => ({ ...prev, localities: [] }))
+                return
+            }
+
+            try {
+                const fallback = await fetchLocalJson<{ data?: LocalityItem[] }>(`/api/countries/${encodeURIComponent(selectedCountryCode)}/localities`)
+                setMetadata((prev) => ({ ...prev, localities: fallback.data ?? [] }))
+            } catch {
+                setMetadata((prev) => ({ ...prev, localities: [] }))
+            }
         } finally {
             setIsLoadingLocalities(false)
         }
-    }, [])
-
-    useEffect(() => { fetchInitialMetadata() }, [fetchInitialMetadata])
+    }, [form])
 
     useEffect(() => {
-        if (selectedCountryCode) {
-            fetchLocalities(selectedCountryCode)
-            form.setValue("Location", undefined as any)
+        fetchInitialMetadata()
+    }, [fetchInitialMetadata])
+
+    useEffect(() => {
+        const selectedCountry = metadata.countries.find((country) => country.code === selectedCountryCode)
+        if (!selectedCountry) {
+            setMetadata((prev) => ({ ...prev, localities: [] }))
+            form.setValue("Location", undefined as never)
+            return
         }
-    }, [selectedCountryCode, fetchLocalities, form])
+
+        fetchLocalities(selectedCountry.id)
+        form.setValue("Location", undefined as never)
+    }, [fetchLocalities, form, metadata.countries, selectedCountryCode])
+
+    const setRegistrationDocumentFile = useCallback((requirementId: number, file: File | null) => {
+        setDocumentFiles((prev) => ({ ...prev, [requirementId]: file }))
+        setDocumentErrors((prev) => {
+            const next = { ...prev }
+            delete next[requirementId]
+            return next
+        })
+    }, [])
+
+    const setRegistrationDocumentNote = useCallback((requirementId: number, note: string) => {
+        setDocumentNotes((prev) => ({ ...prev, [requirementId]: note }))
+    }, [])
+
+    const setLogoUpload = useCallback((file: File | null) => {
+        setLogoFile(file)
+        setLogoError(null)
+    }, [])
+
+    const validateSupplierDocuments = useCallback(() => {
+        if (!selectedTypes?.includes("SU")) {
+            setDocumentErrors({})
+            return true
+        }
+
+        const nextDocumentErrors: Record<number, string> = {}
+        metadata.supplierDocumentRequirements.forEach((requirement) => {
+            if (requirement.isRequired && !documentFiles[requirement.id]) {
+                nextDocumentErrors[requirement.id] = `${requirement.name} is required.`
+            }
+        })
+
+        setDocumentErrors(nextDocumentErrors)
+        return Object.keys(nextDocumentErrors).length === 0
+    }, [documentFiles, metadata.supplierDocumentRequirements, selectedTypes])
+
+    const buildPayload = useCallback((values: RegisterFormInputs) => {
+        const isSupplier = values.types.includes("SU")
+        const isTenant = values.types.includes("TN")
+        const isCustomer = values.types.includes("CU")
+
+        const payload: Record<string, unknown> = {
+            Name: normalizeText(values.Name),
+            TradingName: normalizeText(values.TradingName),
+            BusinessType: normalizeText(values.BusinessType),
+            RegistrationNumber: normalizeText(values.RegistrationNumber),
+            TaxPIN: normalizeText(values.TaxPIN),
+            VATNumber: normalizeText(values.VATNumber),
+            Email: normalizeText(values.Email),
+            Phone: normalizeText(values.Phone),
+            PhysicalAddress: normalizeText(values.PhysicalAddress),
+            Website: normalizeText(values.Website),
+            Country: normalizeText(values.Country),
+            Location: values.Location,
+            types: values.types,
+            createUser: values.createUser,
+        }
+
+        if (isSupplier) {
+            payload.supplier_category_id = values.supplier_category_id ?? undefined
+            payload.legalForm = normalizeText(values.BusinessType)
+        }
+
+        if (isSupplier && isCompanyLikeBusinessType(values.BusinessType)) {
+            payload.contactPersonName = normalizeText(values.contactPersonName)
+            payload.contactPersonEmail = normalizeText(values.contactPersonEmail)
+            payload.contactPersonPhone = normalizeText(values.contactPersonPhone)
+        }
+
+        if (isTenant) {
+            payload.user_Remarks = normalizeText(values.user_Remarks)
+        }
+
+        if (isCustomer) {
+            payload.user_DateOfBirth = normalizeText(values.user_DateOfBirth)
+            payload.user_MaritalStatus = normalizeText(values.user_MaritalStatus)
+            payload.user_Occupation = normalizeText(values.user_Occupation)
+            payload.user_Gender = normalizeText(values.user_Gender)
+        }
+
+        if (values.createUser) {
+            payload.user_FirstName = normalizeText(values.user_FirstName)
+            payload.user_LastName = normalizeText(values.user_LastName)
+            payload.user_Email = normalizeText(values.user_Email)
+            payload.user_Phone = normalizeText(values.user_Phone)
+            payload.user_Gender = normalizeText(values.user_Gender)
+            payload.user_Password = values.user_Password
+            payload.user_Password_confirmation = values.user_Password_confirmation
+        }
+
+        Object.keys(payload).forEach((key) => {
+            const value = payload[key]
+            if (value === undefined || value === null || value === "") {
+                delete payload[key]
+            }
+        })
+
+        return payload
+    }, [])
+
+    const applyServerValidationErrors = useCallback((errors: unknown) => {
+        let hasFieldErrors = false
+
+        if (!errors || typeof errors !== "object" || Array.isArray(errors)) {
+            return hasFieldErrors
+        }
+
+        Object.entries(errors as Record<string, unknown>).forEach(([key, value]) => {
+            const first = Array.isArray(value) ? value[0] : value
+
+            const documentMatch = key.match(DOCUMENT_KEY_PATTERN) ?? key.match(DOCUMENT_NOTE_KEY_PATTERN)
+            if (documentMatch?.[1]) {
+                const requirementId = Number(documentMatch[1])
+                if (Number.isFinite(requirementId)) {
+                    setDocumentErrors((prev) => ({ ...prev, [requirementId]: getSafeServerFieldMessage(key, first) }))
+                    hasFieldErrors = true
+                }
+                return
+            }
+
+            if (key === "logo") {
+                setLogoError(getSafeServerFieldMessage(key, first))
+                hasFieldErrors = true
+                return
+            }
+
+            const fieldKey = key === "legalForm" ? "BusinessType" : key
+            form.setError(fieldKey as never, { message: getSafeServerFieldMessage(fieldKey, first) })
+            hasFieldErrors = true
+        })
+
+        return hasFieldErrors
+    }, [form])
+
+    const validateRegistrationStep = useCallback(async (
+        step: string,
+        values: RegisterFormInputs,
+        fields: string[],
+    ): Promise<RegisterStepValidationResult> => {
+        clearUploadErrors()
+        form.clearErrors(fields as never)
+
+        const response = await fetch("/api/portal/auth/register/validate-step", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Accept: "application/json" },
+            body: JSON.stringify({
+                step,
+                fields,
+                ...buildPayload(values),
+            }),
+        })
+
+        const result = await response.json().catch(() => null)
+        if (response.ok) {
+            return { valid: true }
+        }
+
+        const hasFieldErrors = applyServerValidationErrors(result?.errors)
+        const message = typeof result?.message === "string" && result.message.trim()
+            ? result.message.trim()
+            : hasFieldErrors
+                ? GENERIC_REGISTRATION_ERROR
+                : "We couldn't validate this step right now. Please try again."
+
+        return {
+            valid: false,
+            message,
+        }
+    }, [applyServerValidationErrors, buildPayload, clearUploadErrors, form])
 
     const registerThirdParty = useCallback(async (values: RegisterFormInputs): Promise<RegisterThirdPartyResult> => {
         lastRegisterResponseRef.current = null
-        const isTenant = values.types.includes("TN")
-        const isSupplier = values.types.includes("SU")
-        const payload: Record<string, any> = { ...values }
+        clearUploadErrors()
 
-        if (isTenant) {
-            payload.tenant_Remarks = values.user_Remarks
-        } else {
-            delete payload.user_Remarks
-        }
-        if (!isSupplier) {
-            delete payload.supplier_category_id
-            delete payload.contactPersonName
-            delete payload.contactPersonEmail
-            delete payload.contactPersonPhone
-        } else {
-            payload.legalForm = values.BusinessType
+        if (!validateSupplierDocuments()) {
+            throw new Error(GENERIC_REGISTRATION_ERROR)
         }
 
-        if (!isSupplier || !isCompanyLikeBusinessType(values.BusinessType)) {
-            delete payload.contactPersonName
-            delete payload.contactPersonEmail
-            delete payload.contactPersonPhone
-        }
+        const payload = buildPayload(values)
+        const hasFiles = Boolean(logoFile) || Object.values(documentFiles).some((file) => file instanceof File)
+        const requestBody = hasFiles ? new FormData() : payload
 
-        Object.keys(payload).forEach(key => {
-            if (payload[key] === "" || payload[key] === undefined || payload[key] === null) {
-                if (key !== "supplier_category_id" && key !== "Location") delete payload[key]
+        if (requestBody instanceof FormData) {
+            Object.entries(payload).forEach(([key, value]) => {
+                if (Array.isArray(value)) {
+                    value.forEach((entry) => requestBody.append(`${key}[]`, String(entry)))
+                    return
+                }
+
+                requestBody.append(key, String(value))
+            })
+
+            if (logoFile) {
+                requestBody.append("logo", logoFile)
             }
-        })
 
-        const res = await fetch("/api/register", {
+            Object.entries(documentFiles).forEach(([key, file]) => {
+                if (!(file instanceof File)) return
+                requestBody.append(`registration_documents[${key}]`, file)
+            })
+
+            Object.entries(documentNotes).forEach(([key, note]) => {
+                const normalizedNote = normalizeText(note)
+                if (!normalizedNote) return
+                requestBody.append(`registration_document_notes[${key}]`, normalizedNote)
+            })
+        }
+
+        const response = await fetch("/api/register", {
             method: "POST",
-            headers: { "Content-Type": "application/json", "Accept": "application/json" },
-            body: JSON.stringify(payload)
+            headers: requestBody instanceof FormData ? { Accept: "application/json" } : { "Content-Type": "application/json", Accept: "application/json" },
+            body: requestBody instanceof FormData ? requestBody : JSON.stringify(requestBody),
         })
 
-        const result = await res.json().catch(() => null)
-        if (!res.ok) {
-            let hasFieldErrors = false
-
-            if (result?.errors && typeof result.errors === "object" && !Array.isArray(result.errors)) {
-                Object.entries(result.errors).forEach(([key, value]) => {
-                    const first = Array.isArray(value) ? value[0] : value
-                    const fieldKey = key === "legalForm" ? "BusinessType" : key
-                    const safeMessage = getSafeServerFieldMessage(fieldKey, first)
-                    form.setError(fieldKey as any, { message: safeMessage })
-                    hasFieldErrors = true
-                })
-            }
+        const result = await response.json().catch(() => null)
+        if (!response.ok) {
+            const hasFieldErrors = applyServerValidationErrors(result?.errors)
 
             throw new Error(hasFieldErrors ? GENERIC_REGISTRATION_ERROR : "We couldn't submit your registration right now. Please try again.")
         }
 
-        const verifyEmailLink = extractVerifyEmailUrl(result)
-        lastVerifyEmailUrlRef.current = verifyEmailLink
-        setVerifyEmailUrl(verifyEmailLink)
+        const verifyLink = extractVerifyEmailUrl(result)
+        lastVerifyEmailUrlRef.current = verifyLink
+        setVerifyEmailUrl(verifyLink)
 
-        const response: RegisterThirdPartyResult = {
+        const responsePayload: RegisterThirdPartyResult = {
             success: true,
             payload: typeof result === "object" && result !== null ? result : { message: String(result) },
-            verifyEmailUrl: verifyEmailLink
+            verifyEmailUrl: verifyLink,
         }
-        lastRegisterResponseRef.current = response
-        return response
-    }, [form])
+
+        lastRegisterResponseRef.current = responsePayload
+        return responsePayload
+    }, [applyServerValidationErrors, buildPayload, clearUploadErrors, documentFiles, documentNotes, logoFile, validateSupplierDocuments])
 
     return {
         form,
@@ -452,7 +737,6 @@ export const useRegisterForm = () => {
         isLoadingMetadata,
         isLoadingLocalities,
         metadataError,
-        onSubmit: (e?: React.BaseSyntheticEvent) => form.handleSubmit(registerThirdParty)(e),
         registerThirdParty,
         verifyEmailUrl,
         resetVerifyEmailUrl,
@@ -461,13 +745,22 @@ export const useRegisterForm = () => {
         isSubmitting: form.formState.isSubmitting,
         toggleType: (type: RoleValue) => {
             const current = form.getValues("types") || []
-            const updated = current.includes(type) ? current.filter(t => t !== type) : [...current, type]
-            form.setValue("types", updated, { shouldValidate: true })
+            const updated = current.includes(type) ? current.filter((entry) => entry !== type) : [...current, type]
+            form.setValue("types", updated, { shouldDirty: true, shouldValidate: true })
         },
         selectedTypes,
         isSupplier: selectedTypes?.includes("SU"),
         isTenant: selectedTypes?.includes("TN"),
-        requiresSupplierCategory: selectedTypes?.includes("SU") ?? false,
-        isCustomer: selectedTypes?.includes("CU")
+        isCustomer: selectedTypes?.includes("CU"),
+        logoFile,
+        setLogoFile: setLogoUpload,
+        logoError,
+        documentFiles,
+        documentNotes,
+        documentErrors,
+        setRegistrationDocumentFile,
+        setRegistrationDocumentNote,
+        validateSupplierDocuments,
+        validateRegistrationStep,
     }
 }

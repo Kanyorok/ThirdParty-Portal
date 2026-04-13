@@ -526,7 +526,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
         const map = new Map<string, string>()
         lines.forEach((line, index) => {
             const id = getLineId(line, index)
-            const lineNo = String(line?.rfqLineNo ?? line?.RFQLineNo ?? "").trim()
+            const lineNo = String(line?.rfqLineNo ?? "").trim()
             const label = getLineLabel(line)
             map.set(id, lineNo ? `${lineNo} - ${label}` : label)
         })

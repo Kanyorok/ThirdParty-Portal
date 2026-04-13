@@ -120,6 +120,9 @@ export function useProfile() {
       rawDetails?.businessType ??
       rawDetails?.BusinessType ??
       rawDetails?.business_type ??
+      rawDetails?.legalForm ??
+      rawDetails?.LegalForm ??
+      rawDetails?.legal_form ??
       rawDetails?.businessTypeDetail?.label ??
       rawDetails?.businessTypeDetail?.description ??
       rawDetails?.businessTypeDetail?.Description ??
@@ -128,8 +131,10 @@ export function useProfile() {
       rawDetails?.business_type_detail?.Description ??
       profile?.businessType ??
       profile?.BusinessType ??
+      profile?.legalForm ??
       thirdParty?.businessType ??
       thirdParty?.BusinessType ??
+      thirdParty?.legalForm ??
       null,
     registrationNumber:
       rawDetails?.registrationNumber ??

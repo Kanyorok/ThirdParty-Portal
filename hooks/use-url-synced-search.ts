@@ -15,7 +15,8 @@ export function useUrlSyncedSearch(options: UseUrlSyncedSearchOptions = {}) {
     const router = useRouter()
     const pathname = usePathname()
     const searchParams = useSearchParams()
-    const urlSearch = searchParams.get(paramName) ?? ""
+    const safePathname = pathname ?? ""
+    const urlSearch = searchParams?.get(paramName) ?? ""
     const [search, setSearch] = useState(urlSearch)
     const debouncedSearch = useDebounce(search, debounceMs)
 
@@ -27,14 +28,15 @@ export function useUrlSyncedSearch(options: UseUrlSyncedSearchOptions = {}) {
 
     useEffect(() => {
         if (debouncedSearch === urlSearch) return
+        if (!safePathname) return
 
-        const params = new URLSearchParams(searchParams.toString())
+        const params = new URLSearchParams(searchParams?.toString() ?? "")
         if (debouncedSearch) params.set(paramName, debouncedSearch)
         else params.delete(paramName)
 
-        const nextUrl = params.toString() ? `${pathname}?${params}` : pathname
+        const nextUrl = params.toString() ? `${safePathname}?${params}` : safePathname
         router.replace(nextUrl, { scroll: false })
-    }, [debouncedSearch, paramName, pathname, router, searchParams, urlSearch])
+    }, [debouncedSearch, paramName, router, safePathname, searchParams, urlSearch])
 
     return {
         search,

@@ -127,9 +127,9 @@ export const SEARCH_SOURCE_CONFIGS: SearchSourceConfig[] = [
 export async function executeSearchSource(config: SearchSourceConfig, context: SearchExecutionContext): Promise<SearchSourceResult> {
     try {
         const data = await fetchJson(config.resolveUrl(context).toString(), context.headers)
-        const items = (config.selectItems || defaultSelectItems)(data)
+        const items = ((config.selectItems || defaultSelectItems)(data) ?? []) as unknown[]
         const rankedItems: RankedSearchResult[] = items
-            .map<RankedSearchResult | null>((item) => config.mapItem(item, context))
+            .map((item) => config.mapItem(item as any, context))
             .filter(isRankedSearchResult)
             .sort((left, right) => right.score - left.score)
             .slice(0, context.limit)

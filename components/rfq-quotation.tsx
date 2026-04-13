@@ -657,6 +657,25 @@ export function RfqQuotation() {
 
   const [submissionSummary, setSubmissionSummary] = useState<SubmissionSummary | null>(null)
 
+  const currentInvitation = useMemo(() => {
+    const p = payload as AnyRecord | null
+    return ((p?.data ?? p) ?? null) as RfqInvitation | null
+  }, [payload])
+
+  const {
+    permissions: documentPermissions,
+    selectedSupplierId,
+    selectedSupplierOption,
+    setSelectedSupplierId,
+    supplierOptions,
+  } = useRfqPortalContext({
+    rfqId: normalizedRfqId,
+    initialInvitation: currentInvitation,
+    preferredSupplierId,
+    enabled: Boolean(normalizedRfqId),
+    refreshKey: reloadSeq,
+  })
+
   const draftKey = `rfq-quote:${normalizedRfqId}:${selectedSupplierId || normalizeSupplierId(currentInvitation?.supplierId) || "default"}`
   const saveTimer = useRef<number | null>(null)
 
@@ -704,25 +723,6 @@ export function RfqQuotation() {
     const root = p?.data ?? p
     return root?.rfq ?? null
   }, [payload])
-
-  const currentInvitation = useMemo(() => {
-    const p = payload as AnyRecord | null
-    return ((p?.data ?? p) ?? null) as RfqInvitation | null
-  }, [payload])
-
-  const {
-    permissions: documentPermissions,
-    selectedSupplierId,
-    selectedSupplierOption,
-    setSelectedSupplierId,
-    supplierOptions,
-  } = useRfqPortalContext({
-    rfqId: normalizedRfqId,
-    initialInvitation: currentInvitation,
-    preferredSupplierId,
-    enabled: Boolean(normalizedRfqId),
-    refreshKey: reloadSeq,
-  })
 
   const rfqIdValue = useMemo(() => {
     const p = payload as AnyRecord | null

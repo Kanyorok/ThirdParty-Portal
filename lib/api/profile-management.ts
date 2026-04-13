@@ -213,7 +213,7 @@ export interface ProfileResponse {
 export interface UpdateProfilePayload {
   ThirdPartyName?: string
   TradingName?: string
-  BusinessType?: number
+  BusinessType?: number | string
   RegistrationNumber?: string
   TaxPIN?: string
   VATNumber?: string

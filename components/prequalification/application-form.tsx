@@ -669,6 +669,8 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
             }
             try {
                 const resp = await submitApplicationSafe(roundId, categoryIds);
+                const respData = (resp.data ?? {}) as Record<string, unknown>;
+                const application = (respData.application ?? null) as Record<string, unknown> | null;
                 // After submit, upload any staged files for the selected categories
                 if (resp.status === 201) {
                     for (const u of staged) {
@@ -679,27 +681,34 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                 if (resp.status === 201) {
                     setFormMessage({ type: "success", message: "" });
                     setFormLoadingState("success");
-                    const application = resp.data?.application;
                     if (application) {
-                        onSuccess?.({ applicationId: application.ApplicationID, statusCode: application.Status as "O" | "CL" | "S", statusLabel: application.StatusLabel ?? "Submitted", roundId: values.roundId });
+                        const applicationId = String(application.ApplicationID ?? application.applicationId ?? "");
+                        const rawStatus = String(application.Status ?? application.status ?? "S") as "O" | "CL" | "S";
+                        const statusCode: "O" | "CL" | "S" = rawStatus === "O" || rawStatus === "CL" || rawStatus === "S" ? rawStatus : "S";
+                        const statusLabel = String(application.StatusLabel ?? application.statusLabel ?? "Submitted");
+                        onSuccess?.({ applicationId, statusCode, statusLabel, roundId: values.roundId });
                     } else {
                         onSuccess?.({ applicationId: "", statusCode: "S", statusLabel: "Submitted", roundId: values.roundId });
                     }
                 } else if (resp.status === 409) {
-                    const duplicates = resp.data?.duplicates || [];
-                    const names = duplicates.map((d: { name?: string }) => d.name || 'Unknown').join(', ');
+                    const duplicates = Array.isArray(respData.duplicates) ? (respData.duplicates as Array<Record<string, unknown>>) : [];
+                    const names = duplicates.map((d) => String(d.name ?? 'Unknown')).join(', ');
                     setFormMessage({ type: "warning", message: `⚠️ You have already applied for the category: ${names} in this round.` });
                     setFormLoadingState("warning");
                 } else if (resp.status === 401 || resp.status === 403 || resp.status === 410) {
-                    const msg = resp.data?.message || (resp.status === 410 ? 'This round has expired.' : 'You are not authorized to apply to this round.');
+                    const msg =
+                        (typeof respData.message === "string" && respData.message.trim())
+                            ? respData.message
+                            : (resp.status === 410 ? 'This round has expired.' : 'You are not authorized to apply to this round.');
                     setFormMessage({ type: "error", message: msg });
                     setFormLoadingState("error");
                 } else if (resp.status === 422) {
                     const firstErr = (() => {
-                        const errs = resp.data?.errors;
+                        const errs = respData.errors;
                         if (errs && typeof errs === 'object') {
+                            const errObj = errs as Record<string, unknown>;
                             const firstKey = Object.keys(errs)[0];
-                            if (firstKey) return Array.isArray(errs[firstKey]) ? errs[firstKey][0] : errs[firstKey];
+                            if (firstKey) return Array.isArray(errObj[firstKey]) ? errObj[firstKey][0] : errObj[firstKey];
                         }
                         return null;
                     })();
@@ -708,8 +717,8 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                     setFormLoadingState("error");
                 } else if (resp.status >= 500) {
                     const upstreamMessage =
-                        (typeof resp.data?.message === "string" && resp.data.message.trim()) ||
-                        (typeof resp.data?.error === "string" && resp.data.error.trim()) ||
+                        (typeof respData.message === "string" && respData.message.trim()) ||
+                        (typeof respData.error === "string" && respData.error.trim()) ||
                         "";
                     setFormMessage({
                         type: "error",
@@ -717,7 +726,9 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                     });
                     setFormLoadingState("error");
                 } else {
-                    setFormMessage({ type: "error", message: resp.data?.message || `Unexpected error (${resp.status}).` });
+                    const defaultMessage = `Unexpected error (${resp.status}).`;
+                    const message = (typeof respData.message === "string" && respData.message.trim()) ? respData.message : defaultMessage;
+                    setFormMessage({ type: "error", message });
                     setFormLoadingState("error");
                 }
             } catch (err: unknown) {
