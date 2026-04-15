@@ -131,6 +131,41 @@ function normalizeNotificationText(value?: unknown): string | null {
   return withoutTemplateWords || null
 }
 
+function extractFirstUrl(value?: string | null): string | null {
+  if (!value) return null
+  const match = value.match(/https?:\/\/[^\s"')>]+/i)
+  return match?.[0]?.trim() || null
+}
+
+function looksLikePasswordResetNotification(parts: Array<string | null | undefined>): boolean {
+  const text = parts.filter(Boolean).join(" ").toLowerCase()
+  return (
+    text.includes("password reset") ||
+    text.includes("reset password") ||
+    text.includes("reset-password")
+  )
+}
+
+function buildPasswordResetNotification(input: {
+  subject?: string | null
+  title?: string | null
+  body?: string | null
+  message?: string | null
+  link?: string | null
+}) {
+  const combined = [input.subject, input.title, input.body, input.message].filter(Boolean).join(" ")
+  const resetLink = input.link || extractFirstUrl(combined)
+
+  return {
+    subject: "Reset your password",
+    title: "Reset your password",
+    body: "We received a password reset request for your account. If this was you, continue to reset your password. If not, no further action is required.",
+    message: "We received a password reset request for your account.",
+    link: resetLink,
+    category: "general",
+  }
+}
+
 function buildFallbackMessage(notificationType?: string | null, category?: string | null, channel?: "email" | "sms"): string {
   const kind = String(notificationType ?? category ?? "").toLowerCase()
   if (kind.includes("tender")) return "You have a new tender notification."
@@ -190,7 +225,8 @@ function normalizeNotification(raw: RawNotification): AppNotification {
   const subject = normalizeNotificationText(raw.subject ?? data?.subject)
   const title = normalizeNotificationText(raw.title ?? data?.title)
   const body = normalizeNotificationText(raw.body ?? raw.description ?? data?.body)
-  const link = normalizeText(
+  const rawMessage = normalizeNotificationText(raw.message)
+  const detectedLink = normalizeText(
     raw.link ?? raw.url ?? raw.action_url ?? raw.path ??
     data?.link ?? data?.url ?? data?.action_url ?? data?.path
   )
@@ -199,18 +235,46 @@ function normalizeNotification(raw: RawNotification): AppNotification {
     raw.notification_type ?? raw.type ?? raw.kind ?? raw.category ??
     data?.type ?? data?.kind ?? data?.category
   )
-  const category = normalizeText(raw.category ?? data?.category)
+  const originalCategory = normalizeText(raw.category ?? data?.category)
   const priorityLevel = normalizePriorityLevel(
     raw.priority ?? raw.severity ?? raw.urgency ??
     data?.priority ?? data?.severity ?? data?.urgency
   )
 
+  const passwordReset = looksLikePasswordResetNotification([
+    subject,
+    title,
+    body,
+    rawMessage,
+    detectedLink,
+    notificationType,
+    originalCategory,
+  ])
+
+  const normalizedReset = passwordReset
+    ? buildPasswordResetNotification({
+        subject,
+        title,
+        body,
+        message: rawMessage,
+        link: detectedLink,
+      })
+    : null
+
+  const link = normalizedReset?.link ?? detectedLink
+  const category = normalizedReset?.category ?? originalCategory
+
   const message =
+    normalizedReset?.message ??
     subject ??
-    normalizeNotificationText(raw.message) ??
+    rawMessage ??
     title ??
     body ??
     buildFallbackMessage(notificationType, category, deriveChannel(raw))
+
+  const finalSubject = normalizedReset?.subject ?? subject
+  const finalTitle = normalizedReset?.title ?? title
+  const finalBody = normalizedReset?.body ?? body
 
   const createdAt =
     normalizeText(raw.created_at ?? raw.createdAt ?? raw.timestamp ?? data?.createdAt) ?? null
@@ -229,9 +293,9 @@ function normalizeNotification(raw: RawNotification): AppNotification {
   return {
     id: (baseId ?? channelId) as string | number,
     message: message ?? "Notification",
-    subject,
-    title,
-    body,
+    subject: finalSubject,
+    title: finalTitle,
+    body: finalBody,
     link,
     profileType,
     createdAt,

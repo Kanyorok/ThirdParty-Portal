@@ -99,6 +99,7 @@ export default function SupplierProfilePanel({ enabled }: SupplierProfilePanelPr
   const createdOn = formatDateValue(supplier?.createdOn ?? supplier?.createdOn)
   const prequalifiedLabel =
     typeof supplier?.isPrequalified === "boolean" ? (supplier.isPrequalified ? "Prequalified" : "Not prequalified") : "Not set"
+  const primaryCategory = supplier?.primaryCategory ?? "—"
 
   return (
     <div className="space-y-6">
@@ -138,6 +139,10 @@ export default function SupplierProfilePanel({ enabled }: SupplierProfilePanelPr
           <div className="rounded-xl border border-border/60 bg-muted/25 px-4 py-3 sm:col-span-2 xl:col-span-1">
             <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Category count</div>
             <div className="mt-1 text-sm font-semibold text-foreground">{categories.length}</div>
+          </div>
+          <div className="rounded-xl border border-border/60 bg-muted/25 px-4 py-3 sm:col-span-2 xl:col-span-3">
+            <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Primary category</div>
+            <div className="mt-1 text-sm font-semibold text-foreground">{primaryCategory}</div>
           </div>
         </div>
       </section>

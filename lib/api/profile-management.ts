@@ -27,6 +27,23 @@ export interface ThirdPartyDetails {
   taxPin?: string | null
   vatNumber?: string | null
   VatNumber?: string | null
+  legalForm?: string | null
+  LegalForm?: string | null
+  legal_form?: string | null
+  primaryCategoryId?: number | null
+  primary_category_id?: number | null
+  primaryCategory?: string | null
+  primary_category?: string | null
+  contactPerson?: {
+    name?: string | null
+    email?: string | null
+    phone?: string | null
+  } | null
+  contact_person?: {
+    name?: string | null
+    email?: string | null
+    phone?: string | null
+  } | null
   physicalAddress: string | null
   PhysicalAddress?: string | null
   physical_address?: string | null
@@ -46,6 +63,15 @@ export interface SupplierProfile {
   isPrequalified: boolean
   approvalStatus: string
   categoryId: number | null
+  primaryCategoryId?: number | null
+  primaryCategory?: string | null
+  vatNumber?: string | null
+  legalForm?: string | null
+  contactPerson?: {
+    name?: string | null
+    email?: string | null
+    phone?: string | null
+  } | null
   categories?: Array<{
     id: number
     name: string
@@ -100,6 +126,14 @@ export interface ThirdPartyEntity {
   taxPin?: string | null
   taxPIN?: string | null
   vatNumber?: string | null
+  legalForm?: string | null
+  primaryCategoryId?: number | null
+  primaryCategory?: string | null
+  contactPerson?: {
+    name?: string | null
+    email?: string | null
+    phone?: string | null
+  } | null
   countryId?: number | null
   physicalAddress?: string | null
   website?: string | null
@@ -147,6 +181,15 @@ export interface ThirdPartyUserProfile {
   taxPIN?: string | null
   TaxPIN?: string | null
   taxPin?: string | null
+  vatNumber?: string | null
+  legalForm?: string | null
+  primaryCategoryId?: number | null
+  primaryCategory?: string | null
+  contactPerson?: {
+    name?: string | null
+    email?: string | null
+    phone?: string | null
+  } | null
   physicalAddress?: string | null
   PhysicalAddress?: string | null
   website?: string | null
@@ -170,9 +213,16 @@ export interface ProfileResponse {
 export interface UpdateProfilePayload {
   ThirdPartyName?: string
   TradingName?: string
-  BusinessType?: number
+  BusinessType?: number | string
   RegistrationNumber?: string
   TaxPIN?: string
+  VATNumber?: string
+  LegalForm?: string
+  ContactPersonName?: string
+  ContactPersonEmail?: string
+  ContactPersonPhone?: string
+  primary_category_id?: number
+  category_ids?: number[]
   CountryId?: number
   LocationId?: number
   PhysicalAddress?: string
@@ -183,6 +233,13 @@ export interface UpdateProfilePayload {
   tradingName?: string
   registrationNumber?: string
   taxPIN?: string
+  vatNumber?: string
+  legalForm?: string
+  contactPersonName?: string
+  contactPersonEmail?: string
+  contactPersonPhone?: string
+  primaryCategoryId?: number
+  primaryCategory?: string
   physicalAddress?: string
   website?: string
   email?: string

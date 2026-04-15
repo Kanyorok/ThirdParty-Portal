@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { format } from "date-fns"
 import { toast } from "sonner"
 import {
@@ -25,6 +25,7 @@ import {
 
 import { cn } from "@/lib/utils"
 import { parseSubmissionDeadline } from "@/lib/deadline"
+import { resolveProcurementDocumentName } from "@/lib/procurement-document-name"
 import { isRfqAwardedStatus, isRfqClosedStatus, isRfqSubmittedResponseStatus, normalizeRfqStatusKey } from "@/lib/rfq-status"
 import type { Currency } from "@/types/currencies"
 import { Badge } from "@/components/common/badge"
@@ -32,6 +33,13 @@ import { Button } from "@/components/common/button"
 import { Input } from "@/components/common/input"
 import { Separator } from "@/components/common/separator"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/common/popover"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/common/select"
 import {
   Command,
   CommandEmpty,
@@ -74,7 +82,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/common/dropdown-menu"
-import Loading from "@/components/common/custom-loader"
+import { ProcurementCollectionLoading } from "@/components/procurement/shared/collection-state"
+import { useRfqPortalContext } from "@/hooks/procurement/use-rfq-portal-context"
+import {
+  buildSubmitResponseItems,
+  collectMissingUnitPriceLineIds,
+  formatSupplierOptionLabel,
+  getClarificationsLocked,
+  parseSupplierId,
+  normalizeSupplierId,
+} from "@/lib/rfq-response"
+import type { RfqInvitation } from "@/types/rfq"
 
 type AnyRecord = Record<string, any>
 
@@ -397,16 +415,10 @@ function isAlreadySubmittedErrorResponse(raw: unknown, upstreamStatus: number) {
 
 function getAttachmentName(attachment: AnyRecord, index: number) {
   const docId = getAttachmentDocumentId(attachment)
-  const name = String(
-    attachment?.name ??
-    attachment?.fileName ??
-    attachment?.filename ??
-    attachment?.title ??
-    attachment?.documentName ??
-    attachment?.DocumentName ??
-    (docId != null ? `Document #${String(docId)}` : null) ??
-    `Attachment ${index + 1}`
-  ).trim()
+  const name = resolveProcurementDocumentName(
+    attachment,
+    docId != null ? `Attachment ${index + 1}` : `Attachment ${index + 1}`
+  )
   return name || `Attachment ${index + 1}`
 }
 
@@ -439,8 +451,7 @@ function getDmsDocId(doc: AnyRecord, index: number) {
 }
 
 function getDmsDocName(doc: AnyRecord, index: number) {
-  const name = String(doc?.name ?? doc?.title ?? doc?.documentName ?? doc?.DocumentName ?? "").trim()
-  return name || `Document ${index + 1}`
+  return resolveProcurementDocumentName(doc, `Document ${index + 1}`)
 }
 
 function getAttachmentUrl(attachment: AnyRecord) {
@@ -583,6 +594,7 @@ export function RfqQuotation() {
   const params = useParams<{ rfqId?: string }>()
   const rfqId = params?.rfqId ?? ""
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const normalizedRfqId = useMemo(() => {
     const raw = String(rfqId ?? "")
@@ -592,6 +604,8 @@ export function RfqQuotation() {
       return raw.trim()
     }
   }, [rfqId])
+
+  const preferredSupplierId = searchParams?.get("supplierId") ?? null
 
   const [payload, setPayload] = useState<RfqPayload | null>(null)
   const [loading, setLoading] = useState(true)
@@ -643,7 +657,26 @@ export function RfqQuotation() {
 
   const [submissionSummary, setSubmissionSummary] = useState<SubmissionSummary | null>(null)
 
-  const draftKey = `rfq-quote:${normalizedRfqId}`
+  const currentInvitation = useMemo(() => {
+    const p = payload as AnyRecord | null
+    return ((p?.data ?? p) ?? null) as RfqInvitation | null
+  }, [payload])
+
+  const {
+    permissions: documentPermissions,
+    selectedSupplierId,
+    selectedSupplierOption,
+    setSelectedSupplierId,
+    supplierOptions,
+  } = useRfqPortalContext({
+    rfqId: normalizedRfqId,
+    initialInvitation: currentInvitation,
+    preferredSupplierId,
+    enabled: Boolean(normalizedRfqId),
+    refreshKey: reloadSeq,
+  })
+
+  const draftKey = `rfq-quote:${normalizedRfqId}:${selectedSupplierId || normalizeSupplierId(currentInvitation?.supplierId) || "default"}`
   const saveTimer = useRef<number | null>(null)
 
   const goToRfq = useCallback(() => {
@@ -669,6 +702,11 @@ export function RfqQuotation() {
       redirectTimeoutRef.current = null
     }
   }, [normalizedRfqId])
+
+  useEffect(() => {
+    setClientLocked(null)
+    setMissingLineIds([])
+  }, [selectedSupplierId])
 
   useEffect(() => {
     return () => {
@@ -708,10 +746,12 @@ export function RfqQuotation() {
   }, [])
 
   const supplierResponse = useMemo(() => {
-    const p = payload as AnyRecord | null
-    const root = p?.data ?? p
-    return root?.myResponse ?? null
-  }, [payload])
+    if (!selectedSupplierOption) return currentInvitation?.myResponse ?? null
+    if (normalizeSupplierId(currentInvitation?.myResponse?.supplierId) === selectedSupplierOption.supplierId) {
+      return currentInvitation?.myResponse ?? null
+    }
+    return selectedSupplierOption.myResponse ?? null
+  }, [currentInvitation, selectedSupplierOption])
 
   const clarifications = useMemo(() => {
     const merged = [...clarificationsFromPayload, ...clarificationsFetched]
@@ -741,9 +781,7 @@ export function RfqQuotation() {
 
   const rfqStatusValue = rfq?.status ?? ""
   const invitationStatusValue = (() => {
-    const p = payload as AnyRecord | null
-    const root = p?.data ?? p
-    return String(root?.invitationStatus ?? "")
+    return String(selectedSupplierOption?.invitationStatus ?? currentInvitation?.invitationStatus ?? "")
   })()
   const awardStatusValue = ""
 
@@ -760,15 +798,22 @@ export function RfqQuotation() {
   const lockedByStatus =
     isSubmittedStatus(supplierResponse?.status) || clientLocked === "submitted"
   const isLocked = lockedByAwarded || lockedByDeadline || lockedByRfqStatus || lockedByStatus
-  const clarificationsLocked =
-    lockedByAwarded || lockedByDeadline || lockedByRfqStatus || lockedByStatus
+  const clarificationsLocked = getClarificationsLocked({
+    rfqStatus: rfqStatusValue,
+    invitationStatus: invitationStatusValue,
+    awardStatus: awardStatusValue,
+  })
   const lockInfoMessage = lockedByAwarded
     ? "This RFQ has already been awarded and is no longer accepting responses."
     : lockedByStatus
       ? "Your quotation has already been submitted."
       : `This RFQ is closed${lockedByDeadline ? " (deadline passed)" : ""}.`
-  const canUploadDocs = !isLocked && supplierResponse?.canUploadDocuments === true
-  const canDeleteDocs = !isLocked && supplierResponse?.canDeleteDocuments === true
+  const clarificationsLockMessage = lockedByAwarded
+    ? "This RFQ has already been awarded and clarifications are closed."
+    : "This RFQ is closed and no more clarifications can be sent."
+  const canDownloadDocs = documentPermissions.view && documentPermissions.download
+  const canUploadDocs = !isLocked && documentPermissions.upload && supplierResponse?.canUploadDocuments === true
+  const canDeleteDocs = !isLocked && documentPermissions.delete && supplierResponse?.canDeleteDocuments === true
   const submittedAtDate = submissionSummary
     ? new Date(submissionSummary.submittedAt)
     : null
@@ -1049,12 +1094,8 @@ export function RfqQuotation() {
   }, [])
 
   const supplierIdValue = useMemo(() => {
-    const p = payload as AnyRecord | null
-    const root = p?.data ?? p
-    const raw = root?.supplierId ?? rfq?.supplierId ?? null
-    const n = Number(raw)
-    return Number.isFinite(n) ? n : null
-  }, [payload, rfq])
+    return parseSupplierId(selectedSupplierId ?? currentInvitation?.supplierId)
+  }, [currentInvitation?.supplierId, selectedSupplierId])
 
   const setLine = (lineId: string, patch: Partial<QuoteLine>) => {
     setQuoteLines((prev) => {
@@ -1073,13 +1114,7 @@ export function RfqQuotation() {
 
   const collectMissingLineIds = () => {
     if (enrichedLines.length === 0) return [] as string[]
-    return enrichedLines
-      .filter((l) => {
-        const qty = parsePositiveNumber(l.quantity)
-        const price = parsePositiveNumber(l.unitPrice)
-        return qty == null || price == null
-      })
-      .map((l) => l.id)
+    return collectMissingUnitPriceLineIds(enrichedLines)
   }
 
   const validateSubmitMeta = () => {
@@ -1161,20 +1196,7 @@ export function RfqQuotation() {
     meta: ReturnType<typeof validateSubmitMeta>,
     asDraft: boolean
   ) => {
-    const items = enrichedLines.map((l) => {
-      const rawLineId = String(l.raw?.id ?? l.id).trim()
-      const parsedLineId = Number(rawLineId)
-      const rfqLineId =
-        Number.isFinite(parsedLineId) && Number.isInteger(parsedLineId)
-          ? parsedLineId
-          : rawLineId || l.id
-
-      const qty = parsePositiveNumber(l.quantity) ?? 0
-      const quotedPrice = parsePositiveNumber(l.unitPrice) ?? 0
-      const totalPayable = qty * quotedPrice
-
-      return { rfqLineId, quotedPrice, totalPayable }
-    })
+    const items = buildSubmitResponseItems(enrichedLines)
 
     return {
       rfqId: typeof rfqIdValue === "number" ? rfqIdValue : Number(rfqIdValue),
@@ -1201,10 +1223,14 @@ export function RfqQuotation() {
 
     clearSubmitErrors()
 
+    if (enrichedLines.length === 0) {
+      toast.error("No RFQ line items available.")
+      return
+    }
+
     if (asDraft) {
       const hasLineInput = enrichedLines.some(
-        (line) =>
-          parsePositiveNumber(line.quantity) != null || parsePositiveNumber(line.unitPrice) != null
+        (line) => parsePositiveNumber(line.unitPrice) != null
       )
       const hasContent =
         hasLineInput ||
@@ -1216,34 +1242,6 @@ export function RfqQuotation() {
         toast.error("Nothing to save yet")
         return
       }
-
-      setSubmitting("draft")
-      try {
-        const savedAt = Date.now()
-        if (typeof window !== "undefined") {
-          window.localStorage.setItem(
-            draftKey,
-            JSON.stringify({
-              version: 2,
-              savedAt,
-              remarks,
-              lines: quoteLines,
-              currency: quoteCurrency,
-              durationDays,
-            })
-          )
-        }
-        setMissingLineIds([])
-        setDraftSavedAt(new Date(savedAt))
-        toast.success("Draft saved.")
-      } catch (e: any) {
-        toast.error("Unable to save draft.", {
-          description: e?.message || "Please try again.",
-        })
-      } finally {
-        setSubmitting(null)
-      }
-      return
     }
 
     const meta = validateSubmitMeta()
@@ -1262,16 +1260,18 @@ export function RfqQuotation() {
       return
     }
 
-    const missing = collectMissingLineIds()
-    setMissingLineIds(missing)
-    if (missing.length > 0) {
-      toast.error("Fill quantity and unit price for all line items")
-      return
+    if (!asDraft) {
+      const missing = collectMissingLineIds()
+      setMissingLineIds(missing)
+      if (missing.length > 0) {
+        toast.error("Enter a unit price for all line items")
+        return
+      }
     }
 
-    setSubmitting("submitted")
+    setSubmitting(asDraft ? "draft" : "submitted")
     try {
-      const body = buildResponsePayload(meta, false)
+      const body = buildResponsePayload(meta, asDraft)
 
       const res = await fetch("/api/procurement/rfq-responses", {
         method: "POST",
@@ -1309,9 +1309,33 @@ export function RfqQuotation() {
             ? firstError
             : null
 
-        toast.error("Unable to submit response.", {
+        toast.error(asDraft ? "Unable to save draft." : "Unable to submit response.", {
           description:
             formatValidationErrors(errors) ?? (detail ? `${errMessage}: ${detail}` : errMessage),
+        })
+        return
+      }
+
+      if (asDraft) {
+        const savedAt = Date.now()
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(
+            draftKey,
+            JSON.stringify({
+              version: 2,
+              savedAt,
+              remarks,
+              lines: quoteLines,
+              currency: quoteCurrency,
+              durationDays,
+            })
+          )
+        }
+        setMissingLineIds([])
+        setDraftSavedAt(new Date(savedAt))
+        setReloadSeq((seq) => seq + 1)
+        toast.success("Draft saved.", {
+          description: "The RFQ response draft is now stored in the portal.",
         })
         return
       }
@@ -1339,7 +1363,7 @@ export function RfqQuotation() {
       } catch { }
       scheduleRedirectToRfq()
     } catch (e: any) {
-      toast.error("Unable to submit response.", {
+      toast.error(asDraft ? "Unable to save draft." : "Unable to submit response.", {
         description: e?.message || "Please check your connection and try again.",
       })
     } finally {
@@ -1358,13 +1382,7 @@ export function RfqQuotation() {
   const submitClarification = async () => {
     if (clarificationsLocked) {
       toast.error("Clarifications are closed", {
-        description: lockedByAwarded
-          ? "This RFQ has already been awarded."
-          : lockedByStatus
-            ? "Your quotation is already submitted."
-            : lockedByDeadline
-              ? "The submission deadline has passed."
-              : "This RFQ is closed.",
+        description: clarificationsLockMessage,
       })
       return
     }
@@ -1511,6 +1529,10 @@ export function RfqQuotation() {
 
   const openDmsPicker = () => {
     if (isLocked) return
+    if (!documentPermissions.upload) {
+      toast.error("Document upload is disabled for your account.")
+      return
+    }
     const seed = String(dmsPickerQuery || rfqNumber || rfqIdValue || "").trim()
     setDmsPickerOpen(true)
     if (!dmsPickerQuery && seed) setDmsPickerQuery(seed)
@@ -1570,6 +1592,10 @@ export function RfqQuotation() {
 
   const removeQuoteDocument = async (id: string | number) => {
     // Only call delete API for real documents (not temp uploads)
+    if (!documentPermissions.delete) {
+      toast.error("Document delete is disabled for your account.")
+      return
+    }
     if (!String(id).startsWith("tmp:") && !canDeleteDocs) {
       toast.error("Documents cannot be deleted after submission.")
       return
@@ -1595,6 +1621,10 @@ export function RfqQuotation() {
 
   const uploadFilesToDms = async (files: FileList | null) => {
     if (!files || files.length === 0) return
+    if (!documentPermissions.upload) {
+      toast.error("Document upload is disabled for your account.")
+      return
+    }
     if (isLocked || !canUploadDocs) return
 
     const list = Array.from(files).slice(0, 5)
@@ -1709,7 +1739,7 @@ export function RfqQuotation() {
     const missing = collectMissingLineIds()
     setMissingLineIds(missing)
     if (missing.length > 0) {
-      toast.error("Fill quantity and unit price for all line items")
+      toast.error("Enter a unit price for all line items")
       return
     }
 
@@ -1726,10 +1756,9 @@ export function RfqQuotation() {
 
   if (loading) {
     return (
-      <Loading
-        fullScreen={false}
-        message="Loading quotation"
-        className="min-h-[calc(100vh-14rem)] py-0 bg-transparent"
+      <ProcurementCollectionLoading
+        label="Loading quotation"
+        className="min-h-[calc(100vh-14rem)] rounded-none border-none bg-transparent px-0 py-0"
       />
     )
   }
@@ -1817,6 +1846,26 @@ export function RfqQuotation() {
                 </Badge>
               ) : null}
             </div>
+
+            {supplierOptions.length > 1 ? (
+              <div className="max-w-xs pt-1">
+                <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                  Supplier record
+                </div>
+                <Select value={selectedSupplierId || ""} onValueChange={setSelectedSupplierId}>
+                  <SelectTrigger aria-label="Supplier record" className="h-9 rounded-xl border-slate-200 bg-white text-sm">
+                    <SelectValue placeholder="Select supplier record" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {supplierOptions.map((option) => (
+                      <SelectItem key={option.supplierId} value={option.supplierId}>
+                        {formatSupplierOptionLabel(option)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : null}
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -2003,7 +2052,7 @@ export function RfqQuotation() {
                     <div className="border-l-2 border-rose-400 pl-3 py-1.5">
                       <div className="text-sm font-semibold text-rose-900">Missing required values</div>
                       <p className="mt-1 text-sm text-rose-900/80">
-                        Complete quantity and unit price for {missingLineIds.length}{" "}
+                        Enter a unit price for {missingLineIds.length}{" "}
                         line item{missingLineIds.length === 1 ? "" : "s"} to enable
                         submission.
                       </p>
@@ -2065,20 +2114,9 @@ export function RfqQuotation() {
                                   </TableCell>
 
                                   <TableCell className="w-[132px] px-3 py-2.5">
-                                    <Input
-                                      value={l.quantity}
-                                      disabled={isLocked}
-                                      inputMode="decimal"
-                                      onChange={(e) =>
-                                        setLine(l.id, { quantity: e.target.value })
-                                      }
-                                      placeholder="0"
-                                      className={cn(
-                                        "h-8 text-xs transition-all duration-200 focus-visible:ring-2 focus-visible:ring-indigo-500/30",
-                                        isMissing &&
-                                        "border-destructive focus-visible:ring-destructive"
-                                      )}
-                                    />
+                                    <div className="inline-flex h-8 items-center text-xs font-medium tabular-nums text-slate-900">
+                                      {l.quantity || "—"}
+                                    </div>
                                   </TableCell>
 
                                   <TableCell className="w-[88px] px-3 py-2.5">
@@ -2156,20 +2194,9 @@ export function RfqQuotation() {
                                   <div className={`text-xs font-medium ${META_TEXT}`}>
                                     Quantity
                                   </div>
-                                  <Input
-                                    value={l.quantity}
-                                    disabled={isLocked}
-                                    inputMode="decimal"
-                                    onChange={(e) =>
-                                      setLine(l.id, { quantity: e.target.value })
-                                    }
-                                    placeholder="0"
-                                    className={cn(
-                                      "h-9 text-sm transition-all duration-200 focus-visible:ring-2 focus-visible:ring-indigo-500/30",
-                                      isMissing &&
-                                      "border-destructive focus-visible:ring-destructive"
-                                    )}
-                                  />
+                                  <div className="inline-flex h-9 items-center rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-medium tabular-nums text-slate-900">
+                                    {l.quantity || "—"}
+                                  </div>
                                 </div>
                                 <div className="space-y-1">
                                   <div className={`text-xs font-medium ${META_TEXT}`}>
@@ -2476,6 +2503,16 @@ export function RfqQuotation() {
                     <p className="mt-2 text-xs text-slate-500">
                       Documents are optional. Add supporting files to strengthen your bid.
                     </p>
+                    {!documentPermissions.upload ? (
+                      <p className="mt-2 text-xs text-amber-700">
+                        Upload is disabled by your portal document permissions.
+                      </p>
+                    ) : null}
+                    {!canDownloadDocs ? (
+                      <p className="mt-2 text-xs text-amber-700">
+                        Download is disabled by your portal document permissions.
+                      </p>
+                    ) : null}
                   </div>
 
                   {quoteDocuments.length === 0 ? (
@@ -2524,7 +2561,7 @@ export function RfqQuotation() {
                                 onVerify={hasRealId ? () => verifyAttachment(d.id, d.name) : null}
                                 onRemove={canDeleteDocs ? () => removeQuoteDocument(d.id) : null}
                                 disabled={isLocked}
-                                previewDisabled={d.uploading}
+                                previewDisabled={d.uploading || !canDownloadDocs}
                                 verifyDisabled={d.uploading}
                                 removeDisabled={d.uploading || !canDeleteDocs}
                               />
@@ -2591,7 +2628,7 @@ export function RfqQuotation() {
                           <div className="space-y-2">
                             {dmsDocs.slice(0, 10).map((d, idx) => {
                               const docId = d?.id ?? d?.Id ?? d?.documentId ?? d?.document_id ?? idx
-                              const name = String(d?.name ?? d?.title ?? `Document ${idx + 1}`).trim()
+                              const name = resolveProcurementDocumentName(d, `Document ${idx + 1}`)
                               const previewUrl =
                                 typeof d?.previewUrl === "string" && d.previewUrl.trim()
                                   ? d.previewUrl.trim()
@@ -2612,7 +2649,7 @@ export function RfqQuotation() {
                                   </div>
                                   <div className="flex items-center gap-2 shrink-0">
                                     <AttachmentActionsMenu
-                                      previewUrl={previewUrl}
+                                      previewUrl={canDownloadDocs ? previewUrl : null}
                                       onVerify={() => verifyAttachment(String(docId), name)}
                                     />
                                   </div>
@@ -2661,7 +2698,7 @@ export function RfqQuotation() {
                               </div>
                               <div className="flex items-center gap-2 shrink-0">
                                 <AttachmentActionsMenu
-                                  previewUrl={previewHref}
+                                  previewUrl={canDownloadDocs ? previewHref : null}
                                   onVerify={
                                     docId != null ? () => verifyAttachment(docId, name) : null
                                   }
@@ -2753,7 +2790,7 @@ export function RfqQuotation() {
                     </div>
                   ) : (
                     <div className={`${SOFT_PANEL_DASHED} p-4 text-sm ${META_TEXT}`}>
-                      Clarifications are locked for this RFQ.
+                      {clarificationsLockMessage}
                     </div>
                   )}
 

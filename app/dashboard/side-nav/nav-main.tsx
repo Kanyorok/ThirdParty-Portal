@@ -78,33 +78,38 @@ const NavItemExpanded = memo(
 
     const menuButtonContent = (
       <>
-        <div className="flex min-w-0 flex-1 items-start gap-2 sm:gap-2.5">
+        <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
           {item.icon && (
             <div className={cn(
-              "mt-0.5 flex items-center justify-center transition-all duration-300",
-              variant === "secondary" ? "size-6 rounded-lg sm:size-6.5" : "size-7 rounded-[0.9rem] sm:size-7.5 sm:rounded-[0.95rem]",
+              "flex shrink-0 items-center justify-center self-center border transition-all duration-300",
+              variant === "secondary"
+                ? "size-6 rounded-lg sm:size-6.5"
+                : "size-8 rounded-[1rem] sm:size-8.5 sm:rounded-[1.05rem]",
               isItemActive
-                ? "bg-primary text-primary-foreground shadow-[0_12px_24px_-18px_rgba(37,99,235,0.55)]"
+                ? "border-primary/20 bg-primary text-primary-foreground shadow-[0_14px_28px_-20px_rgba(37,99,235,0.5)]"
                 : isOpen
                   ? variant === "secondary"
-                    ? "bg-primary/12 text-primary"
-                    : "bg-primary/14 text-primary"
+                    ? "border-primary/10 bg-primary/12 text-primary"
+                    : "border-primary/10 bg-primary/12 text-primary"
                   : variant === "secondary"
-                    ? "bg-sidebar-accent/40 text-sidebar-foreground/65 group-hover:bg-primary/8 group-hover:text-primary"
-                    : "bg-sidebar-accent/60 text-sidebar-foreground/72 group-hover:bg-sidebar-accent group-hover:text-sidebar-foreground"
+                    ? "border-sidebar-border/40 bg-sidebar-accent/45 text-sidebar-foreground/68 group-hover:border-primary/10 group-hover:bg-primary/8 group-hover:text-primary"
+                    : "border-sidebar-border/45 bg-sidebar-accent/55 text-sidebar-foreground/72 group-hover:border-sidebar-border/70 group-hover:bg-sidebar-accent/85 group-hover:text-sidebar-foreground"
             )}>
-              <item.icon className={cn("shrink-0", variant === "secondary" ? "h-3.25 w-3.25 sm:h-3.5 sm:w-3.5" : "h-[0.9rem] w-[0.9rem] sm:h-[0.95rem] sm:w-[0.95rem]")} />
+              <item.icon className={cn("shrink-0", variant === "secondary" ? "h-3.25 w-3.25 sm:h-3.5 sm:w-3.5" : "h-[1rem] w-[1rem] sm:h-[1.05rem] sm:w-[1.05rem]")} />
             </div>
           )}
-          <div className="min-w-0 flex-1">
-            <span className={cn(
-              "block truncate text-[11.5px] font-semibold tracking-tight transition-colors sm:text-[12px]",
-              isItemActive
-                ? "text-sidebar-foreground"
-                : variant === "secondary"
-                  ? "text-sidebar-foreground/78 group-hover:text-sidebar-foreground"
-                  : "text-sidebar-foreground/88 group-hover:text-sidebar-foreground"
-            )}>{item.title}</span>
+          <div className="min-w-0 flex-1 self-center">
+            <div className="min-w-0">
+              <span className={cn(
+                "block truncate font-semibold tracking-tight transition-colors",
+                variant === "secondary" ? "text-[11.5px] leading-none sm:text-[12px]" : "text-[12.5px] leading-tight sm:text-[13px]",
+                isItemActive
+                  ? "text-sidebar-foreground"
+                  : variant === "secondary"
+                    ? "text-sidebar-foreground/78 group-hover:text-sidebar-foreground"
+                    : "text-sidebar-foreground/90 group-hover:text-sidebar-foreground"
+              )}>{item.title}</span>
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -131,7 +136,9 @@ const NavItemExpanded = memo(
           isActive={isItemActive}
           className={cn(
             "group relative transition-all duration-300",
-            variant === "secondary" ? "min-h-[2.8rem] rounded-[0.9rem] px-2 py-1.75 sm:min-h-[3rem] sm:rounded-[0.95rem] sm:px-2.25 sm:py-2" : "min-h-[3.25rem] rounded-[1rem] px-2.25 py-2 sm:min-h-[3.625rem] sm:rounded-[1.15rem] sm:px-2.5 sm:py-2.5",
+            variant === "secondary"
+              ? "min-h-[2.8rem] rounded-[0.9rem] px-2 py-1.75 sm:min-h-[3rem] sm:rounded-[0.95rem] sm:px-2.25 sm:py-2"
+              : "min-h-[3.25rem] rounded-[1rem] px-2.25 py-2 sm:min-h-[3.625rem] sm:rounded-[1.15rem] sm:px-2.5 sm:py-2.5",
             isItemActive
               ? "bg-primary/[0.08] text-sidebar-foreground"
               : variant === "secondary"
@@ -176,7 +183,9 @@ const NavItemExpanded = memo(
               isActive={isItemActive}
               className={cn(
                 "group relative overflow-hidden transition-all duration-300",
-                variant === "secondary" ? "min-h-[2.8rem] rounded-[0.9rem] px-2 py-1.75 sm:min-h-[3rem] sm:rounded-[0.95rem] sm:px-2.25 sm:py-2" : "min-h-[3.25rem] rounded-[1rem] px-2.25 py-2 sm:min-h-[3.625rem] sm:rounded-[1.15rem] sm:px-2.5 sm:py-2.5",
+                variant === "secondary"
+                  ? "min-h-[2.8rem] rounded-[0.9rem] px-2 py-1.75 sm:min-h-[3rem] sm:rounded-[0.95rem] sm:px-2.25 sm:py-2"
+                  : "min-h-[3.25rem] rounded-[1rem] px-2.25 py-2 sm:min-h-[3.625rem] sm:rounded-[1.15rem] sm:px-2.5 sm:py-2.5",
                 isOpen
                   ? variant === "secondary"
                     ? "bg-primary/[0.07]"

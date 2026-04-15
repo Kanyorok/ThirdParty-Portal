@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { format } from "date-fns"
 import { toast } from "sonner"
 import {
@@ -15,8 +15,17 @@ import {
 
 import { cn } from "@/lib/utils"
 import { parseSubmissionDeadline } from "@/lib/deadline"
+import { formatSupplierOptionLabel } from "@/lib/rfq-response"
 import { isRfqAwardedStatus, isRfqClosedStatus, isRfqSubmittedResponseStatus, normalizeRfqStatusKey } from "@/lib/rfq-status"
 import { Button } from "@/components/common/button"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/common/select"
+import { useRfqPortalContext } from "@/hooks/procurement/use-rfq-portal-context"
 import type { RfqInvitation, RfqClarification } from "@/types/rfq"
 
 function deadlineMeta(deadline: string) {
@@ -67,6 +76,7 @@ function statusBadgeClass(status?: string) {
 export default function RFQPage() {
     const params = useParams<{ rfqId: string }>()
     const router = useRouter()
+    const searchParams = useSearchParams()
 
     const normalizedRfqId = (() => {
         const raw = String(params?.rfqId ?? "")
@@ -81,6 +91,19 @@ export default function RFQPage() {
     const [clarifications, setClarifications] = useState<RfqClarification[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+
+    const preferredSupplierId = searchParams?.get("supplierId") ?? null
+    const {
+        selectedSupplierId,
+        selectedSupplierOption,
+        setSelectedSupplierId,
+        supplierOptions,
+    } = useRfqPortalContext({
+        rfqId: normalizedRfqId,
+        initialInvitation: data,
+        preferredSupplierId,
+        enabled: Boolean(normalizedRfqId),
+    })
 
     useEffect(() => {
         const run = async () => {
@@ -140,7 +163,11 @@ export default function RFQPage() {
 
     const rfq = data.rfq
     const lines = rfq.rfqLines ?? []
-    const supplierResponse = data.myResponse
+    const supplierResponse = !selectedSupplierOption
+        ? data.myResponse
+        : String(data.myResponse?.supplierId ?? "") === selectedSupplierOption.supplierId
+            ? data.myResponse
+            : selectedSupplierOption.myResponse
     const submissionDeadline = data.submissionDeadline ?? rfq.submissionDeadline
     const parsedDeadline = submissionDeadline
         ? parseSubmissionDeadline(String(submissionDeadline)).date
@@ -162,8 +189,9 @@ export default function RFQPage() {
                     ? "bg-amber-500"
                     : "bg-emerald-500"
     const responseStatus = String(supplierResponse?.status ?? "")
-    const invitationStatus = data.invitationStatus ?? ""
+    const invitationStatus = selectedSupplierOption?.invitationStatus ?? data.invitationStatus ?? ""
     const rfqStatus = rfq.status ?? data.status ?? ""
+    const activeSupplierId = selectedSupplierId || data.supplierId
 
     const isAwarded = [rfqStatus, invitationStatus, responseStatus].some((value) =>
         isRfqAwardedStatus(value)
@@ -194,7 +222,8 @@ export default function RFQPage() {
             toast.info(actionBlockedMessage || "This RFQ is not open for response.")
             return
         }
-        router.push(`/dashboard/supplier/rfqs/${encodeURIComponent(normalizedRfqId)}/quotation`)
+        const query = activeSupplierId ? `?supplierId=${encodeURIComponent(activeSupplierId)}` : ""
+        router.push(`/dashboard/supplier/rfqs/${encodeURIComponent(normalizedRfqId)}/quotation${query}`)
     }
 
     return (
@@ -297,6 +326,23 @@ export default function RFQPage() {
                             <h2 className="text-xs font-semibold uppercase text-slate-500">Overview</h2>
                         </div>
                         <div className="grid gap-4 sm:grid-cols-2">
+                            {supplierOptions.length > 1 ? (
+                                <div>
+                                    <div className="text-xs font-semibold uppercase text-slate-500">Supplier record</div>
+                                    <Select value={activeSupplierId || ""} onValueChange={setSelectedSupplierId}>
+                                        <SelectTrigger aria-label="Supplier record" className="mt-1 h-9 rounded-xl border-slate-200 bg-white text-sm">
+                                            <SelectValue placeholder="Select supplier record" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {supplierOptions.map((option) => (
+                                                <SelectItem key={option.supplierId} value={option.supplierId}>
+                                                    {formatSupplierOptionLabel(option)}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            ) : null}
                             <div>
                                 <div className="text-xs font-semibold uppercase text-slate-500">Currency</div>
                                 <div className="text-sm font-medium text-slate-900">

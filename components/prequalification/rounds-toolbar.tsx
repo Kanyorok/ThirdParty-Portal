@@ -196,6 +196,13 @@ export default function RoundsToolbar({
         [totalCount, activeCount, archivedCount]
     )
 
+    const applicationsHref = useMemo(() => {
+        const params = new URLSearchParams(searchParams?.toString() ?? "")
+        params.set("tab", "applications")
+        const nextQuery = params.toString()
+        return nextQuery ? `${pathname}?${nextQuery}` : pathname ?? "/dashboard/supplier/prequalification"
+    }, [pathname, searchParams])
+
     return (
         <div
             className={cn(
@@ -226,7 +233,7 @@ export default function RoundsToolbar({
                         variant="outline"
                         className="h-9 rounded-full border-border/60 !bg-transparent px-3 text-xs font-semibold hover:!bg-transparent"
                     >
-                        <Link href="/dashboard/supplier/prequalification/application">
+                        <Link href={applicationsHref}>
                             My applications
                             <ArrowUpRight className="ml-1.5 h-4 w-4" />
                         </Link>
@@ -335,6 +342,16 @@ export default function RoundsToolbar({
                             ))}
                         </SelectContent>
                     </Select>
+
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleReset}
+                        className="h-10 rounded-full border border-border/60 px-3 text-xs font-semibold text-muted-foreground hover:text-foreground"
+                    >
+                        Reset
+                    </Button>
                 </div>
             </div>
         </div>

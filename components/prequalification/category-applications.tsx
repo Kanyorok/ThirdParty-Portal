@@ -30,6 +30,7 @@ import {
     Users,
 } from "lucide-react"
 import { Spinner } from "@/components/common/spinner"
+import { resolveProcurementDocumentName } from "@/lib/procurement-document-name"
 import { format } from "date-fns"
 import { Round, CategoryProgress } from "@/types/types"
 import { cn } from "@/lib/utils"
@@ -154,9 +155,10 @@ interface CategoryApplicationsProps {
     round: Round
     className?: string
     variant?: "primary" | "outline"
+    triggerLabel?: string
 }
 
-export default function CategoryApplications({ round: roundProp, className, variant = "outline" }: CategoryApplicationsProps) {
+export default function CategoryApplications({ round: roundProp, className, variant = "outline", triggerLabel }: CategoryApplicationsProps) {
     const [isOpen, setIsOpen] = useState(false)
     const [activeTab, setActiveTab] = useState("overview")
     const contentRef = useRef<HTMLDivElement | null>(null)
@@ -377,9 +379,10 @@ export default function CategoryApplications({ round: roundProp, className, vari
         a.click()
     }, [round.id])
 
-    const headerButtonText = availableCategories > 0
+    const defaultButtonText = availableCategories > 0
         ? (variant === "primary" ? "Apply now" : "View categories")
         : "View details"
+    const headerButtonText = triggerLabel ?? defaultButtonText
 
     const startDateText = safeFormatDate(round.startDate)
     const endDateText = safeFormatDate(round.endDate)
@@ -819,7 +822,7 @@ export default function CategoryApplications({ round: roundProp, className, vari
                                                     ) : (
                                                         <div className="divide-y divide-slate-50">
                                                             {docs.map((doc) => {
-                                                                const name = doc.file_name ?? doc.fileName ?? `Document #${doc.id}`
+                                                                const name = resolveProcurementDocumentName(doc)
                                                                 const type = doc.file_type ?? doc.fileType
                                                                 const date = doc.uploaded_at ?? doc.uploadedAt ?? doc.created_at
 

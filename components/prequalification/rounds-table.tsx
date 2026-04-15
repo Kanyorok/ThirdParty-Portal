@@ -3,7 +3,7 @@
 import { Spinner } from "@/components/common/spinner"
 import { useMemo } from "react"
 import { format } from "date-fns"
-import { ChevronLeft, ChevronRight, Inbox, Timer } from "lucide-react"
+import { AlertTriangle, ChevronLeft, ChevronRight, Inbox, ShieldCheck, Timer } from "lucide-react"
 import { Button } from "@/components/common/button"
 import StatusBadge from "./status-badge"
 import CategoryApplications from "./category-applications"
@@ -33,6 +33,60 @@ function formatPeriod(startDate?: string, endDate?: string) {
     return "Dates pending"
 }
 
+function getAvailableCategoryCount(round: ReturnType<typeof useRoundsStore.getState>["rounds"][number]) {
+    return round.unappliedCount ?? round.availableCategories?.length ?? Math.max((round.categoryCount ?? round.categories?.length ?? 0) - (round.appliedCount ?? round.appliedCategories?.length ?? 0), 0)
+}
+
+function getAppliedCategoryCount(round: ReturnType<typeof useRoundsStore.getState>["rounds"][number]) {
+    return round.appliedCount ?? round.appliedCategories?.length ?? 0
+}
+
+function deriveRoundAction(round: ReturnType<typeof useRoundsStore.getState>["rounds"][number]) {
+    const availableCount = getAvailableCategoryCount(round)
+    const appliedCount = getAppliedCategoryCount(round)
+    const ready = Boolean(round.canApply) && round.supplierEligible !== false && !round.isClosed && !round.isExpired && !round.isFutureWindow && !round.notApplicable
+
+    if (appliedCount > 0 && availableCount === 0) {
+        return {
+            workflow: "submitted" as const,
+            ctaLabel: "View submitted",
+            stateLabel: "Submitted",
+            tone: "border-emerald-200 bg-emerald-50 text-emerald-700",
+            readiness: "complete" as const,
+        }
+    }
+
+    if (appliedCount > 0 && availableCount > 0 && ready) {
+        return {
+            workflow: "continue" as const,
+            ctaLabel: "Continue application",
+            stateLabel: "Continue",
+            tone: "border-blue-200 bg-blue-50 text-blue-700",
+            readiness: "ready" as const,
+        }
+    }
+
+    if (availableCount > 0 && ready) {
+        return {
+            workflow: "apply" as const,
+            ctaLabel: "Apply now",
+            stateLabel: "Ready to apply",
+            tone: "border-violet-200 bg-violet-50 text-violet-700",
+            readiness: "ready" as const,
+        }
+    }
+
+    return {
+        workflow: "all" as const,
+        ctaLabel: appliedCount > 0 ? "View progress" : "View details",
+        stateLabel: round.supplierEligible === false ? "Needs attention" : "View details",
+        tone: round.supplierEligible === false
+            ? "border-amber-200 bg-amber-50 text-amber-700"
+            : "border-slate-200 bg-slate-50 text-slate-700",
+        readiness: "attention" as const,
+    }
+}
+
 export default function RoundsTable() {
     const rounds = useRoundsStore((state) => state.rounds)
     const meta = useRoundsStore((state) => state.meta)
@@ -44,7 +98,10 @@ export default function RoundsTable() {
     const page = useRoundsStore((state) => state.page)
 
     const visibleRounds = useMemo(() => {
-        return hideApplied ? rounds.filter((round) => !round.hasApplied) : rounds
+        return rounds.filter((round) => {
+            if (hideApplied && round.hasApplied) return false
+            return true
+        })
     }, [rounds, hideApplied])
 
     const totalPages = meta.totalPages ?? 1
@@ -58,12 +115,8 @@ export default function RoundsTable() {
 
     /* ── Group into priority (closing soon & unapplied) vs rest ─── */
     const sections = useMemo(() => {
-        const priority = visibleRounds.filter(
-            (r) => !r.hasApplied && !isRoundArchived(r) && deadlineMeta(r.endDate).closingSoon
-        )
-        const rest = visibleRounds.filter(
-            (r) => !priority.includes(r)
-        )
+        const priority = visibleRounds.filter((r) => !r.hasApplied && !isRoundArchived(r) && deadlineMeta(r.endDate).closingSoon)
+        const rest = visibleRounds.filter((r) => !priority.includes(r))
         const groups: { id: string; title: string; items: typeof visibleRounds }[] = []
         if (priority.length) groups.push({ id: "priority", title: "Closing soon — act now", items: priority })
         if (rest.length) groups.push({ id: "all", title: "All rounds", items: rest })
@@ -88,7 +141,7 @@ export default function RoundsTable() {
             {!loading && !error && visibleRounds.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-border/50 p-8 text-center text-sm text-muted-foreground">
                     <Inbox className="mx-auto mb-2 h-5 w-5 text-slate-400" />
-                    No rounds in this view.
+                    No rounds match the current browse filters.
                 </div>
             ) : null}
 
@@ -105,6 +158,7 @@ export default function RoundsTable() {
                     {/* Round cards */}
                     <div className="space-y-2">
                         {section.items.map((round) => {
+                            const action = deriveRoundAction(round)
                             const appliedCategories = round.appliedCategories ?? []
                             const totalCategories = round.categoryCount ?? round.categories?.length ?? 0
                             const progressPct = totalCategories > 0
@@ -168,6 +222,20 @@ export default function RoundsTable() {
                                                 <span aria-hidden className="text-border">·</span>
                                                 <span>{formatPeriod(round.startDate, round.endDate)}</span>
                                                 <StatusBadge status={round.status} />
+                                                <span className={cn("inline-flex rounded-full border px-2 py-0.5 font-semibold", action.tone)}>
+                                                    {action.stateLabel}
+                                                </span>
+                                                <span className={cn(
+                                                    "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-semibold",
+                                                    action.readiness === "ready"
+                                                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                                        : action.readiness === "complete"
+                                                            ? "border-blue-200 bg-blue-50 text-blue-700"
+                                                            : "border-amber-200 bg-amber-50 text-amber-700"
+                                                )}>
+                                                    {action.readiness === "ready" ? <ShieldCheck className="h-3 w-3" /> : action.readiness === "complete" ? <Timer className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
+                                                    {action.readiness === "ready" ? "Ready" : action.readiness === "complete" ? "Complete" : "Needs attention"}
+                                                </span>
                                                 {round.maxVendors ? (
                                                     <span className="inline-flex rounded-full border border-border/60 px-2 py-0.5 font-semibold">
                                                         Max {round.maxVendors} vendors
@@ -198,6 +266,11 @@ export default function RoundsTable() {
                                                     <span className="text-[11px] tabular-nums text-muted-foreground">
                                                         {appliedCategories.length}/{totalCategories} applied
                                                     </span>
+                                                    {getAvailableCategoryCount(round) > 0 ? (
+                                                        <span className="text-[11px] text-muted-foreground">
+                                                            {getAvailableCategoryCount(round)} open category{getAvailableCategoryCount(round) !== 1 ? "ies" : ""}
+                                                        </span>
+                                                    ) : null}
                                                 </div>
                                             ) : null}
                                         </div>
@@ -207,7 +280,8 @@ export default function RoundsTable() {
                                     <div className="flex shrink-0 items-center gap-2 sm:self-center">
                                         <CategoryApplications
                                             round={round}
-                                            variant={isActionable ? "primary" : "outline"}
+                                            variant={action.readiness === "ready" ? "primary" : "outline"}
+                                            triggerLabel={action.ctaLabel}
                                         />
                                     </div>
                                 </div>

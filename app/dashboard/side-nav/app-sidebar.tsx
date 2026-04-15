@@ -69,18 +69,18 @@ function UtilityMenuSheet({
                                 "group text-sidebar-foreground transition-all hover:bg-sidebar-accent/20",
                                 collapsed
                                     ? "h-8.5 w-8.5 justify-center rounded-[0.8rem] px-0 sm:h-9 sm:w-9 sm:rounded-[0.85rem]"
-                                    : "min-h-[2.75rem] rounded-[0.9rem] px-2 py-1.75 sm:min-h-[2.9rem] sm:rounded-[0.95rem] sm:px-2.25 sm:py-2"
+                                    : "min-h-[3.4rem] rounded-[1rem] px-2.5 py-2.25 sm:min-h-[3.65rem] sm:rounded-[1.05rem] sm:px-2.75 sm:py-2.5"
                             )}
                         >
                             {collapsed ? (
                                 <PanelRightOpen className="size-4.5" />
                             ) : (
                                 <>
-                                    <div className="flex size-6.5 shrink-0 items-center justify-center rounded-lg bg-sidebar-accent/40 text-sidebar-foreground/72 transition-colors group-hover:bg-primary/10 group-hover:text-primary sm:size-7">
-                                        <PanelRightOpen className="size-3.25 sm:size-3.5" />
+                                    <div className="flex size-8 shrink-0 items-center justify-center rounded-[1rem] border border-sidebar-border/45 bg-sidebar-accent/55 text-sidebar-foreground/72 transition-colors group-hover:border-primary/10 group-hover:bg-primary/10 group-hover:text-primary sm:size-8.5 sm:rounded-[1.05rem]">
+                                        <PanelRightOpen className="size-[0.95rem] sm:size-[1rem]" />
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <div className="text-[11.5px] font-bold tracking-tight text-sidebar-foreground sm:text-[12px]">
+                                        <div className="text-[12.5px] font-semibold leading-tight tracking-tight text-sidebar-foreground sm:text-[13px]">
                                             Account & Help
                                         </div>
                                     </div>
@@ -100,7 +100,7 @@ function UtilityMenuSheet({
             >
                 <div>
                     <div className="px-3 py-2.5">
-                        <div className="text-[12px] font-semibold tracking-tight text-foreground">Account & Help</div>
+                                        <div className="text-[12px] font-semibold tracking-tight text-foreground">Account & Help</div>
                     </div>
 
                     <div className="px-2 pb-2">
@@ -211,7 +211,7 @@ function SidebarSkeleton() {
     )
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({ className, collapsible = "icon", variant = "sidebar", ...props }: React.ComponentProps<typeof Sidebar>) {
     const { data: session } = useSession()
     const { state, isMobile, setOpenMobile } = useSidebar()
     const {
@@ -226,6 +226,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     useEffect(() => setMounted(true), [])
 
     const profileLabel = activeProfile === "base" ? "Workspace" : activeProfile
+    const profileBadgeLabel = profileLabel
+        .split(/[-_\s]+/)
+        .filter(Boolean)
+        .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+        .join(" ")
     const isCollapsed = state === "collapsed" && !isMobile
 
     const availableProfiles = useMemo(
@@ -289,26 +294,32 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
 
     return (
-        <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar/95 backdrop-blur-xl" {...props}>
+        <Sidebar
+            collapsible={collapsible}
+            variant={variant}
+            className={cn("border-r border-sidebar-border bg-sidebar/95 backdrop-blur-xl", className)}
+            {...props}
+        >
             <SidebarHeader className="px-2 py-2 sm:px-2.5 sm:py-2.5">
                 <div className={cn(
                     "relative overflow-hidden rounded-[1rem] border border-sidebar-border/65 bg-sidebar px-2.25 py-2.25 sm:rounded-[1.05rem] sm:px-2.5 sm:py-2.5",
                     state === "collapsed" && !isMobile ? "px-2 py-2" : ""
                 )}>
-                    <div className="relative flex items-start gap-2.5">
+                    <div className="relative flex items-center gap-2.5">
                         <div className="flex size-8.5 shrink-0 items-center justify-center rounded-[0.9rem] bg-primary text-primary-foreground transition-colors sm:size-9 sm:rounded-[0.95rem]">
                             <Command className="size-[1.05rem] sm:size-[1.125rem]" />
                         </div>
                         <div className={cn(
-                            "min-w-0 flex-1 transition-all duration-300",
+                            "min-w-0 flex-1 self-center transition-all duration-300",
                             state === "collapsed" && !isMobile ? "opacity-0 invisible w-0" : "opacity-100 visible w-auto"
                         )}>
                             <div className="flex items-center justify-between gap-2">
-                                <span className="line-clamp-1 text-[12.5px] font-semibold leading-tight tracking-tight text-sidebar-foreground sm:text-[13px]">
+                                <span className="line-clamp-1 text-[12.5px] font-semibold leading-none tracking-tight text-sidebar-foreground sm:text-[13px]">
                                     {CLIENT_APP_NAME_STRING}
                                 </span>
-                                <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.15em] text-primary">
-                                    {profileLabel}
+                                <span className="inline-flex h-6 shrink-0 items-center gap-1.5 rounded-full border border-primary/15 bg-[linear-gradient(180deg,rgba(59,130,246,0.14),rgba(59,130,246,0.06))] px-2.5 text-[10px] font-semibold tracking-tight text-primary shadow-[0_8px_20px_-16px_rgba(37,99,235,0.65)]">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" />
+                                    <span className="truncate">{profileBadgeLabel}</span>
                                 </span>
                             </div>
                         </div>

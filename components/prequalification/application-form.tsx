@@ -9,7 +9,7 @@ import { CheckCircle2, AlertCircle, Clock, RefreshCw, Info, X, Send, Users, Cale
 import { Button } from "@/components/common/button"
 import { Label } from "@/components/common/label"
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/common/select"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "@/components/common/sheet"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/common/dialog"
 import { toast } from "sonner"
 import { useSession } from "next-auth/react"
 import { getRounds, getSupplierCategories, submitApplicationSafe } from "@/lib/api-base"
@@ -98,10 +98,60 @@ const RoundsApiResponseSchema = z.object({
 });
 
 const CategoryApiItemSchema = z.object({
-    supplierCategoryID: z.number(),
-    categoryName: z.string(),
+    supplierCategoryID: z.number().optional(),
+    id: z.union([z.number(), z.string()]).optional(),
+    categoryName: z.string().optional(),
+    name: z.string().optional(),
     description: z.string().optional(),
     is_active: z.boolean().optional(),
+    requiredDocuments: z.array(z.object({
+        id: z.union([z.number(), z.string()]).optional(),
+        label: z.string().optional(),
+        name: z.string().optional(),
+        description: z.string().optional(),
+        required: z.boolean().optional(),
+        isRequired: z.boolean().optional(),
+        maxFileSizeMb: z.number().optional(),
+        max_file_size_mb: z.number().optional(),
+        maxFileSize: z.number().optional(),
+        max_file_size: z.number().optional(),
+    })).optional(),
+    required_documents: z.array(z.object({
+        id: z.union([z.number(), z.string()]).optional(),
+        label: z.string().optional(),
+        name: z.string().optional(),
+        description: z.string().optional(),
+        required: z.boolean().optional(),
+        isRequired: z.boolean().optional(),
+        maxFileSizeMb: z.number().optional(),
+        max_file_size_mb: z.number().optional(),
+        maxFileSize: z.number().optional(),
+        max_file_size: z.number().optional(),
+    })).optional(),
+    documentRules: z.array(z.object({
+        id: z.union([z.number(), z.string()]).optional(),
+        label: z.string().optional(),
+        name: z.string().optional(),
+        description: z.string().optional(),
+        required: z.boolean().optional(),
+        isRequired: z.boolean().optional(),
+        maxFileSizeMb: z.number().optional(),
+        max_file_size_mb: z.number().optional(),
+        maxFileSize: z.number().optional(),
+        max_file_size: z.number().optional(),
+    })).optional(),
+    document_rules: z.array(z.object({
+        id: z.union([z.number(), z.string()]).optional(),
+        label: z.string().optional(),
+        name: z.string().optional(),
+        description: z.string().optional(),
+        required: z.boolean().optional(),
+        isRequired: z.boolean().optional(),
+        maxFileSizeMb: z.number().optional(),
+        max_file_size_mb: z.number().optional(),
+        maxFileSize: z.number().optional(),
+        max_file_size: z.number().optional(),
+    })).optional(),
 });
 
 const CategoriesApiResponseSchema = z.object({
@@ -290,9 +340,11 @@ const CategorySelector = ({ categories, selectedIds, onToggle, error }: { catego
     </div>
 );
 
-export default function ApplicationForm({ children, open = false, onOpenChange, defaultRoundId, onSuccess }: { children?: React.ReactNode; open?: boolean; onOpenChange?: (open: boolean) => void; defaultRoundId?: string; onSuccess?: (result: { applicationId: string; statusCode: "O" | "CL" | "S"; statusLabel: string; roundId: string }) => void }) {
+export default function ApplicationForm({ children, open = false, onOpenChange, defaultRoundId, defaultCategoryIds, onSuccess }: { children?: React.ReactNode; open?: boolean; onOpenChange?: (open: boolean) => void; defaultRoundId?: string; defaultCategoryIds?: string[]; onSuccess?: (result: { applicationId: string; statusCode: "O" | "CL" | "S"; statusLabel: string; roundId: string }) => void }) {
     const { status } = useSession();
     const isAuthenticated = status === 'authenticated';
+    const pinnedCategoryIds = useMemo(() => (defaultCategoryIds ?? []).map((id) => String(id)).filter(Boolean), [defaultCategoryIds]);
+    const hasPinnedCategories = pinnedCategoryIds.length > 0;
     const [rounds, setRounds] = useState<Round[]>([]);
     const [categories, setCategories] = useState<SupplierCategory[]>([]);
     const [roundsLoadingState, setRoundsLoadingState] = useState<LoadingState>("idle");
@@ -308,7 +360,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
 
     const form = useForm<FormValues>({
         resolver: zodResolver(FormSchema),
-        defaultValues: { roundId: defaultRoundId ?? "", categoryIds: [], descriptions: {} },
+        defaultValues: { roundId: defaultRoundId ?? "", categoryIds: pinnedCategoryIds, descriptions: {} },
         mode: "onChange",
     });
 
@@ -401,12 +453,27 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
             const parsed = CategoriesApiResponseSchema.safeParse(categoriesRes);
             const raw = parsed.success ? parsed.data.data ?? [] : Array.isArray(categoriesRes) ? categoriesRes : [];
             const mapped: SupplierCategory[] = (raw as z.infer<typeof CategoryApiItemSchema>[]).map((c) => ({
-                id: c.supplierCategoryID?.toString() ?? "",
-                name: c.categoryName ?? "Unnamed Category",
+                id: String(c.id ?? c.supplierCategoryID ?? ""),
+                name: c.name ?? c.categoryName ?? "Unnamed Category",
                 is_active: c.is_active ?? true,
+                documentRules: (c.requiredDocuments ?? c.required_documents ?? c.documentRules ?? c.document_rules ?? [])
+                    .map((rule) => ({
+                        id: rule.id,
+                        label: String(rule.label ?? rule.name ?? "").trim(),
+                        required: rule.required ?? rule.isRequired ?? false,
+                        description: rule.description,
+                        maxFileSizeMb: rule.maxFileSizeMb ?? rule.max_file_size_mb ?? rule.maxFileSize ?? rule.max_file_size ?? null,
+                    }))
+                    .filter((rule) => rule.label.length > 0),
             }));
             const active = mapped.filter((c) => c.is_active);
             setCategories(active);
+            const resolvedCategoryIds = hasPinnedCategories
+                ? active
+                    .filter((category) => pinnedCategoryIds.includes(String(category.id)))
+                    .map((category) => String(category.id))
+                : form.getValues("categoryIds").filter((categoryId) => active.some((category) => String(category.id) === String(categoryId)));
+            form.setValue("categoryIds", resolvedCategoryIds, { shouldValidate: true });
             setCategoriesLoadingState("success");
         } catch (error: unknown) {
             const errorMessage = (error as Error)?.message || "Failed to load supplier categories. Please try again.";
@@ -414,7 +481,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
             setCategoriesLoadingState("error");
             setCategories([]);
         }
-    }, [isAuthenticated, selectedRoundId]);
+    }, [form, hasPinnedCategories, isAuthenticated, pinnedCategoryIds, selectedRoundId]);
 
     useEffect(() => {
         if (open && isAuthenticated) fetchRounds();
@@ -504,19 +571,31 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
         if (defaultRoundId) form.setValue("roundId", defaultRoundId);
     }, [defaultRoundId, form]);
 
+    useEffect(() => {
+        form.setValue("categoryIds", pinnedCategoryIds, { shouldValidate: pinnedCategoryIds.length > 0 });
+    }, [form, pinnedCategoryIds]);
+
     // Fallback effective round id (must be declared before any usage below)
     const effectiveRoundId = useMemo(() => (
         (selectedRoundId && String(selectedRoundId)) || (defaultRoundId && String(defaultRoundId)) || ""
     ), [selectedRoundId, defaultRoundId]);
 
+    const visibleCategories = useMemo(
+        () => hasPinnedCategories
+            ? categories.filter((category) => pinnedCategoryIds.includes(String(category.id)))
+            : categories,
+        [categories, hasPinnedCategories, pinnedCategoryIds]
+    );
+
     const handleToggleCategory = useCallback(
         (categoryId: string) => {
+            if (hasPinnedCategories) return;
             const current = form.getValues("categoryIds");
             const exists = current.includes(categoryId);
             const next = exists ? current.filter((id) => id !== categoryId) : [...current, categoryId];
             form.setValue("categoryIds", next, { shouldValidate: true });
         },
-        [form]
+        [form, hasPinnedCategories]
     );
 
     // upload helper removed — immediate upload performed inline in file input handler
@@ -560,11 +639,40 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                 return;
             }
             const categoryIds = values.categoryIds.map((id) => parseInt(id, 10));
+            const staged = uploads.filter(u => (u.status === 'pending' || u.status === 'error') && categoryIds.includes(parseInt(u.categoryId, 10)));
+            const missingDocumentMeta = staged.filter((u) => !u.sectionId || !(u.fileType || '').trim());
+            if (missingDocumentMeta.length > 0) {
+                setFormLoadingState("error");
+                setFormMessage({ type: "error", message: "Add a document type and label for every staged category document before submitting your application." });
+                return;
+            }
+            const missingRequiredRules = values.categoryIds.flatMap((categoryId) => {
+                const category = categories.find((item) => String(item.id) === String(categoryId));
+                const requiredRules = (category?.documentRules ?? []).filter((rule) => rule.required);
+                if (requiredRules.length === 0) return [] as string[];
+
+                const uploadedLabels = new Set(
+                    uploads
+                        .filter((upload) => String(upload.categoryId) === String(categoryId))
+                        .map((upload) => String(upload.fileType ?? "").trim().toLowerCase())
+                        .filter(Boolean)
+                );
+
+                return requiredRules
+                    .filter((rule) => !uploadedLabels.has(rule.label.trim().toLowerCase()))
+                    .map((rule) => `${category?.name ?? "Category"}: ${rule.label}`)
+            });
+            if (missingRequiredRules.length > 0) {
+                setFormLoadingState("error");
+                setFormMessage({ type: "error", message: `Upload all mandatory documents before submitting: ${missingRequiredRules.join(", ")}.` });
+                return;
+            }
             try {
                 const resp = await submitApplicationSafe(roundId, categoryIds);
+                const respData = (resp.data ?? {}) as Record<string, unknown>;
+                const application = (respData.application ?? null) as Record<string, unknown> | null;
                 // After submit, upload any staged files for the selected categories
                 if (resp.status === 201) {
-                    const staged = uploads.filter(u => (u.status === 'pending' || u.status === 'error') && categoryIds.includes(parseInt(u.categoryId, 10)));
                     for (const u of staged) {
                         setUploads((list) => list.map((x) => x.id === u.id ? { ...x, status: 'uploading' } : x));
                         await uploadFile(u);
@@ -573,36 +681,44 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                 if (resp.status === 201) {
                     setFormMessage({ type: "success", message: "" });
                     setFormLoadingState("success");
-                    const application = resp.data?.application;
                     if (application) {
-                        onSuccess?.({ applicationId: application.ApplicationID, statusCode: application.Status as "O" | "CL" | "S", statusLabel: application.StatusLabel ?? "Submitted", roundId: values.roundId });
+                        const applicationId = String(application.ApplicationID ?? application.applicationId ?? "");
+                        const rawStatus = String(application.Status ?? application.status ?? "S") as "O" | "CL" | "S";
+                        const statusCode: "O" | "CL" | "S" = rawStatus === "O" || rawStatus === "CL" || rawStatus === "S" ? rawStatus : "S";
+                        const statusLabel = String(application.StatusLabel ?? application.statusLabel ?? "Submitted");
+                        onSuccess?.({ applicationId, statusCode, statusLabel, roundId: values.roundId });
                     } else {
                         onSuccess?.({ applicationId: "", statusCode: "S", statusLabel: "Submitted", roundId: values.roundId });
                     }
                 } else if (resp.status === 409) {
-                    const duplicates = resp.data?.duplicates || [];
-                    const names = duplicates.map((d: { name?: string }) => d.name || 'Unknown').join(', ');
+                    const duplicates = Array.isArray(respData.duplicates) ? (respData.duplicates as Array<Record<string, unknown>>) : [];
+                    const names = duplicates.map((d) => String(d.name ?? 'Unknown')).join(', ');
                     setFormMessage({ type: "warning", message: `⚠️ You have already applied for the category: ${names} in this round.` });
                     setFormLoadingState("warning");
                 } else if (resp.status === 401 || resp.status === 403 || resp.status === 410) {
-                    const msg = resp.data?.message || (resp.status === 410 ? 'This round has expired.' : 'You are not authorized to apply to this round.');
+                    const msg =
+                        (typeof respData.message === "string" && respData.message.trim())
+                            ? respData.message
+                            : (resp.status === 410 ? 'This round has expired.' : 'You are not authorized to apply to this round.');
                     setFormMessage({ type: "error", message: msg });
                     setFormLoadingState("error");
                 } else if (resp.status === 422) {
                     const firstErr = (() => {
-                        const errs = resp.data?.errors;
+                        const errs = respData.errors;
                         if (errs && typeof errs === 'object') {
+                            const errObj = errs as Record<string, unknown>;
                             const firstKey = Object.keys(errs)[0];
-                            if (firstKey) return Array.isArray(errs[firstKey]) ? errs[firstKey][0] : errs[firstKey];
+                            if (firstKey) return Array.isArray(errObj[firstKey]) ? errObj[firstKey][0] : errObj[firstKey];
                         }
                         return null;
                     })();
-                    setFormMessage({ type: "error", message: firstErr || "Validation error. Please check your input." });
+                    const validationMessage = typeof firstErr === 'string' ? firstErr : "Validation error. Please check your input.";
+                    setFormMessage({ type: "error", message: /document|required|upload/i.test(validationMessage) ? validationMessage : validationMessage });
                     setFormLoadingState("error");
                 } else if (resp.status >= 500) {
                     const upstreamMessage =
-                        (typeof resp.data?.message === "string" && resp.data.message.trim()) ||
-                        (typeof resp.data?.error === "string" && resp.data.error.trim()) ||
+                        (typeof respData.message === "string" && respData.message.trim()) ||
+                        (typeof respData.error === "string" && respData.error.trim()) ||
                         "";
                     setFormMessage({
                         type: "error",
@@ -610,7 +726,9 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                     });
                     setFormLoadingState("error");
                 } else {
-                    setFormMessage({ type: "error", message: resp.data?.message || `Unexpected error (${resp.status}).` });
+                    const defaultMessage = `Unexpected error (${resp.status}).`;
+                    const message = (typeof respData.message === "string" && respData.message.trim()) ? respData.message : defaultMessage;
+                    setFormMessage({ type: "error", message });
                     setFormLoadingState("error");
                 }
             } catch (err: unknown) {
@@ -618,17 +736,17 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                 setFormMessage({ type: "error", message: (err as Error)?.message || "Please check your connection and try again." });
             }
         },
-        [isAuthenticated, onSuccess, uploads, uploadFile, effectiveRoundId]
+        [isAuthenticated, onSuccess, uploads, uploadFile, effectiveRoundId, categories]
     );
 
     const handleClose = useCallback(() => {
         setFormMessage(null);
         setFormLoadingState("idle");
-        form.reset({ roundId: defaultRoundId ?? "", categoryIds: [] });
+        form.reset({ roundId: defaultRoundId ?? "", categoryIds: pinnedCategoryIds, descriptions: {} });
         onOpenChange?.(false);
-    }, [defaultRoundId, form, onOpenChange]);
+    }, [defaultRoundId, form, onOpenChange, pinnedCategoryIds]);
 
-    const trigger = useMemo(() => <SheetTrigger asChild>{children}</SheetTrigger>, [children]);
+    const trigger = useMemo(() => <DialogTrigger asChild>{children}</DialogTrigger>, [children]);
 
     const roundValidationState = form.formState.errors.roundId ? "invalid" : "valid";
     const currentRound = useMemo(() => rounds.find(r => String(r.id) === selectedRoundId) || (defaultRoundId ? rounds[0] : undefined), [rounds, selectedRoundId, defaultRoundId]);
@@ -656,13 +774,28 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
     const submitEnabled = useMemo(() => {
         const hasRound = Boolean(effectiveRoundId || form.getValues("roundId"));
         const hasCategories = Array.isArray(selectedCategoryIds) && selectedCategoryIds.length > 0;
+        const missingRuleDocuments = selectedCategoryIds.some((categoryId) => {
+            const category = categories.find((item) => String(item.id) === String(categoryId));
+            const requiredRules = (category?.documentRules ?? []).filter((rule) => rule.required);
+            if (requiredRules.length === 0) return false;
+
+            const uploadedLabels = new Set(
+                uploads
+                    .filter((upload) => String(upload.categoryId) === String(categoryId))
+                    .map((upload) => String(upload.fileType ?? "").trim().toLowerCase())
+                    .filter(Boolean)
+            );
+
+            return requiredRules.some((rule) => !uploadedLabels.has(rule.label.trim().toLowerCase()));
+        });
         return Boolean(
             hasRound &&
             hasCategories &&
+            !missingRuleDocuments &&
             formLoadingState !== "submitting" &&
             !currentRound?.hasApplied
         );
-    }, [effectiveRoundId, selectedCategoryIds, formLoadingState, currentRound, form]);
+    }, [effectiveRoundId, selectedCategoryIds, formLoadingState, currentRound, form, categories, uploads]);
 
     const renderFormState = () => {
         switch (formLoadingState) {
@@ -835,98 +968,139 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                     <div className="flex items-center justify-between">
                                         <Label htmlFor="categories" id="categories-label" className="text-base font-semibold flex items-center gap-2">
                                             <Users className="w-4 h-4" />
-                                            Select Categories ({selectedCategoryIds.length} selected)
+                                            {hasPinnedCategories ? "Selected category" : `Select Categories (${selectedCategoryIds.length} selected)`}
                                         </Label>
                                         {categoriesLoadingState === "loading" && <Spinner className="h-4 w-4" aria-label="Loading categories" />}
                                     </div>
                                     {categoriesLoadingState === "loading" && <LoadingSkeleton />}
                                     {categoriesLoadingState === "error" && <ErrorState error={categoryError} onRetry={fetchCategories} />}
-                                    {categoriesLoadingState === "success" && categories.length > 0 && (
+                                    {categoriesLoadingState === "success" && visibleCategories.length > 0 && (
                                         currentRound?.hasApplied ? (
                                             <WarningState message="You have already applied to this round. Categories are locked." />
                                         ) : (
                                             <div className="space-y-6">
-                                                <CategorySelector categories={categories} selectedIds={selectedCategoryIds} onToggle={handleToggleCategory} error={form.formState.errors.categoryIds?.message} />
+                                                <CategorySelector categories={visibleCategories} selectedIds={selectedCategoryIds} onToggle={handleToggleCategory} error={form.formState.errors.categoryIds?.message} />
                                                 {selectedCategoryIds.length > 0 && (
                                                     <div className="space-y-4">
                                                         <h4 className="text-sm font-semibold">Supporting Documents</h4>
                                                         {selectedCategoryIds.map((cid) => (
                                                             <div key={cid} className="rounded-2xl border border-slate-200 bg-white p-4 space-y-4">
-                                                                <div className="flex items-center justify-between">
-                                                                    <div className="flex flex-col gap-1">
-                                                                        <div className="text-sm font-medium text-slate-900">{categories.find(c => c.id === cid)?.name || 'Category'}</div>
-                                                                        <div className="text-xs text-slate-600">Optional notes and supporting documents</div>
-                                                                    </div>
-                                                                </div>
-                                                                <textarea
-                                                                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-100"
-                                                                    placeholder="Add a short note (optional)"
-                                                                    value={(descriptionsMap?.[cid] ?? '')}
-                                                                    onChange={(e) => {
-                                                                        const next = { ...(descriptionsMap || {}), [cid]: e.target.value };
-                                                                        form.setValue('descriptions', next, { shouldDirty: true, shouldValidate: false });
-                                                                    }}
-                                                                />
-                                                                <div className="grid gap-2">
-                                                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
-                                                                        <label className="text-xs text-slate-600">Upload file</label>
-                                                                        <input className="sm:col-span-2 h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-200" type="file" id={`fileinput-${cid}`} onChange={async (e) => {
-                                                                            const inputEl = e.currentTarget as HTMLInputElement | null;
-                                                                            const f = inputEl?.files?.[0]
-                                                                            if (!f) return
-                                                                            const sectionId = undefined; // will be set in per-file editor below
-                                                                            const fileType = undefined;
-                                                                            // Stage local upload entry (do not upload now)
-                                                                            const uuid = typeof window !== 'undefined' && typeof window.crypto?.randomUUID === 'function'
-                                                                                ? window.crypto.randomUUID()
-                                                                                : `u-${Date.now()}-${(counterRef.current += 1)}`;
-                                                                            const item: UploadItem = { id: uuid, file: f, categoryId: cid, sectionId: sectionId ?? null, fileType: fileType || undefined, status: 'pending' };
-                                                                            setUploads((u) => [...u, item]);
-                                                                            if (inputEl) inputEl.value = '';
-                                                                        }} />
-                                                                    </div>
-                                                                    {uploads.filter(u => u.categoryId === cid).length > 0 && (
-                                                                        <div className="space-y-2 text-xs">
-                                                                            {uploads.filter(u => u.categoryId === cid).map((u) => (
-                                                                                <div key={u.id} className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50/40 p-3">
-                                                                                    <div className="flex items-center justify-between">
-                                                                                        <span className="truncate font-medium">{u.file ? u.file.name : 'staged'}</span>
-                                                                                        <span className={u.status === 'done' ? 'text-emerald-700' : u.status === 'error' ? 'text-rose-700' : u.status === 'uploading' ? 'text-blue-700' : 'text-slate-500'}>
-                                                                                            {u.status}
-                                                                                        </span>
-                                                                                    </div>
-                                                                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
-                                                                                        <label className="text-[11px] text-slate-600">Document type</label>
-                                                                                        <select
-                                                                                            className="sm:col-span-2 h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-100"
-                                                                                            value={u.sectionId ?? ''}
-                                                                                            onChange={(ev) => {
-                                                                                                const val = ev.target.value ? Number(ev.target.value) : null;
-                                                                                                setUploads((list) => list.map((x) => x.id === u.id ? { ...x, sectionId: val } : x));
-                                                                                            }}
-                                                                                        >
-                                                                                            <option value="">Select section</option>
-                                                                                            {sectionOptions.length === 0 ? (
-                                                                                                <option value="" disabled>Loading sections</option>
-                                                                                            ) : (
-                                                                                                sectionOptions.map((s, si) => (
-                                                                                                    <option key={s.id || String(si)} value={s.id}>{s.name}{typeof s.weight === 'number' ? ` (${s.weight}%)` : ''}</option>
-                                                                                                ))
-                                                                                            )}
-                                                                                        </select>
-                                                                                        <label className="text-[11px] text-slate-600">File type</label>
-                                                                                        <input
-                                                                                            className="sm:col-span-2 h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-100"
-                                                                                            value={u.fileType || ''}
-                                                                                            onChange={(ev) => setUploads((list) => list.map((x) => x.id === u.id ? { ...x, fileType: ev.target.value || undefined } : x))}
-                                                                                            placeholder="e.g., Company Profile, License"
-                                                                                        />
+                                                                {(() => {
+                                                                    const category = visibleCategories.find((item) => String(item.id) === String(cid));
+                                                                    const documentRules = category?.documentRules ?? [];
+                                                                    const requiredRules = documentRules.filter((rule) => rule.required);
+                                                                    return (
+                                                                        <>
+                                                                            <div className="flex items-center justify-between">
+                                                                                <div className="flex flex-col gap-1">
+                                                                                    <div className="text-sm font-medium text-slate-900">{category?.name || 'Category'}</div>
+                                                                                    <div className="text-xs text-slate-600">{requiredRules.length > 0 ? 'Required document rules are active for this category.' : 'Optional notes and supporting documents'}</div>
+                                                                                </div>
+                                                                            </div>
+                                                                            {documentRules.length > 0 ? (
+                                                                                <div className="rounded-xl border border-slate-200 bg-slate-50/40 p-3">
+                                                                                    <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Document rules</div>
+                                                                                    <div className="mt-2 space-y-2">
+                                                                                        {documentRules.map((rule, index) => (
+                                                                                            <div key={`${String(rule.id ?? index)}-${rule.label}`} className="flex items-start justify-between gap-3 text-xs">
+                                                                                                <div>
+                                                                                                    <div className="font-medium text-slate-900">{rule.label}</div>
+                                                                                                    {rule.description ? <div className="text-slate-500">{rule.description}</div> : null}
+                                                                                                </div>
+                                                                                                <div className="flex shrink-0 items-center gap-2">
+                                                                                                    {rule.maxFileSizeMb ? <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-slate-600">Max {rule.maxFileSizeMb} MB</span> : null}
+                                                                                                    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${rule.required ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-slate-200 bg-white text-slate-600'}`}>{rule.required ? 'Required' : 'Optional'}</span>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        ))}
                                                                                     </div>
                                                                                 </div>
-                                                                            ))}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
+                                                                            ) : null}
+                                                                            <textarea
+                                                                                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-100"
+                                                                                placeholder="Add a short note (optional)"
+                                                                                value={(descriptionsMap?.[cid] ?? '')}
+                                                                                onChange={(e) => {
+                                                                                    const next = { ...(descriptionsMap || {}), [cid]: e.target.value };
+                                                                                    form.setValue('descriptions', next, { shouldDirty: true, shouldValidate: false });
+                                                                                }}
+                                                                            />
+                                                                            <div className="grid gap-2">
+                                                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
+                                                                                    <label className="text-xs text-slate-600">Upload file</label>
+                                                                                    <input className="sm:col-span-2 h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-200" type="file" id={`fileinput-${cid}`} onChange={async (e) => {
+                                                                                        const inputEl = e.currentTarget as HTMLInputElement | null;
+                                                                                        const f = inputEl?.files?.[0]
+                                                                                        if (!f) return
+                                                                                        const sectionId = undefined; // will be set in per-file editor below
+                                                                                        const fileType = undefined;
+                                                                                        // Stage local upload entry (do not upload now)
+                                                                                        const uuid = typeof window !== 'undefined' && typeof window.crypto?.randomUUID === 'function'
+                                                                                            ? window.crypto.randomUUID()
+                                                                                            : `u-${Date.now()}-${(counterRef.current += 1)}`;
+                                                                                        const item: UploadItem = { id: uuid, file: f, categoryId: cid, sectionId: sectionId ?? null, fileType: fileType || undefined, status: 'pending' };
+                                                                                        setUploads((u) => [...u, item]);
+                                                                                        if (inputEl) inputEl.value = '';
+                                                                                    }} />
+                                                                                </div>
+                                                                                {uploads.filter(u => u.categoryId === cid).length > 0 && (
+                                                                                    <div className="space-y-2 text-xs">
+                                                                                        {uploads.filter(u => u.categoryId === cid).map((u) => (
+                                                                                            <div key={u.id} className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50/40 p-3">
+                                                                                                <div className="flex items-center justify-between">
+                                                                                                    <span className="truncate font-medium">{u.file ? u.file.name : 'staged'}</span>
+                                                                                                    <span className={u.status === 'done' ? 'text-emerald-700' : u.status === 'error' ? 'text-rose-700' : u.status === 'uploading' ? 'text-blue-700' : 'text-slate-500'}>
+                                                                                                        {u.status}
+                                                                                                    </span>
+                                                                                                </div>
+                                                                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
+                                                                                                    <label className="text-[11px] text-slate-600">Document type</label>
+                                                                                                    <select
+                                                                                                        className="sm:col-span-2 h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-100"
+                                                                                                        value={u.sectionId ?? ''}
+                                                                                                        onChange={(ev) => {
+                                                                                                            const val = ev.target.value ? Number(ev.target.value) : null;
+                                                                                                            setUploads((list) => list.map((x) => x.id === u.id ? { ...x, sectionId: val } : x));
+                                                                                                        }}
+                                                                                                    >
+                                                                                                        <option value="">Select section</option>
+                                                                                                        {sectionOptions.length === 0 ? (
+                                                                                                            <option value="" disabled>Loading sections</option>
+                                                                                                        ) : (
+                                                                                                            sectionOptions.map((s, si) => (
+                                                                                                                <option key={s.id || String(si)} value={s.id}>{s.name}{typeof s.weight === 'number' ? ` (${s.weight}%)` : ''}</option>
+                                                                                                            ))
+                                                                                                        )}
+                                                                                                    </select>
+                                                                                                    <label className="text-[11px] text-slate-600">File type</label>
+                                                                                                    {documentRules.length > 0 ? (
+                                                                                                        <select
+                                                                                                            className="sm:col-span-2 h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-100"
+                                                                                                            value={u.fileType || ''}
+                                                                                                            onChange={(ev) => setUploads((list) => list.map((x) => x.id === u.id ? { ...x, fileType: ev.target.value || undefined } : x))}
+                                                                                                        >
+                                                                                                            <option value="">Select document label</option>
+                                                                                                            {documentRules.map((rule, index) => (
+                                                                                                                <option key={`${String(rule.id ?? index)}-${rule.label}`} value={rule.label}>{rule.label}{rule.required ? ' (required)' : ''}</option>
+                                                                                                            ))}
+                                                                                                        </select>
+                                                                                                    ) : (
+                                                                                                        <input
+                                                                                                            className="sm:col-span-2 h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-100"
+                                                                                                            value={u.fileType || ''}
+                                                                                                            onChange={(ev) => setUploads((list) => list.map((x) => x.id === u.id ? { ...x, fileType: ev.target.value || undefined } : x))}
+                                                                                                            placeholder="e.g., Company Profile, License"
+                                                                                                        />
+                                                                                                    )}
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        ))}
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        </>
+                                                                    )
+                                                                })()}
                                                             </div>
                                                         ))}
                                                     </div>
@@ -934,11 +1108,11 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                             </div>
                                         )
                                     )}
-                                    {categoriesLoadingState === "success" && categories.length === 0 && (
+                                    {categoriesLoadingState === "success" && visibleCategories.length === 0 && (
                                         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 py-8 text-center">
                                             <Info className="mb-3 h-12 w-12 text-slate-500" />
                                             <h3 className="mb-2 text-lg font-semibold text-slate-900">No Categories Found</h3>
-                                            <p className="mb-4 max-w-sm text-sm text-slate-600">This round has no associated categories for selection.</p>
+                                            <p className="mb-4 max-w-sm text-sm text-slate-600">{hasPinnedCategories ? "The selected application category is not available for this round." : "This round has no associated categories for selection."}</p>
                                         </div>
                                     )}
                                 </div>
@@ -972,13 +1146,15 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
     };
 
     return (
-        <Sheet open={open} onOpenChange={onOpenChange}>
+        <Dialog open={open} onOpenChange={onOpenChange}>
             {trigger}
-            <SheetContent className="w-full sm:max-w-2xl lg:max-w-3xl overflow-hidden border-l border-slate-200 bg-white p-0 shadow-none">
-                <SheetHeader className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 px-6 py-5 pr-12 backdrop-blur sm:px-8">
-                    <SheetTitle className="text-2xl font-bold tracking-tight text-slate-900">Prequalification application</SheetTitle>
-                    <SheetDescription className="text-slate-600">Apply to participate in procurement opportunities.</SheetDescription>
-                    <div className="mt-3 flex flex-wrap gap-2">
+            <DialogContent className="left-auto right-0 top-0 h-[100dvh] w-screen max-w-[1400px] translate-x-0 translate-y-0 gap-0 overflow-hidden rounded-none border-0 bg-white p-0 shadow-[-18px_0_48px_rgba(15,23,42,0.14)] sm:w-[96vw] sm:border-l sm:border-slate-200/80 md:w-[90vw] lg:w-[86vw] xl:w-[82vw] 2xl:w-[80vw]">
+                <DialogHeader className="sticky top-0 z-10 gap-3 border-b border-slate-200 bg-white/95 px-6 py-5 pr-14 backdrop-blur sm:px-8">
+                    <div className="space-y-1">
+                        <DialogTitle className="text-2xl font-bold tracking-tight text-slate-900">Prequalification application</DialogTitle>
+                        <DialogDescription className="text-slate-600">Apply to participate in procurement opportunities.</DialogDescription>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
                         <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700">
                             {selectedRoundId ? "Round selected" : "Select a round"}
                         </span>
@@ -986,10 +1162,10 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                             {selectedCategoryIds.length} categories selected
                         </span>
                     </div>
-                </SheetHeader>
+                </DialogHeader>
                 {renderFormState()}
-            </SheetContent>
-        </Sheet>
+            </DialogContent>
+        </Dialog>
     );
 }
 

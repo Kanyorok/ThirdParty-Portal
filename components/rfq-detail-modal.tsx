@@ -13,7 +13,6 @@ import {
     EllipsisVertical,
     FileText,
     ListChecks,
-    Loader2,
     MessageSquare,
     Paperclip,
     Save,
@@ -25,23 +24,28 @@ import {
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { resolveProcurementDocumentName } from "@/lib/procurement-document-name"
 import { parseSubmissionDeadline } from "@/lib/deadline"
 import {
     isRfqAwardedStatus,
     isRfqClosedStatus,
     isRfqSubmittedResponseStatus,
-    normalizeRfqStatusKey,
 } from "@/lib/rfq-status"
 import type { Currency } from "@/types/currencies"
 import { Button } from "@/components/common/button"
-import { Badge } from "@/components/common/badge"
 import { Input } from "@/components/common/input"
-import { Separator } from "@/components/common/separator"
+import { Spinner } from "@/components/common/spinner"
 import { Textarea } from "@/components/common/textarea"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/common/select"
 import {
     Dialog,
     DialogContent,
-    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from "@/components/common/dialog"
@@ -69,6 +73,15 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/common/dropdown-menu"
+import { useRfqPortalContext } from "@/hooks/procurement/use-rfq-portal-context"
+import {
+    buildSubmitResponseItems,
+    collectMissingUnitPriceLineIds,
+    formatSupplierOptionLabel,
+    getClarificationsLocked,
+    normalizeSupplierId,
+    parseSupplierId,
+} from "@/lib/rfq-response"
 import type {
     RfqInvitation,
     RfqClarification,
@@ -157,14 +170,7 @@ function toMoney(value: number, currency?: string) {
 }
 
 function getAttachmentName(a: AnyRecord, idx: number) {
-    return String(a?.name ?? a?.fileName ?? a?.title ?? a?.documentName ?? `Attachment ${idx + 1}`).trim() || `Attachment ${idx + 1}`
-}
-
-function getAttachmentDocumentId(a: AnyRecord) {
-    const raw = a?.documentId ?? a?.DocumentId ?? a?.dmsDocumentId ?? a?.fileId ?? null
-    if (raw == null) return null
-    const s = String(raw).trim()
-    return s || null
+    return resolveProcurementDocumentName(a, `Attachment ${idx + 1}`)
 }
 
 function getAttachmentUrl(a: AnyRecord) {
@@ -188,6 +194,10 @@ function getClarificationLineId(c: AnyRecord) {
     return s || null
 }
 
+function getCriteriaSectionKey(section: AnyRecord, index: number) {
+    return String(section?.id ?? section?.sectionId ?? section?.name ?? `section-${index}`)
+}
+
 function isClarificationPublic(c: AnyRecord) {
     const raw = c?.IsPublic ?? c?.isPublic
     if (typeof raw === "boolean") return raw
@@ -197,21 +207,6 @@ function isClarificationPublic(c: AnyRecord) {
         return v === "1" || v === "true"
     }
     return false
-}
-
-function extractClarificationsList(raw: any) {
-    const root = raw?.data ?? raw
-    if (Array.isArray(root)) return root as AnyRecord[]
-    if (Array.isArray(root?.data)) return root.data as AnyRecord[]
-    return [] as AnyRecord[]
-}
-
-function getDmsDocId(doc: AnyRecord, index: number) {
-    return doc?.id ?? doc?.Id ?? doc?.documentId ?? index
-}
-
-function getDmsDocName(doc: AnyRecord, index: number) {
-    return String(doc?.name ?? doc?.title ?? `Document ${index + 1}`).trim()
 }
 
 function isAlreadySubmittedErrorResponse(raw: unknown, upstreamStatus: number) {
@@ -224,12 +219,16 @@ function isAlreadySubmittedErrorResponse(raw: unknown, upstreamStatus: number) {
 }
 
 const tabTriggerClass =
-    "inline-flex items-center justify-center gap-1.5 rounded-[10px] px-3 py-2 text-[11px] font-semibold text-slate-600 transition data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:shadow-sm sm:text-xs"
+    "inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-[11px] font-semibold text-slate-500 transition data-[state=active]:border data-[state=active]:border-slate-200/80 data-[state=active]:bg-white data-[state=active]:text-slate-900 sm:text-xs"
 
 const sheetCardClass = "rounded-2xl border border-slate-200/80 bg-white p-4 shadow-none"
 const sheetSectionTitleClass =
-    "relative flex items-center gap-2 pl-3 text-sm font-semibold text-slate-900 before:absolute before:left-0 before:top-1 before:h-5 before:w-1 before:rounded-full before:bg-indigo-500/80 before:content-['']"
+    "flex items-center gap-2 text-sm font-semibold text-slate-900"
 const sheetPillClass = "inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold"
+const modalLoadingClass = "flex items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-sm text-slate-500"
+const modalEmptyStateClass = "rounded-2xl border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-500"
+const modalNoticeClass = "flex items-center gap-2 rounded-xl border border-indigo-100 bg-indigo-50/50 px-3 py-2 text-xs text-indigo-700"
+const modalInlineLoadingClass = "inline-flex items-center gap-2 text-slate-500"
 
 
 function AttachmentActionsMenu({ previewUrl, onVerify, onRemove, disabled, previewDisabled, verifyDisabled, removeDisabled }: {
@@ -277,31 +276,57 @@ interface RfqDetailModalProps {
 export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
     const [isOpen, setIsOpen] = useState(false)
     const [activeTab, setActiveTab] = useState("overview")
+    const [responseSnapshot, setResponseSnapshot] = useState(rfq.myResponse)
 
     const rfqId = String(rfq.rfqId).trim()
     const detail = rfq.rfq
-    const myResponse = rfq.myResponse
-    const lines = detail?.rfqLines ?? []
-    const sections = detail?.sections ?? []
-    const criteria = detail?.criteria ?? []
-    const rfqAttachments = detail?.documents ?? []
+    const {
+        permissions: documentPermissions,
+        selectedSupplierId,
+        selectedSupplierOption,
+        setSelectedSupplierId,
+        supplierOptions,
+    } = useRfqPortalContext({
+        rfqId,
+        initialInvitation: rfq,
+        preferredSupplierId: rfq.supplierId,
+        enabled: isOpen,
+    })
+    const myResponse = useMemo(() => {
+        if (!selectedSupplierOption) return responseSnapshot
+        if (normalizeSupplierId(responseSnapshot?.supplierId) === selectedSupplierOption.supplierId) {
+            return responseSnapshot
+        }
+        return selectedSupplierOption.myResponse ?? null
+    }, [responseSnapshot, selectedSupplierOption])
+    const lines = useMemo(() => Array.isArray(detail?.rfqLines) ? detail.rfqLines : [], [detail?.rfqLines])
+    const sections = useMemo(() => Array.isArray(detail?.sections) ? detail.sections : [], [detail?.sections])
+    const criteria = useMemo(() => Array.isArray(detail?.criteria) ? detail.criteria : [], [detail?.criteria])
+    const rfqAttachments = useMemo(() => Array.isArray(detail?.documents) ? detail.documents : [], [detail?.documents])
 
     const deadline = useMemo(() => deadlineMeta(rfq.submissionDeadline), [rfq.submissionDeadline])
     const parsedDeadline = rfq.submissionDeadline ? parseSubmissionDeadline(rfq.submissionDeadline).date : null
 
     const rfqStatusValue = detail?.status ?? rfq.status ?? ""
     const responseStatus = myResponse?.status ?? ""
-    const invitationStatus = rfq.invitationStatus ?? ""
+    const invitationStatus = selectedSupplierOption?.invitationStatus ?? rfq.invitationStatus ?? ""
 
     const isAwarded = [rfqStatusValue, invitationStatus, responseStatus].some((v) => isRfqAwardedStatus(v))
     const isSubmitted = isRfqSubmittedResponseStatus(responseStatus)
     const isClosed = isRfqClosedStatus(rfqStatusValue) || deadline.isClosed
     const isLocked = isAwarded || isSubmitted || isClosed
+    const clarificationsLocked = getClarificationsLocked({
+        rfqStatus: rfqStatusValue,
+        invitationStatus,
+    })
 
     const lockMessage = isAwarded
         ? "This RFQ has already been awarded."
         : isSubmitted ? "Your quotation has already been submitted."
             : "This RFQ is closed."
+    const clarificationsLockMessage = isAwarded
+        ? "This RFQ has already been awarded and clarifications are closed."
+        : "This RFQ is closed and no more clarifications can be sent."
 
     const rfqIdValue = useMemo(() => {
         const raw = String(rfq.rfqId).trim()
@@ -310,10 +335,8 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
     }, [rfq.rfqId])
 
     const supplierIdValue = useMemo(() => {
-        const raw = rfq.supplierId
-        const n = Number(raw)
-        return Number.isFinite(n) ? n : null
-    }, [rfq.supplierId])
+        return parseSupplierId(selectedSupplierId ?? rfq.supplierId)
+    }, [rfq.supplierId, selectedSupplierId])
 
     const [clarifications, setClarifications] = useState<RfqClarification[]>([])
     const [clarLoading, setClarLoading] = useState(false)
@@ -336,13 +359,22 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
 
     useEffect(() => {
         if (!isOpen) return
+        setResponseSnapshot(rfq.myResponse)
         refreshClarifications()
-    }, [isOpen, refreshClarifications])
+    }, [isOpen, refreshClarifications, rfq.myResponse])
+
+    useEffect(() => {
+        setClientLocked(false)
+        setMissingLineIds([])
+    }, [selectedSupplierId])
 
     const submitClarification = async () => {
         const message = clarDraft.trim()
         if (!message) { toast.error("Enter a clarification question"); return }
-        if (isLocked) { toast.error("Clarifications are closed"); return }
+        if (clarificationsLocked) {
+            toast.error("Clarifications are closed", { description: clarificationsLockMessage })
+            return
+        }
         if (supplierIdValue == null) { toast.error("Supplier context is missing for this RFQ"); return }
         const parsedClarLineId = Number(clarRfqLineId)
         const rfqLineId = clarRfqLineId && Number.isFinite(parsedClarLineId) ? parsedClarLineId : undefined
@@ -396,10 +428,11 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
     const uploadInputRef = useRef<HTMLInputElement | null>(null)
     const tmpUploadSeq = useRef(0)
 
-    const canUploadDocs = !isLocked && !clientLocked && myResponse?.canUploadDocuments === true
-    const canDeleteDocs = !isLocked && !clientLocked && myResponse?.canDeleteDocuments === true
+    const canDownloadDocs = documentPermissions.view && documentPermissions.download
+    const canUploadDocs = !isLocked && !clientLocked && documentPermissions.upload && myResponse?.canUploadDocuments === true
+    const canDeleteDocs = !isLocked && !clientLocked && documentPermissions.delete && myResponse?.canDeleteDocuments === true
 
-    const draftKey = `rfq-quote:${rfqId}`
+    const draftKey = `rfq-quote:${rfqId}:${selectedSupplierId || normalizeSupplierId(rfq.supplierId) || "default"}`
     const saveTimer = useRef<number | null>(null)
 
     useEffect(() => {
@@ -422,7 +455,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
         }
         run()
         return () => { cancelled = true }
-    }, [isOpen])
+    }, [isOpen, currencyTouched, quoteCurrency])
 
     useEffect(() => {
         if (!isOpen || lines.length === 0) return
@@ -445,7 +478,9 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
         const responseDocs = myResponse?.documents
         if (Array.isArray(responseDocs) && responseDocs.length > 0) {
             setQuoteDocuments(responseDocs.map((doc: any) => ({
-                id: doc.id, name: doc.name ?? "Document", previewUrl: doc.downloadUrl ?? null,
+                id: doc.id,
+                name: resolveProcurementDocumentName(doc),
+                previewUrl: doc.downloadUrl ?? null,
                 repository: null, version: null, source: "dms" as const,
             })))
         }
@@ -489,17 +524,17 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
 
     const lineLabelById = useMemo(() => {
         const map = new Map<string, string>()
-            ; (lines as AnyRecord[]).forEach((line, index) => {
-                const id = getLineId(line, index)
-                const lineNo = String(line?.rfqLineNo ?? line?.RFQLineNo ?? "").trim()
-                const label = getLineLabel(line)
-                map.set(id, lineNo ? `${lineNo} - ${label}` : label)
-            })
+        lines.forEach((line, index) => {
+            const id = getLineId(line, index)
+            const lineNo = String(line?.rfqLineNo ?? "").trim()
+            const label = getLineLabel(line)
+            map.set(id, lineNo ? `${lineNo} - ${label}` : label)
+        })
         return map
     }, [lines])
 
     const enrichedLines = useMemo(() => {
-        return (lines as AnyRecord[]).map((line, index) => {
+        return lines.map((line, index) => {
             const id = getLineId(line, index)
             const baseQty = getLineQty(line)
             const existing = quoteById.get(id)
@@ -546,13 +581,87 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
 
     const saveDraft = async () => {
         if (effectiveLocked) return
+        if (supplierIdValue == null) { toast.error("Supplier context is missing for this RFQ"); return }
+
+        const hasLineInput = enrichedLines.some((l) => parsePositiveNumber(l.unitPrice) != null)
+        const hasContent = hasLineInput || Boolean(quoteCurrency.trim()) || Boolean(String(durationDays || "").trim())
+        if (!hasContent) {
+            toast.error("Nothing to save yet")
+            return
+        }
+
+        if (enrichedLines.length === 0) {
+            toast.error("No RFQ line items available.")
+            return
+        }
+
+        const errors: Record<string, string[]> = {}
+        if (!quoteCurrency.trim()) errors.currency = ["Currency is required"]
+        const dur = Number(durationDays)
+        if (!Number.isFinite(dur) || dur <= 0) errors.durationDays = ["Duration must be positive"]
+        if (Object.keys(errors).length > 0) {
+            setSubmitFieldErrors(errors)
+            toast.error("Missing required fields", { description: Object.values(errors).flat().join("; ") })
+            return
+        }
+
         try {
+            setSubmitting("draft")
+            const items = buildSubmitResponseItems(enrichedLines)
+
+            const res = await fetch("/api/procurement/rfq-responses", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Accept: "application/json" },
+                body: JSON.stringify({
+                    rfqId: typeof rfqIdValue === "number" ? rfqIdValue : Number(rfqIdValue),
+                    supplierId: supplierIdValue,
+                    currency: quoteCurrency.trim().toUpperCase(),
+                    durationDays: dur,
+                    isDraft: true,
+                    items,
+                }),
+            })
+
+            const json = await res.json().catch(() => ({}))
+            if (!res.ok) {
+                if (json?.errors && typeof json.errors === "object") {
+                    setSubmitFieldErrors(json.errors)
+                    const errorList = Object.entries(json.errors)
+                        .map(([field, msgs]) => `${field}: ${(Array.isArray(msgs) ? msgs.join(", ") : msgs)}`)
+                        .join("; ")
+                    toast.error(json?.message || "Validation failed", { description: errorList })
+                    return
+                }
+                toast.error(json?.message || json?.error || `Failed to save draft (HTTP ${res.status})`)
+                return
+            }
+
+            setResponseSnapshot((prev) => ({
+                ...(prev ?? {}),
+                supplierId: String(supplierIdValue),
+                currency: quoteCurrency.trim().toUpperCase(),
+                durationDays: dur,
+                status: "DRAFT",
+                canUploadDocuments: true,
+                canDeleteDocuments: true,
+                documents: prev?.documents ?? [],
+                items: prev?.items ?? [],
+                rfqId: String(rfqIdValue),
+                id: String(prev?.id ?? json?.data?.rfqResponseId ?? "draft"),
+                rfqResponseNumber: prev?.rfqResponseNumber ?? null,
+                totalPayable: totals.grandTotal,
+                submittedOn: new Date().toISOString(),
+            }))
+
             if (typeof window !== "undefined") {
                 window.localStorage.setItem(draftKey, JSON.stringify({ version: 2, savedAt: Date.now(), lines: quoteLines, currency: quoteCurrency, durationDays }))
             }
-            toast.success("Draft saved.")
+            setMissingLineIds([])
+            toast.success("Draft saved.", { description: "The RFQ response draft is now stored in the portal." })
         } catch (e: any) {
             toast.error("Unable to save draft.", { description: e?.message })
+        } finally {
+            setSubmitting(null)
         }
     }
 
@@ -571,10 +680,10 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
             return
         }
 
-        const missing = enrichedLines.filter((l) => parsePositiveNumber(l.quantity) == null || parsePositiveNumber(l.unitPrice) == null).map((l) => l.id)
+        const missing = collectMissingUnitPriceLineIds(enrichedLines)
         setMissingLineIds(missing)
         if (missing.length > 0) {
-            toast.error("Fill quantity and unit price for all line items")
+            toast.error("Enter a unit price for all line items")
             return
         }
         if (docsUploading) {
@@ -584,13 +693,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
 
         setSubmitting("submitted")
         try {
-            const items = enrichedLines.map((l) => {
-                const parsedLineId = Number(l.raw?.id ?? l.id)
-                const rfqLineId = Number.isFinite(parsedLineId) ? parsedLineId : l.id
-                const qty = parsePositiveNumber(l.quantity) ?? 0
-                const quotedPrice = parsePositiveNumber(l.unitPrice) ?? 0
-                return { rfqLineId, quotedPrice, totalPayable: qty * quotedPrice }
-            })
+            const items = buildSubmitResponseItems(enrichedLines)
 
             const body = {
                 rfqId: typeof rfqIdValue === "number" ? rfqIdValue : Number(rfqIdValue),
@@ -636,6 +739,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
     }
 
     const uploadFiles = async (files: FileList | null) => {
+        if (!documentPermissions.upload) { toast.error("Document upload is disabled for your account."); return }
         if (!files || files.length === 0 || effectiveLocked || !canUploadDocs) return
         const list = Array.from(files).slice(0, 5)
         for (const file of list) {
@@ -656,6 +760,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
     }
 
     const removeDocument = async (id: string | number) => {
+        if (!documentPermissions.delete) { toast.error("Document delete is disabled for your account."); return }
         if (!String(id).startsWith("tmp:") && !canDeleteDocs) { toast.error("Documents cannot be deleted after submission."); return }
         if (!String(id).startsWith("tmp:")) {
             try {
@@ -735,13 +840,13 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                 : <span onClick={() => setIsOpen(true)} className="cursor-pointer">{trigger}</span>
             }
             <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-                <DialogContent className="left-auto right-0 top-0 flex h-[100dvh] w-screen max-w-[1400px] translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 bg-white p-0 shadow-[-18px_0_48px_rgba(15,23,42,0.14)] sm:w-[96vw] sm:border-l sm:border-slate-200/80 md:w-[90vw] lg:w-[86vw] xl:w-[82vw] 2xl:w-[80vw]">
-                    <DialogHeader className="relative flex-shrink-0 border-b border-slate-200/70 bg-white px-6 py-4 lg:px-8 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-indigo-500/80 before:content-['']">
+                <DialogContent className="left-auto right-0 top-0 flex h-[100dvh] w-screen max-w-[1400px] translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 bg-white p-0 shadow-none sm:w-[96vw] sm:border-l sm:border-slate-200/80 md:w-[90vw] lg:w-[86vw] xl:w-[82vw] 2xl:w-[80vw]">
+                    <DialogHeader className="flex-shrink-0 border-b border-slate-200/70 bg-white px-6 py-4 lg:px-8">
                         <DialogTitle className="flex flex-col gap-3">
                             <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0 flex-1">
-                                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
-                                        RFQ application
+                                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                                        RFQ
                                     </p>
                                     <h2 className="truncate text-xl font-semibold text-slate-900 sm:text-2xl">
                                         {rfq.comments || detail?.comments || "Request for Quotation"}
@@ -754,37 +859,47 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                                                 <span>Deadline {format(parsedDeadline, "dd MMM yyyy")}</span>
                                             </>
                                         )}
-                                        {detail?.requisition?.description && (
-                                            <>
-                                                <span className="h-1 w-1 rounded-full bg-slate-300" />
-                                                <span className="truncate">{detail.requisition.description}</span>
-                                            </>
-                                        )}
                                     </div>
                                 </div>
                                 <div className="flex shrink-0 flex-wrap items-center gap-2">
-                                    <span className={cn(sheetPillClass, "border-indigo-200 bg-indigo-50 text-indigo-700")}>
+                                    <span className={cn(sheetPillClass, "border-slate-200 bg-slate-50 text-slate-700")}>
                                         {normalizeStatus(rfqStatusValue)}
                                     </span>
                                     {responseStatus ? (
                                         <span className={cn(sheetPillClass, "border-emerald-200 bg-emerald-50 text-emerald-700")}>
-                                            Response: {normalizeStatus(responseStatus)}
+                                            {normalizeStatus(responseStatus)}
                                         </span>
                                     ) : null}
-                                    <span className={cn(sheetPillClass, "border-slate-200 bg-slate-50 text-slate-600")}>
-                                        {lines.length} line item{lines.length !== 1 ? "s" : ""}
-                                    </span>
                                     <span className={cn(sheetPillClass, deadline.isClosed ? "border-rose-200 bg-rose-50 text-rose-700" : "border-amber-200 bg-amber-50 text-amber-700")}>
                                         <Timer className="mr-1.5 h-3 w-3" />
                                         {deadline.label}
                                     </span>
                                 </div>
+                                {supplierOptions.length > 1 ? (
+                                    <div className="mt-3 max-w-xs">
+                                        <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                                            Supplier record
+                                        </div>
+                                        <Select value={selectedSupplierId || ""} onValueChange={setSelectedSupplierId}>
+                                            <SelectTrigger aria-label="Supplier record" className="h-9 rounded-xl border-slate-200 bg-white text-sm">
+                                                <SelectValue placeholder="Select supplier record" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {supplierOptions.map((option) => (
+                                                    <SelectItem key={option.supplierId} value={option.supplierId}>
+                                                        {formatSupplierOptionLabel(option)}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                ) : null}
                             </div>
                         </DialogTitle>
                     </DialogHeader>
 
-                    <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-1 flex-col overflow-hidden bg-slate-50/40">
-                        <div className="mx-6 mt-2 lg:mx-8">
+                    <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-1 flex-col overflow-hidden bg-white">
+                        <div className="mx-6 mt-3 lg:mx-8">
                             <TabsList className="grid h-auto w-full grid-cols-4 gap-0.5 rounded-xl border border-slate-200/80 bg-slate-100 p-0.5 text-[11px] sm:text-xs">
                                 <TabsTrigger value="overview" className={tabTriggerClass}>
                                     Overview
@@ -793,7 +908,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                                     <ListChecks className="h-3.5 w-3.5" />
                                     Pricing
                                     {totals.filledCount > 0 && (
-                                        <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-indigo-200/70 bg-indigo-50/80 px-1 text-[10px] tabular-nums text-indigo-700">
+                                        <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-1 text-[10px] tabular-nums text-slate-700">
                                             {totals.filledCount}/{totals.totalLines}
                                         </span>
                                     )}
@@ -801,14 +916,14 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                                 <TabsTrigger value="documents" className={tabTriggerClass}>
                                     <Paperclip className="h-3.5 w-3.5" />
                                     Documents
-                                    <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-indigo-200/70 bg-indigo-50/80 px-1 text-[10px] tabular-nums text-indigo-700">
+                                    <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-1 text-[10px] tabular-nums text-slate-700">
                                         {quoteDocuments.length + rfqAttachments.length}
                                     </span>
                                 </TabsTrigger>
                                 <TabsTrigger value="clarifications" className={tabTriggerClass}>
                                     <MessageSquare className="h-3.5 w-3.5" />
                                     Q&A
-                                    <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-indigo-200/70 bg-indigo-50/80 px-1 text-[10px] tabular-nums text-indigo-700">
+                                    <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-1 text-[10px] tabular-nums text-slate-700">
                                         {clarifications.length}
                                     </span>
                                 </TabsTrigger>
@@ -824,6 +939,13 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                                     </div>
                                 )}
 
+                                {!isLocked && (
+                                    <div className={modalNoticeClass}>
+                                        <Spinner className="h-3.5 w-3.5" />
+                                        Review the scope, confirm pricing, and attach documents only if needed.
+                                    </div>
+                                )}
+
                                 <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.15fr_0.85fr]">
                                     <div className="space-y-4">
                                         <div className={sheetCardClass}>
@@ -832,7 +954,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                                                 RFQ summary
                                             </div>
                                             <p className="mt-2 text-sm leading-relaxed text-slate-700">
-                                                {detail?.requisition?.description || rfq.comments || detail?.comments || "Review the RFQ scope, complete your pricing, and attach any supporting response documents before submission."}
+                                                {detail?.requisition?.description || rfq.comments || detail?.comments || "Review the scope and complete pricing before submission."}
                                             </p>
                                         </div>
 
@@ -846,16 +968,18 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                                                     <span className="text-xs font-medium text-slate-500">{lines.length} item{lines.length !== 1 ? "s" : ""}</span>
                                                 </div>
                                                 <div className="mt-3 space-y-2">
-                                                    {(lines as AnyRecord[]).slice(0, 10).map((line, idx) => (
-                                                        <div key={getLineId(line, idx)} className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+                                                    {lines.slice(0, 6).map((line, idx) => (
+                                                        <div key={getLineId(line, idx)} className="rounded-xl border border-slate-200/80 bg-white p-3">
                                                             <div className="truncate text-[13px] font-medium text-slate-900">{getLineLabel(line)}</div>
-                                                            <div className="mt-1 text-[11px] text-slate-500">
-                                                                {line.rfqLineNo ? `${line.rfqLineNo} · ` : ""}Qty: {getLineQty(line) || "—"} · UoM: {getLineUom(line) || "—"}
+                                                            <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
+                                                                {line.rfqLineNo ? <span>{line.rfqLineNo}</span> : null}
+                                                                <span>Qty {getLineQty(line) || "—"}</span>
+                                                                {getLineUom(line) ? <span>{getLineUom(line)}</span> : null}
                                                             </div>
                                                         </div>
                                                     ))}
-                                                    {lines.length > 10 ? (
-                                                        <div className="text-xs text-slate-500">+{lines.length - 10} more items</div>
+                                                    {lines.length > 6 ? (
+                                                        <div className="text-xs text-slate-500">+{lines.length - 6} more items</div>
                                                     ) : null}
                                                 </div>
                                             </div>
@@ -868,24 +992,27 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                                                     Evaluation criteria
                                                 </div>
                                                 <div className="mt-3 space-y-2">
-                                                    {sections.map((sec) => {
-                                                        const sectionCriteria = criteria.filter((c) => c.sectionId === sec.id)
+                                                    {sections.map((sec, secIndex) => {
+                                                        const sectionKey = getCriteriaSectionKey(sec as AnyRecord, secIndex)
+                                                        const sectionId = (sec as AnyRecord)?.id ?? (sec as AnyRecord)?.sectionId ?? null
+                                                        const sectionCriteria = criteria.filter((c) => {
+                                                            const criteriaSectionId = (c as AnyRecord)?.sectionId ?? (c as AnyRecord)?.SectionId ?? null
+                                                            if (sectionId != null && criteriaSectionId != null) {
+                                                                return String(criteriaSectionId) === String(sectionId)
+                                                            }
+                                                            return String((c as AnyRecord)?.sectionName ?? "").trim() === String((sec as AnyRecord)?.name ?? "").trim()
+                                                        })
                                                         return (
-                                                            <div key={sec.id} className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+                                                            <div key={sectionKey} className="rounded-xl border border-slate-200/80 bg-white p-3">
                                                                 <div className="flex items-center justify-between gap-3 text-sm">
                                                                     <span className="font-medium text-slate-900">{sec.name}</span>
                                                                     <span className="text-xs font-semibold text-indigo-600">Weight: {sec.weight}%</span>
                                                                 </div>
-                                                                {sectionCriteria.length > 0 ? (
-                                                                    <div className="mt-2 space-y-1 border-l-2 border-slate-200 pl-3">
-                                                                        {sectionCriteria.map((c) => (
-                                                                            <div key={c.id} className="flex items-center justify-between gap-3 text-[11px] text-slate-500">
-                                                                                <span>{c.name}</span>
-                                                                                <span>Max: {c.maxScore}</span>
-                                                                            </div>
-                                                                        ))}
-                                                                    </div>
-                                                                ) : null}
+                                                                <div className="mt-1 text-[11px] text-slate-500">
+                                                                    {sectionCriteria.length > 0
+                                                                        ? `${sectionCriteria.length} criterion${sectionCriteria.length !== 1 ? "a" : ""}`
+                                                                        : "Criteria configured in this section"}
+                                                                </div>
                                                             </div>
                                                         )
                                                     })}
@@ -917,6 +1044,18 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                                                     <p className="text-xs font-medium text-slate-500">Documents</p>
                                                     <p className="text-sm text-slate-900">{rfqAttachments.length} reference file{rfqAttachments.length !== 1 ? "s" : ""}</p>
                                                 </div>
+                                                {myResponse ? (
+                                                    <>
+                                                        <div>
+                                                            <p className="text-xs font-medium text-slate-500">Response ref</p>
+                                                            <p className="text-sm text-slate-900">{myResponse.rfqResponseNumber || "—"}</p>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-xs font-medium text-slate-500">Quoted total</p>
+                                                            <p className="text-sm text-slate-900">{myResponse.currency} {myResponse.totalPayable?.toLocaleString() ?? "—"}</p>
+                                                        </div>
+                                                    </>
+                                                ) : null}
                                             </div>
                                         </div>
 
@@ -949,32 +1088,6 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                                             </div>
                                         </div>
 
-                                        {myResponse ? (
-                                            <div className={sheetCardClass}>
-                                                <div className={sheetSectionTitleClass}>
-                                                    <CheckCircle className="h-4 w-4 text-indigo-600" />
-                                                    My response
-                                                </div>
-                                                <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-                                                    <div>
-                                                        <p className="text-xs font-medium text-slate-500">Reference</p>
-                                                        <p className="font-semibold text-slate-900">{myResponse.rfqResponseNumber || "—"}</p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-xs font-medium text-slate-500">Status</p>
-                                                        <p className="font-semibold text-slate-900">{normalizeStatus(myResponse.status)}</p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-xs font-medium text-slate-500">Duration</p>
-                                                        <p className="text-slate-900">{myResponse.durationDays} days</p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-xs font-medium text-slate-500">Total</p>
-                                                        <p className="text-slate-900">{myResponse.currency} {myResponse.totalPayable?.toLocaleString() ?? "—"}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ) : null}
                                     </div>
                                 </div>
                             </div>
@@ -995,7 +1108,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                                             Price schedule
                                         </div>
                                         <p className="mt-2 text-sm text-slate-600">
-                                            Complete each line item with a quantity and unit price. The total updates automatically.
+                                            Enter a unit price for each line item. RFQ quantities are fixed and the total updates automatically.
                                         </p>
 
                                         <div className="mt-4 hidden overflow-x-auto md:block">
@@ -1011,7 +1124,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                                                 </TableHeader>
                                                 <TableBody>
                                                     {enrichedLines.map((l) => {
-                                                        const qty = parsePositiveNumber(l.quantity)
+                                                        const qty = getLineQty(l.raw)
                                                         const price = parsePositiveNumber(l.unitPrice)
                                                         const lineTotal = qty != null && price != null ? qty * price : null
                                                         const isMissing = missingSet.has(l.id)
@@ -1022,9 +1135,9 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                                                                     {l.uom && <div className="text-[10px] text-slate-500">UoM: {l.uom}</div>}
                                                                 </TableCell>
                                                                 <TableCell>
-                                                                    <Input value={l.quantity} disabled={effectiveLocked} inputMode="decimal"
-                                                                        onChange={(e) => setLine(l.id, { quantity: e.target.value })}
-                                                                        placeholder="0" className={cn("h-10 rounded-xl border-slate-200 text-xs", isMissing && "border-destructive")} />
+                                                                    <div className="inline-flex h-10 items-center text-xs font-medium tabular-nums text-slate-900">
+                                                                        {l.quantity || "—"}
+                                                                    </div>
                                                                 </TableCell>
                                                                 <TableCell>
                                                                     <span className="text-xs tabular-nums">{(quoteCurrency || currency || "—").toUpperCase()}</span>
@@ -1046,12 +1159,12 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
 
                                         <div className="mt-4 space-y-2.5 md:hidden">
                                             {enrichedLines.map((l, idx) => {
-                                                const qty = parsePositiveNumber(l.quantity)
+                                                const qty = getLineQty(l.raw)
                                                 const price = parsePositiveNumber(l.unitPrice)
                                                 const lineTotal = qty != null && price != null ? qty * price : null
                                                 const isMissing = missingSet.has(l.id)
                                                 return (
-                                                    <div key={l.id} className={cn("space-y-2 rounded-xl border border-slate-200 bg-slate-50/70 p-3", isMissing && "border-destructive/50")}>
+                                                    <div key={l.id} className={cn("space-y-2 rounded-xl border border-slate-200 bg-white p-3", isMissing && "border-destructive/50")}>
                                                         <div className="flex items-start justify-between gap-3">
                                                             <div>
                                                                 <div className="text-[13px] font-semibold text-slate-900">{l.label}</div>
@@ -1062,9 +1175,9 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                                                         <div className="grid grid-cols-2 gap-2">
                                                             <div className="space-y-1">
                                                                 <div className="text-[10px] font-medium text-slate-500">Quantity</div>
-                                                                <Input value={l.quantity} disabled={effectiveLocked} inputMode="decimal"
-                                                                    onChange={(e) => setLine(l.id, { quantity: e.target.value })}
-                                                                    placeholder="0" className={cn("h-10 rounded-xl border-slate-200 text-sm", isMissing && "border-destructive")} />
+                                                                <div className="inline-flex h-10 items-center rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-medium tabular-nums text-slate-900">
+                                                                    {l.quantity || "—"}
+                                                                </div>
                                                             </div>
                                                             <div className="space-y-1">
                                                                 <div className="text-[10px] font-medium text-slate-500">Unit price ({(quoteCurrency || currency || "—").toUpperCase()})</div>
@@ -1105,23 +1218,39 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                                                                         <span className="font-semibold tracking-widest">{quoteCurrency.toUpperCase()}</span>
                                                                         {selectedCurrency?.name && <span className="truncate text-slate-500">{selectedCurrency.name}</span>}
                                                                     </span>
-                                                                ) : <span className="text-slate-500">{currenciesLoading ? "Loading…" : "Select currency"}</span>}
+                                                                ) : currenciesLoading ? (
+                                                                    <span className={modalInlineLoadingClass}>
+                                                                        <Spinner className="h-3.5 w-3.5" />
+                                                                        Loading currencies
+                                                                    </span>
+                                                                ) : <span className="text-slate-500">Select currency</span>}
                                                             </span>
                                                             <ChevronsUpDown className="h-3.5 w-3.5 opacity-60" />
                                                         </Button>
                                                     </PopoverTrigger>
                                                     <PopoverContent className="w-[300px] border-slate-200 bg-white p-0 shadow-none" align="start">
                                                         <Command>
-                                                            <CommandInput placeholder="Search currency…" />
+                                                            <CommandInput placeholder={currenciesLoading ? "Loading currencies…" : "Search currency…"} />
                                                             <CommandList>
-                                                                <CommandEmpty>No currencies found.</CommandEmpty>
-                                                                {currencies.map((c) => (
-                                                                    <CommandItem key={`${c.id}:${c.code}`} value={`${c.code} ${c.name} ${c.symbol ?? ""}`}
-                                                                        onSelect={() => { setCurrencyTouched(true); setQuoteCurrency(String(c.code || "").toUpperCase()); setCurrencyOpen(false); setSubmitFieldErrors((p) => { const { currency: _c, ...r } = p; return r }) }}>
-                                                                        <Check className={cn("h-3.5 w-3.5", quoteCurrency.toLowerCase() === (c.code || "").toLowerCase() ? "opacity-100" : "opacity-0")} />
-                                                                        <span className="truncate">{c.code}{c.symbol ? ` (${c.symbol})` : ""} - {c.name}</span>
-                                                                    </CommandItem>
-                                                                ))}
+                                                                {currenciesLoading ? (
+                                                                    <div className="p-3">
+                                                                        <div className={cn(modalLoadingClass, "rounded-xl p-4 text-xs")}>
+                                                                            <Spinner className="h-4 w-4" />
+                                                                            Loading currencies
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    <>
+                                                                        <CommandEmpty>No currencies found.</CommandEmpty>
+                                                                        {currencies.map((c) => (
+                                                                            <CommandItem key={`${c.id}:${c.code}`} value={`${c.code} ${c.name} ${c.symbol ?? ""}`}
+                                                                                onSelect={() => { setCurrencyTouched(true); setQuoteCurrency(String(c.code || "").toUpperCase()); setCurrencyOpen(false); setSubmitFieldErrors((p) => { const { currency: _c, ...r } = p; return r }) }}>
+                                                                                <Check className={cn("h-3.5 w-3.5", quoteCurrency.toLowerCase() === (c.code || "").toLowerCase() ? "opacity-100" : "opacity-0")} />
+                                                                                <span className="truncate">{c.code}{c.symbol ? ` (${c.symbol})` : ""} - {c.name}</span>
+                                                                            </CommandItem>
+                                                                        ))}
+                                                                    </>
+                                                                )}
                                                             </CommandList>
                                                         </Command>
                                                     </PopoverContent>
@@ -1179,14 +1308,26 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                                             )}
                                         </div>
                                         <span className="text-xs text-slate-500">Accepted formats: PDF, DOCX, XLSX, images. Max 5 files per submission.</span>
+                                        {!documentPermissions.upload ? (
+                                            <span className="text-xs text-amber-700">Upload is disabled by your portal document permissions.</span>
+                                        ) : null}
+                                        {!canDownloadDocs ? (
+                                            <span className="text-xs text-amber-700">Download is disabled by your portal document permissions.</span>
+                                        ) : null}
+                                        {docsUploading ? (
+                                            <div className={modalNoticeClass}>
+                                                <Spinner className="h-3.5 w-3.5" />
+                                                Uploading documents. You can keep reviewing the RFQ while files finish.
+                                            </div>
+                                        ) : null}
                                     </div>
 
                                     {quoteDocuments.length === 0 ? (
-                                        <div className="mt-4 rounded-xl border border-dashed border-slate-300 bg-slate-50/70 p-4 text-sm text-slate-500">
+                                        <div className={cn("mt-4", modalEmptyStateClass)}>
                                             No documents attached. Documents are optional.
                                         </div>
                                     ) : (
-                                        <div className="mt-4 divide-y divide-slate-100 rounded-xl border border-slate-200/80 bg-slate-50/30">
+                                        <div className="mt-4 divide-y divide-slate-100 rounded-xl border border-slate-200/80 bg-white">
                                             {quoteDocuments.map((d) => {
                                                 const idKey = String(d.id)
                                                 const hasRealId = !idKey.startsWith("tmp:")
@@ -1196,7 +1337,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                                                         <div className="min-w-0 space-y-0.5">
                                                             <div className="truncate text-[13px] font-medium text-slate-900">{d.name}</div>
                                                             <div className="text-[10px] text-slate-500">
-                                                                {d.uploading ? <span className="inline-flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" />Uploading document…</span>
+                                                                {d.uploading ? <span className="inline-flex items-center gap-1"><Spinner className="h-3 w-3" />Uploading document…</span>
                                                                     : verified ? <span className="text-emerald-600">Verified</span>
                                                                         : d.source === "upload" ? "Document uploaded" : "From DMS"}
                                                             </div>
@@ -1206,7 +1347,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                                                             onVerify={hasRealId ? () => verifyAttachment(d.id, d.name) : null}
                                                             onRemove={canDeleteDocs || idKey.startsWith("tmp:") ? () => removeDocument(d.id) : null}
                                                             disabled={effectiveLocked}
-                                                            previewDisabled={d.uploading}
+                                                            previewDisabled={d.uploading || !canDownloadDocs}
                                                             removeDisabled={d.uploading}
                                                         />
                                                     </div>
@@ -1225,12 +1366,15 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                                         <span className="text-xs font-medium text-slate-500">{rfqAttachments.length} file{rfqAttachments.length !== 1 ? "s" : ""}</span>
                                     </div>
                                     {rfqAttachments.length === 0 ? (
-                                        <div className="mt-4 rounded-xl border border-dashed border-slate-300 bg-slate-50/70 p-4 text-sm text-slate-500">No reference documents.</div>
+                                        <div className={cn("mt-4", modalEmptyStateClass)}>No reference documents.</div>
+                                    ) : !canDownloadDocs ? (
+                                        <div className={cn("mt-4", modalEmptyStateClass)}>
+                                            Reference documents are available, but download is disabled by your portal document permissions.
+                                        </div>
                                     ) : (
-                                        <div className="mt-4 divide-y divide-slate-100 rounded-xl border border-slate-200/80 bg-slate-50/30">
+                                        <div className="mt-4 divide-y divide-slate-100 rounded-xl border border-slate-200/80 bg-white">
                                             {rfqAttachments.map((a: AnyRecord, idx: number) => {
                                                 const name = getAttachmentName(a, idx)
-                                                const docId = getAttachmentDocumentId(a)
                                                 const url = getAttachmentUrl(a)
                                                 return (
                                                     <a key={`${idx}-${name}`}
@@ -1255,7 +1399,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                         {/* ── Clarifications tab ── */}
                         <TabsContent value="clarifications" className="mt-0 flex-1 overflow-y-auto px-6 pb-24 pt-3 lg:px-8">
                             <div className="mx-auto max-w-6xl space-y-4">
-                                {!effectiveLocked && (
+                                {!clarificationsLocked && (
                                     <div className={sheetCardClass}>
                                         <div className={sheetSectionTitleClass}>
                                             <MessageSquare className="h-4 w-4 text-indigo-600" />
@@ -1301,25 +1445,34 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                                             <span className="text-[11px] text-slate-500">Keep it short and specific.</span>
                                             <Button size="sm" className="h-9 gap-2 rounded-xl bg-indigo-600 text-xs font-semibold text-white hover:bg-indigo-700"
                                                 onClick={submitClarification} disabled={askingClar || !clarDraft.trim()}>
-                                                {askingClar ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                                                {askingClar ? <Spinner className="h-3.5 w-3.5" /> : <Send className="h-3.5 w-3.5" />}
                                                 Send
                                             </Button>
                                         </div>
                                     </div>
                                 )}
 
+                                {clarificationsLocked ? (
+                                    <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                                        {clarificationsLockMessage}
+                                    </div>
+                                ) : null}
+
                                 {/* Clarifications list */}
                                 {clarLoading ? (
-                                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" />Loading…</div>
+                                    <div className={modalLoadingClass}>
+                                        <Spinner className="h-4 w-4" />
+                                        Loading clarifications
+                                    </div>
                                 ) : clarifications.length === 0 ? (
-                                    <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-500">No clarifications yet.</div>
+                                    <div className={modalEmptyStateClass}>No clarifications yet.</div>
                                 ) : (
                                     <div className={sheetCardClass}>
                                         <div className={sheetSectionTitleClass}>
                                             <MessageSquare className="h-4 w-4 text-indigo-600" />
                                             Clarification history
                                         </div>
-                                        <div className="mt-4 divide-y divide-slate-100 rounded-xl border border-slate-200/80 bg-slate-50/30">
+                                        <div className="mt-4 divide-y divide-slate-100 rounded-xl border border-slate-200/80 bg-white">
                                             {clarifications.slice(0, 20).map((c, idx) => {
                                                 const msg = getClarificationMessage(c, idx)
                                                 const answer = getClarificationAnswer(c)
@@ -1368,7 +1521,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                     </Tabs>
 
                     {/* ── Sticky footer (prequalification pattern) ── */}
-                    <div className="shrink-0 border-t border-slate-200 bg-white/95 px-6 py-4 backdrop-blur lg:px-8">
+                    <div className="shrink-0 border-t border-slate-200 bg-white px-6 py-3 lg:px-8">
                         <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div className="text-[11px] text-slate-500">
                                 {footerContent.text}
@@ -1388,7 +1541,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                                                 : "border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100")}
                                         disabled={footerContent.button.disabled}
                                         onClick={footerContent.button.action}>
-                                        {submitting === "submitted" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ArrowUpRight className="h-3.5 w-3.5" />}
+                                        {submitting === "submitted" ? <Spinner className="h-3.5 w-3.5" /> : <ArrowUpRight className="h-3.5 w-3.5" />}
                                         {footerContent.button.label}
                                     </Button>
                                 )}

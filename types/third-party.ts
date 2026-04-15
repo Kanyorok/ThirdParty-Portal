@@ -31,10 +31,19 @@ export type ThirdPartyInputs = {
     categories?: number[]
     tradingName?: string | null
     businessType?: number | string | null
+    legalForm?: string | null
     registrationNumber?: string | null
     taxPin?: string | null
     taxPIN?: string | null
     vatNumber?: string | null
+    contactPerson?: {
+        name?: string | null
+        email?: string | null
+        phone?: string | null
+    } | null
+    primaryCategoryId?: number | null
+    primary_category_id?: number | null
+    primaryCategory?: string | null
     countryId?: number | null
     physicalAddress?: string | null
     website?: string | null
