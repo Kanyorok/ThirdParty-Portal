@@ -1,86 +1,323 @@
-export function getBaseUrl() {
-    if (typeof window !== "undefined") {
-        // Prefer runtime-injected environment (window.__ENV__) for dynamic
-        // deployments (allows changing API host without rebuilding).
-        // Fallbacks: API_BASE_URL, NEXT_PUBLIC_API_URL, EXTERNAL_API_URL.
-        try {
-            const win: any = window as any
-            const runtime = win.__ENV__ || {}
-            const runtimeUrl = (runtime.API_BASE_URL || runtime.NEXT_PUBLIC_API_URL || runtime.EXTERNAL_API_URL) as string | undefined
-            if (runtimeUrl && runtimeUrl !== '') {
-                // normalize (remove trailing slash)
-                return runtimeUrl.replace(/\/+$/, '')
-            }
-        } catch {
-            // ignore and fall back to default behaviour
+declare global {
+    interface Window {
+        __ENV__?: {
+            API_BASE_URL?: string
+            NEXT_PUBLIC_API_URL?: string
+            EXTERNAL_API_URL?: string
         }
+    }
+}
 
-        // Default client behaviour: use relative paths so requests go through
-        // the frontend host (and any reverse-proxy) unless a runtime URL is present.
+const ABSOLUTE_HTTP_URL_PATTERN = /^https?:\/\//i
+const JSON_CONTENT_TYPE_PATTERN = /(^|\s|;)application\/json|\+json/i
+const DEFAULT_TIMEOUT_MS = 30_000
+
+type ApiErrorBody = {
+    message?: string
+    error?: string
+}
+
+export type ApiRequestResult<T = unknown> = {
+    status: number
+    ok: boolean
+    data: T | null
+    raw: string
+}
+
+type ApiFetchOptions = RequestInit & {
+    allowError?: boolean
+    timeoutMs?: number
+}
+
+function normalizeBaseUrl(value: string | null | undefined): string {
+    const candidate = String(value ?? "").trim()
+    if (!candidate) return ""
+
+    const normalized = candidate.replace(/\/+$/, "")
+    if (normalized.startsWith("/")) {
+        return normalized
+    }
+
+    if (!ABSOLUTE_HTTP_URL_PATTERN.test(normalized)) {
         return ""
     }
 
-    return process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || process.env.EXTERNAL_API_URL || ''
+    try {
+        const parsed = new URL(normalized)
+        return parsed.protocol === "http:" || parsed.protocol === "https:"
+            ? normalized
+            : ""
+    } catch {
+        return ""
+    }
 }
 
-export async function apiFetch<T>(path: string, options?: RequestInit & { allowError?: boolean }): Promise<T> {
-    const baseUrl = getBaseUrl()
-    const isAbsolute = /^https?:\/\//i.test(path)
-    const url = isAbsolute ? path : `${baseUrl}${path}`
-    const { allowError, ...fetchOptions } = options || {}
-    const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        ...(fetchOptions?.headers as Record<string, string> || {})
+function getRuntimeBaseUrl(): string {
+    if (typeof window === "undefined") {
+        return ""
     }
-    const res = await fetch(url, { ...fetchOptions, headers, credentials: "same-origin", cache: "no-store" })
-    const text = await res.text()
-    if (!res.ok && !allowError) throw new Error(`API request failed: ${res.status} ${res.statusText} - ${text.slice(0, 200)}`)
-    try { return JSON.parse(text) } catch { throw new Error(`Invalid JSON at ${url}. Received: ${text.slice(0, 200)}`) }
+
+    try {
+        const runtime = window.__ENV__ ?? {}
+        return normalizeBaseUrl(
+            runtime.API_BASE_URL ??
+            runtime.NEXT_PUBLIC_API_URL ??
+            runtime.EXTERNAL_API_URL
+        )
+    } catch {
+        return ""
+    }
+}
+
+export function getBaseUrl() {
+    return getRuntimeBaseUrl() || normalizeBaseUrl(
+        process.env.API_BASE_URL ??
+        process.env.NEXT_PUBLIC_API_URL ??
+        process.env.EXTERNAL_API_URL
+    )
+}
+
+function resolveRequestUrl(path: string, baseUrl = getBaseUrl()): string {
+    const trimmedPath = String(path ?? "").trim()
+    if (!trimmedPath) {
+        throw new Error("API request path is required")
+    }
+
+    if (ABSOLUTE_HTTP_URL_PATTERN.test(trimmedPath)) {
+        return trimmedPath
+    }
+
+    const normalizedPath = trimmedPath.startsWith("/") ? trimmedPath : `/${trimmedPath}`
+    return baseUrl ? `${baseUrl}${normalizedPath}` : normalizedPath
+}
+
+function mergeHeaders(headers?: HeadersInit, body?: BodyInit | null): Headers {
+    const mergedHeaders = new Headers(headers)
+    if (!mergedHeaders.has("Accept")) {
+        mergedHeaders.set("Accept", "application/json")
+    }
+
+    if (
+        body &&
+        typeof body === "string" &&
+        !mergedHeaders.has("Content-Type")
+    ) {
+        mergedHeaders.set("Content-Type", "application/json")
+    }
+
+    return mergedHeaders
+}
+
+function createRequestSignal(timeoutMs: number, signal?: AbortSignal | null) {
+    if ((!timeoutMs || timeoutMs <= 0) && !signal) {
+        return { signal: undefined as AbortSignal | undefined, cleanup: () => undefined }
+    }
+
+    const controller = new AbortController()
+    let timeoutId: ReturnType<typeof setTimeout> | undefined
+
+    const abortWithReason = (reason?: unknown) => {
+        if (!controller.signal.aborted) {
+            controller.abort(reason)
+        }
+    }
+
+    const onAbort = () => abortWithReason(signal?.reason)
+
+    if (signal) {
+        if (signal.aborted) {
+            abortWithReason(signal.reason)
+        } else {
+            signal.addEventListener("abort", onAbort, { once: true })
+        }
+    }
+
+    if (timeoutMs > 0) {
+        timeoutId = setTimeout(() => {
+            abortWithReason(new Error(`Request timed out after ${timeoutMs}ms`))
+        }, timeoutMs)
+    }
+
+    return {
+        signal: controller.signal,
+        cleanup: () => {
+            if (timeoutId) {
+                clearTimeout(timeoutId)
+            }
+            if (signal) {
+                signal.removeEventListener("abort", onAbort)
+            }
+        }
+    }
+}
+
+function shouldParseJson(contentType: string, text: string): boolean {
+    if (!text) return false
+    if (JSON_CONTENT_TYPE_PATTERN.test(contentType)) return true
+
+    const trimmed = text.trim()
+    return trimmed.startsWith("{") || trimmed.startsWith("[")
+}
+
+function parseResponseBody<T>(text: string, contentType: string, url: string, allowInvalidJson: boolean): T | string | null {
+    if (!text) {
+        return null
+    }
+
+    if (!shouldParseJson(contentType, text)) {
+        return text
+    }
+
+    try {
+        return JSON.parse(text) as T
+    } catch {
+        if (allowInvalidJson) {
+            return text
+        }
+
+        throw new Error(`Invalid JSON at ${url}. Received: ${text.slice(0, 200)}`)
+    }
+}
+
+function getDefaultCredentials(url: string, explicitCredentials?: RequestCredentials): RequestCredentials | undefined {
+    if (explicitCredentials) {
+        return explicitCredentials
+    }
+
+    if (!ABSOLUTE_HTTP_URL_PATTERN.test(url)) {
+        return "same-origin"
+    }
+
+    if (typeof window === "undefined") {
+        return "same-origin"
+    }
+
+    try {
+        const target = new URL(url, window.location.origin)
+        return target.origin === window.location.origin ? "same-origin" : undefined
+    } catch {
+        return "same-origin"
+    }
+}
+
+function extractErrorMessage(body: unknown, status: number, statusText: string): string {
+    if (body && typeof body === "object") {
+        const errorBody = body as ApiErrorBody
+        const message = errorBody.message?.trim() || errorBody.error?.trim()
+        if (message) {
+            return message
+        }
+    }
+
+    if (typeof body === "string" && body.trim()) {
+        return body.trim().slice(0, 200)
+    }
+
+    return `API request failed: ${status}${statusText ? ` ${statusText}` : ""}`
+}
+
+async function executeApiRequest<T>(path: string, options?: ApiFetchOptions): Promise<ApiRequestResult<T>> {
+    const { allowError = false, timeoutMs = DEFAULT_TIMEOUT_MS, signal, headers, body, ...fetchOptions } = options || {}
+    const url = resolveRequestUrl(path)
+    const mergedHeaders = mergeHeaders(headers, body)
+    const { signal: requestSignal, cleanup } = createRequestSignal(timeoutMs, signal)
+
+    try {
+        const response = await fetch(url, {
+            ...fetchOptions,
+            body,
+            headers: mergedHeaders,
+            signal: requestSignal,
+            credentials: getDefaultCredentials(url, fetchOptions.credentials),
+            cache: fetchOptions.cache ?? "no-store",
+        })
+
+        const raw = await response.text()
+        const contentType = response.headers.get("content-type") ?? ""
+        const data = parseResponseBody<T>(raw, contentType, url, allowError && !response.ok)
+
+        if (!response.ok && !allowError) {
+            throw new Error(extractErrorMessage(data, response.status, response.statusText))
+        }
+
+        return {
+            status: response.status,
+            ok: response.ok,
+            data: (data ?? null) as T | null,
+            raw,
+        }
+    } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") {
+            throw new Error(`Request aborted: ${path}`)
+        }
+
+        if (error instanceof Error && /timed out/i.test(error.message)) {
+            throw new Error(`Request timed out: ${path}`)
+        }
+
+        throw error
+    } finally {
+        cleanup()
+    }
+}
+
+export async function apiFetch<T>(path: string, options?: ApiFetchOptions): Promise<T> {
+    const result = await executeApiRequest<T>(path, options)
+    return result.data as T
 }
 
 export async function getRounds<T = unknown>(q?: Record<string, string | undefined>): Promise<T> {
     const params = new URLSearchParams()
-    if (q) Object.entries(q).forEach(([k, v]) => { if (v) params.append(k, v) })
+    if (q) {
+        Object.entries(q).forEach(([key, value]) => {
+            if (value != null && value !== "") {
+                params.append(key, value)
+            }
+        })
+    }
+
     const queryString = params.toString()
     return apiFetch<T>(`/api/prequalification/rounds${queryString ? `?${queryString}` : ""}`)
 }
 
 export async function getSupplierCategories<T = unknown>(): Promise<T> {
-    return apiFetch<T>("/api/procurement/supplier-cat")
+    return apiFetch<T>("/portal/metadata/supplier-categories")
+}
+
+function validateApplicationPayload(roundId: number, categoryIds: number[]) {
+    if (!Number.isInteger(roundId) || roundId <= 0) {
+        throw new Error("A valid round ID is required")
+    }
+
+    const normalizedCategoryIds = Array.from(new Set(
+        categoryIds.filter((categoryId) => Number.isInteger(categoryId) && categoryId > 0)
+    ))
+
+    if (normalizedCategoryIds.length === 0) {
+        throw new Error("At least one valid category must be selected")
+    }
+
+    return {
+        round_id: roundId,
+        category_ids: normalizedCategoryIds,
+    }
 }
 
 export async function submitApplication(roundId: number, categoryIds: number[]) {
     const result = await submitApplicationSafe(roundId, categoryIds)
     if (!result.ok) {
-        const errorMessage =
-            result.data?.message ||
-            result.data?.error ||
-            `API request failed: ${result.status}`
-        throw new Error(errorMessage)
+        throw new Error(extractErrorMessage(result.data, result.status, ""))
     }
+
     return result.data
 }
 
 export async function submitApplicationSafe(roundId: number, categoryIds: number[]) {
-    const payload = {
-        round_id: roundId,
-        category_ids: categoryIds,
-    }
+    const payload = validateApplicationPayload(roundId, categoryIds)
 
-    const url = "/api/prequalification/applications"
-    const res = await fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-        },
-        credentials: 'same-origin',
+    return executeApiRequest<Record<string, unknown>>("/api/prequalification/applications", {
+        method: "POST",
         body: JSON.stringify(payload),
-        cache: 'no-store'
+        allowError: true,
     })
-    const text = await res.text()
-    let json: any = null
-    try { json = text ? JSON.parse(text) : null } catch { /* ignore */ }
-    return { status: res.status, ok: res.ok, data: json, raw: text }
 }

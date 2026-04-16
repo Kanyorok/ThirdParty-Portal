@@ -10,16 +10,22 @@ import { Edit, Plus, Save, X } from "lucide-react"
 import { ThirdPartyInputs, businessTypeOptions, CountryOption } from "@/types/third-party"
 import { UseFormReturn } from "react-hook-form"
 
+type SupplierCategoryOption = {
+    id: number | string
+    name: string
+}
+
 export interface ProfileModalProps {
     isOpen: boolean
     onOpenChange: (open: boolean) => void
     form: UseFormReturn<ThirdPartyInputs>
     countries: CountryOption[]
+    supplierCategories: SupplierCategoryOption[]
     isEditing: boolean
     onSubmit: (values: ThirdPartyInputs) => void
 }
 
-export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onOpenChange, form, countries, isEditing, onSubmit }) => (
+export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onOpenChange, form, countries, supplierCategories, isEditing, onSubmit }) => (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
         <SheetContent className="w-full sm:max-w-xl flex flex-col">
             <SheetHeader>
@@ -42,6 +48,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onOpenChange
                     <FormField control={form.control} name="registrationNumber" render={({ field }) => <FormItem><FormLabel>Registration Number</FormLabel><FormControl><Input {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>} />
                     <FormField control={form.control} name="taxPIN" render={({ field }) => <FormItem><FormLabel>Tax PIN</FormLabel><FormControl><Input {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>} />
                     <FormField control={form.control} name="vatNumber" render={({ field }) => <FormItem><FormLabel>VAT Number</FormLabel><FormControl><Input {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>} />
+                    <FormField control={form.control} name="primaryCategoryId" render={({ field }) => <FormItem><FormLabel>Primary Category</FormLabel><Select onValueChange={v => field.onChange(v ? Number(v) : null)} value={field.value != null ? String(field.value) : undefined} disabled={!supplierCategories.length}><SelectTrigger className="w-full"><SelectValue placeholder="Select primary category" /></SelectTrigger><SelectContent>{supplierCategories.map(c => <SelectItem key={String(c.id)} value={String(c.id)}>{c.name}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>} />
                     <FormField control={form.control} name="countryId" render={({ field }) => <FormItem><FormLabel>Country</FormLabel><Select onValueChange={v => field.onChange(Number(v))} value={String(field.value ?? 0)} disabled={!countries.length}><SelectTrigger className="w-full"><SelectValue placeholder="Select country" /></SelectTrigger><SelectContent>{countries.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.flag ? `${c.flag} ${c.name}` : c.name}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>} />
                     <FormField control={form.control} name="physicalAddress" render={({ field }) => <FormItem><FormLabel>Address</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>} />
                     <FormField control={form.control} name="email" render={({ field }) => <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>} />

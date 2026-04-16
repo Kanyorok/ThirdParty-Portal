@@ -8,6 +8,7 @@ export default function ApplicationPageClient() {
     const searchParams = useSearchParams()
     const router = useRouter()
     const roundId = useMemo(() => searchParams?.get("roundId") ?? undefined, [searchParams])
+    const categoryId = useMemo(() => searchParams?.get("categoryId") ?? undefined, [searchParams])
     const [open, setOpen] = useState(true)
 
     useEffect(() => {
@@ -27,6 +28,7 @@ export default function ApplicationPageClient() {
                 open={open}
                 onOpenChange={handleOpenChange}
                 defaultRoundId={roundId}
+                defaultCategoryIds={categoryId ? [categoryId] : undefined}
             >
             </ApplicationForm>
         </div>

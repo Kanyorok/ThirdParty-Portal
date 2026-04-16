@@ -92,6 +92,15 @@ export interface RfqMyResponse {
     items: RfqResponseItem[]
 }
 
+export interface RfqSupplierOption {
+    supplierId: string
+    supplierLabel?: string | null
+    invitationStatus: string | null
+    invitedOn?: string | null
+    invitationUpdatedOn?: string | null
+    myResponse: RfqMyResponse | null
+}
+
 /** A single item in the `data` array from `GET /supplier/rfqs` or the
  *  top-level object from `GET /supplier/rfqs/{rfq}`. */
 export interface RfqInvitation {
@@ -106,6 +115,7 @@ export interface RfqInvitation {
     invitationUpdatedOn?: string | null
     rfq: RfqDetail | null
     myResponse: RfqMyResponse | null
+    supplierOptions?: RfqSupplierOption[]
 }
 
 export interface RfqListResponse {
@@ -173,4 +183,21 @@ export interface RfqDocumentListResponse {
 export interface RfqDocumentUploadResponse {
     message: string
     data: RfqDocument
+}
+
+export interface RfqDocumentPermissions {
+    view: boolean
+    upload: boolean
+    download: boolean
+    delete: boolean
+}
+
+export interface PortalDocumentPermissionsResponse {
+    success?: boolean
+    permissions?: {
+        rfq?: Partial<RfqDocumentPermissions>
+    }
+    defaults?: {
+        rfq?: Partial<RfqDocumentPermissions>
+    }
 }

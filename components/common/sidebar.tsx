@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, VariantProps } from "class-variance-authority"
-import { PanelLeftIcon } from "lucide-react"
+import { PanelLeftCloseIcon, PanelLeftOpenIcon } from "lucide-react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
@@ -282,28 +282,58 @@ function Sidebar({
 }
 
 function SidebarTrigger({
+  collapsibleMode,
   className,
   onClick,
   ...props
-}: React.ComponentProps<typeof Button>) {
-  const { toggleSidebar } = useSidebar()
+}: React.ComponentProps<typeof Button> & {
+  collapsibleMode?: "offcanvas" | "icon" | "none"
+}) {
+  const { isMobile, openMobile, state, toggleSidebar } = useSidebar()
+  const isOpen = isMobile ? openMobile : state === "expanded"
 
-  return (
+  const triggerLabel = React.useMemo(() => {
+    if (isMobile) return isOpen ? "Close navigation" : "Open navigation"
+    if (collapsibleMode === "offcanvas") {
+      return isOpen ? "Hide navigation" : "Show navigation"
+    }
+    return isOpen ? "Collapse navigation" : "Expand navigation"
+  }, [collapsibleMode, isMobile, isOpen])
+
+  const TriggerIcon = isOpen ? PanelLeftCloseIcon : PanelLeftOpenIcon
+
+  const button = (
     <Button
       data-sidebar="trigger"
       data-slot="sidebar-trigger"
       variant="ghost"
       size="icon"
-      className={cn("size-7", className)}
+      aria-label={triggerLabel}
+      aria-pressed={isOpen}
+      title={triggerLabel}
+      className={cn(
+        "size-7 transition-all duration-200",
+        !isOpen && "border-primary/15 bg-primary/[0.04] text-primary hover:bg-primary/[0.08] hover:text-primary",
+        className
+      )}
       onClick={(event) => {
         onClick?.(event)
         toggleSidebar()
       }}
       {...props}
     >
-      <PanelLeftIcon />
-      <span className="sr-only">Toggle Sidebar</span>
+      <TriggerIcon />
+      <span className="sr-only">{triggerLabel}</span>
     </Button>
+  )
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{button}</TooltipTrigger>
+      <TooltipContent side="bottom" sideOffset={10} className="border border-border/70 bg-popover px-2.5 py-1.5 text-[10px] font-semibold text-foreground shadow-none">
+        {triggerLabel}
+      </TooltipContent>
+    </Tooltip>
   )
 }
 
@@ -502,7 +532,7 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
 }
 
 const sidebarMenuButtonVariants = cva(
-  "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
+  "peer/menu-button flex w-full items-center gap-2.5 overflow-hidden rounded-md px-2.5 py-2 text-left text-sm outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-current",
   {
     variants: {
       variant: {
@@ -545,7 +575,12 @@ function SidebarMenuButton({
       data-sidebar="menu-button"
       data-size={size}
       data-active={isActive}
-      className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
+      className={cn(
+        sidebarMenuButtonVariants({ variant, size }),
+        "[&>svg]:mr-0.5 [&>svg]:flex-none",
+        "[&>svg+span]:min-w-0 [&>svg+span]:flex-1",
+        className
+      )}
       {...props}
     />
   )
@@ -718,7 +753,7 @@ function SidebarMenuSubButton({
       data-size={size}
       data-active={isActive}
       className={cn(
-        "text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground [&>svg]:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
+        "text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground [&>svg]:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2.5 overflow-hidden rounded-md px-2.5 outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:flex-none [&>svg+span]:min-w-0 [&>svg+span]:flex-1",
         "data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground",
         size === "sm" && "text-xs",
         size === "md" && "text-sm",

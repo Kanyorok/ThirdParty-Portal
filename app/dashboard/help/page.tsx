@@ -5,6 +5,7 @@ import React, { useMemo, useState } from "react"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/common/accordion"
 import { Button } from "@/components/common/button"
 import { Input } from "@/components/common/input"
+import { useProfileStore } from "@/store/use-profile-store"
 import {
   ArrowUpRight,
   CircleHelp,
@@ -20,6 +21,10 @@ import {
   Search,
   ShieldCheck,
   Ticket,
+  FileText,
+  Users,
+  Building2,
+  Shield,
 } from "lucide-react"
 
 type TopicKey = "all" | "account" | "tenders" | "documents" | "support"
@@ -126,6 +131,37 @@ const SUPPORT_PLAYBOOK = [
   { step: "Add references", detail: "Include IDs, dates, and screenshots so support can reproduce quickly." },
 ]
 
+const DOCUMENTATION_GUIDES = [
+  {
+    title: "General Portal Guide",
+    description: "Navigation, dashboard, settings, and common features available to all users",
+    icon: BookOpen,
+    href: "/dashboard/help/guides/general",
+    tone: "border-slate-200 text-slate-700 bg-slate-50",
+  },
+  {
+    title: "Supplier Guide",
+    description: "Complete guide for prequalification, tenders, RFQs, and document management",
+    icon: Users,
+    href: "/dashboard/help/guides/supplier",
+    tone: "border-amber-200 text-amber-700 bg-amber-50",
+  },
+  {
+    title: "Tenant Guide",
+    description: "Property browsing, leases, maintenance requests, and billing for tenants",
+    icon: Building2,
+    href: "/dashboard/help/guides/tenant",
+    tone: "border-emerald-200 text-emerald-700 bg-emerald-50",
+  },
+  {
+    title: "Customer Guide",
+    description: "Insurance policies, claims, payments, and renewals management",
+    icon: Shield,
+    href: "/dashboard/help/guides/customer",
+    tone: "border-blue-200 text-blue-700 bg-blue-50",
+  },
+]
+
 function topicTone(topic: Exclude<TopicKey, "all">) {
   if (topic === "tenders") return "border-amber-200 text-amber-700 bg-amber-50"
   if (topic === "documents") return "border-emerald-200 text-emerald-700 bg-emerald-50"
@@ -136,6 +172,7 @@ function topicTone(topic: Exclude<TopicKey, "all">) {
 export default function HelpPage() {
   const [query, setQuery] = useState("")
   const [activeTopic, setActiveTopic] = useState<TopicKey>("all")
+  const activeProfile = useProfileStore((s) => s.activeProfile)
 
   const filteredFaqs = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -145,6 +182,23 @@ export default function HelpPage() {
       return f.question.toLowerCase().includes(q) || f.answer.toLowerCase().includes(q)
     })
   }, [query, activeTopic])
+
+  const filteredDocumentationGuides = useMemo(() => {
+    // Always show general guide
+    const guides = DOCUMENTATION_GUIDES.filter((guide) => guide.href.includes('/general'))
+    
+    // Add active profile guide if not 'base'
+    if (activeProfile && activeProfile !== 'base') {
+      const profileGuide = DOCUMENTATION_GUIDES.find((guide) => 
+        guide.href.includes(`/${activeProfile.toLowerCase()}`)
+      )
+      if (profileGuide) {
+        guides.push(profileGuide)
+      }
+    }
+    
+    return guides
+  }, [activeProfile])
 
   return (
     <div className="w-full space-y-8 antialiased">
@@ -230,6 +284,65 @@ export default function HelpPage() {
               </button>
             )
           })}
+        </div>
+      </section>
+
+      {/* Comprehensive Documentation Guides */}
+      <section className="space-y-3">
+        <div className="border-y border-slate-200 bg-white">
+          <div className="border-b border-slate-200 px-5 py-4">
+            <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
+              <FileText className="h-4 w-4 text-blue-600" />
+              Comprehensive Documentation
+            </h2>
+            <p className="mt-1 text-xs text-slate-600">
+              In-depth guides for all portal features, organized by user role
+            </p>
+          </div>
+          <div className="px-5 py-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredDocumentationGuides.map((guide) => {
+                const Icon = guide.icon
+                return (
+                  <Link
+                    key={guide.href}
+                    href={guide.href}
+                    className="group flex items-start gap-4 rounded-xl border border-slate-200 bg-white px-4 py-4 transition-all hover:border-slate-300 hover:shadow-md hover:bg-slate-50"
+                  >
+                    <div className={`mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${guide.tone}`}>
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-slate-900 leading-tight group-hover:text-blue-700 transition-colors">
+                        {guide.title}
+                      </p>
+                      <p className="mt-1.5 text-xs text-slate-600 leading-relaxed">
+                        {guide.description}
+                      </p>
+                      <div className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-blue-600">
+                        <BookOpen className="h-3.5 w-3.5" />
+                        Read guide
+                        <ArrowUpRight className="h-3.5 w-3.5" />
+                      </div>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+            <div className="mt-4 pt-4 border-t border-slate-200">
+              <div className="flex items-start gap-3 rounded-lg bg-blue-50 border border-blue-200 px-4 py-3">
+                <CircleHelp className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-blue-900">
+                    Getting Started
+                  </p>
+                  <p className="mt-1 text-xs text-blue-700 leading-relaxed">
+                    New to the portal? Start with the General Portal Guide to learn navigation, settings, and common features. Then explore your role-specific guide for detailed workflows.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

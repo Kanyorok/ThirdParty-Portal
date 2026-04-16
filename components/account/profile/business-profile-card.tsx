@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, type ReactNode } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -9,6 +10,7 @@ import { Building2, Hash, Save } from "lucide-react"
 import { Button } from "@/components/common/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/common/form"
 import { Input } from "@/components/common/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/common/select"
 import { Spinner } from "@/components/common/spinner"
 import { cn } from "@/lib/utils"
 import { normalizeString } from "@/components/account/profile/utils"
@@ -43,17 +45,45 @@ type DetailsField = {
   href?: string
 }
 
+type BusinessTypeOption = {
+  id: number | null
+  value: string
+  label: string
+  name?: string
+}
+
+type BusinessTypesResponse = {
+  data?: Array<Record<string, unknown>>
+}
+
 function normalizeDisplay(value: unknown) {
   if (value == null) return "—"
   const text = String(value).trim()
   return text.length > 0 ? text : "—"
 }
 
-function resolveBusinessTypeValue(source: any) {
-  const candidates = [
+function normalizeBusinessTypeKey(value: unknown) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "")
+}
+
+function formatBusinessTypeLabel(value: string) {
+  return value
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/_/g, " ")
+    .trim()
+}
+
+function resolveBusinessTypeCandidates(source: any) {
+  const rawCandidates = [
     source?.businessType,
     source?.BusinessType,
     source?.business_type,
+    source?.legalForm,
+    source?.LegalForm,
+    source?.legal_form,
     source?.businessTypeDetail?.label,
     source?.businessTypeDetail?.description,
     source?.businessTypeDetail?.Description,
@@ -62,13 +92,61 @@ function resolveBusinessTypeValue(source: any) {
     source?.business_type_detail?.Description,
   ]
 
-  for (const candidate of candidates) {
+  const candidates: string[] = []
+
+  for (const candidate of rawCandidates) {
     if (candidate == null) continue
     const text = String(candidate).trim()
-    if (text.length > 0) return text
+    if (text.length > 0) candidates.push(text)
   }
 
-  return ""
+  return candidates
+}
+
+function normalizeBusinessTypeOptions(options: Array<Record<string, unknown>>): BusinessTypeOption[] {
+  return options
+    .map<BusinessTypeOption | null>((option) => {
+      const rawId = option.id ?? option.Id ?? null
+      const id = rawId == null || rawId === "" ? null : Number(rawId)
+      const value = String(option.value ?? option.Value ?? option.id ?? option.Id ?? "").trim()
+      const name = String(option.name ?? option.Name ?? "").trim()
+      const rawLabel = String(
+        option.label ?? option.Label ?? option.description ?? option.Description ?? name ?? value,
+      ).trim()
+      const label = formatBusinessTypeLabel(rawLabel || name || value)
+
+      if (!value || !label) return null
+      return { id: Number.isFinite(id) ? id : null, value, label, name }
+    })
+    .filter((option): option is BusinessTypeOption => option !== null)
+}
+
+function findBusinessTypeOption(options: BusinessTypeOption[], source: any) {
+  const candidates = resolveBusinessTypeCandidates(source)
+
+  for (const candidate of candidates) {
+    const normalizedCandidate = normalizeBusinessTypeKey(candidate)
+    const match = options.find((option) => {
+      return (
+        normalizeBusinessTypeKey(option.id) === normalizedCandidate ||
+        normalizeBusinessTypeKey(option.value) === normalizedCandidate ||
+        normalizeBusinessTypeKey(option.label) === normalizedCandidate ||
+        normalizeBusinessTypeKey(option.name) === normalizedCandidate
+      )
+    })
+
+    if (match) return match
+  }
+
+  return null
+}
+
+function resolveBusinessTypeValue(source: any, options: BusinessTypeOption[]) {
+  const matchedOption = findBusinessTypeOption(options, source)
+  if (matchedOption) return matchedOption.label
+
+  const candidates = resolveBusinessTypeCandidates(source)
+  return candidates[0] ?? ""
 }
 
 function DetailsFieldRow({ label, value, icon, mono = false, href }: DetailsField) {
@@ -98,15 +176,50 @@ export default function BusinessProfileCard({
   updateProfile,
   refetch,
 }: BusinessProfileCardProps) {
+  const { data: businessTypesResponse, isLoading: isLoadingBusinessTypes } = useQuery({
+    queryKey: ["businessTypes"],
+    queryFn: async () => {
+      const response = await fetch("/api/portal/auth/metadata/business-types", {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+        },
+        cache: "no-store",
+      })
+
+      const body = (await response.json().catch(() => null)) as BusinessTypesResponse | null
+      if (!response.ok) {
+        throw new Error("Failed to load business types")
+      }
+
+      return body ?? { data: [] }
+    },
+    staleTime: 30 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
+    retry: 1,
+  })
+
+  const rawBusinessTypeOptions = businessTypesResponse?.data ?? []
+
+  const businessTypeOptions = useMemo(
+    () => normalizeBusinessTypeOptions(rawBusinessTypeOptions as Array<Record<string, unknown>>),
+    [rawBusinessTypeOptions],
+  )
+
+  const selectedBusinessType = useMemo(
+    () => findBusinessTypeOption(businessTypeOptions, thirdPartyDetails),
+    [businessTypeOptions, thirdPartyDetails],
+  )
+
   const defaultValues = useMemo<ProfileFormValues>(
     () => ({
       thirdPartyName: thirdPartyDetails?.thirdPartyName ?? "",
       tradingName: thirdPartyDetails?.tradingName ?? "",
-      businessType: resolveBusinessTypeValue(thirdPartyDetails),
+      businessType: selectedBusinessType?.value ?? "",
       registrationNumber: thirdPartyDetails?.registrationNumber ?? "",
       taxPIN: thirdPartyDetails?.taxPIN ?? "",
     }),
-    [thirdPartyDetails],
+    [selectedBusinessType, thirdPartyDetails],
   )
 
   const form = useForm<ProfileFormValues>({
@@ -132,7 +245,7 @@ export default function BusinessProfileCard({
       },
       {
         label: "Business type",
-        value: normalizeDisplay(resolveBusinessTypeValue(thirdPartyDetails)),
+        value: normalizeDisplay(resolveBusinessTypeValue(thirdPartyDetails, businessTypeOptions)),
         icon: <Building2 className="h-4 w-4" />,
       },
       {
@@ -148,7 +261,7 @@ export default function BusinessProfileCard({
         mono: true,
       },
     ],
-    [thirdPartyDetails],
+    [businessTypeOptions, thirdPartyDetails],
   )
 
   const handleCancelEdit = () => {
@@ -158,20 +271,19 @@ export default function BusinessProfileCard({
 
   const onSubmit = async (values: ProfileFormValues) => {
     const normalizedBusinessType = normalizeString(values.businessType)
-    const businessTypeAsNumber =
-      normalizedBusinessType && /^\d+$/.test(normalizedBusinessType)
-        ? Number(normalizedBusinessType)
-        : undefined
+    const selectedOption = businessTypeOptions.find((option) => option.value === normalizedBusinessType) ?? null
 
     const payload = {
       ThirdPartyName: normalizeString(values.thirdPartyName) ?? undefined,
       TradingName: normalizeString(values.tradingName) ?? undefined,
-      BusinessType: businessTypeAsNumber,
+      BusinessType: selectedOption?.id ?? undefined,
+      LegalForm: normalizedBusinessType ?? undefined,
       RegistrationNumber: normalizeString(values.registrationNumber) ?? undefined,
       TaxPIN: normalizeString(values.taxPIN) ?? undefined,
       thirdPartyName: normalizeString(values.thirdPartyName),
       tradingName: normalizeString(values.tradingName),
       businessType: normalizedBusinessType,
+      legalForm: normalizedBusinessType,
       registrationNumber: normalizeString(values.registrationNumber),
       taxPIN: normalizeString(values.taxPIN),
     }
@@ -285,9 +397,20 @@ export default function BusinessProfileCard({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs font-semibold text-foreground">Business type</FormLabel>
-                        <FormControl>
-                          <Input {...field} value={field.value || ""} placeholder="e.g. Limited company" />
-                        </FormControl>
+                        <Select value={field.value || undefined} onValueChange={field.onChange} disabled={isLoadingBusinessTypes}>
+                          <FormControl>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select business type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {businessTypeOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage className="text-xs" />
                       </FormItem>
                     )}

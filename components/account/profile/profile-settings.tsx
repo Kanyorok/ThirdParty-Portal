@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import { ArrowUpRight, CheckCircle2, CircleDashed, ShieldCheck, Sparkles } from "lucide-react"
 
 import { Button } from "@/components/common/button"
@@ -31,6 +32,7 @@ function LoadingState() {
 }
 
 export default function ProfileSettings() {
+  const queryClient = useQueryClient()
   const [isEditing, setIsEditing] = useState(false)
   const [isLogoDialogOpen, setIsLogoDialogOpen] = useState(false)
   const [isUserImageDialogOpen, setIsUserImageDialogOpen] = useState(false)
@@ -78,6 +80,30 @@ export default function ProfileSettings() {
     [profile],
   )
   const userImageUrl = optimisticUserImageUrl ?? resolvedUserImageUrl
+
+  useEffect(() => {
+    queryClient.prefetchQuery({
+      queryKey: ["businessTypes"],
+      queryFn: async () => {
+        const response = await fetch("/api/portal/auth/metadata/business-types", {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+          },
+          cache: "no-store",
+        })
+
+        const body = await response.json().catch(() => null)
+        if (!response.ok) {
+          throw new Error("Failed to load business types")
+        }
+
+        return body ?? { data: [] }
+      },
+      staleTime: 30 * 60 * 1000,
+      gcTime: 60 * 60 * 1000,
+    }).catch(() => null)
+  }, [queryClient])
 
   useEffect(() => {
     if (resolvedLogoUrl || optimisticLogoUrl) return

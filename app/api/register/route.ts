@@ -1,90 +1,60 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from "next/server"
 
-const PHONE_REGEX = /^\+?[0-9]{8,15}$/;
-const SENSITIVE_ERROR_PATTERN = /(exception|stack|trace|sql|syntax|internal server|undefined|vendor|route|line\s+\d+)/i;
+import { sanitizeFieldErrors } from "@/app/api/portal/auth/_utils"
 
-const FIELD_FALLBACK_MESSAGES: Record<string, string> = {
-    Name: "Please enter a valid legal company name.",
-    TradingName: "Please enter a valid trading name.",
-    BusinessType: "Please select a valid business type.",
-    RegistrationNumber: "Please enter a valid registration number.",
-    TaxPIN: "Please enter a valid tax PIN.",
-    VATNumber: "Please enter a valid VAT number.",
-    Country: "Please select a valid country.",
-    Location: "Please select a valid location.",
-    Email: "Please enter a valid business email address.",
-    Phone: "Please enter a valid business phone number.",
-    PhysicalAddress: "Please enter a valid physical address.",
-    Website: "Please enter a valid website URL.",
-    types: "Please select at least one business role.",
-    supplier_category_id: "Please select a supplier category.",
-    user_Remarks: "Please provide tenant remarks.",
-    user_DateOfBirth: "Please provide a valid date of birth.",
-    user_MaritalStatus: "Please select a valid marital status.",
-    user_Occupation: "Please select a valid occupation.",
-    user_FirstName: "Please enter a valid first name.",
-    user_LastName: "Please enter a valid last name.",
-    user_Email: "Please enter a valid admin email address.",
-    user_Phone: "Please enter a valid admin phone number.",
-    user_Gender: "Please select a valid gender.",
-    user_Password: "Please enter a valid password.",
-    user_Password_confirmation: "Please confirm your password.",
-};
-
-const sanitizeFieldErrorMessage = (field: string, candidate: unknown) => {
-    const fallback = FIELD_FALLBACK_MESSAGES[field] ?? "Please provide a valid value.";
-    if (typeof candidate !== "string") return fallback;
-
-    const normalized = candidate.replace(/\s+/g, " ").trim();
-    if (!normalized || normalized.length > 140 || SENSITIVE_ERROR_PATTERN.test(normalized)) {
-        return fallback;
-    }
-
-    return normalized;
-};
-
-const sanitizeFieldErrors = (errors: unknown): Record<string, string[]> => {
-    if (!errors || typeof errors !== "object" || Array.isArray(errors)) return {};
-
-    const safe: Record<string, string[]> = {};
-    Object.entries(errors as Record<string, unknown>).forEach(([field, value]) => {
-        const first = Array.isArray(value) ? value[0] : value;
-        safe[field] = [sanitizeFieldErrorMessage(field, first)];
-    });
-    return safe;
-};
+const PHONE_REGEX = /^\+?[0-9]{8,15}$/
 
 const validatePhone = (value: unknown, required: boolean, label: string): string[] => {
-    const text = typeof value === "string" ? value.trim() : "";
-    const issues: string[] = [];
+    const text = typeof value === "string" ? value.trim() : ""
+    const issues: string[] = []
 
     if (!text) {
-        if (required) issues.push(`${label} is required.`);
-        return issues;
+        if (required) issues.push(`${label} is required.`)
+        return issues
     }
 
     if (!PHONE_REGEX.test(text)) {
-        issues.push(`${label} must be 8 to 15 digits and may start with +.`);
+        issues.push(`${label} must be 8 to 15 digits and may start with +.`)
     }
 
-    return issues;
-};
+    return issues
+}
 
 export async function POST(request: Request) {
     try {
-        const body = await request.json();
+        const contentType = request.headers.get("content-type") ?? "";
+        const isMultipart = contentType.includes("multipart/form-data");
+        const body = isMultipart ? await request.formData() : await request.json();
         const errors: Record<string, string[]> = {};
-        const requiresAdminPhone = body?.createUser === true;
+        const getValue = (key: string) => {
+            if (isMultipart) {
+                const value = (body as FormData).get(key);
+                return typeof value === "string" ? value : "";
+            }
 
-        const companyPhoneIssues = validatePhone(body?.Phone, true, "Phone number");
+            return body?.[key];
+        };
+        const requiresAdminPhone = isMultipart
+            ? ["1", "true", "yes", "on"].includes(String(getValue("createUser") ?? "").trim().toLowerCase())
+            : body?.createUser === true;
+
+        const companyPhoneIssues = validatePhone(getValue("Phone"), true, "Phone number");
         if (companyPhoneIssues.length > 0) {
             errors.Phone = companyPhoneIssues;
         }
 
         if (requiresAdminPhone) {
-            const adminPhoneIssues = validatePhone(body?.user_Phone, true, "Admin phone");
+            const adminPhoneIssues = validatePhone(getValue("user_Phone"), true, "Admin phone");
             if (adminPhoneIssues.length > 0) {
                 errors.user_Phone = adminPhoneIssues;
+            }
+        }
+
+        const contactPersonPhone = getValue("contactPersonPhone");
+        if (typeof contactPersonPhone === "string" && contactPersonPhone.trim()) {
+            const contactPhoneIssues = validatePhone(contactPersonPhone, false, "Contact person phone");
+            if (contactPhoneIssues.length > 0) {
+                errors.contactPersonPhone = contactPhoneIssues;
             }
         }
 
@@ -92,53 +62,57 @@ export async function POST(request: Request) {
             return NextResponse.json(
                 {
                     message: "Please correct the highlighted fields and try again.",
-                    errors
+                    errors,
                 },
                 { status: 422 }
-            );
+            )
         }
 
-    // Prefer NEXT_PUBLIC_API_URL, fall back to other env vars that may be present in production
-    const baseApi = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_EXTERNAL_API_URL || process.env.API_BASE_URL || '';
-    const laravelEndpoint = `${baseApi.replace(/\/$/, '')}/api/v1/portal/auth/register`;
+        // Prefer NEXT_PUBLIC_API_URL, fall back to other env vars that may be present in production
+        const baseApi = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_EXTERNAL_API_URL || process.env.API_BASE_URL || ''
+        const laravelEndpoint = `${baseApi.replace(/\/$/, '')}/api/v1/portal/auth/register`
 
         const response = await fetch(laravelEndpoint, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-            },
-            body: JSON.stringify(body),
-        });
+            headers: isMultipart
+                ? {
+                    "Accept": "application/json",
+                }
+                : {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                },
+            body: isMultipart ? (body as FormData) : JSON.stringify(body),
+        })
 
-        let data: any = null;
+        let data: any = null
         try {
-            data = await response.json().catch(() => null);
+            data = await response.json().catch(() => null)
         } catch (e) {
-            console.error('[Register API] Failed to parse JSON from Laravel response', e);
+            console.error('[Register API] Failed to parse JSON from Laravel response', e)
         }
 
         if (!response.ok) {
             // Log status and body for debugging in production logs (no sensitive internals)
-            console.error('[Register API] Laravel responded with', { status: response.status, body: data });
-            const safeErrors = sanitizeFieldErrors(data?.errors);
+            console.error('[Register API] Laravel responded with', { status: response.status, body: data })
+            const safeErrors = sanitizeFieldErrors(data?.errors)
             return NextResponse.json(
                 {
                     message: Object.keys(safeErrors).length > 0
                         ? "Please correct the highlighted fields and try again."
                         : "We couldn't complete registration right now. Please try again.",
-                    errors: safeErrors
+                    errors: safeErrors,
                 },
                 { status: response.status }
-            );
+            )
         }
 
-        return NextResponse.json(data, { status: 200 });
+        return NextResponse.json(data, { status: response.status })
     } catch (error: unknown) {
-        console.error("[Register API] Failed to process registration request.", error);
+        console.error("[Register API] Failed to process registration request.", error)
         return NextResponse.json(
             { message: "We couldn't complete registration right now. Please try again." },
             { status: 500 }
-        );
+        )
     }
 }

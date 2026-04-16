@@ -19,6 +19,7 @@ import {
   AlertDialogTitle,
 } from "@/components/common/alert-dialog"
 import { Button } from "@/components/common/button"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/common/dialog"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/common/form"
 import { Input } from "@/components/common/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/common/select"
@@ -460,6 +461,9 @@ export default function BankDetailsForm() {
     })
   }
 
+  const formTitle = editingBankDetail ? "Edit bank account" : "Add bank account"
+  const submitLabel = editingBankDetail ? "Update account" : "Save account"
+
   return (
     <section className="overflow-hidden rounded-2xl border border-border/60 bg-background">
       <div className="border-b border-border/60 bg-gradient-to-r from-background via-muted/20 to-background px-5 py-5 sm:px-6">
@@ -479,154 +483,6 @@ export default function BankDetailsForm() {
       </div>
 
       <div className="space-y-5 px-5 py-5 sm:px-6 sm:py-6">
-        {isFormOpen ? (
-          <div className="rounded-2xl border border-border/60 bg-muted/20 p-4 sm:p-5">
-            <div className="mb-4 flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-primary" />
-              <h3 className="text-sm font-semibold text-foreground">
-                {editingBankDetail ? "Edit bank account" : "Add bank account"}
-              </h3>
-            </div>
-
-            <Form {...form}>
-              <form className="space-y-5" onSubmit={form.handleSubmit(onSubmit)}>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name="bankName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs font-semibold text-foreground">
-                          Bank name <span className="text-destructive">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="e.g. Kenya Commercial Bank" />
-                        </FormControl>
-                        <FormMessage className="text-xs" />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="branchId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs font-semibold text-foreground">
-                          Branch <span className="text-destructive">*</span>
-                        </FormLabel>
-                        <Select
-                          value={field.value > 0 ? String(field.value) : undefined}
-                          onValueChange={(value) => field.onChange(Number(value))}
-                          disabled={isLoadingBranches || !branches.length}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={isLoadingBranches ? "Loading branches" : "Select branch"} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {branches.map((branch: BranchOption) => (
-                              <SelectItem key={branch.id} value={String(branch.id)}>
-                                {branch.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage className="text-xs" />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="accountNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs font-semibold text-foreground">
-                          Account number <span className="text-destructive">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input {...field} className="font-mono" placeholder="e.g. 0123456789012" />
-                        </FormControl>
-                        <FormMessage className="text-xs" />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="swiftCode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs font-semibold text-foreground">Swift code</FormLabel>
-                        <FormControl>
-                          <Input {...field} className="font-mono uppercase" placeholder="e.g. KCBLKENX" />
-                        </FormControl>
-                        <FormMessage className="text-xs" />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="currencyId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs font-semibold text-foreground">Currency</FormLabel>
-                        <Select
-                          value={field.value > 0 ? String(field.value) : undefined}
-                          onValueChange={(value) => field.onChange(Number(value))}
-                          disabled={isLoadingCurrencies || !currencies.length}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={isLoadingCurrencies ? "Loading currencies" : "Select currency"} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {currencies.map((currency: CurrencyOption) => {
-                              const label = currency.code || currency.name || String(currency.id)
-                              const suffix =
-                                currency.name && currency.code && currency.name.toLowerCase() !== currency.code.toLowerCase()
-                                  ? ` · ${currency.name}`
-                                  : ""
-
-                              return (
-                                <SelectItem key={currency.id} value={String(currency.id)}>
-                                  {label}
-                                  {suffix}
-                                </SelectItem>
-                              )
-                            })}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage className="text-xs" />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="flex flex-wrap items-center justify-end gap-2">
-                  <Button type="button" variant="outline" size="sm" className="text-xs font-medium" onClick={closeForm}>
-                    <X className="mr-1.5 h-4 w-4" />
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    size="sm"
-                    className="text-xs font-medium"
-                    disabled={saveMutation.isPending}
-                  >
-                    {saveMutation.isPending ? <Spinner className="mr-1.5 h-4 w-4" /> : <Save className="mr-1.5 h-4 w-4" />}
-                    {editingBankDetail ? "Update account" : "Save account"}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </div>
-        ) : null}
-
         {isLoadingBankDetails ? (
           <div className="flex min-h-[180px] items-center justify-center rounded-2xl border border-border/60 bg-muted/15">
             <Spinner className="h-5 w-5" />
@@ -716,6 +572,177 @@ export default function BankDetailsForm() {
           </div>
         )}
       </div>
+
+      <Dialog open={isFormOpen} onOpenChange={(open) => (!open ? closeForm() : setIsFormOpen(true))}>
+        <DialogContent className="max-w-2xl gap-0 overflow-hidden rounded-[1.6rem] border border-border/70 bg-background p-0 shadow-[0_24px_70px_-32px_rgba(15,23,42,0.3)]">
+          <DialogHeader className="border-b border-border/60 bg-[linear-gradient(180deg,rgba(248,250,252,0.98),rgba(248,250,252,0.88))] px-5 py-5 sm:px-6">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-primary/15 bg-primary/[0.08] text-primary shadow-[0_12px_24px_-18px_rgba(37,99,235,0.55)]">
+                  <Building2 className="h-4.5 w-4.5" />
+                </div>
+                <div className="min-w-0">
+                  <DialogTitle className="truncate text-[1.02rem] font-semibold tracking-tight text-foreground">
+                    {formTitle}
+                  </DialogTitle>
+                  <DialogDescription className="mt-0.5 text-[12px] text-muted-foreground">
+                    Settlement account
+                  </DialogDescription>
+                </div>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <span className="inline-flex h-7 items-center rounded-full border border-border/70 bg-background px-2.5 text-[10px] font-semibold tracking-tight text-muted-foreground">
+                  {editingBankDetail ? "Editing" : "New"}
+                </span>
+                <span className="inline-flex h-7 items-center rounded-full border border-primary/15 bg-primary/[0.08] px-2.5 text-[10px] font-semibold tracking-tight text-primary">
+                  Required fields
+                </span>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="bg-muted/[0.18] px-5 py-5 sm:px-6 sm:py-6">
+            <Form {...form}>
+              <form className="space-y-5" onSubmit={form.handleSubmit(onSubmit)}>
+                <div className="rounded-[1.3rem] border border-border/70 bg-background p-4 shadow-[0_14px_30px_-24px_rgba(15,23,42,0.18)] sm:p-5">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="bankName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-semibold text-foreground">
+                          Bank name <span className="text-destructive">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input {...field} className="bg-background" placeholder="e.g. Kenya Commercial Bank" />
+                        </FormControl>
+                        <FormMessage className="text-xs" />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="branchId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-semibold text-foreground">
+                          Branch <span className="text-destructive">*</span>
+                        </FormLabel>
+                        <Select
+                          value={field.value > 0 ? String(field.value) : undefined}
+                          onValueChange={(value) => field.onChange(Number(value))}
+                          disabled={isLoadingBranches || !branches.length}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="h-11 rounded-xl bg-background">
+                              <SelectValue placeholder={isLoadingBranches ? "Loading branches" : "Select branch"} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {branches.map((branch: BranchOption) => (
+                              <SelectItem key={branch.id} value={String(branch.id)}>
+                                {branch.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage className="text-xs" />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="accountNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-semibold text-foreground">
+                          Account number <span className="text-destructive">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input {...field} className="bg-background font-mono tracking-[0.08em]" placeholder="e.g. 0123456789012" />
+                        </FormControl>
+                        <FormMessage className="text-xs" />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="swiftCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-semibold text-foreground">Swift code</FormLabel>
+                        <FormControl>
+                          <Input {...field} className="bg-background font-mono uppercase tracking-[0.12em]" placeholder="e.g. KCBLKENX" />
+                        </FormControl>
+                        <FormMessage className="text-xs" />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="currencyId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-semibold text-foreground">Currency</FormLabel>
+                        <Select
+                          value={field.value > 0 ? String(field.value) : undefined}
+                          onValueChange={(value) => field.onChange(Number(value))}
+                          disabled={isLoadingCurrencies || !currencies.length}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="h-11 rounded-xl bg-background">
+                              <SelectValue placeholder={isLoadingCurrencies ? "Loading currencies" : "Select currency"} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {currencies.map((currency: CurrencyOption) => {
+                              const label = currency.code || currency.name || String(currency.id)
+                              const suffix =
+                                currency.name && currency.code && currency.name.toLowerCase() !== currency.code.toLowerCase()
+                                  ? ` · ${currency.name}`
+                                  : ""
+
+                              return (
+                                <SelectItem key={currency.id} value={String(currency.id)}>
+                                  {label}
+                                  {suffix}
+                                </SelectItem>
+                              )
+                            })}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage className="text-xs" />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                </div>
+
+                <div className="flex flex-col-reverse gap-2 border-t border-border/60 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                  <Button type="button" variant="outline" size="sm" className="text-xs font-medium sm:min-w-[7.5rem]" onClick={closeForm}>
+                    <X className="mr-1.5 h-4 w-4" />
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    size="sm"
+                    className="min-w-[10rem] text-xs font-medium shadow-[0_14px_30px_-20px_rgba(37,99,235,0.55)]"
+                    disabled={saveMutation.isPending}
+                  >
+                    {saveMutation.isPending ? <Spinner className="mr-1.5 h-4 w-4" /> : <Save className="mr-1.5 h-4 w-4" />}
+                    {submitLabel}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={pendingDeleteId != null} onOpenChange={(open) => (!open ? setPendingDeleteId(null) : null)}>
         <AlertDialogContent className="shadow-none">
