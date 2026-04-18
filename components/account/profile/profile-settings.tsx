@@ -20,6 +20,7 @@ import TenantProfilePanel from "@/components/account/profile/tenant-profile-pane
 import CustomerProfilePanel from "@/components/account/profile/customer-profile-panel"
 import DangerZoneCard from "@/components/account/danger-card"
 import BankDetailsForm from "@/components/thirdParty/bank-details"
+import { parseJsonResponse } from "@/lib/parse-json-response"
 
 function LoadingState() {
   return (
@@ -93,7 +94,7 @@ export default function ProfileSettings() {
           cache: "no-store",
         })
 
-        const body = await response.json().catch(() => null)
+        const body = await parseJsonResponse(response)
         if (!response.ok) {
           throw new Error("Failed to load business types")
         }
@@ -111,7 +112,7 @@ export default function ProfileSettings() {
     let cancelled = false
     fetch("/api/v1/profile/logo", { method: "GET", cache: "no-store" })
       .then(async (res) => {
-        const body = await res.json().catch(() => null)
+        const body = await parseJsonResponse(res)
         if (!res.ok || body?.success === false) return
 
         const src =
@@ -142,7 +143,7 @@ export default function ProfileSettings() {
     let cancelled = false
     fetch("/api/v1/profile/user-image", { method: "GET", cache: "no-store" })
       .then(async (res) => {
-        const body = await res.json().catch(() => null)
+        const body = await parseJsonResponse(res)
         if (!res.ok || body?.success === false) return
 
         const src =

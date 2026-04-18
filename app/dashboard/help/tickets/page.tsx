@@ -12,6 +12,27 @@ import { NativeSelect, NativeSelectOption } from "@/components/common/native-sel
 import { Spinner } from "@/components/common/spinner"
 import { Textarea } from "@/components/common/textarea"
 import { useDebounce } from "@/hooks/use-debounce"
+import {
+  asText as s,
+  escapeRegExp,
+  getMentionTrigger,
+  mentionExistsInText,
+  MentionTrigger,
+  normalizeMentionCandidate,
+  parseMentionRows,
+  readText,
+  renderMessageWithMentions,
+  sanitizeMentionSearch,
+  toMentionHandle,
+  toPositiveInt,
+  uniqueMentionCandidates,
+} from "@/app/dashboard/help/tickets/_mention-utils"
+import {
+  formatTicketTokenLabel,
+  getTicketPriorityToneClasses,
+  getTicketStatusToneClasses,
+  normalizeTicketTokenKey,
+} from "@/app/dashboard/help/tickets/_ticket-ui-utils"
 import { cn } from "@/lib/utils"
 import {
   AlertCircle,
@@ -45,7 +66,6 @@ type SortKey = "newest" | "oldest"
 type Filters = { search: string; status: string; severity: string; sort: SortKey }
 type CreateFieldErrors = { subject?: string; message?: string }
 type NoticeTone = "success" | "info"
-type MentionTrigger = { start: number; end: number; query: string }
 type MentionCandidate = {
   key: string
   label: string
@@ -56,144 +76,6 @@ type MentionCandidate = {
 
 const DEFAULT_FILTERS: Filters = { search: "", status: "all", severity: "all", sort: "newest" }
 const STATUS_FILTERS = ["all", "open", "pending", "resolved", "closed"]
-
-const s = (v: unknown) => (v == null ? "" : String(v))
-
-function norm(v: string): string {
-  return v.trim().toLowerCase().replace(/\s+/g, "_")
-}
-
-function readText(v: unknown, depth = 0): string {
-  if (v == null) return ""
-  if (typeof v === "string") return v.trim()
-  if (typeof v === "number" || typeof v === "boolean" || typeof v === "bigint") return String(v)
-  if (Array.isArray(v)) return v.map((x) => readText(x, depth + 1)).filter(Boolean).join(" ").trim()
-  if (typeof v === "object" && depth < 3) {
-    const o = v as Record<string, unknown>
-    for (const k of ["subject", "message", "text", "content", "body", "title", "label", "name", "value"]) {
-      const t = readText(o[k], depth + 1)
-      if (t) return t
-    }
-    for (const x of Object.values(o)) {
-      const t = readText(x, depth + 1)
-      if (t) return t
-    }
-  }
-  return ""
-}
-
-function toPositiveInt(value: unknown): number | undefined {
-  const next = Number(value)
-  if (!Number.isFinite(next) || next <= 0) return undefined
-  return Math.trunc(next)
-}
-
-function toMentionHandle(value: unknown, fallback = "user"): string {
-  const normalized = s(value)
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9._\-\s]/g, "")
-    .replace(/\s+/g, ".")
-    .replace(/\.{2,}/g, ".")
-    .replace(/^\.|\.$/g, "")
-
-  return normalized || fallback
-}
-
-function sanitizeMentionSearch(value: string): string {
-  return value.trim().toLowerCase().replace(/[^a-z0-9._-]/g, "")
-}
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-}
-
-function uniqueMentionCandidates(list: MentionCandidate[]): MentionCandidate[] {
-  const map = new Map<string, MentionCandidate>()
-  for (const candidate of list) {
-    if (!map.has(candidate.key)) {
-      map.set(candidate.key, candidate)
-    }
-  }
-  return [...map.values()]
-}
-
-function parseMentionRows(payload: unknown): unknown[] {
-  const body = payload as any
-  for (const candidate of [body?.data, body?.items, body?.rows, body]) {
-    if (Array.isArray(candidate)) return candidate
-  }
-  return []
-}
-
-function normalizeMentionCandidate(input: unknown): MentionCandidate | null {
-  if (!input || typeof input !== "object") return null
-
-  const row = input as Record<string, unknown>
-  const mentionId = toPositiveInt(
-    row.id ??
-    row.Id ??
-    row.user_id ??
-    row.userId ??
-    row.third_party_user_id ??
-    row.thirdPartyUserId,
-  )
-
-  const label =
-    readText(row.name ?? row.full_name ?? row.fullName ?? row.label ?? row.title ?? row.username ?? row.email) ||
-    (mentionId ? `User ${mentionId}` : "")
-  if (!label) return null
-
-  const email = s(row.email).trim() || undefined
-  const handle = toMentionHandle(
-    row.username ?? row.handle ?? row.tag ?? row.slug ?? label ?? email ?? (mentionId ? `user.${mentionId}` : "user"),
-    mentionId ? `user.${mentionId}` : "user",
-  )
-
-  return {
-    key: mentionId ? `api:${mentionId}` : `api:${handle}`,
-    label,
-    handle,
-    mentionId,
-    email,
-  }
-}
-
-function getMentionTrigger(value: string, cursor: number): MentionTrigger | null {
-  const prefix = value.slice(0, cursor)
-  const match = /(^|[\s(])@([a-zA-Z0-9._-]*)$/.exec(prefix)
-  if (!match) return null
-
-  const query = match[2] ?? ""
-  const atPosition = prefix.lastIndexOf("@")
-  if (atPosition < 0) return null
-
-  return { start: atPosition, end: cursor, query }
-}
-
-function mentionExistsInText(text: string, handle: string): boolean {
-  if (!text.trim() || !handle) return false
-  const pattern = new RegExp(`(^|[\\s(])@${escapeRegExp(handle)}(?=\\b|[\\s).,!?]|$)`, "i")
-  return pattern.test(text)
-}
-
-function renderMessageWithMentions(text: string) {
-  const parts = text.split(/(@[a-zA-Z0-9._-]+)/g)
-  return parts.map((part, index) => {
-    if (!part.startsWith("@")) {
-      return <React.Fragment key={`txt-${index}`}>{part}</React.Fragment>
-    }
-
-    return (
-      <span
-        key={`mention-${index}`}
-        className="inline-flex items-center rounded-md bg-blue-100/80 px-1 py-0.5 font-semibold text-blue-700"
-      >
-        {part}
-      </span>
-    )
-  })
-}
 
 function readNum(v: unknown, depth = 0): number | null {
   if (v == null) return null
@@ -218,7 +100,7 @@ function readNum(v: unknown, depth = 0): number | null {
 }
 
 function isUserMessage(raw: any): boolean {
-  const sender = norm(readText(raw?.senderType ?? raw?.sender_type ?? raw?.sender ?? raw?.source))
+  const sender = normalizeTicketTokenKey(readText(raw?.senderType ?? raw?.sender_type ?? raw?.sender ?? raw?.source))
   if (sender) return ["user", "customer", "requester", "portal", "portal_user", "logged_in_user"].includes(sender)
   return Boolean(raw?.isFromUser ?? raw?.is_from_user ?? raw?.mine)
 }
@@ -271,33 +153,12 @@ function metaFrom(body: any): { page: number; last: number; per: number } | null
   return { page: Math.max(1, Number(page ?? 1)), last: Math.max(1, Number(last ?? 1)), per: Math.max(1, Number(per ?? DEFAULT_PAGE_SIZE)) }
 }
 
-function statusTone(status: string): string {
-  const key = norm(status)
-  if (["resolved", "closed", "done"].includes(key)) return "border-emerald-200 text-emerald-700 bg-emerald-50"
-  if (["pending", "waiting", "in_progress", "pending_approval"].includes(key)) return "border-amber-200 text-amber-700 bg-amber-50"
-  if (["rejected", "failed"].includes(key)) return "border-rose-200 text-rose-700 bg-rose-50"
-  return "border-blue-200 text-blue-700 bg-blue-50"
-}
-
-function priorityTone(priority: string): string {
-  const key = norm(priority)
-  if (key === "urgent") return "border-rose-200 text-rose-700 bg-rose-50"
-  if (key === "high") return "border-amber-200 text-amber-700 bg-amber-50"
-  if (key === "low") return "border-emerald-200 text-emerald-700 bg-emerald-50"
-  return "border-slate-200 text-slate-700 bg-slate-50"
-}
-
 function rowAccent(status: string): string {
-  const key = norm(status)
+  const key = normalizeTicketTokenKey(status)
   if (["resolved", "closed", "done"].includes(key)) return "border-l-emerald-400"
   if (["pending", "waiting", "in_progress", "pending_approval"].includes(key)) return "border-l-amber-400"
   if (["rejected", "failed"].includes(key)) return "border-l-rose-400"
   return "border-l-blue-400"
-}
-
-function displayText(value: string, fallback: string): string {
-  const t = value.trim().replace(/[_-]+/g, " ")
-  return t ? t.charAt(0).toUpperCase() + t.slice(1) : fallback
 }
 
 function validateTicketPayload(subject: string, message: string): { ok: boolean; nextErrors: CreateFieldErrors; cleanSubject: string; cleanMessage: string } {
@@ -353,7 +214,7 @@ function createdTicketIdFrom(body: any): string {
 
 function statusFilterLabel(value: string): string {
   if (value === "all") return "All"
-  return displayText(value, "All")
+  return formatTicketTokenLabel(value, "All")
 }
 export default function TicketsPage() {
   const [tickets, setTickets] = useState<Ticket[]>([])
@@ -1055,15 +916,15 @@ export default function TicketsPage() {
 
                         <div className="text-sm">
                           <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 lg:hidden">Status</p>
-                          <span className={cn("inline-flex h-7 items-center rounded-full border px-3 text-xs font-semibold", statusTone(t.status))}>
-                            {displayText(t.status, "Open")}
+                          <span className={cn("inline-flex h-7 items-center rounded-full border px-3 text-xs font-semibold", getTicketStatusToneClasses(t.status))}>
+                            {formatTicketTokenLabel(t.status, "Open")}
                           </span>
                         </div>
 
                         <div className="text-sm">
                           <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 lg:hidden">Priority</p>
-                          <span className={cn("inline-flex h-7 items-center rounded-full border px-3 text-xs font-semibold", priorityTone(t.priority))}>
-                            {displayText(t.priority, "Normal")}
+                          <span className={cn("inline-flex h-7 items-center rounded-full border px-3 text-xs font-semibold", getTicketPriorityToneClasses(t.priority, "border-slate-200 text-slate-700 bg-slate-50"))}>
+                            {formatTicketTokenLabel(t.priority, "Normal")}
                           </span>
                         </div>
 

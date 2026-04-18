@@ -10,9 +10,9 @@ export async function GET(_request: NextRequest) {
     }
 
     try {
-    const backendUrl = `${getBaseUrl() || process.env.NEXT_PUBLIC_API_URL || ''}/api/v1/supplier/documents`
+        const backendUrl = `${getBaseUrl()}/api/v1/supplier/documents`
 
-    const res = await fetch(backendUrl, {
+        const res = await fetch(backendUrl, {
             headers: {
                 Accept: "application/json",
                 Authorization: `Bearer ${session.accessToken}`,

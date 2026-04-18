@@ -12,7 +12,7 @@ export function createPageMetadata(
         description: pageDescription ?? CLIENT_APP_NAME.meta.description,
         applicationName: CLIENT_APP_NAME.name,
         keywords: [
-            "third parties portal",
+            "third party portal",
             "self service",
             "vendor management",
             "BR Portal",

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server"
-import { getBaseUrl } from "@/lib/api-base"
 import { z } from "zod"
 import { Currency } from '@/types/currencies';
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth-options"
+import { fetchUpstreamJson, toServerErrorResponse, toUpstreamErrorResponse } from "@/app/api/_shared/upstream-json"
 
 const RawCurrencySchema = z.object({
     id: z.union([z.string(), z.number()]).optional(),
@@ -50,13 +50,10 @@ function normalizeCurrencies(input: unknown): Currency[] {
 
 export async function GET() {
     try {
-    const apiBase = getBaseUrl() || process.env.NEXT_PUBLIC_API_URL || ''
-    if (!apiBase) return NextResponse.json({ data: [] })
-
-    const session = await getServerSession(authOptions)
+        const session = await getServerSession(authOptions)
         const hasToken = Boolean(session?.accessToken)
 
-    const res = await fetch(`${apiBase}/api/v1/currencies`, {
+        const response = await fetchUpstreamJson("/api/v1/currencies", {
             headers: {
                 Accept: "application/json",
                 ...(hasToken ? { Authorization: `Bearer ${session!.accessToken}` } : {}),
@@ -64,14 +61,14 @@ export async function GET() {
             ...(hasToken ? { cache: "no-store" as const } : { next: { revalidate: 3600 } }),
         })
 
-        if (!res.ok) {
-            const body = await res.json().catch(() => ({ message: "Upstream Error" }))
-            return NextResponse.json(body, { status: res.status })
+        if (response.missingBase) return NextResponse.json({ data: [] })
+
+        if (!response.ok) {
+            return toUpstreamErrorResponse(response.body, response.status, { message: "Upstream Error" })
         }
 
-        const body = await res.json()
-        return NextResponse.json({ data: normalizeCurrencies(body) })
+        return NextResponse.json({ data: normalizeCurrencies(response.body) })
     } catch {
-        return NextResponse.json({ message: "Internal server error" }, { status: 500 })
+        return toServerErrorResponse({ message: "Internal server error" })
     }
 }

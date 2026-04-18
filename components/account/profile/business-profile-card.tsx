@@ -12,6 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/common/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/common/select"
 import { Spinner } from "@/components/common/spinner"
+import { parseJsonResponse } from "@/lib/parse-json-response"
 import { cn } from "@/lib/utils"
 import { normalizeString } from "@/components/account/profile/utils"
 
@@ -187,7 +188,7 @@ export default function BusinessProfileCard({
         cache: "no-store",
       })
 
-      const body = (await response.json().catch(() => null)) as BusinessTypesResponse | null
+      const body = (await parseJsonResponse<BusinessTypesResponse>(response)) as BusinessTypesResponse | null
       if (!response.ok) {
         throw new Error("Failed to load business types")
       }

@@ -10,6 +10,7 @@ import { Input } from '@/components/common/input';
 import { Label } from '@/components/common/label';
 import { useSession } from 'next-auth/react';
 import { motion } from 'framer-motion';
+import { parseJsonResponse } from '@/lib/parse-json-response';
 
 const generalProfileSchema = z.object({
     firstName: z.string().min(1, "First name is required.").max(50),
@@ -87,14 +88,14 @@ export default function GeneralProfileSettings({ initialData }: GeneralProfileSe
                 credentials: 'same-origin',
                 body: JSON.stringify(data),
             }).then(async res => {
-                const responseData = await res.json();
+                const responseData = await parseJsonResponse<{ message?: string; errors?: Record<string, string[]> }>(res);
                 if (!res.ok) {
-                    const errorMessage = responseData.message || 'Failed to update profile.';
-                    const errorDetails = responseData.errors ? Object.values(responseData.errors).flat().join('\n') : '';
+                    const errorMessage = responseData?.message || 'Failed to update profile.';
+                    const errorDetails = responseData?.errors ? Object.values(responseData.errors).flat().join('\n') : '';
                     throw new Error(`${errorMessage}\n${errorDetails}`);
                 }
                 reset(data);
-                return responseData.message || 'Profile updated successfully.';
+                return responseData?.message || 'Profile updated successfully.';
             }),
             { loading: 'Saving profile', success: m => m, error: e => e.message }
         );

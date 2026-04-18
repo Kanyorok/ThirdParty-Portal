@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
-import { getBaseUrl } from "@/lib/api-base"
 import { z } from "zod"
 import type { CountryOption } from "@/types/third-party"
+import { fetchUpstreamJson, toServerErrorResponse, toUpstreamErrorResponse } from "@/app/api/_shared/upstream-json"
 
 const CountrySchema = z.object({
   id: z.number().or(z.string().transform((v) => Number(v))).optional(),
@@ -39,23 +39,20 @@ function normalizeCountries(input: unknown): CountryOption[] {
 
 export async function GET() {
   try {
-  const apiBase = getBaseUrl() || process.env.NEXT_PUBLIC_API_URL || ''
-  if (!apiBase) return NextResponse.json({ data: [] })
-
-  const res = await fetch(`${apiBase}/api/v1/portal/auth/metadata/countries`, {
+    const response = await fetchUpstreamJson("/api/v1/portal/auth/metadata/countries", {
       headers: { Accept: "application/json" },
       next: { revalidate: 24 * 60 * 60 },
     })
 
-    const body = await res.json().catch(() => null)
+    if (response.missingBase) return NextResponse.json({ data: [] })
 
-    if (!res.ok) {
-      return NextResponse.json(body ?? { message: "Upstream Error" }, { status: res.status })
+    if (!response.ok) {
+      return toUpstreamErrorResponse(response.body, response.status, { message: "Upstream Error" })
     }
 
-    return NextResponse.json({ data: normalizeCountries(body) })
+    return NextResponse.json({ data: normalizeCountries(response.body) })
   } catch {
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 })
+    return toServerErrorResponse({ message: "Internal server error" })
   }
 }
 

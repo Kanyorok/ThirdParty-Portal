@@ -59,7 +59,7 @@ const signInLinkClass = "group inline-flex w-full items-center justify-center ga
 const sectionCardClass = "p-0"
 const formSectionGridClass = "mt-5 grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2 md:items-start"
 const fieldBlockClass = "grid content-start gap-2.5"
-type StepId = "role-setup" | "business" | "contact" | "supplier-documents" | "profile-details" | "user-access"
+type StepId = "role-setup" | "business" | "supplier-documents" | "profile-details" | "user-access"
 
 type StepMeta = {
     id: StepId
@@ -205,9 +205,11 @@ function SelectFieldBlock({
     hint?: React.ReactNode
     className?: string
 }) {
+    const controlledValue = value ?? ""
+
     return (
         <FieldShell label={label} required={required} error={error} hint={hint} className={className}>
-            <Select value={value} onValueChange={onValueChange} disabled={disabled}>
+            <Select value={controlledValue} onValueChange={onValueChange} disabled={disabled}>
                 <SelectTrigger className={cn(selectStyle, error && inputErrorClass)} aria-required={required ? "true" : undefined}>
                     <SelectValue placeholder={placeholder} />
                 </SelectTrigger>
@@ -319,7 +321,7 @@ export default function RegisterForm() {
             {
                 id: "business",
                 title: "Business",
-                description: "Register the organization using official business details.",
+                description: "Register the organization using official business details and primary contact information.",
                 fields: [
                     "Name",
                     "TradingName",
@@ -327,15 +329,15 @@ export default function RegisterForm() {
                     "RegistrationNumber",
                     "TaxPIN",
                     "VATNumber",
+                    "Email",
+                    "Phone",
+                    "Country",
+                    "Location",
+                    "PhysicalAddress",
+                    "Website",
                     ...(isSupplier ? ["supplier_category_id"] : []),
                     ...(showContactPersonFields ? ["contactPersonName", "contactPersonEmail", "contactPersonPhone"] : []),
                 ],
-            },
-            {
-                id: "contact",
-                title: "Contact",
-                description: "Add the primary business contacts and operating location.",
-                fields: ["Email", "Phone", "Country", "Location", "PhysicalAddress", "Website"],
             },
         ]
 
@@ -477,7 +479,7 @@ export default function RegisterForm() {
             return false
         }
 
-        const requiresServerValidation = currentStep?.id === "business" || currentStep?.id === "contact" || currentStep?.id === "user-access"
+        const requiresServerValidation = currentStep?.id === "business"
         if (requiresServerValidation && currentStep) {
             const serverValidation = await validateRegistrationStep(currentStep.id, form.getValues(), fields)
             if (!serverValidation.valid) {
@@ -760,39 +762,35 @@ export default function RegisterForm() {
                                                 <FieldError message={errors.VATNumber?.message as string | undefined} />
                                             </div>
 
-                                            {isSupplier ? (
+                                            {isSupplier && showContactPersonFields ? (
                                                 <>
-                                                    {showContactPersonFields ? (
-                                                        <>
-                                                            <div className={fieldBlockClass}>
-                                                                <FieldLabel required>Contact Person Name</FieldLabel>
-                                                                <Input required {...form.register("contactPersonName")} placeholder="Jane Doe" className={cn(inputStyle, errors.contactPersonName && inputErrorClass)} />
-                                                                <FieldError message={errors.contactPersonName?.message as string | undefined} />
-                                                            </div>
+                                                    <div className={fieldBlockClass}>
+                                                        <FieldLabel required>Contact Person Name</FieldLabel>
+                                                        <Input required {...form.register("contactPersonName")} placeholder="Jane Doe" className={cn(inputStyle, errors.contactPersonName && inputErrorClass)} />
+                                                        <FieldError message={errors.contactPersonName?.message as string | undefined} />
+                                                    </div>
 
-                                                            <div className={fieldBlockClass}>
-                                                                <FieldLabel required>Contact Person Email</FieldLabel>
-                                                                <Input type="email" required {...form.register("contactPersonEmail")} placeholder="jane@company.com" className={cn(inputStyle, errors.contactPersonEmail && inputErrorClass)} />
-                                                                <FieldError message={errors.contactPersonEmail?.message as string | undefined} />
-                                                            </div>
+                                                    <div className={fieldBlockClass}>
+                                                        <FieldLabel required>Contact Person Email</FieldLabel>
+                                                        <Input type="email" required {...form.register("contactPersonEmail")} placeholder="jane@company.com" className={cn(inputStyle, errors.contactPersonEmail && inputErrorClass)} />
+                                                        <FieldError message={errors.contactPersonEmail?.message as string | undefined} />
+                                                    </div>
 
-                                                            <div className={fieldBlockClass}>
-                                                                <FieldLabel required>Contact Person Phone</FieldLabel>
-                                                                <Input type="tel" inputMode="tel" pattern="[+]?[0-9]{8,15}" required {...form.register("contactPersonPhone")} placeholder="+254711111111" className={cn(inputStyle, errors.contactPersonPhone && inputErrorClass)} />
-                                                                <FieldError message={errors.contactPersonPhone?.message as string | undefined} />
-                                                            </div>
-                                                        </>
-                                                    ) : null}
+                                                    <div className={fieldBlockClass}>
+                                                        <FieldLabel required>Contact Person Phone</FieldLabel>
+                                                        <Input type="tel" inputMode="tel" pattern="[+]?[0-9]{8,15}" required {...form.register("contactPersonPhone")} placeholder="+254711111111" className={cn(inputStyle, errors.contactPersonPhone && inputErrorClass)} />
+                                                        <FieldError message={errors.contactPersonPhone?.message as string | undefined} />
+                                                    </div>
                                                 </>
                                             ) : null}
-                                        </div>
-                                    </section>
-                                ) : null}
 
-                                {currentStep?.id === "contact" ? (
-                                    <section className={sectionCardClass}>
-                                        <SectionTitle title="Contact" icon={UserCog} />
-                                        <div className={formSectionGridClass}>
+                                            <div className="md:col-span-2 mt-2 border-t border-slate-200 pt-5">
+                                                <div className="space-y-1.5">
+                                                    <h3 className="text-sm font-bold uppercase tracking-[0.08em] text-slate-700">Primary Contact</h3>
+                                                    <p className="text-sm font-medium leading-6 text-slate-500">These fields are required by the registration backend for the business profile.</p>
+                                                </div>
+                                            </div>
+
                                             <div className={fieldBlockClass}>
                                                 <FieldLabel>Business Email</FieldLabel>
                                                 <Input type="email" autoComplete="email" {...form.register("Email")} placeholder="procurement@company.com" className={cn(inputStyle, errors.Email && inputErrorClass)} />
@@ -854,45 +852,70 @@ export default function RegisterForm() {
 
                                 {currentStep?.id === "supplier-documents" ? (
                                     <section className={sectionCardClass}>
-                                        <SectionTitle title="Supplier Documents" icon={FileCheck2} />
-                                        <div className="mt-4 grid grid-cols-1 gap-4">
-                                            {metadata.supplierDocumentRequirements.map((requirement) => (
-                                                <div key={requirement.id} className="rounded-[8px] border border-slate-200 bg-transparent p-4">
-                                                    <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
-                                                        <div>
-                                                            <p className="text-sm font-semibold text-slate-900">
-                                                                {requirement.name}
-                                                                {requirement.isRequired ? <span className="text-rose-600"> *</span> : null}
-                                                            </p>
-                                                            {requirement.description ? <p className="text-xs text-slate-500">{requirement.description}</p> : null}
-                                                        </div>
-                                                        <div className="text-xs text-slate-500">
-                                                            {requirement.allowedExtensions.length > 0 ? `Allowed: ${requirement.allowedExtensions.join(", ")}` : "Any supported file type"}
-                                                            {requirement.maxFileSizeKb ? ` • Max ${requirement.maxFileSizeKb} KB` : ""}
-                                                        </div>
-                                                    </div>
+                                        <SectionTitle title="Supplier Documents" icon={FileCheck2} description="Upload the supporting documents required for supplier registration." />
+                                        <div className="grid gap-5">
+                                            {metadata.supplierDocumentRequirements.length > 0 ? (
+                                                metadata.supplierDocumentRequirements.map((requirement) => {
+                                                    const selectedFile = documentFiles[requirement.id]
+                                                    const noteValue = documentNotes[requirement.id] ?? ""
+                                                    const allowedExtensions = requirement.allowedExtensions
+                                                        .map((extension) => extension.trim())
+                                                        .filter(Boolean)
+                                                    const accept = allowedExtensions.length > 0
+                                                        ? allowedExtensions.map((extension) => (extension.startsWith(".") ? extension : `.${extension}`)).join(",")
+                                                        : undefined
+                                                    const metadataHint = [
+                                                        allowedExtensions.length > 0 ? `Allowed: ${allowedExtensions.join(", ")}` : null,
+                                                        requirement.maxFileSizeKb ? `Max size: ${requirement.maxFileSizeKb} KB` : null,
+                                                    ].filter(Boolean).join(". ")
 
-                                                    <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
-                                                        <FileFieldBlock
-                                                            label="Document File"
-                                                            required={requirement.isRequired}
-                                                            onChange={(event) => setRegistrationDocumentFile(requirement.id, event.target.files?.[0] ?? null)}
-                                                            selectedFileName={documentFiles[requirement.id]?.name}
-                                                            error={documentErrors[requirement.id]}
-                                                        />
+                                                    return (
+                                                        <div key={requirement.id} className="rounded-[14px] border border-slate-200 bg-white p-4 sm:p-5">
+                                                            <div className="space-y-1.5">
+                                                                <h3 className="text-sm font-bold uppercase tracking-[0.08em] text-slate-700">
+                                                                    {requirement.name}
+                                                                    {requirement.isRequired ? <span className="text-rose-600"> *</span> : null}
+                                                                </h3>
+                                                                {requirement.description ? (
+                                                                    <p className="text-sm font-medium leading-6 text-slate-600">{requirement.description}</p>
+                                                                ) : null}
+                                                                {metadataHint ? (
+                                                                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">{metadataHint}</p>
+                                                                ) : null}
+                                                            </div>
 
-                                                        <div className="grid gap-2.5">
-                                                            <FieldLabel>Document Note</FieldLabel>
-                                                            <Textarea
-                                                                value={documentNotes[requirement.id] ?? ""}
-                                                                onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => setRegistrationDocumentNote(requirement.id, event.target.value)}
-                                                                placeholder="Optional note for this document"
-                                                                className={cn(textAreaStyle, documentErrors[requirement.id] && inputErrorClass)}
-                                                            />
+                                                            <div className="mt-4 grid gap-4 md:grid-cols-2 md:items-start">
+                                                                <FileFieldBlock
+                                                                    label="Document File"
+                                                                    required={requirement.isRequired}
+                                                                    accept={accept}
+                                                                    onChange={(event) => setRegistrationDocumentFile(requirement.id, event.target.files?.[0] ?? null)}
+                                                                    selectedFileName={selectedFile?.name ?? null}
+                                                                    error={documentErrors[requirement.id]}
+                                                                />
+
+                                                                <FieldShell
+                                                                    label="Document Note"
+                                                                    hint="Optional note for reviewers or document context."
+                                                                >
+                                                                    <Textarea
+                                                                        value={noteValue}
+                                                                        onChange={(event) => setRegistrationDocumentNote(requirement.id, event.target.value)}
+                                                                        placeholder="Add a note for this document"
+                                                                        className={textAreaStyle}
+                                                                    />
+                                                                </FieldShell>
+                                                            </div>
                                                         </div>
-                                                    </div>
+                                                    )
+                                                })
+                                            ) : (
+                                                <div className="rounded-[14px] border border-dashed border-slate-300 bg-white p-5">
+                                                    <p className="text-sm font-medium leading-6 text-slate-600">
+                                                        No supplier document requirements were returned for the current registration metadata.
+                                                    </p>
                                                 </div>
-                                            ))}
+                                            )}
                                         </div>
                                     </section>
                                 ) : null}

@@ -44,7 +44,7 @@ export type TenantBreakdown = {
 }
 
 import { getBaseUrl } from "./api-base"
-const API_BASE = getBaseUrl() || process.env.NEXT_PUBLIC_API_URL || ''
+const API_BASE = getBaseUrl()
 const DASHBOARD_BIDS_PER_PAGE = 100
 const DASHBOARD_BIDS_MAX_PAGES = 40
 
@@ -348,7 +348,7 @@ export async function getDashboardData() {
 
         const [leasesRes, invoicesRes] = await Promise.allSettled([
             fetch(`${apiBase}/api/v1/property/leases/tenant?${leaseParams.toString()}`, { headers, cache: "no-store" }).then((r) => r.json()),
-                fetch(`${apiBase}/api/v1/property/invoices/tenant?${invoiceParams.toString()}`, { headers, cache: "no-store" }).then((r) => r.json()),
+            fetch(`${apiBase}/api/v1/property/invoices/tenant?${invoiceParams.toString()}`, { headers, cache: "no-store" }).then((r) => r.json()),
         ])
 
         const leaseEntries =
@@ -377,12 +377,12 @@ export async function getDashboardData() {
             return deadline >= now && deadline <= soonThreshold
         }).length
 
-            const inactiveLeases = Math.max(0, leaseTotal - activeLeases)
+        const inactiveLeases = Math.max(0, leaseTotal - activeLeases)
 
-            let invoicePaid = 0
-            let invoicePending = 0
-            let invoiceOverdue = 0
-            let outstandingAmount = 0
+        let invoicePaid = 0
+        let invoicePending = 0
+        let invoiceOverdue = 0
+        let outstandingAmount = 0
 
         const invoiceTotal =
             Number(invoicesRes.status === "fulfilled" ? invoicesRes.value?.meta?.total : NaN) ||

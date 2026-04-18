@@ -7,6 +7,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/common/button"
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/common/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/common/avatar"
+import { parseJsonResponse } from "@/lib/parse-json-response"
 import { cn } from "@/lib/utils"
 import { Spinner } from "@/components/common/spinner"
 
@@ -82,7 +83,7 @@ export default function LogoDialog({ open, onOpenChange, logoUrl, onLogoUrlChang
     startTransition(async () => {
       try {
         const res = await fetch("/api/v1/profile/logo", { method: "POST", body: formData })
-        const body = await res.json().catch(() => ({}))
+        const body = await parseJsonResponse(res)
         if (!res.ok || body?.success === false) throw new Error(body?.message || "Failed to upload logo.")
 
         const nextUrl =

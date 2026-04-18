@@ -17,6 +17,7 @@ import {
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { resolveBidStatus } from "@/lib/bids/status"
+import { parseJsonResponse } from "@/lib/parse-json-response"
 import { toast } from "sonner"
 import TenderResponseForm from "./tender-response-form"
 import TenderClarifications from "./tender-clarifications"
@@ -275,8 +276,9 @@ export default function TenderDetailModal({
         `/api/tenders${params.toString() ? `?${params.toString()}` : ""}`,
         { headers: { Accept: "application/json" } }
       )
-      const json = await res.json().catch(() => null)
-      if (!res.ok) throw new Error(json?.message ?? "Failed to refresh documents")
+      const json = await parseJsonResponse<{ data?: any[]; message?: string; error?: string } | any[]>(res)
+      const message = Array.isArray(json) ? null : json?.message ?? json?.error ?? null
+      if (!res.ok) throw new Error(message ?? "Failed to refresh documents")
       const list = Array.isArray(json?.data)
         ? json.data
         : Array.isArray(json)
@@ -310,7 +312,7 @@ export default function TenderDetailModal({
         credentials: "same-origin",
         cache: "no-store",
       })
-      const data = await response.json().catch(() => null)
+      const data = await parseJsonResponse<{ message?: string; error?: string; existingBid?: any }>(response)
       if (!response.ok) throw new Error(data?.message || "Failed to check existing bids")
 
       const existingBid = data?.existingBid ?? null

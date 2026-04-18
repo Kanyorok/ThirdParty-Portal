@@ -25,6 +25,7 @@ import {
 
 import { cn } from "@/lib/utils"
 import { resolveProcurementDocumentName } from "@/lib/procurement-document-name"
+import { parseJsonResponse } from "@/lib/parse-json-response"
 import { parseSubmissionDeadline } from "@/lib/deadline"
 import {
     isRfqAwardedStatus,
@@ -351,8 +352,8 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
         try {
             const res = await fetch(`/api/procurement/rfq-clarifications/${encodeURIComponent(rfqId)}`, { cache: "no-store" })
             if (res.ok) {
-                const json = (await res.json().catch(() => ({}))) as RfqClarificationsResponse
-                setClarifications(Array.isArray(json.data) ? json.data : [])
+                const json = await parseJsonResponse<RfqClarificationsResponse>(res)
+                setClarifications(Array.isArray(json?.data) ? json.data : [])
             }
         } catch { } finally { setClarLoading(false) }
     }, [rfqId])
@@ -391,7 +392,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                     isPublic: clarIsPublic,
                 }),
             })
-            const json = await res.json().catch(() => ({}))
+            const json = await parseJsonResponse(res)
             if (!res.ok) {
                 if (json?.errors && typeof json.errors === "object") {
                     const errorList = Object.entries(json.errors)
@@ -442,7 +443,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
             setCurrenciesLoading(true)
             try {
                 const res = await fetch("/api/currencies", { cache: "no-store" })
-                const json = await res.json().catch(() => ({}))
+                const json = await parseJsonResponse<{ data?: Currency[] }>(res)
                 const rows = Array.isArray(json?.data) ? (json.data as Currency[]) : []
                 if (!cancelled) {
                     setCurrencies(rows)
@@ -622,7 +623,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                 }),
             })
 
-            const json = await res.json().catch(() => ({}))
+            const json = await parseJsonResponse(res)
             if (!res.ok) {
                 if (json?.errors && typeof json.errors === "object") {
                     setSubmitFieldErrors(json.errors)
@@ -710,7 +711,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                 body: JSON.stringify(body),
             })
 
-            const json = await res.json().catch(() => ({}))
+            const json = await parseJsonResponse(res)
             if (!res.ok) {
                 const upstreamStatus = json?.upstreamStatus ?? res.status
                 if (isAlreadySubmittedErrorResponse(json, upstreamStatus)) {
@@ -748,7 +749,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
             try {
                 const fd = new FormData(); fd.append("file", file)
                 const res = await fetch(`/api/procurement/rfq-response-documents/${encodeURIComponent(String(rfqIdValue))}`, { method: "POST", body: fd })
-                const json = await res.json().catch(() => ({}))
+                const json = await parseJsonResponse(res)
                 if (!res.ok) throw new Error(json?.message ?? "Unable to upload document")
                 const created = json?.data ?? json
                 setQuoteDocuments((prev) => prev.map((d) => String(d.id) === tmpId ? { ...d, id: created?.id ?? tmpId, previewUrl: created?.downloadUrl ?? null, uploading: false } : d))
@@ -779,7 +780,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                 headers: { "Content-Type": "application/json", Accept: "application/json" },
                 body: JSON.stringify({ id: docId, documentId: docId, rfqId: rfqIdValue }),
             })
-            const payload = await res.json().catch(() => ({}))
+            const payload = await parseJsonResponse(res)
             if (!res.ok) throw new Error((payload as any)?.message ?? "Unable to verify document")
             setVerifiedByDocId((prev) => ({ ...prev, [String(docId)]: payload }))
             toast.success("Document verified.")

@@ -26,6 +26,7 @@ import {
 import { cn } from "@/lib/utils"
 import { parseSubmissionDeadline } from "@/lib/deadline"
 import { resolveProcurementDocumentName } from "@/lib/procurement-document-name"
+import { parseJsonResponse } from "@/lib/parse-json-response"
 import { isRfqAwardedStatus, isRfqClosedStatus, isRfqSubmittedResponseStatus, normalizeRfqStatusKey } from "@/lib/rfq-status"
 import type { Currency } from "@/types/currencies"
 import { Badge } from "@/components/common/badge"
@@ -845,7 +846,7 @@ export function RfqQuotation() {
           `/api/procurement/rfq-suppliers/${encodeURIComponent(normalizedRfqId)}`,
           { cache: "no-store" }
         )
-        const json = await res.json().catch(() => ({}))
+        const json = await parseJsonResponse(res)
         if (!res.ok) {
           throw new Error(
             json?.message ?? json?.error ?? `Failed to load RFQ (HTTP ${res.status})`
@@ -880,7 +881,7 @@ export function RfqQuotation() {
         `/api/procurement/rfq-clarifications/${encodeURIComponent(normalizedRfqId)}`,
         { cache: "no-store" }
       )
-      const json = await res.json().catch(() => ({}))
+      const json = await parseJsonResponse(res)
       if (!res.ok) {
         throw new Error(
           json?.message ?? json?.error ?? `Failed to load clarifications (HTTP ${res.status})`
@@ -1070,7 +1071,7 @@ export function RfqQuotation() {
       setCurrenciesLoading(true)
       try {
         const res = await fetch("/api/currencies", { cache: "no-store" })
-        const json = await res.json().catch(() => ({}))
+        const json = await parseJsonResponse<{ data?: Currency[] }>(res)
         const rows = Array.isArray(json?.data) ? (json.data as Currency[]) : []
         if (!cancelled) {
           setCurrencies(rows)
@@ -1279,7 +1280,7 @@ export function RfqQuotation() {
         body: JSON.stringify(body),
       })
 
-      const json = await res.json().catch(() => ({}))
+      const json = await parseJsonResponse(res)
       if (!res.ok) {
         const upstreamStatus = json?.upstreamStatus ?? res.status
         if (isAlreadySubmittedErrorResponse(json, upstreamStatus)) {
@@ -1409,7 +1410,7 @@ export function RfqQuotation() {
         }),
       })
 
-      const json = await res.json().catch(() => ({}))
+      const json = await parseJsonResponse(res)
       if (!res.ok) {
         const fieldErrors = formatValidationErrors(json?.errors)
         throw new Error(fieldErrors ?? json?.message ?? json?.error ?? `Failed to send clarification (HTTP ${res.status})`)
@@ -1449,10 +1450,7 @@ export function RfqQuotation() {
         }),
       })
 
-      const contentType = res.headers.get("content-type") || ""
-      const payload = contentType.includes("application/json")
-        ? await res.json().catch(() => ({}))
-        : { raw: await res.text().catch(() => "") }
+      const payload = await parseJsonResponse(res)
 
       if (!res.ok) {
         const msg =
@@ -1488,7 +1486,7 @@ export function RfqQuotation() {
         headers: { Accept: "application/json" },
         cache: "no-store",
       })
-      const json = await res.json().catch(() => ({}))
+      const json = await parseJsonResponse(res)
       if (!res.ok) {
         throw new Error(json?.error ?? json?.message ?? `Failed to load documents (HTTP ${res.status})`)
       }
@@ -1514,7 +1512,7 @@ export function RfqQuotation() {
         headers: { Accept: "application/json" },
         cache: "no-store",
       })
-      const json = await res.json().catch(() => ({}))
+      const json = await parseJsonResponse(res)
       if (!res.ok) {
         throw new Error(json?.error ?? json?.message ?? `Failed to load documents (HTTP ${res.status})`)
       }
@@ -1607,7 +1605,7 @@ export function RfqQuotation() {
           { method: "DELETE" }
         )
         if (!res.ok) {
-          const json = await res.json().catch(() => ({}))
+          const json = await parseJsonResponse(res)
           toast.error(json?.message ?? "Unable to delete document.")
           return
         }
@@ -1650,7 +1648,7 @@ export function RfqQuotation() {
           body: fd,
         })
 
-        const json = await res.json().catch(() => ({}))
+        const json = await parseJsonResponse(res)
         if (!res.ok) {
           throw new Error(json?.error ?? json?.message ?? `Upload failed (HTTP ${res.status})`)
         }

@@ -1,6 +1,6 @@
-# Supplier Portal API Reference
+# Third Party Portal API Reference
 
-> Frontend production contract for the supplier portal.
+> Frontend production contract for the Third Party Portal.
 >
 > Base URL: `/api/v1`
 >
@@ -8,7 +8,7 @@
 
 ## Scope
 
-This document is a production-oriented frontend reference for the supplier portal API.
+This document is a production-oriented frontend reference for the Third Party Portal API.
 
 It does four things:
 

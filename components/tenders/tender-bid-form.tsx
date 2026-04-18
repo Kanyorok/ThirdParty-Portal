@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { resolveBidStatus } from "@/lib/bids/status";
+import { parseJsonResponse } from "@/lib/parse-json-response";
 import { Spinner } from "@/components/common/spinner";
 
 // Simple module scoped counter for fallback IDs (avoids window any casts)
@@ -148,7 +149,7 @@ export default function TenderBidForm({
     try {
       const noParam = tender.tenderNo ? `&tenderNo=${encodeURIComponent(tender.tenderNo)}` : "";
       const response = await fetch(`/api/tender-bids?all=true&tenderId=${tender.id}${noParam}`);
-      const data = await response.json();
+      const data = await parseJsonResponse<{ data?: BidSubmission[] }>(response);
       const list: BidSubmission[] = Array.isArray(data?.data) ? data.data : [];
       const sorted = [...list].sort((a, b) => {
         const left = getBidTimestamp(a) ? new Date(getBidTimestamp(a)).getTime() : 0;
@@ -469,7 +470,7 @@ export default function TenderBidForm({
         body: formData,
       });
 
-      const data = await response.json();
+      const data = await parseJsonResponse<{ message?: string; error?: string; data?: Record<string, any> }>(response);
 
       if (!response.ok) {
         const existingBidPayload = data?.data && typeof data.data === "object" ? data.data : null;

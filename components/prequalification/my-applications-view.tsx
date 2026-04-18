@@ -29,6 +29,7 @@ import {
 } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
+import { parseJsonResponse } from "@/lib/parse-json-response"
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/common/select"
@@ -171,11 +172,11 @@ export default function MyApplicationsView({
                 }),
             ])
 
-            if (!preqRes.ok) throw new Error("Failed to load prequalification applications")
-            if (!rfqRes.ok) throw new Error("Failed to load RFQ applications")
+            const preqJson = await parseJsonResponse<{ data?: RoundGroup[]; message?: string; error?: string }>(preqRes)
+            const rfqJson = await parseJsonResponse<RfqListResponse & { message?: string; error?: string }>(rfqRes)
 
-            const preqJson = await preqRes.json()
-            const rfqJson = (await rfqRes.json()) as RfqListResponse
+            if (!preqRes.ok) throw new Error(preqJson?.message || preqJson?.error || "Failed to load prequalification applications")
+            if (!rfqRes.ok) throw new Error(rfqJson?.message || rfqJson?.error || "Failed to load RFQ applications")
 
             const list: RoundGroup[] = Array.isArray(preqJson?.data) ? preqJson.data : []
             const rfqList: RfqInvitation[] = Array.isArray(rfqJson?.data) ? rfqJson.data : []

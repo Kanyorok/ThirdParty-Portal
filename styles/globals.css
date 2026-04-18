@@ -168,6 +168,87 @@
 }
 
 @layer components {
+  .dashboard-readable {
+    --dashboard-muted: #5f7390;
+  }
+
+  .dashboard-shell {
+    @apply relative isolate overflow-hidden border border-slate-200/80 bg-gradient-to-br from-sky-50/80 via-white to-blue-100/65 py-0;
+  }
+
+  .dashboard-shell--hero {
+    @apply bg-gradient-to-r from-card via-muted/35 to-card;
+  }
+
+  .dashboard-shell-glow {
+    @apply pointer-events-none absolute -right-8 -bottom-10 h-28 w-28 rounded-full bg-white/55 blur-xl;
+  }
+
+  .dashboard-chip {
+    @apply inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em];
+  }
+
+  .dashboard-chip--progress {
+    @apply border-sky-300/70 bg-sky-100/80 text-sky-800;
+  }
+
+  .dashboard-chip--attention {
+    @apply border-amber-300/70 bg-amber-100/80 text-amber-800;
+  }
+
+  .dashboard-chip--neutral {
+    @apply border-slate-300/70 bg-slate-100/80 text-slate-700;
+  }
+
+  .dashboard-cta {
+    @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors;
+  }
+
+  .dashboard-cta--primary {
+    @apply border border-primary bg-primary text-primary-foreground hover:bg-primary/90;
+  }
+
+  .dashboard-cta--sky {
+    @apply border-sky-300/70 bg-sky-100/80 text-sky-700 hover:bg-sky-100 hover:text-sky-800;
+  }
+
+  .dashboard-cta--teal {
+    @apply border-teal-300/70 bg-teal-100/80 text-teal-700 hover:bg-teal-100 hover:text-teal-800;
+  }
+
+  .dashboard-cta--amber {
+    @apply border-amber-300/70 bg-amber-100/80 text-amber-700 hover:bg-amber-100 hover:text-amber-800;
+  }
+
+  .dashboard-cta--slate {
+    @apply border-slate-300/70 bg-slate-100/80 text-slate-700 hover:bg-slate-100 hover:text-slate-800;
+  }
+
+  .dashboard-control-bar {
+    @apply flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border/70 bg-card px-3.5 py-2.5;
+  }
+
+  .dashboard-empty-state {
+    @apply rounded-2xl border border-dashed border-border/70 bg-muted/30 px-6 py-9 text-center;
+  }
+
+  .dashboard-readable :where(p, span, li, label, small, td, th, dt, dd) {
+    font-weight: 500;
+  }
+
+  .dashboard-readable :where(h1, h2, h3, h4, h5, h6) {
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .dashboard-readable :where(.text-muted-foreground) {
+    color: var(--dashboard-muted) !important;
+  }
+
+  .dashboard-readable :where([class*="text-slate-4"], [class*="text-slate-5"]) {
+    color: var(--dashboard-muted) !important;
+  }
+
   .loader-bars {
     display: inline-flex;
     align-items: flex-end;

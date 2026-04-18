@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/common/avatar"
 import { Button } from "@/components/common/button"
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/common/dialog"
 import { Spinner } from "@/components/common/spinner"
+import { parseJsonResponse } from "@/lib/parse-json-response"
 import { cn, getInitials } from "@/lib/utils"
 
 const USER_IMAGE_UPDATED_EVENT = "profile:user-image-updated"
@@ -126,7 +127,7 @@ export default function UserImageDialog({
     startTransition(async () => {
       try {
         const res = await fetch("/api/v1/profile/user-image", { method: "POST", body: formData })
-        const body = await res.json().catch(() => ({}))
+        const body = await parseJsonResponse(res)
         if (!res.ok || body?.success === false) throw new Error(body?.message || "Failed to upload image.")
 
         const nextUrl = resolveImageUrl(body)

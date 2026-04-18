@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { parseJsonResponse } from "@/lib/parse-json-response"
 import { useDebounce } from "@/hooks/use-debounce"
 import Loading from "@/components/common/custom-loader"
 import { Button } from "@/components/common/button"
@@ -295,7 +296,7 @@ export default function TendersFilter() {
         headers: { Accept: "application/json" },
       })
       if (!res.ok) return
-      const json = await res.json().catch(() => null)
+      const json = await parseJsonResponse<{ data?: AnyRecord[] }>(res)
       const list = Array.isArray(json?.data) ? json.data : []
       const map: Record<string, AnyRecord> = {}
       list.forEach((entry: AnyRecord) => {
@@ -320,8 +321,9 @@ export default function TendersFilter() {
         `/api/tenders${params.toString() ? `?${params}` : ""}`,
         { signal, headers: { Accept: "application/json" } }
       )
-      const json = await res.json().catch(() => null)
-      if (!res.ok) throw new Error(json?.message ?? "Failed to load tenders")
+      const json = await parseJsonResponse<({ data?: unknown[]; message?: string; error?: string }) | unknown[]>(res)
+      const message = Array.isArray(json) ? null : json?.message ?? json?.error ?? null
+      if (!res.ok) throw new Error(message ?? "Failed to load tenders")
       if (Array.isArray(json?.data)) setTenders(json.data)
       else if (Array.isArray(json)) setTenders(json)
       else setTenders([])

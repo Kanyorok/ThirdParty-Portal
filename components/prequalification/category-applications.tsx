@@ -125,7 +125,7 @@ function computeSummary(categories: CategoryProgress[]): AppSummary {
 function overallStatus(s: AppSummary): string {
     if (s.total === 0) return "No categories"
     if (s.approved === s.total) return "Complete"
-    if (s.approved > 0 || s.pending > 0) return "In progress"
+    if (s.approved > 0 || s.pending > 0) return "In Progress"
     return "Draft"
 }
 

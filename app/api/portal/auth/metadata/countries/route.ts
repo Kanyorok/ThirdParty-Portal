@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
-import { toServerErrorResponse, toUpstreamErrorResponse } from "@/app/api/portal/auth/_utils"
-import { fetchFirstAvailableJson } from "@/lib/portal-auth-api"
+import { createArrayResponseSchema, createMetadataGetHandler, parseArrayResponse } from "@/app/api/portal/auth/metadata/_shared"
 
 const CountrySchema = z.object({
     id: z.union([z.number(), z.string().transform((value) => Number(value))]).optional(),
@@ -17,16 +16,10 @@ const CountrySchema = z.object({
     Flag: z.string().optional(),
 })
 
-const ResponseSchema = z.union([
-    z.object({ data: z.array(CountrySchema).optional() }),
-    z.array(CountrySchema),
-])
+const ResponseSchema = createArrayResponseSchema(CountrySchema)
 
 function normalizeCountries(payload: unknown) {
-    const parsed = ResponseSchema.safeParse(payload)
-    if (!parsed.success) return []
-
-    const rows = Array.isArray(parsed.data) ? parsed.data : parsed.data.data ?? []
+    const rows = parseArrayResponse<z.infer<typeof CountrySchema>>(payload, ResponseSchema)
 
     return rows
         .map((row) => ({
@@ -40,19 +33,10 @@ function normalizeCountries(payload: unknown) {
         .sort((left, right) => left.name.localeCompare(right.name, undefined, { sensitivity: "base" }))
 }
 
-export async function GET() {
-    try {
-        const response = await fetchFirstAvailableJson([
-            "/portal/auth/metadata/countries",
-            "/api/v1/portal/auth/metadata/countries",
-        ])
-
-        if (!response.ok) {
-            return toUpstreamErrorResponse(response.body, response.status)
-        }
-
-        return NextResponse.json({ data: normalizeCountries(response.body) })
-    } catch {
-        return toServerErrorResponse([])
-    }
-}
+export const GET = createMetadataGetHandler(
+    [
+        "/portal/auth/metadata/countries",
+        "/api/v1/portal/auth/metadata/countries",
+    ],
+    normalizeCountries
+)

@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/common/avatar"
 import { Button } from "@/components/common/button"
 import { Input } from "@/components/common/input"
 import { Label } from "@/components/common/label"
+import { parseJsonResponse } from "@/lib/parse-json-response"
 import { Spinner } from "@/components/common/spinner"
 
 type AccountOwnerCardProps = {
@@ -107,7 +108,7 @@ export default function AccountOwnerCard({
 
     fetch(`/api/v1/profile/user-image${query}`, { method: "GET", cache: "no-store" })
       .then(async (res) => {
-        const body = await res.json().catch(() => null)
+        const body = await parseJsonResponse(res)
         if (!res.ok || body?.success === false) return
 
         const src =

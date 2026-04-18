@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import * as z from "zod"
 
-import { getBaseUrl } from "@/lib/api-base"
+import { fetchUpstreamJson, toServerErrorResponse, toUpstreamErrorResponse } from "@/app/api/_shared/upstream-json"
 
 const LocalitySchema = z.object({
     id: z.number().or(z.string().transform((v) => Number(v))).optional(),
@@ -37,22 +37,21 @@ export async function GET(
 ) {
     try {
         const { countryCode } = await context.params
-        const apiBase = getBaseUrl() || process.env.NEXT_PUBLIC_API_URL
-        if (!apiBase || !countryCode) return NextResponse.json({ data: [] })
+        if (!countryCode) return NextResponse.json({ data: [] })
 
-        const response = await fetch(`${apiBase}/api/v1/countries/${encodeURIComponent(countryCode)}/localities`, {
+        const response = await fetchUpstreamJson(`/api/v1/countries/${encodeURIComponent(countryCode)}/localities`, {
             headers: { Accept: "application/json" },
             cache: "no-store",
         })
 
-        const body = await response.json().catch(() => null)
+        if (response.missingBase) return NextResponse.json({ data: [] })
 
         if (!response.ok) {
-            return NextResponse.json(body ?? { message: "Error occurred", data: [] }, { status: response.status })
+            return toUpstreamErrorResponse(response.body, response.status, { message: "Error occurred", data: [] })
         }
 
-        return NextResponse.json({ data: normalizeLocalities(body) })
+        return NextResponse.json({ data: normalizeLocalities(response.body) })
     } catch {
-        return NextResponse.json({ message: "Internal server error", data: [] }, { status: 500 })
+        return toServerErrorResponse({ message: "Internal server error", data: [] })
     }
 }

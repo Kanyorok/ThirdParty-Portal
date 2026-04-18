@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { parseJsonResponse } from "@/lib/parse-json-response";
 
 
 interface TenderClarification {
@@ -87,25 +88,15 @@ export default function TenderClarifications({
     try {
       const response = await fetch(`/api/tender-clarifications?tender_id=${tenderId}`);
 
-      if (!response.ok) {
-        const raw = await response.text().catch(() => "");
-        const rawText = raw.trim();
-        let errorData: any = null;
-        try {
-          errorData = rawText ? JSON.parse(rawText) : null;
-        } catch {
-          errorData = null;
-        }
+      const data = await parseJsonResponse<{ data?: TenderClarification[]; message?: string; error?: string; details?: { message?: string } }>(response);
 
-        const parsedMessage =
-          (typeof errorData === "string" ? errorData : null) ||
-          errorData?.message ||
-          errorData?.error ||
-          errorData?.details?.message;
-        const nonEmptyRaw =
-          rawText && rawText !== "{}" && rawText !== "null" ? rawText : "";
+      if (!response.ok) {
         const fallbackMessage = `Failed to fetch clarifications: ${response.status} ${response.statusText}`;
-        const errorMessage = parsedMessage || nonEmptyRaw || fallbackMessage;
+        const errorMessage =
+          data?.message ||
+          data?.error ||
+          data?.details?.message ||
+          fallbackMessage;
 
         if (process.env.NODE_ENV !== "production") {
           console.warn("Clarifications request failed", {
@@ -119,8 +110,6 @@ export default function TenderClarifications({
         err.status = response.status;
         throw err;
       }
-
-      const data = await response.json();
       const clarificationsData = data.data || [];
 
       setClarifications(clarificationsData);
@@ -182,10 +171,10 @@ export default function TenderClarifications({
         }),
       });
 
-      const data = await response.json();
+      const data = await parseJsonResponse<{ message?: string; error?: string }>(response);
 
       if (!response.ok) {
-        let errorMessage = data.message || 'Unable to submit clarification.';
+        let errorMessage = data?.message || data?.error || 'Unable to submit clarification.';
         console.error('Submit Error:', { status: response.status, data });
         throw new Error(errorMessage);
       }
@@ -225,16 +214,10 @@ export default function TenderClarifications({
         }),
       });
 
-      const raw = await response.text().catch(() => "");
-      let data: any = null;
-      try {
-        data = raw ? JSON.parse(raw) : null;
-      } catch {
-        data = null;
-      }
+      const data = await parseJsonResponse<{ message?: string; error?: string }>(response);
 
       if (!response.ok) {
-        const msg = data?.message || data?.error || raw || "Unable to accept invitation.";
+        const msg = data?.message || data?.error || "Unable to accept invitation.";
         throw new Error(msg);
       }
 

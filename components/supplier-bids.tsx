@@ -35,6 +35,7 @@ import {
   SheetTitle,
 } from "@/components/common/sheet"
 import { bidStatusLabel, resolveBidStatus, type BidStatus } from "@/lib/bids/status"
+import { parseJsonResponse } from "@/lib/parse-json-response"
 import { cn } from "@/lib/utils"
 
 interface BidRecord {
@@ -183,9 +184,9 @@ export default function SupplierBids() {
       const response = await fetch("/api/tender-bids?all=true", {
         headers: { Accept: "application/json" },
       })
-      const payload = await response.json().catch(() => null)
+      const payload = await parseJsonResponse<{ data?: unknown[]; message?: string; error?: string }>(response)
       if (!response.ok) {
-        throw new Error(payload?.message || "Failed to load bids")
+        throw new Error(payload?.message || payload?.error || "Failed to load bids")
       }
 
       const list = Array.isArray(payload?.data) ? payload.data : []

@@ -1,4 +1,4 @@
-// Normalized Tender Portal types for supplier portal
+// Normalized Tender Portal types for the Third Party Portal
 
 export type TenderDocument = {
     Id: number | null;

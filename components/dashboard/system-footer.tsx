@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import { CLIENT_APP_NAME_STRING } from "@/config/client-config"
 
 function pad(value: number) {
   return String(value).padStart(2, "0")
@@ -28,22 +29,18 @@ export function SystemFooter() {
   const year = useMemo(() => (now ? now.getFullYear() : new Date().getFullYear()), [now])
 
   return (
-    <div className="w-full rounded-xl border border-border/60 bg-background/70 px-3 py-2 backdrop-blur">
-      <div className="flex w-full flex-col gap-1.5 text-[11px] font-medium text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <span className="inline-flex items-center rounded-md border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-indigo-700">
-            BRERP Logo
-          </span>
-          <span className="truncate">© {year} BR_ERP | Craft Silicon Limited</span>
+    <div className="w-full">
+      <div className="flex w-full flex-col gap-1.5 border-t border-border/60 pt-2 text-[11px] font-medium text-slate-600 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <span className="truncate">© {year} {CLIENT_APP_NAME_STRING} | Craft Silicon Limited</span>
         </div>
 
-        <div className="flex min-w-0 flex-wrap items-center gap-2 sm:justify-end">
-          <span className="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-700">
-            System Time: {now ? formatSystemTime(now) : "--:--:--"}
-          </span>
-          <span className="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-700">
-            version v1.0.0
-          </span>
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:justify-end">
+          <span className="uppercase tracking-[0.12em] text-[10px] text-slate-500">System Time</span>
+          <span className="font-mono font-semibold text-slate-700">{now ? formatSystemTime(now) : "--:--:--"}</span>
+          <span className="text-slate-300">|</span>
+          <span className="uppercase tracking-[0.12em] text-[10px] text-slate-500">Version</span>
+          <span className="font-semibold text-slate-700">v1.0.0</span>
         </div>
       </div>
     </div>
