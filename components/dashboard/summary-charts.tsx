@@ -1,744 +1,371 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
-import { motion } from "framer-motion"
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  LabelList,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts"
-import {
-  Activity,
-  AlertCircle,
-  Building,
-  Coins,
-  FileCheck2,
-  FileSearch,
-  FileText,
-  Wallet,
-} from "lucide-react"
+import { useMemo } from "react"
+import { AlertCircle, MoveRight, TrendingUp } from "lucide-react"
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
+
 import { Skeleton } from "@/components/common/skeleton"
 import {
-  useDashboardStore,
-  type TenantBreakdown,
+    Card,
+    CardContent,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card"
+import {
+    ChartContainer,
+    ChartTooltip,
+    ChartTooltipContent,
+    type ChartConfig,
+} from "@/components/ui/chart"
+import {
+    useDashboardStore,
+    type TenantBreakdown,
 } from "@/store/use-dashboard-store"
 import type { ProfileType } from "@/store/use-profile-store"
 import { useShallow } from "zustand/react/shallow"
 
 type PreqBreakdown = {
-  approved: number
-  submitted: number
-  under_review: number
-  rejected: number
-  not_applied: number
+    approved: number
+    submitted: number
+    under_review: number
+    rejected: number
+    not_applied: number
 }
 
 type RFQBreakdown = {
-  invited: number
-  draft: number
-  submitted: number
-  closed: number
+    invited: number
+    draft: number
+    submitted: number
+    closed: number
 }
 
 type TenderBreakdown = {
-  open: number
-  draft: number
-  closed: number
+    open: number
+    draft: number
+    closed: number
 }
 
 type BidBreakdown = {
-  draft: number
-  submitted: number
-  unknown: number
+    draft: number
+    submitted: number
+    unknown: number
 }
 
 type SummaryChartsProps = {
-  profile?: ProfileType
+    profile?: ProfileType
 }
 
-type ChartDatum = {
-  name: string
-  value: number
-  color: string
+const color = {
+    primary: "var(--primary)",
+    success: "var(--success)",
+    warning: "var(--warning)",
+    danger: "var(--danger)",
 }
 
-const chartColors = {
-  emerald: "#10B981",
-  amber: "#F59E0B",
-  sky: "#38BDF8",
-  rose: "#F43F5E",
-  slate: "#64748B",
-  indigo: "#6366F1",
+const safe = (value?: number) => Number(value ?? 0)
+
+type UnifiedAreaCardProps = {
+    title: string
+    data: Array<Record<string, string | number>>
+    xKey: string
+    yLabel?: string
+    insightCopy: string
+    nextStep?: string
+    nextStepHref?: string
+    config: ChartConfig
+    keys: string[]
+    stackAreas?: boolean
 }
 
-const percentOf = (value: number, total: number) =>
-  total > 0 ? (value / total) * 100 : 0
+function UnifiedAreaCard({
+    title,
+    data,
+    xKey,
+    yLabel,
+    insightCopy,
+    nextStep,
+    nextStepHref,
+    config,
+    keys,
+    stackAreas = false,
+}: UnifiedAreaCardProps) {
+    return (
+        <Card className="dashboard-shell">
+            <div className="dashboard-shell-glow" />
+            <CardHeader className="px-4 pt-4 pb-2">
+                <div className="flex flex-wrap items-center justify-between gap-2.5">
+                    <div>
+                        <CardTitle className="text-sm font-semibold tracking-tight text-slate-900">{title}</CardTitle>
+                        <p className="mt-0.5 text-xs text-slate-600">Stage distribution of growth opportunities and items needing attention.</p>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        {keys.map((key) => {
+                            const entry = config[key]
+                            const label = entry?.label ?? key
+                            const tone = entry?.color ?? "#64748B"
 
-const buildChartData = (data: ChartDatum[]) =>
-  data.filter((item) => item.value > 0)
+                            return (
+                                <span
+                                    key={key}
+                                    className="dashboard-chip"
+                                    style={{
+                                        borderColor: `${tone}66`,
+                                        backgroundColor: `${tone}1A`,
+                                        color: tone,
+                                    }}
+                                >
+                                    {label}
+                                </span>
+                            )
+                        })}
+                    </div>
+                </div>
+            </CardHeader>
+            <CardContent className="px-3 pb-2">
+                {data.length === 0 ? (
+                    <div className="flex h-44 items-center justify-center rounded-xl border border-dashed border-slate-300/70 bg-white/70 text-sm font-medium text-slate-600">
+                        No data yet
+                    </div>
+                ) : (
+                    <ChartContainer config={config} className="h-[220px] w-full rounded-xl border border-slate-200/70 bg-white/75 p-2">
+                        <BarChart accessibilityLayer data={data} margin={{ left: 4, right: 4, top: 8, bottom: 0 }}>
+                            <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#CBD5E1" strokeOpacity={0.8} />
+                            <XAxis
+                                dataKey={xKey}
+                                tickLine={false}
+                                axisLine={false}
+                                tickMargin={6}
+                                tick={{ fontSize: 10, fontWeight: 600, fill: "#475569" }}
+                            />
+                            <YAxis
+                                tickLine={false}
+                                axisLine={false}
+                                width={30}
+                                allowDecimals={false}
+                                tick={{ fontSize: 10, fontWeight: 600, fill: "#64748B" }}
+                                label={
+                                    yLabel
+                                        ? {
+                                            value: yLabel,
+                                            angle: -90,
+                                            position: "insideLeft",
+                                            style: { fontSize: 9, fontWeight: 700, fill: "#64748B" },
+                                        }
+                                        : undefined
+                                }
+                            />
+                            <ChartTooltip
+                                cursor={false}
+                                defaultIndex={1}
+                                content={
+                                    <ChartTooltipContent
+                                        hideLabel
+                                        className="w-[220px] border border-slate-200/90 bg-white/95 shadow-lg backdrop-blur"
+                                        label=""
+                                        payload={[]}
+                                        formatter={(value, name, item, index) => {
+                                            const current = Number(value ?? 0)
+                                            const total = Number(item.payload?.drivers ?? 0) + Number(item.payload?.risks ?? 0)
+                                            const label = config[name]?.label ?? name
 
-const truncateLabel = (value: string, maxLength: number) =>
-  value.length > maxLength ? `${value.slice(0, maxLength)}...` : value
-
-const useViewportWidth = () => {
-  const [width, setWidth] = useState(0)
-
-  useEffect(() => {
-    const updateWidth = () => setWidth(window.innerWidth)
-    updateWidth()
-    window.addEventListener("resize", updateWidth)
-    return () => window.removeEventListener("resize", updateWidth)
-  }, [])
-
-  return width
-}
-
-const SectionHeader = ({
-  title,
-  icon: Icon,
-  total,
-}: {
-  title: string
-  icon: any
-  total: number
-}) => (
-  <div className="flex items-center justify-between gap-3 px-0.5 pb-2.5">
-    <div className="flex min-w-0 items-center gap-2.5">
-      <span className="h-8 w-1 rounded-full bg-indigo-500/70" />
-      <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-indigo-200/80 bg-indigo-50 text-indigo-600">
-        <Icon className="h-4.5 w-4.5" />
-      </div>
-      <h3 className="truncate text-[14px] font-semibold tracking-tight text-foreground">
-        {title}
-      </h3>
-    </div>
-    <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-[11px] font-semibold text-slate-600">
-      {total.toLocaleString()}
-    </span>
-  </div>
-)
-
-const defaultValueFormatter = (value: number) => value.toLocaleString()
-const formatLabelValue = (
-  value: string | number | null | undefined,
-  formatter: (value: number) => string
-) => formatter(typeof value === "number" ? value : Number(value ?? 0))
-
-type BarTooltipProps = {
-  active?: boolean
-  payload?: Array<{ value?: number; color?: string }>
-  label?: string
-  valueFormatter: (value: number) => string
-}
-
-const BarTooltip = ({
-  active,
-  payload,
-  label,
-  valueFormatter,
-}: BarTooltipProps) => {
-  if (!active || !payload?.length) return null
-
-  const entry = payload[0]
-  const rawValue =
-    typeof entry?.value === "number" ? entry.value : Number(entry?.value ?? 0)
-
-  return (
-    <div className="rounded-lg border border-border/60 bg-popover px-3 py-2 text-xs shadow-sm">
-      <p className="font-medium text-foreground">{label}</p>
-      <div className="mt-1 flex items-center gap-2 text-muted-foreground">
-        <span
-          className="h-2 w-2 rounded-full"
-          style={{ backgroundColor: entry?.color ?? chartColors.slate }}
-        />
-        <span className="font-semibold text-foreground">
-          {valueFormatter(rawValue)}
-        </span>
-      </div>
-    </div>
-  )
-}
-
-const BarChartCard = ({
-  title: _title,
-  total: _total,
-  data,
-  valueFormatter = defaultValueFormatter,
-  yDomain,
-  size = "regular",
-  yLabel,
-}: {
-  title: string
-  total?: number
-  data: ChartDatum[]
-  valueFormatter?: (value: number) => string
-  yDomain?: [number, number]
-  size?: "compact" | "regular"
-  yLabel?: string
-}) => {
-  const chartData = buildChartData(data)
-  const isCompact = size === "compact"
-  const barSize = isCompact ? (chartData.length > 4 ? 16 : 22) : 30
-  const chartHeight = isCompact ? 156 : 196
-  const tickAngle = isCompact ? -20 : 0
-  const labelMaxLength = isCompact ? 9 : 12
-  const yAxisWidth = isCompact ? 30 : 36
-  const showLabels = true
-
-  return (
-    <div className="px-2 py-1.5">
-      <div className="mb-1 flex items-center justify-between gap-2">
-        <p className="truncate text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-          {_title}
-        </p>
-        {typeof _total === "number" ? (
-          <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
-            {_total}
-          </span>
-        ) : null}
-      </div>
-      <div className="pt-1">
-        {chartData.length === 0 ? (
-          <div className="flex h-24 items-center justify-center text-xs text-muted-foreground">
-            No data yet
-          </div>
-        ) : (
-          <div style={{ minWidth: 0 }}>
-            <ResponsiveContainer width="100%" height={chartHeight} minWidth={0} debounce={50}>
-              <BarChart
-                data={chartData}
-                barCategoryGap={isCompact ? 12 : 20}
-                barGap={isCompact ? 6 : 14}
-                margin={{ top: 10, right: 8, left: -10, bottom: isCompact ? 10 : 6 }}
-              >
-                <CartesianGrid
-                  vertical={false}
-                  stroke="hsl(var(--border))"
-                  strokeOpacity={0.45}
-                  strokeDasharray="3 3"
-                />
-                <XAxis
-                  dataKey="name"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={isCompact ? 6 : 10}
-                  interval={0}
-                  tickFormatter={(value) => truncateLabel(value, labelMaxLength)}
-                  angle={tickAngle}
-                  textAnchor={isCompact ? "end" : "middle"}
-                  height={isCompact ? 34 : 32}
-                  tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
-                />
-                <YAxis
-                  tickLine={false}
-                  axisLine={false}
-                  width={yAxisWidth}
-                  allowDecimals={false}
-                  tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
-                  tickFormatter={valueFormatter}
-                  domain={yDomain ?? (["auto", "auto"] as const)}
-                  label={
-                    yLabel
-                      ? {
-                        value: yLabel,
-                        angle: -90,
-                        position: "insideLeft",
-                        fill: "hsl(var(--muted-foreground))",
-                        style: { fontSize: 10, fontWeight: 600 },
-                      }
-                      : undefined
-                  }
-                />
-                <Tooltip
-                  cursor={false}
-                  content={<BarTooltip valueFormatter={valueFormatter} />}
-                />
-                <Bar
-                  dataKey="value"
-                  barSize={barSize}
-                  minPointSize={3}
-                  radius={[10, 10, 6, 6]}
-                  background={{ fill: "hsl(var(--muted) / 0.18)", radius: 10 }}
-                >
-                  {chartData.map((entry) => (
-                    <Cell key={entry.name} fill={entry.color} />
-                  ))}
-                  {showLabels ? (
-                    <LabelList
-                      dataKey="value"
-                      position="insideTop"
-                      formatter={(value) =>
-                        typeof value === "boolean"
-                          ? ""
-                          : formatLabelValue(value, valueFormatter)
-                      }
-                      fill="hsl(var(--foreground))"
-                      fontSize={isCompact ? 10 : 11}
-                      fontWeight={600}
-                    />
-                  ) : null}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-      </div>
-    </div>
-  )
+                                            return (
+                                                <>
+                                                    <div
+                                                        className="h-2.5 w-2.5 shrink-0 rounded-[2px] bg-(--color-bg)"
+                                                        style={
+                                                            {
+                                                                "--color-bg": `var(--color-${name})`,
+                                                            } as React.CSSProperties
+                                                        }
+                                                    />
+                                                    <span className="text-muted-foreground">{label}</span>
+                                                    <div className="ml-auto flex items-baseline gap-0.5 font-mono font-medium text-foreground tabular-nums">
+                                                        {current.toLocaleString()}
+                                                        <span className="font-normal text-muted-foreground">items</span>
+                                                    </div>
+                                                    {index === keys.length - 1 ? (
+                                                        <div className="mt-1.5 flex basis-full items-center border-t pt-1.5 text-xs font-medium text-foreground">
+                                                            Total
+                                                            <div className="ml-auto flex items-baseline gap-0.5 font-mono font-medium text-foreground tabular-nums">
+                                                                {total.toLocaleString()}
+                                                                <span className="font-normal text-muted-foreground">items</span>
+                                                            </div>
+                                                        </div>
+                                                    ) : null}
+                                                </>
+                                            )
+                                        }}
+                                    />
+                                }
+                            />
+                            {keys.map((key) => (
+                                <Bar
+                                    key={key}
+                                    dataKey={key}
+                                    fill={`var(--color-${key})`}
+                                    stackId={stackAreas ? "combined" : undefined}
+                                    radius={
+                                        keys.length === 2
+                                            ? key === keys[0]
+                                                ? [0, 0, 4, 4]
+                                                : [4, 4, 0, 0]
+                                            : [4, 4, 0, 0]
+                                    }
+                                />
+                            ))}
+                        </BarChart>
+                    </ChartContainer>
+                )}
+            </CardContent>
+            <CardFooter className="px-4 pt-1 pb-3">
+                <div className="flex w-full flex-wrap items-center justify-between gap-2 border-t border-slate-200/70 pt-2 text-[11px]">
+                    <div className="flex items-center gap-1.5 font-medium text-slate-800">
+                        {insightCopy}
+                        <TrendingUp className="h-3.5 w-3.5" />
+                    </div>
+                    {nextStep && nextStepHref ? (
+                        <a
+                            href={nextStepHref}
+                            className="dashboard-cta dashboard-cta--sky"
+                        >
+                            {nextStep}
+                            <MoveRight className="h-3 w-3" />
+                        </a>
+                    ) : null}
+                </div>
+            </CardFooter>
+        </Card>
+    )
 }
 
 export default function SummaryCharts({ profile }: SummaryChartsProps) {
-  const viewportWidth = useViewportWidth()
-  const chartSize = viewportWidth > 0 && viewportWidth < 640 ? "compact" : "regular"
-  const { summary, loading, error } = useDashboardStore(
-    useShallow((s) => ({
-      summary: s.summary,
-      loading: s.loading,
-      error: s.error,
-    }))
-  )
+    const { summary, loading, error } = useDashboardStore(
+        useShallow((s) => ({
+            summary: s.summary,
+            loading: s.loading,
+            error: s.error,
+        }))
+    )
 
-  const preq = summary?.breakdowns?.prequalification as
-    | PreqBreakdown
-    | undefined
-  const rfqs = summary?.breakdowns?.rfqs as RFQBreakdown | undefined
+    const preq = summary?.breakdowns?.prequalification as PreqBreakdown | undefined
+    const rfqs = summary?.breakdowns?.rfqs as RFQBreakdown | undefined
+    const tenders = summary?.breakdowns?.tenders as TenderBreakdown | undefined
+    const bids = summary?.breakdowns?.bids as BidBreakdown | undefined
 
-  const preqTotal = useMemo(
-    () => Object.values(preq || {}).reduce((a, b) => a + b, 0),
-    [preq]
-  )
+    const tenant = summary?.breakdowns?.tenant as TenantBreakdown | undefined
+    const lease = tenant?.leases
+    const invoice = tenant?.invoices
 
-  const rfqTotal = useMemo(
-    () => Object.values(rfqs || {}).reduce((a, b) => a + b, 0),
-    [rfqs]
-  )
+    const isTenantView = profile === "Tenant"
 
-  const tenderBreakdown = summary?.breakdowns?.tenders as
-    | TenderBreakdown
-    | undefined
-  const tenderTotal = useMemo(
-    () => Object.values(tenderBreakdown || {}).reduce((a, b) => a + b, 0),
-    [tenderBreakdown]
-  )
-  const tenderCardTotal =
-    summary?.summary?.openTenders ??
-    summary?.summary?.tendersAvailable ??
-    tenderBreakdown?.open ??
-    tenderTotal
-  const bidBreakdown = summary?.breakdowns?.bids as BidBreakdown | undefined
-  const bidTotal = useMemo(
-    () => Object.values(bidBreakdown || {}).reduce((a, b) => a + b, 0),
-    [bidBreakdown]
-  )
-  const bidCardTotal = summary?.summary?.myBids ?? bidTotal
+    const supplierDistributionData = useMemo(
+        () => [
+            {
+                stage: "Prequalification",
+                drivers: safe(preq?.approved) + safe(preq?.submitted) + safe(preq?.under_review),
+                risks: safe(preq?.rejected) + safe(preq?.not_applied),
+            },
+            {
+                stage: "RFQs",
+                drivers: safe(rfqs?.submitted) + safe(rfqs?.invited),
+                risks: safe(rfqs?.draft) + safe(rfqs?.closed),
+            },
+            {
+                stage: "Tenders",
+                drivers: safe(tenders?.open),
+                risks: safe(tenders?.draft) + safe(tenders?.closed),
+            },
+            {
+                stage: "Bids",
+                drivers: safe(bids?.submitted),
+                risks: safe(bids?.draft) + safe(bids?.unknown),
+            },
+        ],
+        [preq, rfqs, tenders, bids]
+    )
 
-  const tenantBreakdown = summary?.breakdowns?.tenant as
-    | TenantBreakdown
-    | undefined
-  const leaseSummary = tenantBreakdown?.leases
-  const invoiceSummary = tenantBreakdown?.invoices
+    const tenantDistributionData = useMemo(
+        () => [
+            {
+                stage: "Leases",
+                drivers: safe(lease?.active),
+                risks: safe(lease?.expiringSoon) + safe(lease?.inactive),
+            },
+            {
+                stage: "Invoices",
+                drivers: safe(invoice?.paid),
+                risks: safe(invoice?.pending) + safe(invoice?.overdue),
+            },
+        ],
+        [lease, invoice]
+    )
 
-  const leaseTotal = leaseSummary
-    ? leaseSummary.total ||
-    leaseSummary.active +
-    leaseSummary.expiringSoon +
-    leaseSummary.inactive
-    : 0
+    const tenantConfig = {
+        drivers: {
+            label: "Growth Opportunities",
+            color: color.primary,
+        },
+        risks: {
+            label: "Needs Attention",
+            color: color.danger,
+        },
+    } satisfies ChartConfig
 
-  const invoiceCountFallback =
-    (invoiceSummary?.paid ?? 0) +
-    (invoiceSummary?.pending ?? 0) +
-    (invoiceSummary?.overdue ?? 0)
+    const supplierConfig = {
+        drivers: {
+            label: "Growth Opportunities",
+            color: color.success,
+        },
+        risks: {
+            label: "Needs Attention",
+            color: color.warning,
+        },
+    } satisfies ChartConfig
 
-  const invoiceTotal = Math.max(invoiceSummary?.total ?? 0, invoiceCountFallback)
-
-  const isTenantView = profile === "Tenant"
-
-  const preqStatusData = useMemo(
-    () =>
-      buildChartData([
-        {
-          name: "Approved",
-          value: preq?.approved || 0,
-          color: chartColors.emerald,
-        },
-        {
-          name: "In review",
-          value: preq?.under_review || 0,
-          color: chartColors.amber,
-        },
-        {
-          name: "Submitted",
-          value: preq?.submitted || 0,
-          color: chartColors.sky,
-        },
-        {
-          name: "Rejected",
-          value: preq?.rejected || 0,
-          color: chartColors.rose,
-        },
-        {
-          name: "Not applied",
-          value: preq?.not_applied || 0,
-          color: chartColors.slate,
-        },
-      ]),
-    [preq]
-  )
-
-  const rfqStatusData = useMemo(
-    () =>
-      buildChartData([
-        {
-          name: "Invited",
-          value: rfqs?.invited || 0,
-          color: chartColors.indigo,
-        },
-        {
-          name: "Draft",
-          value: rfqs?.draft || 0,
-          color: chartColors.amber,
-        },
-        {
-          name: "Submitted",
-          value: rfqs?.submitted || 0,
-          color: chartColors.emerald,
-        },
-        {
-          name: "Closed",
-          value: rfqs?.closed || 0,
-          color: chartColors.rose,
-        },
-      ]),
-    [rfqs]
-  )
-
-  const tenderStatusData = useMemo(
-    () =>
-      buildChartData([
-        {
-          name: "Open",
-          value: tenderBreakdown?.open || 0,
-          color: chartColors.emerald,
-        },
-        {
-          name: "Draft",
-          value: tenderBreakdown?.draft || 0,
-          color: chartColors.amber,
-        },
-        {
-          name: "Closed",
-          value: tenderBreakdown?.closed || 0,
-          color: chartColors.rose,
-        },
-      ]),
-    [tenderBreakdown]
-  )
-
-  const bidStatusData = useMemo(
-    () =>
-      buildChartData([
-        {
-          name: "Submitted",
-          value: bidBreakdown?.submitted || 0,
-          color: chartColors.emerald,
-        },
-        {
-          name: "Draft",
-          value: bidBreakdown?.draft || 0,
-          color: chartColors.amber,
-        },
-        {
-          name: "Other",
-          value: bidBreakdown?.unknown || 0,
-          color: chartColors.slate,
-        },
-      ]),
-    [bidBreakdown]
-  )
-
-  const leaseStatusData = useMemo(
-    () =>
-      buildChartData([
-        {
-          name: "Active",
-          value: leaseSummary?.active || 0,
-          color: chartColors.emerald,
-        },
-        {
-          name: "Expiring",
-          value: leaseSummary?.expiringSoon || 0,
-          color: chartColors.amber,
-        },
-        {
-          name: "Inactive",
-          value: leaseSummary?.inactive || 0,
-          color: chartColors.slate,
-        },
-      ]),
-    [leaseSummary]
-  )
-
-  const leaseOccupancyData = useMemo(() => {
-    const occupied = leaseSummary?.active || 0
-    const vacant = Math.max(leaseTotal - occupied, 0)
-
-    return buildChartData([
-      {
-        name: "Occupied",
-        value: occupied,
-        color: chartColors.emerald,
-      },
-      {
-        name: "Vacant",
-        value: vacant,
-        color: chartColors.slate,
-      },
-    ])
-  }, [leaseSummary, leaseTotal])
-
-  const invoiceStatusData = useMemo(
-    () =>
-      buildChartData([
-        {
-          name: "Pending",
-          value: invoiceSummary?.pending || 0,
-          color: chartColors.amber,
-        },
-        {
-          name: "Overdue",
-          value: invoiceSummary?.overdue || 0,
-          color: chartColors.rose,
-        },
-        {
-          name: "Paid",
-          value: invoiceSummary?.paid || 0,
-          color: chartColors.emerald,
-        },
-      ]),
-    [invoiceSummary]
-  )
-
-  const invoiceCollectionData = useMemo(() => {
-    const paid = invoiceSummary?.paid || 0
-    const unpaid = (invoiceSummary?.pending || 0) + (invoiceSummary?.overdue || 0)
-
-    return buildChartData([
-      {
-        name: "Paid",
-        value: paid,
-        color: chartColors.emerald,
-      },
-      {
-        name: "Unpaid",
-        value: unpaid,
-        color: chartColors.amber,
-      },
-    ])
-  }, [invoiceSummary])
-
-  const invoiceRiskData = useMemo(
-    () =>
-      buildChartData([
-        {
-          name: "Overdue",
-          value: invoiceSummary?.overdue || 0,
-          color: chartColors.rose,
-        },
-        {
-          name: "Pending",
-          value: invoiceSummary?.pending || 0,
-          color: chartColors.amber,
-        },
-      ]),
-    [invoiceSummary]
-  )
-
-  const invoicePercentData = useMemo(
-    () =>
-      buildChartData([
-        {
-          name: "Paid %",
-          value: percentOf(invoiceSummary?.paid || 0, invoiceTotal),
-          color: chartColors.emerald,
-        },
-        {
-          name: "Pending %",
-          value: percentOf(invoiceSummary?.pending || 0, invoiceTotal),
-          color: chartColors.amber,
-        },
-        {
-          name: "Overdue %",
-          value: percentOf(invoiceSummary?.overdue || 0, invoiceTotal),
-          color: chartColors.rose,
-        },
-      ]),
-    [invoiceSummary, invoiceTotal]
-  )
-
-  if (loading)
-    return (
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="rounded-2xl border border-border/60 bg-white/90 p-3.5">
-            <div className="flex justify-between items-center">
-              <Skeleton className="h-6 w-40 rounded-lg" />
-              <Skeleton className="h-6 w-20 rounded-full" />
+    if (loading) {
+        return (
+            <div className="grid grid-cols-1 gap-3">
+                <div className="dashboard-shell rounded-2xl p-4">
+                    <div className="flex items-center justify-between">
+                        <Skeleton className="h-5 w-48 rounded-lg" />
+                        <Skeleton className="h-5 w-28 rounded-full" />
+                    </div>
+                    <Skeleton className="mt-3 h-56 w-full rounded-xl" />
+                </div>
             </div>
-            <div className="mt-4 space-y-2.5">
-              {[1, 2, 3].map((j) => (
-                <Skeleton key={j} className="h-16 w-full rounded-xl" />
-              ))}
+        )
+    }
+
+    if (error) {
+        return (
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 bg-white px-6 py-10">
+                <AlertCircle className="mb-4 h-10 w-10 text-muted-foreground" />
+                <p className="text-center font-medium text-muted-foreground">
+                    Failed to load dashboard analytics
+                </p>
             </div>
-          </div>
-        ))}
-      </div>
-    )
+        )
+    }
 
-  if (error)
+    const activeData = isTenantView ? tenantDistributionData : supplierDistributionData
+
+    const title = isTenantView ? "Tenant Pipeline Breakdown" : "Supplier Pipeline Breakdown"
+
     return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 bg-white px-6 py-10">
-        <AlertCircle className="h-10 w-10 text-muted-foreground mb-4" />
-        <p className="text-muted-foreground font-medium text-center">
-          Failed to load dashboard analytics
-        </p>
-      </div>
+        <div className="space-y-3">
+            <UnifiedAreaCard
+                title={title}
+                data={activeData}
+                xKey="stage"
+                yLabel="Count"
+                insightCopy="Increase growth opportunities, reduce items needing attention, and improve outcomes at each stage."
+                nextStep={isTenantView ? "View tenant dashboard" : "View supplier dashboard"}
+                nextStepHref={isTenantView ? "/dashboard/tenant" : "/dashboard/supplier"}
+                config={isTenantView ? tenantConfig : supplierConfig}
+                keys={["drivers", "risks"]}
+                stackAreas
+            />
+        </div>
     )
-
-  if (isTenantView) {
-    return (
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-        <motion.section className="rounded-2xl border border-slate-200/80 bg-white/90 p-3 md:p-3.5">
-          <SectionHeader title="Lease health" icon={Building} total={leaseTotal} />
-          <div className="mt-2.5 grid gap-0 divide-y divide-slate-200/70 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:divide-y-0 lg:divide-x lg:divide-slate-200/70">
-            <BarChartCard
-              title="Lease status"
-              total={leaseTotal}
-              data={leaseStatusData}
-              size={chartSize}
-              yLabel="Leases"
-            />
-            <BarChartCard
-              title="Occupancy split"
-              total={leaseTotal}
-              data={leaseOccupancyData}
-              size={chartSize}
-              yLabel="Leases"
-            />
-          </div>
-        </motion.section>
-
-        <motion.section className="rounded-2xl border border-slate-200/80 bg-white/90 p-3 md:p-3.5">
-          <SectionHeader
-            title="Invoice performance"
-            icon={Wallet}
-            total={invoiceTotal}
-          />
-          <div className="mt-2.5 grid gap-0 divide-y divide-slate-200/70 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:divide-y-0 lg:divide-x lg:divide-slate-200/70">
-            <BarChartCard
-              title="Invoice status"
-              total={invoiceTotal}
-              data={invoiceStatusData}
-              size={chartSize}
-              yLabel="Invoices"
-            />
-            <BarChartCard
-              title="Collections split"
-              total={invoiceTotal}
-              data={invoiceCollectionData}
-              size={chartSize}
-              yLabel="Invoices"
-            />
-          </div>
-        </motion.section>
-
-        <motion.section className="rounded-2xl border border-slate-200/80 bg-white/90 p-3 md:p-3.5">
-          <SectionHeader
-            title="Financial overview"
-            icon={Coins}
-            total={invoiceTotal}
-          />
-          <div className="mt-2.5 grid gap-0 divide-y divide-slate-200/70 lg:grid-cols-2 lg:divide-y-0 lg:divide-x lg:divide-slate-200/70">
-            <BarChartCard
-              title="Risk exposure"
-              total={invoiceTotal}
-              data={invoiceRiskData}
-              size={chartSize}
-              yLabel="Invoices"
-            />
-            <BarChartCard
-              title="Receivables (%)"
-              data={invoicePercentData}
-              valueFormatter={(value) => `${Math.round(value)}%`}
-              yDomain={[0, 100]}
-              size={chartSize}
-              yLabel="%"
-            />
-          </div>
-        </motion.section>
-      </div>
-    )
-  }
-
-  return (
-    <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 2xl:grid-cols-4">
-      <motion.section className="rounded-2xl border border-slate-200/80 bg-white/90 p-3 md:p-3.5">
-        <SectionHeader title="Prequalification overview" icon={Activity} total={preqTotal} />
-        <div className="mt-2.5">
-          <BarChartCard
-            title="Prequalification status"
-            total={preqTotal}
-            data={preqStatusData}
-            size={chartSize}
-            yLabel="Rounds"
-          />
-        </div>
-      </motion.section>
-
-      <motion.section className="rounded-2xl border border-slate-200/80 bg-white/90 p-3 md:p-3.5">
-        <SectionHeader title="RFQ activity" icon={FileText} total={rfqTotal} />
-        <div className="mt-2.5">
-          <BarChartCard
-            title="RFQ pipeline"
-            total={rfqTotal}
-            data={rfqStatusData}
-            size={chartSize}
-            yLabel="RFQs"
-          />
-        </div>
-      </motion.section>
-
-      <motion.section className="rounded-2xl border border-slate-200/80 bg-white/90 p-3 md:p-3.5">
-        <SectionHeader title="Tender opportunities" icon={FileSearch} total={tenderCardTotal} />
-        <div className="mt-2.5">
-          <BarChartCard
-            title="Tender status"
-            total={tenderTotal}
-            data={tenderStatusData}
-            size={chartSize}
-            yLabel="Tenders"
-          />
-        </div>
-      </motion.section>
-
-      <motion.section className="rounded-2xl border border-slate-200/80 bg-white/90 p-3 md:p-3.5">
-        <SectionHeader title="Bid performance" icon={FileCheck2} total={bidCardTotal} />
-        <div className="mt-2.5">
-          <BarChartCard
-            title="Bid status"
-            total={bidTotal}
-            data={bidStatusData}
-            size={chartSize}
-            yLabel="Bids"
-          />
-        </div>
-      </motion.section>
-    </div>
-  )
 }

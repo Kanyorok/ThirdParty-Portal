@@ -17,6 +17,7 @@ import {
 } from "lucide-react"
 
 import { Button } from "@/components/common/button"
+import { parseJsonResponse } from "@/lib/parse-json-response"
 import {
     Collapsible,
     CollapsibleContent,
@@ -170,8 +171,8 @@ export default function AllDocuments() {
                 credentials: "include",
                 headers: { Accept: "application/json" },
             })
-            if (!res.ok) throw new Error("Failed to load documents")
-            const json = await res.json()
+            const json = await parseJsonResponse<{ data?: SupplierDocument[]; message?: string; error?: string }>(res)
+            if (!res.ok) throw new Error(json?.message || json?.error || "Failed to load documents")
             const list: SupplierDocument[] = Array.isArray(json?.data) ? json.data : []
             setDocuments(list)
 

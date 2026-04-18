@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
-import { toServerErrorResponse, toUpstreamErrorResponse } from "@/app/api/portal/auth/_utils"
-import { fetchFirstAvailableJson } from "@/lib/portal-auth-api"
+import { createArrayResponseSchema, createMetadataGetHandler, parseArrayResponse } from "@/app/api/portal/auth/metadata/_shared"
 
 const BusinessTypeSchema = z.object({
     id: z.union([z.number(), z.string().transform((value) => Number(value))]).optional(),
@@ -15,16 +14,10 @@ const BusinessTypeSchema = z.object({
     Description: z.string().optional(),
 })
 
-const BusinessTypesResponseSchema = z.union([
-    z.object({ data: z.array(BusinessTypeSchema).optional() }),
-    z.array(BusinessTypeSchema),
-])
+const BusinessTypesResponseSchema = createArrayResponseSchema(BusinessTypeSchema)
 
 function normalizeBusinessTypes(payload: unknown) {
-    const parsed = BusinessTypesResponseSchema.safeParse(payload)
-    if (!parsed.success) return []
-
-    const rows = Array.isArray(parsed.data) ? parsed.data : parsed.data.data ?? []
+    const rows = parseArrayResponse<z.infer<typeof BusinessTypeSchema>>(payload, BusinessTypesResponseSchema)
 
     return rows
         .map((row) => {
@@ -43,19 +36,10 @@ function normalizeBusinessTypes(payload: unknown) {
         .filter((row) => row.value.length > 0 && (row.label.length > 0 || row.name.length > 0))
 }
 
-export async function GET() {
-    try {
-        const response = await fetchFirstAvailableJson([
-            "/portal/metadata/business-types",
-            "/api/v1/portal/auth/metadata/business-types",
-        ])
-
-        if (!response.ok) {
-            return toUpstreamErrorResponse(response.body, response.status)
-        }
-
-        return NextResponse.json({ data: normalizeBusinessTypes(response.body) })
-    } catch {
-        return toServerErrorResponse([])
-    }
-}
+export const GET = createMetadataGetHandler(
+    [
+        "/portal/metadata/business-types",
+        "/api/v1/portal/auth/metadata/business-types",
+    ],
+    normalizeBusinessTypes
+)

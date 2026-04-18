@@ -15,6 +15,7 @@ import {
 } from "@/components/common/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/common/avatar";
 import { getInitials } from "@/lib/utils";
+import { parseJsonResponse } from "@/lib/parse-json-response";
 import { MutatorOptions } from "swr";
 
 interface UserProfile {
@@ -112,11 +113,11 @@ export function ProfileImageUploadModal({
                         method: "POST",
                         body: formData,
                     }).then(async (response) => {
+                        const payload = await parseJsonResponse(response);
                         if (!response.ok) {
-                            const errorData = await response.json();
-                            throw new Error(errorData.message || "Failed to upload image.");
+                            throw new Error(payload?.message || payload?.error || "Failed to upload image.");
                         }
-                        return response.json();
+                        return payload;
                     }),
                     {
                         loading: "Uploading image...",

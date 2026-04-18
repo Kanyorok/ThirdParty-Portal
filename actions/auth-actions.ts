@@ -29,7 +29,7 @@ type ApiPayload = {
 }
 
 function getApiBaseUrl() {
-    return getBaseUrl() || process.env.NEXT_PUBLIC_API_URL || ''
+    return getBaseUrl()
 }
 
 async function parsePayload(response: Response): Promise<ApiPayload> {

@@ -16,6 +16,12 @@ import { useDashboardStore } from "@/store/use-dashboard-store"
 import type { ProfileType } from "@/store/use-profile-store"
 import { Skeleton } from "@/components/common/skeleton"
 import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import {
   buildPriorityActions,
   type PriorityActionIconKey,
 } from "@/lib/priority-actions"
@@ -60,9 +66,9 @@ const toneIconStyles: Record<PriorityAction["tone"], string> = {
 }
 
 const toneLabels: Record<PriorityAction["tone"], string> = {
-  danger: "Critical",
-  warning: "High",
-  info: "Medium",
+  danger: "Needs attention",
+  warning: "Conversion blocker",
+  info: "Growth opportunity",
 }
 
 function PriorityCard({ action }: { action: PriorityAction }) {
@@ -72,7 +78,7 @@ function PriorityCard({ action }: { action: PriorityAction }) {
     <Link
       href={action.href}
       className={cn(
-        "group block rounded-2xl border border-l-[3px] p-3 transition hover:-translate-y-0.5 hover:border-border/80",
+        "group block rounded-2xl border border-l-[3px] bg-white/90 p-3 transition duration-200 hover:-translate-y-0.5 hover:border-border/80",
         toneCardStyles[action.tone]
       )}
     >
@@ -97,7 +103,7 @@ function PriorityCard({ action }: { action: PriorityAction }) {
         </div>
         <span
           className={cn(
-            "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.28em]",
+            "dashboard-chip",
             toneStyles[action.tone]
           )}
         >
@@ -109,9 +115,6 @@ function PriorityCard({ action }: { action: PriorityAction }) {
         <div>
           <p className="text-3xl font-semibold tracking-tight text-foreground">
             {action.value.toLocaleString()}
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {action.description}
           </p>
         </div>
         <span className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground transition group-hover:text-foreground">
@@ -152,36 +155,43 @@ export function PriorityActions({
   }))
 
   return (
-    <div className="rounded-3xl border border-border/50 px-4 py-3">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold tracking-tight text-foreground">
-          Priority actions
-        </p>
-        <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-muted/20 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
-          {rankedActions.length} active
-        </div>
-      </div>
-
-      <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-3">
-        {loading ? (
-          [1, 2, 3].map((i) => (
-            <div key={i} className="rounded-2xl border border-border/50 bg-transparent p-3">
-              <Skeleton className="h-6 w-40 rounded-full" />
-              <Skeleton className="mt-3 h-8 w-24 rounded-lg" />
-              <Skeleton className="mt-2 h-4 w-52 rounded-md" />
-              <Skeleton className="mt-4 h-8 w-28 rounded-md" />
-            </div>
-          ))
-        ) : rankedActions.length > 0 ? (
-          rankedActions.map((action) => (
-            <PriorityCard key={action.id} action={action} />
-          ))
-        ) : (
-          <div className="col-span-full rounded-2xl border border-dashed border-border/60 px-6 py-8 text-center text-sm text-muted-foreground">
-            You are all caught up. No urgent actions right now.
+    <Card className="dashboard-shell">
+      <div className="dashboard-shell-glow" />
+      <CardHeader className="px-4 pt-4 pb-1.5">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <CardTitle className="text-sm font-semibold tracking-tight text-slate-900">
+              Priority action queue
+            </CardTitle>
           </div>
-        )}
-      </div>
-    </div>
+          <div className="dashboard-chip dashboard-chip--neutral text-[11px]">
+            {rankedActions.length} active
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="px-4 pb-4">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+          {loading ? (
+            [1, 2, 3].map((i) => (
+              <div key={i} className="rounded-2xl border border-slate-200/70 bg-slate-50/60 p-3">
+                <Skeleton className="h-6 w-40 rounded-full" />
+                <Skeleton className="mt-3 h-8 w-24 rounded-lg" />
+                <Skeleton className="mt-2 h-4 w-52 rounded-md" />
+                <Skeleton className="mt-4 h-8 w-28 rounded-md" />
+              </div>
+            ))
+          ) : rankedActions.length > 0 ? (
+            rankedActions.map((action) => (
+              <PriorityCard key={action.id} action={action} />
+            ))
+          ) : (
+            <div className="col-span-full rounded-2xl border border-dashed border-slate-300/80 px-6 py-8 text-center text-sm text-slate-600">
+              You are all caught up. No urgent actions right now.
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   )
 }

@@ -1,5 +1,6 @@
 import { create } from "zustand"
 import { isClosedByDeadline } from "@/lib/deadline"
+import { parseJsonResponse } from "@/lib/parse-json-response"
 
 export type PreqBreakdown = {
     approved: number
@@ -97,6 +98,11 @@ export type DashboardState = {
     fetchSummary: () => Promise<void>
 }
 
+type DashboardSummaryResponse = DashboardSummary & {
+    message?: string
+    error?: string
+}
+
 function computeRFQBreakdown(rfqs: RFQItem[]): RFQBreakdown {
     return rfqs.reduce(
         (acc, rfq) => {
@@ -138,8 +144,9 @@ export const useDashboardStore = create<DashboardState>((set) => ({
         set({ loading: true, error: false })
         try {
             const res = await fetch("/api/dashboard/summary", { cache: "no-store" })
-            if (!res.ok) throw new Error()
-            const json = await res.json()
+            const json = await parseJsonResponse<DashboardSummaryResponse>(res)
+            if (!res.ok) throw new Error(json?.message ?? json?.error ?? "Failed to load dashboard summary")
+            if (!json) throw new Error("Dashboard summary endpoint returned an invalid response")
             set({ summary: applySummary(json) })
         } catch {
             set({ error: true })

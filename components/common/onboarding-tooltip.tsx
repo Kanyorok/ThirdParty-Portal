@@ -9,7 +9,7 @@ import { Button } from '@/components/common/button'
 
 const TOUR_CONTENT: Record<string, { title: string; desc: string }> = {
     Supplier: {
-        title: "Welcome to the Supplier Portal",
+        title: "Welcome to the Third Party Portal",
         desc: "You can now manage bids, view active procurement rounds, and track your application status in real-time."
     },
     Tenant: {

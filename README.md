@@ -1,4 +1,4 @@
-# BRERP Supplier Portal Frontend
+# BRERP Third Party Portal Frontend
 
 ## Getting Started
 Follow these steps to set up the project locally.

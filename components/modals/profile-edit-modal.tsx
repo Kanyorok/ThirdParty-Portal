@@ -20,6 +20,7 @@ import {
     DialogClose,
 } from "@/components/common/dialog";
 import { MutatorOptions } from "swr";
+import { parseJsonResponse } from "@/lib/parse-json-response";
 
 const profileEditSchema = z.object({
     firstName: z
@@ -126,8 +127,10 @@ export function ProfileEditModal({
                     body: JSON.stringify(data),
                 });
 
+                const payload = await parseJsonResponse<ApiError & ProfileUpdateResponse>(response);
+
                 if (!response.ok) {
-                    const errorData: ApiError = await response.json();
+                    const errorData = (payload ?? { message: "Failed to update profile" }) as ApiError;
 
                     if (errorData.errors) {
                         Object.entries(errorData.errors).forEach(([field, messages]) => {
@@ -142,7 +145,7 @@ export function ProfileEditModal({
                     throw new Error(errorData.message || "Failed to update profile");
                 }
 
-                const result: ProfileUpdateResponse = await response.json();
+                const result = (payload ?? {}) as ProfileUpdateResponse;
                 const updatedProfile = result.user_profile ?? result.userProfile;
                 if (!updatedProfile) {
                     throw new Error("Profile update response is missing user_profile.");

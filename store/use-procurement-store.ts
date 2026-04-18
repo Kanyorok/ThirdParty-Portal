@@ -1,6 +1,13 @@
 import { create } from "zustand"
 import { Round } from "@/types/types"
 import { mapApiRound } from "@/lib/rounds"
+import { parseJsonResponse } from "@/lib/parse-json-response"
+
+type ApiResult = {
+    message?: string
+    error?: string
+    data?: any
+}
 
 interface ProcurementState {
     rounds: Round[]
@@ -40,9 +47,9 @@ export const useProcurementStore = create<ProcurementState>((set) => ({
                 headers: { Accept: "application/json" },
                 credentials: "same-origin",
             })
-            const result = await res.json()
-            if (!res.ok) throw new Error(result.message)
-            const list = Array.isArray(result.data) ? result.data : []
+            const result = await parseJsonResponse<ApiResult>(res)
+            if (!res.ok) throw new Error(result?.message ?? result?.error ?? "Failed to fetch rounds")
+            const list = Array.isArray(result?.data) ? result.data : []
             set({ rounds: list.map(mapApiRound), isLoading: false })
         } catch (err: any) {
             set({ error: err.message, isLoading: false })
@@ -56,9 +63,9 @@ export const useProcurementStore = create<ProcurementState>((set) => ({
                 headers: { Accept: "application/json" },
                 credentials: "same-origin",
             })
-            const result = await res.json()
-            if (!res.ok) throw new Error(result.message)
-            const raw = result.data ?? result
+            const result = await parseJsonResponse<ApiResult>(res)
+            if (!res.ok) throw new Error(result?.message ?? result?.error ?? "Failed to fetch round details")
+            const raw = result?.data ?? result
             set({ selectedRound: mapApiRound(raw), isLoading: false })
         } catch (err: any) {
             set({ error: err.message, isLoading: false })
@@ -77,8 +84,8 @@ export const useProcurementStore = create<ProcurementState>((set) => ({
                 credentials: "same-origin",
                 body: JSON.stringify(payload),
             })
-            const result = await res.json()
-            if (!res.ok) throw new Error(result.message)
+            const result = await parseJsonResponse<ApiResult>(res)
+            if (!res.ok) throw new Error(result?.message ?? result?.error ?? "Failed to submit application")
             set({ isLoading: false })
             return result
         } catch (err: any) {
@@ -94,9 +101,9 @@ export const useProcurementStore = create<ProcurementState>((set) => ({
                 headers: { Accept: "application/json" },
                 credentials: "same-origin",
             })
-            const result = await res.json()
-            if (!res.ok) throw new Error(result.message)
-            const applications = Array.isArray(result.data) ? result.data : []
+            const result = await parseJsonResponse<ApiResult>(res)
+            if (!res.ok) throw new Error(result?.message ?? result?.error ?? "Failed to fetch applications")
+            const applications = Array.isArray(result?.data) ? result.data : []
             const applicationStatus = applications.reduce((accumulator: Record<string, any>, application: any) => {
                 const key = String(application?.ApplicationID ?? application?.applicationId ?? Object.keys(accumulator).length)
                 accumulator[key] = application
@@ -115,12 +122,12 @@ export const useProcurementStore = create<ProcurementState>((set) => ({
                 headers: { Accept: "application/json" },
                 credentials: "same-origin",
             })
-            const result = await res.json()
-            if (!res.ok) throw new Error(result.message)
+            const result = await parseJsonResponse<ApiResult>(res)
+            if (!res.ok) throw new Error(result?.message ?? result?.error ?? "Failed to fetch application progress")
             set((state) => ({
                 applicationProgress: {
                     ...state.applicationProgress,
-                    [roundId]: result.data
+                    [roundId]: result?.data
                 },
                 isLoading: false
             }))

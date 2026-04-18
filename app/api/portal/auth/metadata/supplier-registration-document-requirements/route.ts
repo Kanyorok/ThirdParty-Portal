@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
-import { toServerErrorResponse, toUpstreamErrorResponse } from "@/app/api/portal/auth/_utils"
-import { fetchFirstAvailableJson } from "@/lib/portal-auth-api"
+import { createArrayResponseSchema, createMetadataGetHandler, parseArrayResponse } from "@/app/api/portal/auth/metadata/_shared"
 
 const RequirementSchema = z.object({
     id: z.union([z.number(), z.string().transform((value) => Number(value))]),
@@ -15,16 +14,10 @@ const RequirementSchema = z.object({
     allowedExtensions: z.array(z.string()).optional(),
 })
 
-const ResponseSchema = z.union([
-    z.object({ data: z.array(RequirementSchema).optional() }),
-    z.array(RequirementSchema),
-])
+const ResponseSchema = createArrayResponseSchema(RequirementSchema)
 
 function normalizeRequirements(payload: unknown) {
-    const parsed = ResponseSchema.safeParse(payload)
-    if (!parsed.success) return []
-
-    const rows = Array.isArray(parsed.data) ? parsed.data : parsed.data.data ?? []
+    const rows = parseArrayResponse<z.infer<typeof RequirementSchema>>(payload, ResponseSchema)
 
     return rows.map((row) => ({
         id: row.id,
@@ -38,19 +31,10 @@ function normalizeRequirements(payload: unknown) {
     }))
 }
 
-export async function GET() {
-    try {
-        const response = await fetchFirstAvailableJson([
-            "/portal/metadata/supplier-registration-document-requirements",
-            "/api/v1/portal/auth/metadata/supplier-registration-document-requirements",
-        ])
-
-        if (!response.ok) {
-            return toUpstreamErrorResponse(response.body, response.status)
-        }
-
-        return NextResponse.json({ data: normalizeRequirements(response.body) })
-    } catch {
-        return toServerErrorResponse([])
-    }
-}
+export const GET = createMetadataGetHandler(
+    [
+        "/portal/metadata/supplier-registration-document-requirements",
+        "/api/v1/portal/auth/metadata/supplier-registration-document-requirements",
+    ],
+    normalizeRequirements
+)

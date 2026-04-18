@@ -29,7 +29,7 @@ import { getBaseUrl, apiFetch } from "../api-base"
 function getApiBaseUrl() {
   // prefer runtime or build-time configured base; if absent return empty so
   // apiFetch will use relative paths
-  return getBaseUrl() || process.env.NEXT_PUBLIC_API_URL || ''
+  return getBaseUrl()
 }
 
 async function parseJson<T>(res: Response): Promise<T | Record<string, unknown>> {
@@ -48,9 +48,9 @@ function defaultHeaders(): HeadersInit {
 
 export const apiService = {
   async getProfile(): Promise<UserProfileLike> {
-  const body = await apiFetch<UpdateProfileResponse>(`/api/third-party-profile`, { allowError: true })
-  if (!body) throw new Error("Failed to fetch profile")
-  return (body?.user_profile || body?.userProfile || body?.data || body) as UserProfileLike
+    const body = await apiFetch<UpdateProfileResponse>(`/api/third-party-profile`, { allowError: true })
+    if (!body) throw new Error("Failed to fetch profile")
+    return (body?.user_profile || body?.userProfile || body?.data || body) as UserProfileLike
   },
 
   async changePassword(payload: PasswordPayload) {
@@ -78,7 +78,7 @@ export const apiService = {
     const formData = new FormData()
     formData.append("image", file)
 
-  const res = await fetch("/api/v1/profile/user-image", {
+    const res = await fetch("/api/v1/profile/user-image", {
       method: "POST",
       credentials: "same-origin",
       body: formData,
@@ -108,7 +108,7 @@ export const apiService = {
   },
 
   async suspendAccount(): Promise<DeactivateAccountResponse> {
-  const res = await fetch("/api/third-party-profile", {
+    const res = await fetch("/api/third-party-profile", {
       method: "DELETE",
       headers: defaultHeaders(),
       credentials: "same-origin",
@@ -130,7 +130,7 @@ export const apiService = {
       throw new Error("Password is required to deactivate account")
     }
 
-  const res = await fetch("/api/third-party-profile", {
+    const res = await fetch("/api/third-party-profile", {
       method: "DELETE",
       headers: {
         ...defaultHeaders(),

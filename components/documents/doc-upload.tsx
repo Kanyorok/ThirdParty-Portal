@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import toast from "react-hot-toast"
 import useSWR from "swr"
+import { parseJsonResponse } from "@/lib/parse-json-response"
 
 import { Button } from "@/components/common/button"
 import { Input } from "@/components/common/input"
@@ -281,11 +282,11 @@ export default function DocsUpload() {
         docsKey,
         async ([url]) => {
             const res = await fetch(url, { headers: { Accept: "application/json" } })
+            const payload = await parseJsonResponse(res)
             if (!res.ok) {
-                const err = await res.json().catch(() => ({}))
-                throw new Error((err as any)?.error || `HTTP ${res.status}`)
+                throw new Error((payload as any)?.error || (payload as any)?.message || `HTTP ${res.status}`)
             }
-            return res.json()
+            return payload ?? {}
         },
         { keepPreviousData: true }
     )

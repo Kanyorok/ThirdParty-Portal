@@ -48,6 +48,7 @@ import type {
 } from "@/types/rfq"
 import { useUrlSyncedSearch } from "@/hooks/use-url-synced-search"
 import { groupRfqInvitations } from "@/lib/rfq-response"
+import { parseJsonResponse } from "@/lib/parse-json-response"
 import { ProcurementCollectionHeader } from "@/components/procurement/shared/collection-header"
 import { ProcurementCollectionLoading, ProcurementCollectionState } from "@/components/procurement/shared/collection-state"
 import { ProcurementSectionTrigger } from "@/components/procurement/shared/section-trigger"
@@ -56,6 +57,7 @@ import { ProcurementSectionTrigger } from "@/components/procurement/shared/secti
 
 type RfqStatusFilter = "all" | "open" | "closed"
 type RfqResponseFilter = "all" | "submitted" | "pending"
+type RfqInvitationsResponse = RfqListResponse & { message?: string; error?: string }
 
 /* ── Status theme (mirrors my-applications) ──────── */
 
@@ -277,8 +279,22 @@ export function RfqInvitations() {
         headers: { Accept: "application/json" },
         cache: "no-store",
       })
-      const json = (await res.json()) as RfqListResponse & { message?: string }
-      if (!res.ok) throw new Error(json.message || "Failed to load RFQ invitations")
+      const json = await parseJsonResponse<RfqInvitationsResponse>(res)
+
+      if (!res.ok) {
+        throw new Error(
+          json?.message ||
+          json?.error ||
+          (res.status === 401
+            ? "Your session has expired. Sign in again and retry."
+            : "Failed to load RFQ invitations")
+        )
+      }
+
+      if (!json) {
+        throw new Error("RFQ invitations endpoint returned an invalid response")
+      }
+
       const list = Array.isArray(json.data) ? json.data : []
       setData(groupRfqInvitations(list))
     } catch (e) {

@@ -2,8 +2,14 @@
 
 import React, { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { Card, CardContent } from "@/components/common/card"
 import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card"
+import {
+    ChevronRight,
     ClipboardCheck,
     FileCheck2,
     FileSearch,
@@ -11,11 +17,14 @@ import {
     Trophy,
 } from "lucide-react"
 import { motion } from "framer-motion"
+import { parseJsonResponse } from "@/lib/parse-json-response"
 import { cn } from "@/lib/utils"
 import { useProfileStore } from "@/store/use-profile-store"
 
 type DashboardSummaryResponse = {
     summary?: Record<string, any>
+    message?: string
+    error?: string
 }
 
 type SummaryCardItem = {
@@ -24,6 +33,7 @@ type SummaryCardItem = {
     icon: React.ElementType
     description: string
     tone: "primary" | "emerald" | "sky" | "amber" | "indigo"
+    role: "driver" | "risk"
     href: string
 }
 
@@ -90,47 +100,53 @@ const toneClasses: Record<
         label: string
         value: string
         description: string
+        cta: string
     }
 > = {
     primary: {
-        card: "border-blue-300/60 bg-card",
-        iconWrap: "border-blue-300/60 bg-blue-500/10",
-        icon: "text-primary",
-        label: "text-muted-foreground",
-        value: "text-foreground",
-        description: "text-muted-foreground",
+        card: "border-sky-200/80 bg-gradient-to-br from-sky-50/95 via-white to-blue-100/70",
+        iconWrap: "border-sky-300/80 bg-sky-500/15",
+        icon: "text-sky-700",
+        label: "text-sky-900/80",
+        value: "text-sky-950",
+        description: "text-sky-900/70",
+        cta: "dashboard-cta dashboard-cta--sky",
     },
     emerald: {
-        card: "border-emerald-300/60 bg-card",
-        iconWrap: "border-emerald-300/60 bg-emerald-500/10",
-        icon: "text-emerald-600",
-        label: "text-muted-foreground",
-        value: "text-foreground",
-        description: "text-muted-foreground",
+        card: "border-teal-200/80 bg-gradient-to-br from-teal-50/95 via-white to-emerald-100/70",
+        iconWrap: "border-teal-300/80 bg-teal-500/15",
+        icon: "text-teal-700",
+        label: "text-teal-900/80",
+        value: "text-teal-950",
+        description: "text-teal-900/70",
+        cta: "dashboard-cta dashboard-cta--teal",
     },
     sky: {
-        card: "border-sky-300/60 bg-card",
-        iconWrap: "border-sky-300/60 bg-sky-500/10",
-        icon: "text-sky-600",
-        label: "text-muted-foreground",
-        value: "text-foreground",
-        description: "text-muted-foreground",
+        card: "border-blue-200/80 bg-gradient-to-br from-blue-50/95 via-white to-sky-100/70",
+        iconWrap: "border-blue-300/80 bg-blue-500/15",
+        icon: "text-blue-700",
+        label: "text-blue-900/80",
+        value: "text-blue-950",
+        description: "text-blue-900/70",
+        cta: "dashboard-cta dashboard-cta--sky",
     },
     amber: {
-        card: "border-amber-300/60 bg-card",
-        iconWrap: "border-amber-300/60 bg-amber-500/10",
-        icon: "text-amber-600",
-        label: "text-muted-foreground",
-        value: "text-foreground",
-        description: "text-muted-foreground",
+        card: "border-amber-200/85 bg-gradient-to-br from-amber-50/95 via-white to-orange-100/70",
+        iconWrap: "border-amber-300/80 bg-amber-500/15",
+        icon: "text-amber-700",
+        label: "text-amber-900/80",
+        value: "text-amber-950",
+        description: "text-amber-900/70",
+        cta: "dashboard-cta dashboard-cta--amber",
     },
     indigo: {
-        card: "border-indigo-300/60 bg-card",
-        iconWrap: "border-indigo-300/60 bg-indigo-500/10",
-        icon: "text-indigo-600",
-        label: "text-muted-foreground",
-        value: "text-foreground",
-        description: "text-muted-foreground",
+        card: "border-slate-300/85 bg-gradient-to-br from-slate-50/95 via-white to-blue-100/60",
+        iconWrap: "border-slate-300/85 bg-slate-500/10",
+        icon: "text-slate-700",
+        label: "text-slate-800/85",
+        value: "text-slate-900",
+        description: "text-slate-700/75",
+        cta: "dashboard-cta dashboard-cta--slate",
     },
 }
 
@@ -147,8 +163,9 @@ export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSumma
             setLoading(true)
             try {
                 const res = await fetch("/api/dashboard/summary", { cache: "no-store" })
-                if (!res.ok) throw new Error("Failed to load summary")
-                const json = (await res.json()) as DashboardSummaryResponse
+                const json = await parseJsonResponse<DashboardSummaryResponse>(res)
+                if (!res.ok) throw new Error(json?.message || json?.error || "Failed to load summary")
+                if (!json) throw new Error("Dashboard summary endpoint returned an invalid response")
                 if (mounted) setFetched(json)
             } finally {
                 if (mounted) setLoading(false)
@@ -170,6 +187,7 @@ export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSumma
             icon: ClipboardCheck,
             description: "Open prequalification opportunities.",
             tone: "primary",
+            role: "driver",
             href: "/dashboard/supplier/prequalification",
         },
         {
@@ -178,6 +196,7 @@ export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSumma
             icon: MailCheck,
             description: "Invitations that need your response.",
             tone: "sky",
+            role: "driver",
             href: "/dashboard/supplier/rfqs",
         },
         {
@@ -186,6 +205,7 @@ export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSumma
             icon: FileSearch,
             description: "Open tenders you can apply to.",
             tone: "amber",
+            role: "driver",
             href: "/dashboard/supplier/tenders",
         },
         {
@@ -194,6 +214,7 @@ export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSumma
             icon: Trophy,
             description: "Approved or completed outcomes.",
             tone: "emerald",
+            role: "driver",
             href: "/dashboard/supplier/prequalification",
         },
     ]
@@ -205,80 +226,109 @@ export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSumma
             icon: FileCheck2,
             description: `${resolved.submittedBids} submitted • ${resolved.draftBids} draft`,
             tone: "indigo",
+            role: resolved.draftBids > resolved.submittedBids ? "risk" : "driver",
             href: "/dashboard/supplier/my-applications/tenders",
         })
     }
 
+    const driversCount = cards.filter((card) => card.role === "driver").length
+    const riskCount = cards.length - driversCount
+
     return (
-        <section className="space-y-3 border-y border-border/70 bg-card px-3 py-3.5 md:px-4">
-            <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold tracking-tight text-foreground">Pipeline overview</p>
-                <span className="inline-flex items-center rounded-full border border-border/70 bg-muted/45 px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground">
-                    {cards.length} metrics
-                </span>
-            </div>
+        <Card className="dashboard-shell">
+            <div className="dashboard-shell-glow" />
+            <CardHeader className="px-4 pt-4 pb-2">
+                <div className="flex flex-wrap items-center justify-between gap-2.5">
+                    <div>
+                        <CardTitle className="text-sm font-semibold tracking-tight text-slate-900">Pipeline Snapshot</CardTitle>
+                        <p className="mt-0.5 text-xs text-slate-600">Current stage counts for opportunities in your pipeline.</p>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <span className="dashboard-chip dashboard-chip--progress">
+                            {driversCount} On Track
+                        </span>
+                        <span className="dashboard-chip dashboard-chip--attention">
+                            {riskCount} Needs Attention
+                        </span>
+                    </div>
+                </div>
+            </CardHeader>
 
-            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
-                {effectiveLoading
-                    ? Array.from({ length: cards.length }).map((_, i) => (
-                        <Card key={i} className="rounded-2xl border border-border/70 bg-card shadow-none">
-                            <CardContent className="p-3">
-                                <div className="h-9 w-9 rounded-lg bg-muted/60" />
-                                <div className="mt-2.5 h-3 w-36 rounded bg-muted/60" />
-                                <div className="mt-2 h-7 w-20 rounded bg-muted/60" />
-                                <div className="mt-2 h-3 w-48 rounded bg-muted/60" />
-                            </CardContent>
-                        </Card>
-                    ))
-                    : cards.map((item, index) => {
-                        const t = toneClasses[item.tone]
-                        return (
-                            <motion.div
-                                key={item.title}
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.05, duration: 0.25, ease: "easeOut" }}
-                                className="h-full"
-                            >
-                                <Link
-                                    href={item.href}
-                                    aria-label={`${item.title} details`}
-                                    className="group block h-full focus-visible:outline-none"
+            <CardContent className="px-3 pb-2">
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
+                    {effectiveLoading
+                        ? Array.from({ length: cards.length }).map((_, i) => (
+                            <Card key={i} className="rounded-2xl border border-slate-200/70 bg-slate-50/80 py-0 shadow-none">
+                                <CardContent className="p-3">
+                                    <div className="h-9 w-9 rounded-lg bg-muted/60" />
+                                    <div className="mt-2.5 h-3 w-36 rounded bg-muted/60" />
+                                    <div className="mt-2 h-7 w-20 rounded bg-muted/60" />
+                                    <div className="mt-2 h-3 w-44 rounded bg-muted/60" />
+                                    <div className="mt-3 h-3 w-24 rounded bg-muted/60" />
+                                </CardContent>
+                            </Card>
+                        ))
+                        : cards.map((item, index) => {
+                            const t = toneClasses[item.tone]
+                            return (
+                                <motion.div
+                                    key={item.title}
+                                    initial={{ opacity: 0, y: 8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.05, duration: 0.25, ease: "easeOut" }}
+                                    className="h-full"
                                 >
-                                    <Card
-                                        className={cn(
-                                            "h-full overflow-hidden rounded-2xl border shadow-none transition group-hover:-translate-y-0.5 group-hover:bg-accent/45 focus-visible:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-ring/40",
-                                            t.card
-                                        )}
+                                    <Link
+                                        href={item.href}
+                                        aria-label={`${item.title} details`}
+                                        className="group block h-full focus-visible:outline-none"
                                     >
-                                        <CardContent className="flex h-full flex-col gap-2 p-3">
-                                            <div className="flex items-start justify-between gap-3">
-                                                <div className={cn("text-[11px] font-semibold uppercase tracking-[0.28em]", t.label)}>
-                                                    {item.title}
+                                        <Card
+                                            className={cn(
+                                                "relative isolate h-full overflow-hidden rounded-2xl border py-0 transition duration-200 group-hover:-translate-y-0.5 group-hover:border-slate-300/80 focus-visible:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-ring/40",
+                                                t.card
+                                            )}
+                                        >
+                                            <div className="pointer-events-none absolute -right-5 -bottom-8 h-24 w-24 rounded-full bg-white/50 blur-xl" />
+                                            <CardContent className="relative flex h-full flex-col p-3">
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <div className={cn("text-[11px] font-semibold uppercase tracking-[0.28em]", t.label)}>
+                                                        {item.title}
+                                                    </div>
+                                                    <div
+                                                        className={cn(
+                                                            "flex h-9 w-9 items-center justify-center rounded-lg border transition-transform duration-200 group-hover:scale-105",
+                                                            t.iconWrap,
+                                                        )}
+                                                    >
+                                                        <item.icon className={cn("h-4 w-4", t.icon)} />
+                                                    </div>
                                                 </div>
-                                                <div
-                                                    className={cn(
-                                                        "flex h-9 w-9 items-center justify-center rounded-lg border",
-                                                        t.iconWrap,
-                                                    )}
-                                                >
-                                                    <item.icon className={cn("h-4 w-4", t.icon)} />
-                                                </div>
-                                            </div>
 
-                                            <div className={cn("text-3xl font-semibold tracking-tight tabular-nums", t.value)}>
-                                                {item.count.toLocaleString()}
-                                            </div>
-                                            <div className={cn("text-xs truncate", t.description)}>
-                                                {item.description}
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                </Link>
-                            </motion.div>
-                        )
-                    })}
-            </div>
-        </section>
+                                                <div className="mt-3">
+                                                    <div className={cn("text-3xl font-semibold tracking-tight tabular-nums", t.value)}>
+                                                        {item.count.toLocaleString()}
+                                                    </div>
+                                                </div>
+
+                                                <p className={cn("mt-1.5 line-clamp-2 text-xs leading-relaxed", t.description)}>
+                                                    {item.description}
+                                                </p>
+
+                                                <div className="mt-auto pt-3">
+                                                    <div className={cn("text-[11px]", t.cta)}>
+                                                        View details
+                                                        <ChevronRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+                                                    </div>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    </Link>
+                                </motion.div>
+                            )
+                        })}
+                </div>
+            </CardContent>
+        </Card>
     )
 }

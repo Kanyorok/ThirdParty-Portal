@@ -78,7 +78,7 @@ async function resolveTenantMaintenanceId(userPayload: any, accessToken: string)
     if (resolved != null) return resolved
   }
 
-  const apiBase = getBaseUrl() || process.env.NEXT_PUBLIC_API_URL || ''
+  const apiBase = getBaseUrl()
   if (!apiBase || !(userPayload?.isTenant ?? userPayload?.is_tenant)) return null
 
   const endpoints = [
@@ -122,7 +122,7 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        const loginUrl = `${getBaseUrl() || process.env.NEXT_PUBLIC_API_URL || ''}/api/v1/portal/auth/login`
+        const loginUrl = `${getBaseUrl()}/api/v1/portal/auth/login`
         const res = await fetch(loginUrl, {
           method: "POST",
           headers: {

@@ -18,6 +18,7 @@ import {
 } from "@/components/common/dialog"
 import { Input } from "@/components/common/input"
 import { Label } from "@/components/common/label"
+import { parseJsonResponse } from "@/lib/parse-json-response"
 import { Spinner } from "@/components/common/spinner"
 
 type ApiErrors = Record<string, string[]>
@@ -131,7 +132,7 @@ export default function ChangePasswordCard() {
         }),
       })
 
-      const json = (await res.json().catch(() => ({}))) as PasswordRouteResponse
+      const json = ((await parseJsonResponse<PasswordRouteResponse>(res)) ?? {}) as PasswordRouteResponse
 
       if (!res.ok) {
         const serverErrors = json?.errors ?? {}

@@ -43,7 +43,7 @@ async function AsyncDashboardLayout({ children }: { children: ReactNode }) {
             <AppSidebar variant={sidebarVariant} collapsible={sidebarCollapsible} />
             <SidebarInset
                 className={cn(
-                    "flex flex-col transition-all duration-300 ease-in-out bg-background/50",
+                    "dashboard-readable flex flex-col transition-all duration-300 ease-in-out bg-background/50",
                     contentLayout === "centered" && "mx-auto w-full max-w-[96rem] border-x border-border/40 min-h-screen",
                     "peer-data-[variant=inset]:m-2 peer-data-[variant=inset]:rounded-xl peer-data-[variant=inset]:border"
                 )}
@@ -66,12 +66,12 @@ async function AsyncDashboardLayout({ children }: { children: ReactNode }) {
                     </div>
                 </header>
                 <main className={cn(
-                    "flex-1 p-4 md:p-6 lg:p-8 overflow-x-hidden",
+                    "flex-1 px-4 py-4 md:px-6 md:py-6 lg:px-6 lg:py-6 overflow-x-hidden",
                     contentLayout === "centered" && "bg-card/30"
                 )}>
                     {children}
                 </main>
-                <footer className="mt-auto border-t border-border/40 bg-muted/5 px-4 py-3">
+                <footer className="mt-auto border-t border-border/40 bg-muted/5 px-4 py-3 lg:px-6">
                     <SystemFooter />
                 </footer>
             </SidebarInset>

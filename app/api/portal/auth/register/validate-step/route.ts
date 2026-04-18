@@ -5,7 +5,7 @@ import { getBaseUrl } from "@/lib/api-base"
 
 export async function POST(request: Request) {
     try {
-        const apiBase = getBaseUrl() || process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE_URL || ""
+        const apiBase = getBaseUrl()
         if (!apiBase) {
             return NextResponse.json({ message: "Registration service is not configured." }, { status: 500 })
         }
