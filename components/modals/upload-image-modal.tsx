@@ -115,7 +115,11 @@ export function ProfileImageUploadModal({
                     }).then(async (response) => {
                         const payload = await parseJsonResponse(response);
                         if (!response.ok) {
-                            throw new Error(payload?.message || payload?.error || "Failed to upload image.");
+                            throw new Error(
+                                (typeof payload?.message === "string" && payload.message) ||
+                                (typeof payload?.error === "string" && payload.error) ||
+                                "Failed to upload image."
+                            );
                         }
                         return payload;
                     }),

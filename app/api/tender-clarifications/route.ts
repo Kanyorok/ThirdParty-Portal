@@ -77,8 +77,6 @@ export async function POST(req: NextRequest) {
     return jsonError("Tender ID and question are required", 400)
   }
 
-  const actorId = session.user.userId ?? session.user.thirdPartyId ?? null
-
   const payload = {
     tender_id: Number(tenderId),
     question,

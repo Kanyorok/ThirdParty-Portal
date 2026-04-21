@@ -200,11 +200,9 @@ export default function BusinessProfileCard({
     retry: 1,
   })
 
-  const rawBusinessTypeOptions = businessTypesResponse?.data ?? []
-
   const businessTypeOptions = useMemo(
-    () => normalizeBusinessTypeOptions(rawBusinessTypeOptions as Array<Record<string, unknown>>),
-    [rawBusinessTypeOptions],
+    () => normalizeBusinessTypeOptions((businessTypesResponse?.data ?? []) as Array<Record<string, unknown>>),
+    [businessTypesResponse?.data],
   )
 
   const selectedBusinessType = useMemo(

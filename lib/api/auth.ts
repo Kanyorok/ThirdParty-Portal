@@ -1,4 +1,4 @@
-import { getBaseUrl, apiFetch } from "../api-base"
+import { apiFetch } from "../api-base"
 
 interface ApiResponse<T = any> {
   success: boolean

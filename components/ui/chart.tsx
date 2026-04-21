@@ -4,7 +4,6 @@ import * as React from "react"
 import {
     ResponsiveContainer,
     Tooltip as RechartsTooltip,
-    type TooltipProps,
 } from "recharts"
 import { cn } from "@/lib/utils"
 
@@ -56,16 +55,27 @@ function ChartContainer({ config, className, children, ...props }: ChartContaine
 
 const ChartTooltip = RechartsTooltip
 
+type ChartTooltipPayloadItem = {
+    color?: string
+    dataKey?: string | number
+    name?: string | number
+    payload?: Record<string, unknown>
+    value?: number | string | null
+}
+
 type ChartTooltipContentProps = React.ComponentProps<"div"> &
-    Partial<Pick<TooltipProps<number, string>, "active" | "payload" | "label">> & {
-        hideLabel?: boolean
-        formatter?: (
-            value: number | string,
-            name: string,
-            item: NonNullable<TooltipProps<number, string>["payload"]>[number],
-            index: number
-        ) => React.ReactNode
-    }
+{
+    active?: boolean
+    payload?: ChartTooltipPayloadItem[]
+    label?: string | number
+    hideLabel?: boolean
+    formatter?: (
+        value: number | string,
+        name: string,
+        item: ChartTooltipPayloadItem,
+        index: number
+    ) => React.ReactNode
+}
 
 function ChartTooltipContent({
     active,

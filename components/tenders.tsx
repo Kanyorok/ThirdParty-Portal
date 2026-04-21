@@ -61,12 +61,6 @@ function pick(obj: AnyRecord, keys: readonly string[]) {
   return undefined
 }
 
-function fmt(value?: string | null) {
-  if (!value) return null
-  const d = new Date(value)
-  return Number.isNaN(d.getTime()) ? null : format(d, "dd MMM yyyy")
-}
-
 function deadlineMeta(deadline?: string | null) {
   if (!deadline) return { label: "No deadline", tone: "text-muted-foreground", closed: false, closingSoon: false }
   const parsed = new Date(deadline)
@@ -324,7 +318,7 @@ export default function TendersFilter() {
       const json = await parseJsonResponse<({ data?: unknown[]; message?: string; error?: string }) | unknown[]>(res)
       const message = Array.isArray(json) ? null : json?.message ?? json?.error ?? null
       if (!res.ok) throw new Error(message ?? "Failed to load tenders")
-      if (Array.isArray(json?.data)) setTenders(json.data)
+      if (!Array.isArray(json) && Array.isArray(json?.data)) setTenders(json.data)
       else if (Array.isArray(json)) setTenders(json)
       else setTenders([])
     } catch (e: unknown) {

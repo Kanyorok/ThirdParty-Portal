@@ -38,9 +38,8 @@ export function NotificationsPopover() {
   const markRead = useMarkNotificationRead()
   const markAllRead = useMarkAllNotificationsRead()
 
-  const items = data?.items ?? []
   const summary = data?.summary ?? { total: 0, unread: 0 }
-  const recent = React.useMemo(() => items.slice(0, 10), [items])
+  const recent = React.useMemo(() => (data?.items ?? []).slice(0, 10), [data?.items])
   const isNotifications = pathname?.startsWith("/dashboard/notifications")
 
   const onSelect = (item: AppNotification) => {

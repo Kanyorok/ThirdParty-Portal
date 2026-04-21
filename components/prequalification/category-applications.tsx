@@ -368,7 +368,7 @@ export default function CategoryApplications({ round: roundProp, className, vari
         } finally {
             setUploading(null)
         }
-    }, [round.id])
+    }, [round.id, round.sections])
 
     /* ── Document download ── */
     const downloadDocument = useCallback((categoryId: string, docId: string | number, fileName?: string) => {

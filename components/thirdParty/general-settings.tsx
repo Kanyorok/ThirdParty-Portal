@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { motion, AnimatePresence, Variants } from 'framer-motion'
-import { Globe, Bell, Shield, Check, ChevronDown } from 'lucide-react'
+import { motion, Variants } from 'framer-motion'
+import { Globe, Bell, Shield, ChevronDown } from 'lucide-react'
 
 type Language = 'en'
 
@@ -68,12 +68,12 @@ function SettingSection({
                     <Icon className="h-5 w-5 text-primary" />
                 </motion.div>
 
-                <div className="flex-1 space-y-4 min-w-0">
+                <div className="min-w-0 flex-1 space-y-4">
                     <div>
-                        <h3 className="text-base font-semibold text-foreground leading-tight">
+                        <h3 className="text-base font-semibold leading-tight text-foreground">
                             {title}
                         </h3>
-                        <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
+                        <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
                             {description}
                         </p>
                     </div>
@@ -81,57 +81,6 @@ function SettingSection({
                 </div>
             </div>
         </motion.div>
-    );
-}
-
-function RadioGroup({
-    options,
-    value,
-    onChange,
-}: {
-    options: SettingOption[];
-    value: string;
-    onChange: (value: string) => void;
-}) {
-    return (
-        <div className="flex flex-wrap gap-2">
-            {options.map((option) => {
-                const isSelected = value === option.value;
-                const Icon = option.icon;
-
-                return (
-                    <motion.button
-                        key={option.value}
-                        onClick={() => onChange(option.value)}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className={`
-                            relative flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium
-                            transition-all duration-200 border-2
-                            ${isSelected
-                                ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20'
-                                : 'bg-background hover:bg-accent border-border/50 text-foreground hover:border-border'
-                            }
-                        `}
-                    >
-                        {Icon && <Icon className="h-4 w-4" />}
-                        <span>{option.label}</span>
-                        <AnimatePresence>
-                            {isSelected && (
-                                <motion.div
-                                    initial={{ scale: 0, opacity: 0 }}
-                                    animate={{ scale: 1, opacity: 1 }}
-                                    exit={{ scale: 0, opacity: 0 }}
-                                    transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-                                >
-                                    <Check className="h-4 w-4" />
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </motion.button>
-                );
-            })}
-        </div>
     );
 }
 

@@ -213,13 +213,6 @@ function AttachmentActionsMenu({
   )
 }
 
-function pickArray(candidates: any[]) {
-  for (const c of candidates) {
-    if (Array.isArray(c)) return c as AnyRecord[]
-  }
-  return [] as AnyRecord[]
-}
-
 function extractClarificationsList(raw: any) {
   const root = raw?.data ?? raw
   if (Array.isArray(root)) return root as AnyRecord[]
@@ -1062,7 +1055,7 @@ export function RfqQuotation() {
     if (cur && !currencyTouched) {
       setQuoteCurrency(cur)
     }
-  }, [rfq, currencyTouched])
+  }, [supplierResponse?.currency, currencyTouched])
 
   useEffect(() => {
     let cancelled = false

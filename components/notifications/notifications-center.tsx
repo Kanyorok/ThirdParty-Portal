@@ -61,16 +61,16 @@ export function NotificationsCenter() {
   const markAllRead = useMarkAllNotificationsRead()
   const [filter, setFilter] = React.useState<"all" | "unread" | "read">("all")
 
-  const items = data?.items ?? []
   const summary = data?.summary ?? { total: 0, unread: 0 }
 
   const sortedItems = React.useMemo(() => {
+    const items = data?.items ?? []
     return [...items].sort((a, b) => {
       const left = a.createdAt ? new Date(a.createdAt).getTime() : 0
       const right = b.createdAt ? new Date(b.createdAt).getTime() : 0
       return right - left
     })
-  }, [items])
+  }, [data?.items])
 
   const unreadItems = React.useMemo(() => sortedItems.filter((n) => !n.read), [sortedItems])
   const readItems = React.useMemo(() => sortedItems.filter((n) => n.read), [sortedItems])

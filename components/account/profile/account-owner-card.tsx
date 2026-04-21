@@ -9,6 +9,7 @@ import { Input } from "@/components/common/input"
 import { Label } from "@/components/common/label"
 import { parseJsonResponse } from "@/lib/parse-json-response"
 import { Spinner } from "@/components/common/spinner"
+import { resolveMediaUrl } from "@/components/account/profile/utils"
 
 type AccountOwnerCardProps = {
   profile: any
@@ -111,16 +112,7 @@ export default function AccountOwnerCard({
         const body = await parseJsonResponse(res)
         if (!res.ok || body?.success === false) return
 
-        const src =
-          body?.data?.image?.src ??
-          body?.data?.imageUrl ??
-          body?.data?.image_url ??
-          body?.data?.image ??
-          body?.image?.src ??
-          body?.imageUrl ??
-          body?.image_url ??
-          body?.image ??
-          null
+        const src = resolveMediaUrl(body, "image")
 
         if (!cancelled && typeof src === "string" && src.trim().length > 0) {
           setRemoteAvatarSrc(src)

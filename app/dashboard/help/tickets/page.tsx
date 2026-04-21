@@ -23,8 +23,6 @@ import {
   readText,
   renderMessageWithMentions,
   sanitizeMentionSearch,
-  toMentionHandle,
-  toPositiveInt,
   uniqueMentionCandidates,
 } from "@/app/dashboard/help/tickets/_mention-utils"
 import {

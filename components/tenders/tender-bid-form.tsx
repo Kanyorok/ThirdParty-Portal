@@ -75,6 +75,19 @@ interface BidSubmission {
   submission_reference?: string;
 }
 
+type TenderBidSubmitResponse = {
+  message?: string;
+  error?: string;
+  errors?: Record<string, string[] | string>;
+  data?: Record<string, any>;
+  invitation_status?: string;
+  tender_status?: string;
+  submission_deadline?: string;
+  effective_status?: string;
+  fallback_to_draft?: boolean;
+  fallback?: boolean;
+};
+
 type SubmittedBidInfo = {
   id: number | null;
   submittedAt: string | null;
@@ -470,10 +483,11 @@ export default function TenderBidForm({
         body: formData,
       });
 
-      const data = await parseJsonResponse<{ message?: string; error?: string; data?: Record<string, any> }>(response);
+      const data = await parseJsonResponse<TenderBidSubmitResponse>(response);
+      const payload = data ?? {};
 
       if (!response.ok) {
-        const existingBidPayload = data?.data && typeof data.data === "object" ? data.data : null;
+        const existingBidPayload = payload.data && typeof payload.data === "object" ? payload.data : null;
         const existingBidId = Number(existingBidPayload?.existing_bid_id);
         const hasExistingBid = Number.isFinite(existingBidId) && existingBidId > 0;
         const existingSubmittedAt = typeof existingBidPayload?.submitted_at === "string"
@@ -497,12 +511,12 @@ export default function TenderBidForm({
               id: existingBidId,
               submittedAt: existingSubmittedAt,
               status: existingStatus,
-              fallback: data?.message || "A final bid has already been submitted for this tender.",
+              fallback: payload.message || "A final bid has already been submitted for this tender.",
             })
           );
         }
 
-        if (response.status === 422 && data.errors) {
+        if (response.status === 422 && payload.errors) {
           // Handle validation errors from ERP
           const errorMessages: string[] = [];
           const fieldLabelMap: Record<string, string> = {
@@ -515,13 +529,13 @@ export default function TenderBidForm({
             status: "Status",
           };
 
-          Object.entries(data.errors as Record<string, string[] | string>).forEach(([field, value]) => {
+          Object.entries(payload.errors as Record<string, string[] | string>).forEach(([field, value]) => {
             const label = fieldLabelMap[field] || field.replace(/_/g, " ");
             const text = Array.isArray(value) ? value[0] : String(value);
             if (text) errorMessages.push(`${label}: ${text}`);
           });
 
-          const hasBidDocValidation = Object.keys(data.errors as Record<string, unknown>).some(
+          const hasBidDocValidation = Object.keys(payload.errors as Record<string, unknown>).some(
             (key) => key === "bid_documents" || key.startsWith("bid_documents.")
           );
           if (hasBidDocValidation && documents.length === 0 && type === "final") {
@@ -530,38 +544,38 @@ export default function TenderBidForm({
 
           const errorMessage = errorMessages.length > 0
             ? errorMessages.join(', ')
-            : data.message || 'Validation failed';
+            : payload.message || 'Validation failed';
 
           throw new Error(errorMessage);
         } else if (response.status === 409) {
-          throw new Error(data.message || "A final bid has already been submitted for this tender.");
+          throw new Error(payload.message || "A final bid has already been submitted for this tender.");
         } else if (response.status === 403) {
           // Handle business logic errors from ERP (like expired deadlines)
-          const messageText = (data.message || data.error || "").toString().toLowerCase();
-          if (data.invitation_status || messageText.includes("invitation")) {
-            throw new Error(data.message || "You must accept the tender invitation before submitting a bid.");
+          const messageText = (payload.message || payload.error || "").toString().toLowerCase();
+          if (payload.invitation_status || messageText.includes("invitation")) {
+            throw new Error(payload.message || "You must accept the tender invitation before submitting a bid.");
           }
 
-          if (data.tender_status === "cl" || data.submission_deadline) {
-            const deadline = data.submission_deadline
-              ? ` (Deadline was: ${new Date(data.submission_deadline).toLocaleString()})`
+          if (payload.tender_status === "cl" || payload.submission_deadline) {
+            const deadline = payload.submission_deadline
+              ? ` (Deadline was: ${new Date(payload.submission_deadline).toLocaleString()})`
               : "";
-            throw new Error(`${data.message || 'Submission not allowed'}${deadline}`);
+            throw new Error(`${payload.message || 'Submission not allowed'}${deadline}`);
           } else {
-            throw new Error(data.message || 'This action is not allowed');
+            throw new Error(payload.message || 'This action is not allowed');
           }
         } else if (response.status >= 500 || response.status === 502) {
           // ERP server error surfaced by proxy
           throw new Error('ERP is currently unavailable. Please try again in a moment.');
         } else {
-          throw new Error(data.message || data.error || 'Failed to submit bid');
+          throw new Error(payload.message || payload.error || 'Failed to submit bid');
         }
       }
 
       // Show appropriate success message based on whether fallback was used
-      const effectiveStatus = String(data.effective_status || data.data?.status || data.data?.bid_status || "").toLowerCase();
-      const fallbackToDraft = Boolean(data.fallback_to_draft) || (type === "final" && effectiveStatus === "draft");
-      const message = data.fallback ?
+      const effectiveStatus = String(payload.effective_status || payload.data?.status || payload.data?.bid_status || "").toLowerCase();
+      const fallbackToDraft = Boolean(payload.fallback_to_draft) || (type === "final" && effectiveStatus === "draft");
+      const message = payload.fallback ?
         (type === 'draft'
           ? "Bid saved as draft successfully! (Mock mode - ERP not connected)"
           : "Bid submitted successfully! (Mock mode - ERP not connected)"
@@ -591,7 +605,7 @@ export default function TenderBidForm({
           paymentTerms: "",
         });
         setDocuments([]);
-        setExistingBidId(data.data?.bid_id || data.data?.Id || null);
+        setExistingBidId(payload.data?.bid_id || payload.data?.Id || null);
         setIsEditingDraft(false); // Final submission, no longer editing draft
 
         // Trigger external success handler (e.g., close modal / collapse dialog)
@@ -603,7 +617,7 @@ export default function TenderBidForm({
         }
       } else {
         // For draft saves, update the existing bid ID if we got one back
-        setExistingBidId(data.data?.bid_id || data.data?.Id || existingBidId);
+        setExistingBidId(payload.data?.bid_id || payload.data?.Id || existingBidId);
         setIsEditingDraft(true); // Still in draft mode
       }
 

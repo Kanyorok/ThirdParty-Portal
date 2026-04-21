@@ -110,7 +110,7 @@ export default function TenderClarifications({
         err.status = response.status;
         throw err;
       }
-      const clarificationsData = data.data || [];
+      const clarificationsData = data?.data || [];
 
       setClarifications(clarificationsData);
       setInlineError(null);
