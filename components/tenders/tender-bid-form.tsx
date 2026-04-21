@@ -483,8 +483,7 @@ export default function TenderBidForm({
         body: formData,
       });
 
-      const data = await parseJsonResponse<TenderBidSubmitResponse>(response);
-      const payload = data ?? {};
+      const data: any = await parseJsonResponse(response);
 
       if (!response.ok) {
         const existingBidPayload = payload.data && typeof payload.data === "object" ? payload.data : null;

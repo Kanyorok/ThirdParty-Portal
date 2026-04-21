@@ -88,7 +88,7 @@ export default function TenderClarifications({
     try {
       const response = await fetch(`/api/tender-clarifications?tender_id=${tenderId}`);
 
-      const data = await parseJsonResponse<{ data?: TenderClarification[]; message?: string; error?: string; details?: { message?: string } }>(response);
+      const data: any = await parseJsonResponse(response);
 
       if (!response.ok) {
         const fallbackMessage = `Failed to fetch clarifications: ${response.status} ${response.statusText}`;

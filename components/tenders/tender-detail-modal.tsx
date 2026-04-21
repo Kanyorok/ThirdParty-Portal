@@ -268,7 +268,7 @@ export default function TenderDetailModal({
         `/api/tenders${params.toString() ? `?${params.toString()}` : ""}`,
         { headers: { Accept: "application/json" } }
       )
-      const json = await parseJsonResponse<{ data?: any[]; message?: string; error?: string } | any[]>(res)
+      const json: any = await parseJsonResponse(res)
       const message = Array.isArray(json) ? null : json?.message ?? json?.error ?? null
       if (!res.ok) throw new Error(message ?? "Failed to refresh documents")
       const list = !Array.isArray(json) && Array.isArray(json?.data)
