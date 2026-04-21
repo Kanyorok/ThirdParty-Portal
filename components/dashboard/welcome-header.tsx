@@ -1,12 +1,14 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { motion, type Variants } from "framer-motion"
 import { ArrowUpRight, Sparkles } from "lucide-react"
 import { Button } from "@/components/common/button"
 
 type Action = { label: string; href: string }
+
+const headerEase: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94]
 
 const headerShellVariants: Variants = {
   hidden: { opacity: 0, y: 16 },
@@ -22,7 +24,6 @@ const headerShellVariants: Variants = {
   },
 }
 
-const headerItemVariants: Variants = {
 const headerItemVariants: Variants = {
   hidden: { opacity: 0, y: 8 },
   visible: {

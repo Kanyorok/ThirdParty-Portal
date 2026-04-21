@@ -75,18 +75,7 @@ interface BidSubmission {
   submission_reference?: string;
 }
 
-type TenderBidSubmitResponse = {
-  message?: string;
-  error?: string;
-  errors?: Record<string, string[] | string>;
-  data?: Record<string, any>;
-  invitation_status?: string;
-  tender_status?: string;
-  submission_deadline?: string;
-  effective_status?: string;
-  fallback_to_draft?: boolean;
-  fallback?: boolean;
-};
+
 
 type SubmittedBidInfo = {
   id: number | null;
@@ -483,7 +472,7 @@ export default function TenderBidForm({
         body: formData,
       });
 
-      const data: any = await parseJsonResponse(response);
+      const payload: any = await parseJsonResponse(response);
 
       if (!response.ok) {
         const existingBidPayload = payload.data && typeof payload.data === "object" ? payload.data : null;

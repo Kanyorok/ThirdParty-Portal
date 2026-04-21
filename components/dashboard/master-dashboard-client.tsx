@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { motion, type Variants } from "framer-motion"
-import { motion, type Variants } from "framer-motion"
 import { SlidersHorizontal } from "lucide-react"
 import { useShallow } from "zustand/react/shallow"
 
@@ -28,6 +27,8 @@ import {
 } from "@/components/common/dialog"
 import { Label } from "@/components/common/label"
 import { Checkbox } from "@/components/common/checkbox"
+
+const shellEase: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94]
 
 const shellSectionVariants: Variants = {
   hidden: { opacity: 0, y: 14 },

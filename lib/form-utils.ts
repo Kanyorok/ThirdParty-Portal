@@ -52,7 +52,7 @@ export const transformRegisterFormDataForApi = (formData: RegisterFormInputs) =>
         FirstName: formData.user_FirstName,
         LastName: formData.user_LastName,
         Email: formData.user_Email || formData.Email,
-        Phone: normalizeToE164(formData.user_Phone || formData.Phone),
+        Phone: normalizeToE164(formData.user_Phone || formData.Phone || ""),
         Password: formData.user_Password,
         Password_confirmation: formData.user_Password_confirmation,
     };
@@ -69,7 +69,7 @@ export const transformThirdPartyDetailsForApi = (formData: ThirdPartyDetailsForm
         Country: formData.country,
         PhysicalAddress: formData.physicalAddress,
         Email: formData.email,
-        Phone: normalizeToE164(formData.phone),
+        Phone: normalizeToE164(formData.phone || ""),
         Website: formData.website,
         ThirdPartyType: formData.userType === "supplier" ? "S" : formData.userType === "tenant" ? "T" : "C",
     };

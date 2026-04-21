@@ -95,13 +95,7 @@ function ChartContainer({ config, className, children, ...props }: ChartContaine
 
 const ChartTooltip = RechartsTooltip
 
-type ChartTooltipPayloadItem = {
-    color?: string
-    dataKey?: string | number
-    name?: string | number
-    payload?: Record<string, unknown>
-    value?: number | string | null
-}
+
 
 type ChartTooltipContentProps = React.ComponentProps<"div"> & {
     active?: boolean
