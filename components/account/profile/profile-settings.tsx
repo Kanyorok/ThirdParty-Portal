@@ -21,6 +21,7 @@ import CustomerProfilePanel from "@/components/account/profile/customer-profile-
 import DangerZoneCard from "@/components/account/danger-card"
 import BankDetailsForm from "@/components/thirdParty/bank-details"
 import { parseJsonResponse } from "@/lib/parse-json-response"
+import { resolveMediaUrl } from "@/components/account/profile/utils"
 
 function LoadingState() {
   return (
@@ -115,16 +116,7 @@ export default function ProfileSettings() {
         const body = await parseJsonResponse(res)
         if (!res.ok || body?.success === false) return
 
-        const src =
-          body?.data?.logo?.src ??
-          body?.data?.logoUrl ??
-          body?.data?.logo_url ??
-          body?.data?.logo ??
-          body?.logo?.src ??
-          body?.logoUrl ??
-          body?.logo_url ??
-          body?.logo ??
-          null
+        const src = resolveMediaUrl(body, "logo")
 
         if (!cancelled && typeof src === "string" && src.trim().length > 0) {
           setOptimisticLogoUrl(src)
@@ -146,16 +138,7 @@ export default function ProfileSettings() {
         const body = await parseJsonResponse(res)
         if (!res.ok || body?.success === false) return
 
-        const src =
-          body?.data?.image?.src ??
-          body?.data?.imageUrl ??
-          body?.data?.image_url ??
-          body?.data?.image ??
-          body?.image?.src ??
-          body?.imageUrl ??
-          body?.image_url ??
-          body?.image ??
-          null
+        const src = resolveMediaUrl(body, "image")
 
         if (!cancelled && typeof src === "string" && src.trim().length > 0) {
           setOptimisticUserImageUrl(src)

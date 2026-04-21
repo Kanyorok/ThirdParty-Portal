@@ -11,6 +11,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { Spinner } from "@/components/common/spinner"
 import { parseJsonResponse } from "@/lib/parse-json-response"
 import { cn, getInitials } from "@/lib/utils"
+import { resolveMediaId, resolveMediaUrl } from "@/components/account/profile/utils"
 
 const USER_IMAGE_UPDATED_EVENT = "profile:user-image-updated"
 
@@ -25,33 +26,11 @@ type UserImageDialogProps = {
 }
 
 function resolveImageUrl(body: any): string | null {
-  const nextUrl =
-    body?.data?.image?.src ??
-    body?.data?.imageUrl ??
-    body?.data?.image_url ??
-    body?.data?.image ??
-    body?.image?.src ??
-    body?.imageUrl ??
-    body?.image_url ??
-    body?.image ??
-    null
-
-  return typeof nextUrl === "string" && nextUrl.trim().length > 0 ? nextUrl : null
+  return resolveMediaUrl(body, "image")
 }
 
 function resolveImageId(body: any): number | null {
-  const raw =
-    body?.data?.image?.id ??
-    body?.data?.imageId ??
-    body?.data?.image_id ??
-    body?.image?.id ??
-    body?.imageId ??
-    body?.image_id ??
-    null
-
-  if (raw == null) return null
-  const parsed = Number(raw)
-  return Number.isFinite(parsed) ? parsed : null
+  return resolveMediaId(body, "image")
 }
 
 export default function UserImageDialog({
@@ -128,7 +107,7 @@ export default function UserImageDialog({
       try {
         const res = await fetch("/api/v1/profile/user-image", { method: "POST", body: formData })
         const body = await parseJsonResponse(res)
-        if (!res.ok || body?.success === false) throw new Error(body?.message || "Failed to upload image.")
+        if (!res.ok || body?.success === false) throw new Error(typeof body?.message === "string" ? body.message : "Failed to upload image.")
 
         const nextUrl = resolveImageUrl(body)
         const nextImageId = resolveImageId(body)

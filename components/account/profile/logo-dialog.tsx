@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/common/avatar"
 import { parseJsonResponse } from "@/lib/parse-json-response"
 import { cn } from "@/lib/utils"
 import { Spinner } from "@/components/common/spinner"
+import { resolveMediaUrl } from "@/components/account/profile/utils"
 
 type LogoDialogProps = {
   open: boolean
@@ -84,18 +85,9 @@ export default function LogoDialog({ open, onOpenChange, logoUrl, onLogoUrlChang
       try {
         const res = await fetch("/api/v1/profile/logo", { method: "POST", body: formData })
         const body = await parseJsonResponse(res)
-        if (!res.ok || body?.success === false) throw new Error(body?.message || "Failed to upload logo.")
+        if (!res.ok || body?.success === false) throw new Error(typeof body?.message === "string" ? body.message : "Failed to upload logo.")
 
-        const nextUrl =
-          body?.data?.logo?.src ??
-          body?.data?.logoUrl ??
-          body?.data?.logo_url ??
-          body?.data?.logo ??
-          body?.logo?.src ??
-          body?.logoUrl ??
-          body?.logo_url ??
-          body?.logo ??
-          null
+        const nextUrl = resolveMediaUrl(body, "logo")
         onLogoUrlChange(typeof nextUrl === "string" && nextUrl.trim().length ? nextUrl : logoUrl)
 
         toast.success("Logo updated.")

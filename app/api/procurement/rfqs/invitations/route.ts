@@ -7,7 +7,7 @@ export const revalidate = 0
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
     const session = await getServerSession(authOptions)
 
     if (!session || !session.accessToken) {

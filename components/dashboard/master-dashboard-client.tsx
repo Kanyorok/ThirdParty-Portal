@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { motion } from "framer-motion"
+import { motion, type Variants } from "framer-motion"
 import { SlidersHorizontal } from "lucide-react"
 import { useShallow } from "zustand/react/shallow"
 
@@ -28,14 +28,16 @@ import {
 import { Label } from "@/components/common/label"
 import { Checkbox } from "@/components/common/checkbox"
 
-const shellSectionVariants = {
+const shellEase = [0.22, 1, 0.36, 1] as const
+
+const shellSectionVariants: Variants = {
   hidden: { opacity: 0, y: 14 },
   visible: (index: number) => ({
     opacity: 1,
     y: 0,
     transition: {
       duration: 0.34,
-      ease: [0.22, 1, 0.36, 1],
+      ease: shellEase,
       delay: index * 0.045,
     },
   }),

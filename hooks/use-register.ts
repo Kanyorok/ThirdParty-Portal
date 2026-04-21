@@ -73,6 +73,11 @@ const normalizeText = (value: unknown) => {
     return trimmed.length > 0 ? trimmed : undefined
 }
 
+const joinContactPersonName = (firstName?: string, lastName?: string) => {
+    const parts = [normalizeText(firstName), normalizeText(lastName)].filter(Boolean)
+    return parts.length > 0 ? parts.join(" ") : undefined
+}
+
 const optionalTextField = (label: string, maxLength: number) =>
     z.preprocess(
         emptyToUndefined,
@@ -227,14 +232,11 @@ const registerSchema = z
         Country: z.string().trim().min(2, "Country is required").max(3, "Please select a valid country code"),
         Location: z.coerce.number().int("Please select a valid location").min(1, "Location is required"),
         Email: optionalEmailField("Business email"),
-        Phone: phoneField("Phone number is required"),
+        Phone: optionalPhoneField("Phone number is required"),
         PhysicalAddress: optionalTextField("Physical address", 200),
         Website: optionalHttpsUrlField("Website", 255),
         types: z.array(z.enum(ROLE_VALUES)).min(1, "Select at least one business role"),
         supplier_category_id: z.preprocess((value) => (value === "" ? null : value), z.coerce.number().int().positive().nullable().optional()),
-        contactPersonName: optionalNameField("Contact person name"),
-        contactPersonEmail: optionalEmailField("Contact person email"),
-        contactPersonPhone: optionalPhoneField("Contact person phone is required"),
         user_Remarks: optionalTextField("Tenant remarks", 500),
         user_DateOfBirth: optionalTextField("Date of birth", 25),
         user_MaritalStatus: optionalLookupField("Marital status", 100),
@@ -253,14 +255,28 @@ const registerSchema = z
         const tenantFlow = hasRole(data.types, "TN")
         const customerFlow = hasRole(data.types, "CU")
 
+        if (!data.createUser && !data.Phone) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["Phone"], message: "Phone number is required." })
+        }
+
         if (supplierFlow && !data.supplier_category_id) {
             ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["supplier_category_id"], message: "Select a supplier category." })
         }
 
         if (supplierFlow && isCompanyLikeBusinessType(data.BusinessType)) {
-            if (!data.contactPersonName) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contactPersonName"], message: "Contact person name is required." })
-            if (!data.contactPersonEmail) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contactPersonEmail"], message: "Contact person email is required." })
-            if (!data.contactPersonPhone) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contactPersonPhone"], message: "Contact person phone is required." })
+            const derivedContactName = data.createUser
+                ? joinContactPersonName(data.user_FirstName, data.user_LastName)
+                : normalizeText(data.Name)
+            const derivedContactEmail = data.createUser
+                ? normalizeText(data.user_Email)
+                : normalizeText(data.Email)
+            const derivedContactPhone = data.createUser
+                ? normalizeText(data.user_Phone)
+                : normalizeText(data.Phone)
+
+            if (!derivedContactName) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["Name"], message: "A contact name is required." })
+            if (!derivedContactEmail) ctx.addIssue({ code: z.ZodIssueCode.custom, path: [data.createUser ? "user_Email" : "Email"], message: "A contact email is required." })
+            if (!derivedContactPhone) ctx.addIssue({ code: z.ZodIssueCode.custom, path: [data.createUser ? "user_Phone" : "Phone"], message: "A contact phone is required." })
         }
 
         if (tenantFlow && !(data.user_Remarks ?? "").trim()) {
@@ -333,9 +349,6 @@ export const useRegisterForm = () => {
             Website: "",
             types: [],
             supplier_category_id: null,
-            contactPersonName: "",
-            contactPersonEmail: "",
-            contactPersonPhone: "",
             user_Remarks: "",
             user_DateOfBirth: "",
             user_MaritalStatus: "",
@@ -559,9 +572,15 @@ export const useRegisterForm = () => {
         }
 
         if (isSupplier && isCompanyLikeBusinessType(values.BusinessType)) {
-            payload.contactPersonName = normalizeText(values.contactPersonName)
-            payload.contactPersonEmail = normalizeText(values.contactPersonEmail)
-            payload.contactPersonPhone = normalizeText(values.contactPersonPhone)
+            payload.contactPersonName = values.createUser
+                ? joinContactPersonName(values.user_FirstName, values.user_LastName)
+                : normalizeText(values.Name)
+            payload.contactPersonEmail = values.createUser
+                ? normalizeText(values.user_Email)
+                : normalizeText(values.Email)
+            payload.contactPersonPhone = values.createUser
+                ? normalizeText(values.user_Phone)
+                : normalizeText(values.Phone)
         }
 
         if (isTenant) {

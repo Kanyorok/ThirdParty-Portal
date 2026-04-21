@@ -257,14 +257,6 @@ export default function TenderDetailModal({
   const tabTriggerClass =
     "rounded-lg px-3 py-2 text-[11px] font-semibold text-slate-600 transition-all duration-150 hover:text-slate-900 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:border data-[state=active]:border-slate-200/80"
 
-  const handleStartBid = () => {
-    if (isCheckingBid || hasSubmittedBid) return
-    setActiveTab("bidding")
-    requestAnimationFrame(() => {
-      contentRef.current?.scrollTo({ top: 0, behavior: "smooth" })
-    })
-  }
-
   const refreshDocuments = useCallback(async () => {
     if (!tenderNo && !tenderId) return
     try {
@@ -279,7 +271,7 @@ export default function TenderDetailModal({
       const json = await parseJsonResponse<{ data?: any[]; message?: string; error?: string } | any[]>(res)
       const message = Array.isArray(json) ? null : json?.message ?? json?.error ?? null
       if (!res.ok) throw new Error(message ?? "Failed to refresh documents")
-      const list = Array.isArray(json?.data)
+      const list = !Array.isArray(json) && Array.isArray(json?.data)
         ? json.data
         : Array.isArray(json)
           ? json

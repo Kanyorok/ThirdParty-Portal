@@ -133,13 +133,6 @@ export default function RoundsToolbar({
         startTransition(() => fetchRounds({ sortBy: value }))
     }
 
-    const handleSortOrderToggle = () => {
-        const nextOrder = sortOrder === "asc" ? "desc" : "asc"
-        setSortOrder(nextOrder)
-        updateUrl({ sortOrder: nextOrder })
-        startTransition(() => fetchRounds({ sortOrder: nextOrder }))
-    }
-
     const handlePageSizeChange = (value: string) => {
         const size = Number(value)
         setPageSize(size)

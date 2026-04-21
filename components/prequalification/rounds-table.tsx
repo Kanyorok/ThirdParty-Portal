@@ -8,7 +8,7 @@ import { Button } from "@/components/common/button"
 import StatusBadge from "./status-badge"
 import CategoryApplications from "./category-applications"
 import { useRoundsStore } from "@/hooks/use-rounds-store"
-import { isRoundActive, isRoundArchived } from "@/lib/rounds"
+import { isRoundArchived } from "@/lib/rounds"
 import { cn } from "@/lib/utils"
 
 function deadlineMeta(endDate?: string) {

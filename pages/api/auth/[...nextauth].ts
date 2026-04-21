@@ -7,14 +7,14 @@ const handler = NextAuth(authOptions)
 
 function stripSensitive(body: unknown): unknown {
     if (body && typeof body === "object" && !Buffer.isBuffer(body)) {
-        const { accessToken, tokenType, access_token, ...safe } = body as Record<string, unknown>
+        const { accessToken: _accessToken, tokenType: _tokenType, access_token: _access_token, ...safe } = body as Record<string, unknown>
         return safe
     }
     if (typeof body === "string") {
         try {
             const parsed = JSON.parse(body)
             if (parsed && typeof parsed === "object" && "accessToken" in parsed) {
-                const { accessToken, tokenType, access_token, ...safe } = parsed
+                const { accessToken: _accessToken, tokenType: _tokenType, access_token: _access_token, ...safe } = parsed
                 return JSON.stringify(safe)
             }
         } catch {

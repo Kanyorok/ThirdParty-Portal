@@ -3,6 +3,40 @@ export function normalizeString(value: string | null | undefined) {
   return trimmed.length ? trimmed : null
 }
 
+function readStringCandidate(value: unknown) {
+  return typeof value === "string" && value.trim().length > 0 ? value.trim() : null
+}
+
+export function resolveMediaUrl(source: any, kind: "image" | "logo") {
+  const nested = source?.data?.[kind]
+  return (
+    readStringCandidate(nested?.src) ??
+    readStringCandidate(source?.data?.[`${kind}Url`]) ??
+    readStringCandidate(source?.data?.[`${kind}_url`]) ??
+    readStringCandidate(source?.data?.[kind]) ??
+    readStringCandidate(source?.[kind]?.src) ??
+    readStringCandidate(source?.[`${kind}Url`]) ??
+    readStringCandidate(source?.[`${kind}_url`]) ??
+    readStringCandidate(source?.[kind]) ??
+    null
+  )
+}
+
+export function resolveMediaId(source: any, kind: "image" | "logo") {
+  const raw =
+    source?.data?.[kind]?.id ??
+    source?.data?.[`${kind}Id`] ??
+    source?.data?.[`${kind}_id`] ??
+    source?.[kind]?.id ??
+    source?.[`${kind}Id`] ??
+    source?.[`${kind}_id`] ??
+    null
+
+  if (raw == null) return null
+  const parsed = Number(raw)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
 export function resolveLogoUrl(profile: any, thirdParty: any, thirdPartyDetails: any) {
   return (
     thirdPartyDetails?.logo?.src ??

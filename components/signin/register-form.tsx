@@ -34,7 +34,6 @@ import {
 } from "../common/select"
 import { cn } from "../../lib/utils"
 import { CLIENT_APP_NAME_STRING } from "../../config/client-config"
-import { isCompanyLikeBusinessType } from "../../lib/register-shared"
 import { type RegisterFormInputs, type RegisterRole, type RegisterThirdPartyResult, useRegisterForm } from "../../hooks/use-register"
 
 const ROLE_OPTIONS: Array<{ id: RegisterRole; label: string; icon: LucideIcon }> = [
@@ -305,7 +304,6 @@ export default function RegisterForm() {
     const maritalStatusValue = form.watch("user_MaritalStatus")
     const occupationValue = form.watch("user_Occupation")
 
-    const showContactPersonFields = isSupplier && isCompanyLikeBusinessType(businessTypeValue)
     const isPosting = submitState === "posting"
     const isBusy = isSubmitting || isPosting
     const formDescriptionIds = [authError ? authErrorId : null].filter(Boolean).join(" ")
@@ -321,7 +319,9 @@ export default function RegisterForm() {
             {
                 id: "business",
                 title: "Business",
-                description: "Register the organization using official business details and primary contact information.",
+                description: createUser
+                    ? "Register the organization using official business details."
+                    : "Register the organization using official business details and primary contact information.",
                 fields: [
                     "Name",
                     "TradingName",
@@ -329,14 +329,12 @@ export default function RegisterForm() {
                     "RegistrationNumber",
                     "TaxPIN",
                     "VATNumber",
-                    "Email",
-                    "Phone",
+                    ...(!createUser ? ["Email", "Phone"] : []),
                     "Country",
                     "Location",
                     "PhysicalAddress",
                     "Website",
                     ...(isSupplier ? ["supplier_category_id"] : []),
-                    ...(showContactPersonFields ? ["contactPersonName", "contactPersonEmail", "contactPersonPhone"] : []),
                 ],
             },
         ]
@@ -365,14 +363,14 @@ export default function RegisterForm() {
         if (createUser) {
             dynamicSteps.push({
                 id: "user-access",
-                title: "Access",
-                description: "Create the login credentials for the primary account user.",
+                title: "Primary Contact",
+                description: "Use one set of details for the primary contact and login account.",
                 fields: ["user_FirstName", "user_LastName", "user_Email", "user_Phone", "user_Gender", "user_Password", "user_Password_confirmation"],
             })
         }
 
         return dynamicSteps
-    }, [createUser, isCustomer, isSupplier, isTenant, showContactPersonFields])
+    }, [createUser, isCustomer, isSupplier, isTenant])
 
     React.useEffect(() => {
         if (!steps.some((step) => step.id === currentStepId)) {
@@ -752,7 +750,7 @@ export default function RegisterForm() {
 
                                             <div className={fieldBlockClass}>
                                                 <FieldLabel required>Tax PIN</FieldLabel>
-                                                <Input required {...form.register("TaxPIN")} placeholder="A001234567X" className={cn(inputStyle, errors.TaxPIN && inputErrorClass)} />
+                                                <Input required {...form.register("TaxPIN")} placeholder="Enter tax PIN" className={cn(inputStyle, errors.TaxPIN && inputErrorClass)} />
                                                 <FieldError message={errors.TaxPIN?.message as string | undefined} />
                                             </div>
 
@@ -762,47 +760,29 @@ export default function RegisterForm() {
                                                 <FieldError message={errors.VATNumber?.message as string | undefined} />
                                             </div>
 
-                                            {isSupplier && showContactPersonFields ? (
+                                            {!createUser ? (
                                                 <>
-                                                    <div className={fieldBlockClass}>
-                                                        <FieldLabel required>Contact Person Name</FieldLabel>
-                                                        <Input required {...form.register("contactPersonName")} placeholder="Jane Doe" className={cn(inputStyle, errors.contactPersonName && inputErrorClass)} />
-                                                        <FieldError message={errors.contactPersonName?.message as string | undefined} />
+                                                    <div className="md:col-span-2 mt-2 border-t border-slate-200 pt-5">
+                                                        <div className="space-y-1.5">
+                                                            <h3 className="text-sm font-bold uppercase tracking-[0.08em] text-slate-700">Primary Contact</h3>
+                                                            <p className="text-sm font-medium leading-6 text-slate-500">These fields are required when you are not creating a separate login account.</p>
+                                                        </div>
                                                     </div>
 
                                                     <div className={fieldBlockClass}>
-                                                        <FieldLabel required>Contact Person Email</FieldLabel>
-                                                        <Input type="email" required {...form.register("contactPersonEmail")} placeholder="jane@company.com" className={cn(inputStyle, errors.contactPersonEmail && inputErrorClass)} />
-                                                        <FieldError message={errors.contactPersonEmail?.message as string | undefined} />
+                                                        <FieldLabel>Business Email</FieldLabel>
+                                                        <Input type="email" autoComplete="email" {...form.register("Email")} placeholder="procurement@company.com" className={cn(inputStyle, errors.Email && inputErrorClass)} />
+                                                        <FieldError message={errors.Email?.message as string | undefined} />
                                                     </div>
 
                                                     <div className={fieldBlockClass}>
-                                                        <FieldLabel required>Contact Person Phone</FieldLabel>
-                                                        <Input type="tel" inputMode="tel" pattern="[+]?[0-9]{8,15}" required {...form.register("contactPersonPhone")} placeholder="+254711111111" className={cn(inputStyle, errors.contactPersonPhone && inputErrorClass)} />
-                                                        <FieldError message={errors.contactPersonPhone?.message as string | undefined} />
+                                                        <FieldLabel required>Phone Number</FieldLabel>
+                                                        <Input type="tel" inputMode="tel" pattern="[+]?[0-9]{8,15}" required autoComplete="tel" {...form.register("Phone")} placeholder="+254712345678" className={cn(inputStyle, errors.Phone && inputErrorClass)} />
+                                                        <p className="text-sm font-medium leading-6 text-slate-500">Use 8-15 digits, with optional +.</p>
+                                                        <FieldError message={errors.Phone?.message as string | undefined} />
                                                     </div>
                                                 </>
                                             ) : null}
-
-                                            <div className="md:col-span-2 mt-2 border-t border-slate-200 pt-5">
-                                                <div className="space-y-1.5">
-                                                    <h3 className="text-sm font-bold uppercase tracking-[0.08em] text-slate-700">Primary Contact</h3>
-                                                    <p className="text-sm font-medium leading-6 text-slate-500">These fields are required by the registration backend for the business profile.</p>
-                                                </div>
-                                            </div>
-
-                                            <div className={fieldBlockClass}>
-                                                <FieldLabel>Business Email</FieldLabel>
-                                                <Input type="email" autoComplete="email" {...form.register("Email")} placeholder="procurement@company.com" className={cn(inputStyle, errors.Email && inputErrorClass)} />
-                                                <FieldError message={errors.Email?.message as string | undefined} />
-                                            </div>
-
-                                            <div className={fieldBlockClass}>
-                                                <FieldLabel required>Phone Number</FieldLabel>
-                                                <Input type="tel" inputMode="tel" pattern="[+]?[0-9]{8,15}" required autoComplete="tel" {...form.register("Phone")} placeholder="+254712345678" className={cn(inputStyle, errors.Phone && inputErrorClass)} />
-                                                <p className="text-sm font-medium leading-6 text-slate-500">Use 8-15 digits, with optional +.</p>
-                                                <FieldError message={errors.Phone?.message as string | undefined} />
-                                            </div>
 
                                             <SelectFieldBlock
                                                 label="Country"
@@ -982,7 +962,7 @@ export default function RegisterForm() {
 
                                 {currentStep?.id === "user-access" ? (
                                     <section className={sectionCardClass}>
-                                        <SectionTitle title="User Access" icon={ShieldCheck} />
+                                        <SectionTitle title="Primary Contact" description="These details will be used for both the primary contact and account login." icon={ShieldCheck} />
                                         <div className={formSectionGridClass}>
                                             <div className={fieldBlockClass}>
                                                 <FieldLabel required>First Name</FieldLabel>
@@ -997,13 +977,13 @@ export default function RegisterForm() {
                                             </div>
 
                                             <div className={fieldBlockClass}>
-                                                <FieldLabel required>User Email</FieldLabel>
+                                                <FieldLabel required>Email</FieldLabel>
                                                 <Input type="email" required autoComplete="email" {...form.register("user_Email")} placeholder="admin@company.com" className={cn(inputStyle, errors.user_Email && inputErrorClass)} />
                                                 <FieldError message={errors.user_Email?.message as string | undefined} />
                                             </div>
 
                                             <div className={fieldBlockClass}>
-                                                <FieldLabel required>User Phone</FieldLabel>
+                                                <FieldLabel required>Phone Number</FieldLabel>
                                                 <Input type="tel" inputMode="tel" pattern="[+]?[0-9]{8,15}" required autoComplete="tel" {...form.register("user_Phone")} placeholder="+254711111111" className={cn(inputStyle, errors.user_Phone && inputErrorClass)} />
                                                 <FieldError message={errors.user_Phone?.message as string | undefined} />
                                             </div>

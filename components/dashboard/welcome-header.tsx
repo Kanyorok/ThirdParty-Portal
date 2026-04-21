@@ -1,35 +1,37 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
-import { motion } from "framer-motion"
+import { useEffect, useState } from "react"
+import { motion, type Variants } from "framer-motion"
 import { ArrowUpRight, Sparkles } from "lucide-react"
 import { Button } from "@/components/common/button"
 
 type Action = { label: string; href: string }
 
-const headerShellVariants = {
+const headerEase = [0.22, 1, 0.36, 1] as const
+
+const headerShellVariants: Variants = {
   hidden: { opacity: 0, y: 16 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
       duration: 0.4,
-      ease: [0.22, 1, 0.36, 1],
+      ease: headerEase,
       staggerChildren: 0.08,
       delayChildren: 0.05,
     },
   },
 }
 
-const headerItemVariants = {
+const headerItemVariants: Variants = {
   hidden: { opacity: 0, y: 8 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
       duration: 0.32,
-      ease: [0.22, 1, 0.36, 1],
+      ease: headerEase,
     },
   },
 }
@@ -54,8 +56,6 @@ export function WelcomeHeader({
     else setGreeting("Good evening")
   }, [])
 
-  const stableLabel = useMemo(() => contextLabel, [contextLabel])
-
   return (
     <motion.header
       variants={headerShellVariants}
@@ -79,7 +79,7 @@ export function WelcomeHeader({
       <div className="relative flex flex-col gap-4">
         <motion.div variants={headerItemVariants} className="dashboard-chip w-fit border-primary/25 bg-primary/10 px-3 py-1 text-primary">
           <Sparkles className="h-3.5 w-3.5" />
-          <span className="text-[11px] font-semibold tracking-tight">{stableLabel}</span>
+          <span className="text-[11px] font-semibold tracking-tight">{contextLabel}</span>
         </motion.div>
 
         <motion.div variants={headerItemVariants} className="space-y-1">

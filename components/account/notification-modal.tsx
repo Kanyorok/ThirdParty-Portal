@@ -29,7 +29,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
     onClose,
     profile,
     mutateProfile,
-    accessToken,
+    accessToken: _accessToken,
 }) => {
     const [isPending, startTransition] = useTransition();
 
@@ -55,7 +55,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                 toast.error(error.message || "Unable to update notification preferences.");
             }
         });
-    }, [accessToken, mutateProfile, onClose, profile]);
+    }, [mutateProfile, onClose, profile]);
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
