@@ -30,6 +30,9 @@ type ChartContainerProps = React.ComponentProps<"div"> & {
 }
 
 function ChartContainer({ config, className, children, ...props }: ChartContainerProps) {
+    const containerRef = React.useRef<HTMLDivElement | null>(null)
+    const [containerSize, setContainerSize] = React.useState({ width: 0, height: 0 })
+
     const cssVars = Object.entries(config).reduce<Record<string, string>>((acc, [key, value]) => {
         if (value.color) {
             acc[`--color-${key}`] = value.color
@@ -37,17 +40,54 @@ function ChartContainer({ config, className, children, ...props }: ChartContaine
         return acc
     }, {})
 
+    React.useEffect(() => {
+        const element = containerRef.current
+        if (!element) return
+
+        const updateSize = () => {
+            const nextWidth = element.clientWidth
+            const nextHeight = element.clientHeight
+
+            setContainerSize((current) => {
+                if (current.width === nextWidth && current.height === nextHeight) {
+                    return current
+                }
+                return { width: nextWidth, height: nextHeight }
+            })
+        }
+
+        updateSize()
+
+        if (typeof ResizeObserver === "undefined") {
+            return undefined
+        }
+
+        const observer = new ResizeObserver(() => {
+            updateSize()
+        })
+
+        observer.observe(element)
+        return () => observer.disconnect()
+    }, [])
+
+    const isReady = containerSize.width > 0 && containerSize.height > 0
+
     return (
         <ChartContext.Provider value={{ config }}>
             <div
+                ref={containerRef}
                 data-slot="chart-container"
                 className={cn("h-[260px] w-full", className)}
                 style={cssVars as React.CSSProperties}
                 {...props}
             >
-                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                    {children}
-                </ResponsiveContainer>
+                {isReady ? (
+                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                        {children}
+                    </ResponsiveContainer>
+                ) : (
+                    <div className="h-full w-full" aria-hidden />
+                )}
             </div>
         </ChartContext.Provider>
     )

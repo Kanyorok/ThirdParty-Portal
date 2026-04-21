@@ -273,18 +273,12 @@ export default function BusinessProfileCard({
     const selectedOption = businessTypeOptions.find((option) => option.value === normalizedBusinessType) ?? null
 
     const payload = {
-      ThirdPartyName: normalizeString(values.thirdPartyName) ?? undefined,
-      TradingName: normalizeString(values.tradingName) ?? undefined,
-      BusinessType: selectedOption?.id ?? undefined,
-      LegalForm: normalizedBusinessType ?? undefined,
-      RegistrationNumber: normalizeString(values.registrationNumber) ?? undefined,
-      TaxPIN: normalizeString(values.taxPIN) ?? undefined,
       thirdPartyName: normalizeString(values.thirdPartyName),
       tradingName: normalizeString(values.tradingName),
-      businessType: normalizedBusinessType,
+      businessType: selectedOption?.id ?? normalizedBusinessType,
       legalForm: normalizedBusinessType,
       registrationNumber: normalizeString(values.registrationNumber),
-      taxPIN: normalizeString(values.taxPIN),
+      taxPin: normalizeString(values.taxPIN),
     }
 
     try {
@@ -436,7 +430,7 @@ export default function BusinessProfileCard({
                       <FormItem className="md:col-span-2">
                         <FormLabel className="text-xs font-semibold text-foreground">Tax PIN</FormLabel>
                         <FormControl>
-                          <Input {...field} value={field.value || ""} className="font-mono" placeholder="e.g. P123456789A" />
+                          <Input {...field} value={field.value || ""} className="font-mono" placeholder="Enter tax PIN" />
                         </FormControl>
                         <FormMessage className="text-xs" />
                       </FormItem>
