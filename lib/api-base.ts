@@ -52,23 +52,6 @@ function normalizeBaseUrl(value: string | null | undefined): string {
     }
 }
 
-function getRuntimeBaseUrl(): string {
-    if (typeof window === "undefined") {
-        return ""
-    }
-
-    try {
-        const runtime = window.__ENV__ ?? {}
-        return normalizeBaseUrl(
-            runtime.API_BASE_URL ??
-            runtime.NEXT_PUBLIC_API_URL ??
-            runtime.EXTERNAL_API_URL
-        )
-    } catch {
-        return ""
-    }
-}
-
 export function getBaseUrl() {
     // Force use of EXTERNAL_API_URL for all backend requests
     return normalizeBaseUrl(
