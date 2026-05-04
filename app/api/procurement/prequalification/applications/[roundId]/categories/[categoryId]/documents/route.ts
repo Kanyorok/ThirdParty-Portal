@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
     const res = await fetch(
-      `${process.env.NEXTAUTH_URL}/api/procurement/prequalification/applications/${encodeURIComponent(roundId)}/categories/${encodeURIComponent(categoryId)}/documents`,
+      `${process.env.EXTERNAL_API_URL}/api/procurement/prequalification/applications/${encodeURIComponent(roundId)}/categories/${encodeURIComponent(categoryId)}/documents`,
       {
         method: "POST",
         headers: { Authorization: `Bearer ${session.accessToken}` },

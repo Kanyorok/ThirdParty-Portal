@@ -37,8 +37,8 @@ function normalizeSupplierCategories(payload: unknown) {
 
 export const GET = createMetadataGetHandler(
     [
-        "/portal/metadata/supplier-categories",
         "/api/v1/portal/auth/metadata/supplier-categories",
+        "/api/v1/portal/metadata/supplier-categories"
     ],
     normalizeSupplierCategories
 )

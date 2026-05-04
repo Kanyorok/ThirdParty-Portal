@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 
 import { sanitizeFieldErrors } from "@/app/api/portal/auth/_utils"
 import { getBaseUrl } from "@/lib/api-base"
+import { canonicalizeBusinessTypeValue, normalizePhoneNumber } from "@/lib/register-shared"
 
 const PHONE_REGEX = /^\+?[0-9]{8,15}$/
 const BOOLEAN_FORM_KEYS = ["createUser", "create_user"] as const
@@ -67,6 +68,97 @@ const REGISTRATION_ALIASES: Record<string, string[]> = {
     user_Gender: ["userGender"],
     user_Password: ["userPassword"],
     user_Password_confirmation: ["userPasswordConfirmation"],
+}
+
+const REGISTRATION_ERROR_FIELD_MAP = Object.fromEntries(
+    Object.entries(REGISTRATION_ALIASES).flatMap(([canonical, aliases]) => [
+        [canonical, canonical],
+        ...aliases.map((alias) => [alias, canonical] as const),
+    ])
+) as Record<string, string>
+
+REGISTRATION_ERROR_FIELD_MAP.legalForm = "BusinessType"
+
+const REGISTRATION_UPSTREAM_DUPLICATE_INDEX_PATTERNS: Array<{
+    pattern: RegExp
+    field: string
+    message: string
+}> = [
+        {
+            pattern: /t_thirdparties.*registrationnumber|registrationnumber.*t_thirdparties|countryid_registrationnumber/i,
+            field: "RegistrationNumber",
+            message: "This registration number is already registered.",
+        },
+        {
+            pattern: /t_thirdparties.*taxpin|taxpin.*t_thirdparties/i,
+            field: "TaxPIN",
+            message: "This tax PIN is already registered.",
+        },
+        {
+            pattern: /t_thirdparties.*vatnumber|vatnumber.*t_thirdparties/i,
+            field: "VATNumber",
+            message: "This VAT number is already registered.",
+        },
+        {
+            pattern: /t_thirdparties.*email|email.*t_thirdparties/i,
+            field: "Email",
+            message: "This business email is already registered.",
+        },
+        {
+            pattern: /t_thirdparties.*phone|phone.*t_thirdparties/i,
+            field: "Phone",
+            message: "This business phone number is already registered.",
+        },
+        {
+            pattern: /t_thirdpartyusers.*email|email.*t_thirdpartyusers/i,
+            field: "user_Email",
+            message: "This admin email is already registered.",
+        },
+        {
+            pattern: /t_thirdpartyusers.*phone|phone.*t_thirdpartyusers/i,
+            field: "user_Phone",
+            message: "This admin phone number is already registered.",
+        },
+    ]
+
+const normalizeRegistrationErrors = (errors: unknown) => {
+    if (!errors || typeof errors !== "object" || Array.isArray(errors)) return {}
+
+    return Object.fromEntries(
+        Object.entries(errors as Record<string, unknown>).map(([field, value]) => [
+            REGISTRATION_ERROR_FIELD_MAP[field] ?? field,
+            value,
+        ])
+    )
+}
+
+const inferRegistrationErrorsFromUpstreamMessage = (message: unknown) => {
+    if (typeof message !== "string") return {} as Record<string, string[]>
+
+    const normalizedMessage = message.replace(/\s+/g, " ").trim()
+    if (!normalizedMessage) return {}
+
+    for (const candidate of REGISTRATION_UPSTREAM_DUPLICATE_INDEX_PATTERNS) {
+        if (candidate.pattern.test(normalizedMessage)) {
+            return {
+                [candidate.field]: [candidate.message],
+            }
+        }
+    }
+
+    if (/the phone field is required/i.test(normalizedMessage)) {
+        return {
+            Phone: ["Please enter a valid business phone number."],
+        }
+    }
+
+    if (/the user[_\s-]*phone field is required/i.test(normalizedMessage)) {
+        return {
+            user_Phone: ["Please enter a valid admin phone number."],
+        }
+    }
+
+    return {}
 }
 
 const SENSITIVE_REGISTRATION_KEYS = new Set([
@@ -161,7 +253,9 @@ const summarizeRegistrationJson = (source: Record<string, unknown>) => {
 }
 
 const withRegistrationAliases = (payload: Record<string, unknown>) => {
-    const next = { ...payload }
+    const next = applyBusinessTypeFallbacks(
+        applyRegistrationContactFallbacks(normalizeRegistrationPhoneFields({ ...payload }))
+    )
 
     if (next.createUser != null && next.create_user == null) {
         next.create_user = next.createUser
@@ -198,8 +292,104 @@ const appendFormValue = (target: FormData, key: string, value: unknown) => {
     target.append(key, String(value))
 }
 
+const PHONE_FORM_KEYS = ["Phone", "phone", "user_Phone", "userPhone", "contactPersonPhone"] as const
+
+const normalizeRegistrationPhoneFields = (source: FormData | Record<string, unknown>) => {
+    if (source instanceof FormData) {
+        PHONE_FORM_KEYS.forEach((key) => {
+            const current = source.get(key)
+            if (typeof current !== "string") return
+
+            source.set(key, normalizePhoneNumber(current) ?? current.trim())
+        })
+
+        return source
+    }
+
+    PHONE_FORM_KEYS.forEach((key) => {
+        const current = source[key]
+        if (typeof current !== "string") return
+
+        source[key] = normalizePhoneNumber(current) ?? current.trim()
+    })
+
+    return source
+}
+
+const applyRegistrationContactFallbacks = (source: FormData | Record<string, unknown>) => {
+    if (source instanceof FormData) {
+        const createUserValue = String(source.get("createUser") ?? source.get("create_user") ?? "").trim().toLowerCase()
+        const usesSeparateUser = ["1", "true", "yes", "on"].includes(createUserValue)
+
+        if (!usesSeparateUser) return source
+
+        const phone = String(source.get("Phone") ?? "").trim()
+        const userPhone = String(source.get("user_Phone") ?? source.get("userPhone") ?? "").trim()
+        const email = String(source.get("Email") ?? "").trim()
+        const userEmail = String(source.get("user_Email") ?? source.get("userEmail") ?? "").trim()
+
+        if (!phone && userPhone) source.set("Phone", userPhone)
+        if (!email && userEmail) source.set("Email", userEmail)
+
+        return source
+    }
+
+    const createUserValue = source.createUser ?? source.create_user
+    const usesSeparateUser = createUserValue === true || createUserValue === 1 || createUserValue === "1" || createUserValue === "true"
+
+    if (!usesSeparateUser) return source
+
+    const phone = typeof source.Phone === "string" ? source.Phone.trim() : ""
+    const userPhone = typeof source.user_Phone === "string"
+        ? source.user_Phone.trim()
+        : typeof source.userPhone === "string"
+            ? source.userPhone.trim()
+            : ""
+    const email = typeof source.Email === "string" ? source.Email.trim() : ""
+    const userEmail = typeof source.user_Email === "string"
+        ? source.user_Email.trim()
+        : typeof source.userEmail === "string"
+            ? source.userEmail.trim()
+            : ""
+
+    if (!phone && userPhone) source.Phone = userPhone
+    if (!email && userEmail) source.Email = userEmail
+
+    return source
+}
+
+const applyBusinessTypeFallbacks = (source: FormData | Record<string, unknown>) => {
+    if (source instanceof FormData) {
+        const businessType = String(source.get("BusinessType") ?? source.get("businessType") ?? source.get("legalForm") ?? "").trim()
+        const canonicalBusinessType = canonicalizeBusinessTypeValue(businessType)
+
+        if (canonicalBusinessType) {
+            source.set("BusinessType", canonicalBusinessType)
+
+            const legalForm = String(source.get("legalForm") ?? "").trim()
+            if (!legalForm) source.set("legalForm", canonicalBusinessType)
+        }
+
+        return source
+    }
+
+    const businessType = source.BusinessType ?? source.businessType ?? source.legalForm
+    const canonicalBusinessType = canonicalizeBusinessTypeValue(businessType)
+
+    if (canonicalBusinessType) {
+        source.BusinessType = canonicalBusinessType
+        if (source.legalForm == null || source.legalForm === "") {
+            source.legalForm = canonicalBusinessType
+        }
+    }
+
+    return source
+}
+
 const withRegistrationAliasesFormData = (source: FormData) => {
-    const next = normalizeRegistrationFormData(source)
+    const next = applyBusinessTypeFallbacks(
+        applyRegistrationContactFallbacks(normalizeRegistrationPhoneFields(normalizeRegistrationFormData(source)))
+    )
 
     Object.entries(REGISTRATION_ALIASES).forEach(([sourceKey, aliases]) => {
         const value = next.getAll(sourceKey)
@@ -215,7 +405,7 @@ const withRegistrationAliasesFormData = (source: FormData) => {
 }
 
 const validatePhone = (value: unknown, required: boolean, label: string): string[] => {
-    const text = typeof value === "string" ? value.trim() : ""
+    const text = normalizePhoneNumber(value) ?? (typeof value === "string" ? value.trim() : "")
     const issues: string[] = []
 
     if (!text) {
@@ -265,7 +455,7 @@ export async function POST(request: Request) {
             ? ["1", "true", "yes", "on"].includes(String(getValue("createUser") ?? "").trim().toLowerCase())
             : body?.createUser === true;
 
-        const companyPhoneIssues = validatePhone(getValue("Phone"), true, "Phone number");
+        const companyPhoneIssues = validatePhone(getValue("Phone"), !requiresAdminPhone, "Phone number");
         if (companyPhoneIssues.length > 0) {
             errors.Phone = companyPhoneIssues;
         }
@@ -341,7 +531,10 @@ export async function POST(request: Request) {
                 forwardedPayload: upstreamPayloadSummary,
                 transport: isMultipart ? 'multipart' : 'json',
             })
-            const safeErrors = sanitizeFieldErrors(data?.errors)
+            const safeErrors = {
+                ...inferRegistrationErrorsFromUpstreamMessage(data?.message),
+                ...sanitizeFieldErrors(normalizeRegistrationErrors(data?.errors)),
+            }
             return NextResponse.json(
                 {
                     message: Object.keys(safeErrors).length > 0

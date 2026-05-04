@@ -52,7 +52,7 @@ export const transformRegisterFormDataForApi = (formData: RegisterFormInputs) =>
         FirstName: formData.user_FirstName,
         LastName: formData.user_LastName,
         Email: formData.user_Email || formData.Email,
-        Phone: normalizeToE164(formData.user_Phone || formData.Phone),
+        Phone: normalizeToE164(formData.user_Phone || formData.Phone || ""),
         Password: formData.user_Password,
         Password_confirmation: formData.user_Password_confirmation,
     };

@@ -549,7 +549,7 @@ export default function RegisterForm() {
             <main className="relative flex min-h-dvh items-center bg-slate-50 px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
                 <div className="relative mx-auto flex w-full max-w-6xl items-center justify-center">
                     <div className="w-full px-1 sm:px-2 lg:px-4">
-                        <Loading message="Loading form" fullScreen={false} className="py-24" />
+                        <Loading fullScreen={false} className="py-24" />
                     </div>
                 </div>
             </main>
@@ -630,9 +630,6 @@ export default function RegisterForm() {
                                             <div className="rounded-[14px] border border-slate-200 bg-white p-4 sm:p-5">
                                                 <div className="mb-4 flex items-center justify-between gap-3">
                                                     <h3 className="text-sm font-bold uppercase tracking-[0.08em] text-slate-700">Select profiles</h3>
-                                                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
-                                                        {selectedTypes?.length ?? 0} selected
-                                                    </span>
                                                 </div>
 
                                                 <div aria-label="Business role" className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3" role="group">

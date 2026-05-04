@@ -206,11 +206,8 @@ const EmptyState = ({ onRetry }: { onRetry: () => void }) => (
         <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600">
             <Frown className="w-6 h-6" />
         </div>
-        <h3 className="mb-2 text-xl font-bold tracking-tight text-slate-900">
-            Nothing to see here
-        </h3>
-        <p className="mb-6 max-w-sm text-sm text-slate-600">
-            No open prequalification rounds are available at the moment. Please check back later or try refreshing.
+        <p className="mb-6 max-w-sm text-sm font-medium text-slate-700">
+            No open rounds right now.
         </p>
         <Button
             variant="ghost"
@@ -231,10 +228,7 @@ const ErrorState = ({ error, onRetry }: { error: string; onRetry: () => void }) 
         <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-rose-700">
             <XCircle className="w-6 h-6" />
         </div>
-        <h3 className="mb-2 text-xl font-bold tracking-tight text-rose-950">
-            Something went wrong
-        </h3>
-        <p className="mb-6 max-w-sm text-sm text-rose-700">
+        <p className="mb-6 max-w-sm text-sm font-medium text-rose-700">
             {error || "An unexpected error occurred. Please try again later."}
         </p>
         <Button
@@ -256,10 +250,7 @@ const WarningState = ({ message }: { message: string }) => (
         <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-800">
             <InfoIcon className="w-6 h-6" />
         </div>
-        <h3 className="mb-2 text-xl font-bold tracking-tight text-amber-950">
-            Already Applied
-        </h3>
-        <p className="mb-6 max-w-sm text-sm text-amber-800">
+        <p className="max-w-sm text-sm font-medium text-amber-800">
             {message}
         </p>
     </div>
@@ -273,11 +264,11 @@ const SuccessState = ({ onClose }: { onClose: () => void }) => (
         <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
             <CheckCheck className="w-8 h-8" />
         </div>
-        <h3 className="mb-2 text-2xl font-bold tracking-tight text-emerald-950">
+        <h3 className="mb-2 text-xl font-bold tracking-tight text-emerald-950">
             Application submitted
         </h3>
         <p className="mb-6 max-w-sm text-sm text-emerald-800">
-            Your prequalification application has been successfully submitted. We&apos;ll send you an email with the next steps.
+            We&apos;ll update you on the next step.
         </p>
         <Button onClick={onClose} className="h-11 w-full rounded-xl px-8 sm:w-auto">
             Continue
@@ -519,7 +510,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
         if (!isAuthenticated || !rid) return;
         try {
             // Use frontend proxy route for proper session auth and CORS
-            let res = await fetch(`/api/prequalification/rounds/${encodeURIComponent(rid)}`, { cache: 'no-store', credentials: 'same-origin' });
+            let res = await fetch(`/api/v1/prequalification/rounds/${encodeURIComponent(rid)}`, { cache: 'no-store', credentials: 'same-origin' });
             let jsonRaw: unknown = await res.json().catch(() => ({} as unknown));
             if (!res.ok || !jsonRaw) {
                 return;
@@ -906,25 +897,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                                 {roundDetail.description}
                                             </div>
                                         )}
-                                        {Array.isArray(roundDetail.sections) && roundDetail.sections.length > 0 && (
-                                            <div className="mt-3 space-y-2">
-                                                <h4 className="text-sm font-semibold">Sections & Criteria</h4>
-                                                <ul className="text-sm list-disc pl-5 space-y-1">
-                                                    {roundDetail.sections.map((s, si) => (
-                                                        <li key={String(s.id ?? s.sectionId ?? si)}>
-                                                            <span className="font-medium">{s.name}</span>
-                                                            {Array.isArray(s.criteria) && s.criteria.length > 0 && (
-                                                                <ul className="list-disc pl-5 mt-1">
-                                                                    {s.criteria.map((c, ci) => (
-                                                                        <li key={String(c.id ?? c.criteriaId ?? ci)}>Max: {c.maxScore ?? '-'} {c.included === false ? '(excluded)' : ''}</li>
-                                                                    ))}
-                                                                </ul>
-                                                            )}
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        )}
+                                        {/* Evaluation criteria removed as requested */}
                                         {rounds[0].hasApplied && (
                                             <div className="mt-2 text-xs font-medium text-emerald-700" role="note">
                                                 Already applied{rounds[0].applicationId ? ` • Ref ${rounds[0].applicationId}` : ''}
@@ -949,26 +922,10 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                             </div>
                             {selectedRoundId && (
                                 <div className="space-y-4 pt-6 transition-all duration-300 ease-in-out animate-in slide-in-from-bottom-4">
-                                    {currentRound && (
-                                        <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <div className="flex items-center gap-2">
-                                                    <Calendar className="w-4 h-4 text-blue-500" />
-                                                    <span className="font-medium text-slate-900">{currentRound.name ?? currentRound.title}</span>
-                                                </div>
-                                                <StatusBadge status={currentRound.status ?? ""} />
-                                            </div>
-                                            {roundDetail.description && (
-                                                <div className="mb-2 whitespace-pre-wrap text-sm text-slate-600">
-                                                    {roundDetail.description}
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
                                     <div className="flex items-center justify-between">
                                         <Label htmlFor="categories" id="categories-label" className="text-base font-semibold flex items-center gap-2">
                                             <Users className="w-4 h-4" />
-                                            {hasPinnedCategories ? "Selected category" : `Select Categories (${selectedCategoryIds.length} selected)`}
+                                            {hasPinnedCategories ? "Selected category" : "Categories"}
                                         </Label>
                                         {categoriesLoadingState === "loading" && <Spinner className="h-4 w-4" aria-label="Loading categories" />}
                                     </div>
@@ -1111,8 +1068,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                     {categoriesLoadingState === "success" && visibleCategories.length === 0 && (
                                         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 py-8 text-center">
                                             <Info className="mb-3 h-12 w-12 text-slate-500" />
-                                            <h3 className="mb-2 text-lg font-semibold text-slate-900">No Categories Found</h3>
-                                            <p className="mb-4 max-w-sm text-sm text-slate-600">{hasPinnedCategories ? "The selected application category is not available for this round." : "This round has no associated categories for selection."}</p>
+                                            <p className="max-w-sm text-sm font-medium text-slate-700">{hasPinnedCategories ? "That category is not available for this round." : "No categories available for this round."}</p>
                                         </div>
                                     )}
                                 </div>
@@ -1148,20 +1104,43 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             {trigger}
-            <DialogContent className="left-auto right-0 top-0 h-[100dvh] w-screen max-w-[1400px] translate-x-0 translate-y-0 gap-0 overflow-hidden rounded-none border-0 bg-white p-0 shadow-[-18px_0_48px_rgba(15,23,42,0.14)] sm:w-[96vw] sm:border-l sm:border-slate-200/80 md:w-[90vw] lg:w-[86vw] xl:w-[82vw] 2xl:w-[80vw]">
-                <DialogHeader className="sticky top-0 z-10 gap-3 border-b border-slate-200 bg-white/95 px-6 py-5 pr-14 backdrop-blur sm:px-8">
-                    <div className="space-y-1">
-                        <DialogTitle className="text-2xl font-bold tracking-tight text-slate-900">Prequalification application</DialogTitle>
-                        <DialogDescription className="text-slate-600">Apply to participate in procurement opportunities.</DialogDescription>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                        <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700">
-                            {selectedRoundId ? "Round selected" : "Select a round"}
-                        </span>
-                        <span className="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700">
-                            {selectedCategoryIds.length} categories selected
-                        </span>
-                    </div>
+            <DialogContent className="left-auto right-0 top-0 h-[100dvh] w-screen max-w-[1400px] flex flex-col translate-x-0 translate-y-0 gap-0 overflow-hidden rounded-none border-0 bg-white p-0 shadow-[-18px_0_48px_rgba(15,23,42,0.14)] sm:w-[96vw] sm:border-l sm:border-slate-200/80 md:w-[90vw] lg:w-[86vw] xl:w-[82vw] 2xl:w-[80vw]">
+                <DialogHeader className="relative flex-shrink-0 border-b border-slate-200/70 bg-white px-6 py-3 pr-14 lg:px-8 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-indigo-500/80 before:content-['']">
+                    <DialogTitle className="flex flex-col gap-3">
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                                    Prequalification
+                                </p>
+                                <h2 className="truncate text-xl font-semibold text-slate-900 sm:text-2xl">
+                                    {currentRound?.name ?? currentRound?.title ?? "Prequalification application"}
+                                </h2>
+                                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                                    {selectedRoundId ? <span className="font-mono">Round {selectedRoundId}</span> : null}
+                                    {currentRound?.deadline ? (
+                                        <>
+                                            {selectedRoundId ? <span className="h-1 w-1 rounded-full bg-slate-300" /> : null}
+                                            <span>Deadline {new Date(currentRound.deadline).toLocaleDateString()}</span>
+                                        </>
+                                    ) : null}
+                                </div>
+                            </div>
+                            <div className="flex shrink-0 flex-wrap items-center gap-2">
+                                {selectedCategoryIds.length > 0 ? (
+                                    <span className="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-[11px] font-semibold text-indigo-700">
+                                        {selectedCategoryIds.length} {selectedCategoryIds.length === 1 ? "category" : "categories"}
+                                    </span>
+                                ) : null}
+                                {currentRound?.hasApplied ? (
+                                    <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+                                        Applied
+                                    </span>
+                                ) : null}
+                                {currentRound?.status ? <StatusBadge status={currentRound.status} /> : null}
+                            </div>
+                        </div>
+                        <DialogDescription className="sr-only">Prequalification application</DialogDescription>
+                    </DialogTitle>
                 </DialogHeader>
                 {renderFormState()}
             </DialogContent>

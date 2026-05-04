@@ -73,10 +73,10 @@ const buildFetchUrl = (params: Record<string, string | number | undefined>) => {
     })
 
     if (typeof window !== "undefined") {
-        return `${window.location.origin}/api/prequalification/rounds?${query.toString()}`
+        return `${window.location.origin}/api/v1/prequalification/rounds?${query.toString()}`
     }
 
-    return `/api/prequalification/rounds?${query.toString()}`
+    return `/api/v1/prequalification/rounds?${query.toString()}`
 }
 
 export const useRoundsStore = create<RoundsState>((set, get) => ({

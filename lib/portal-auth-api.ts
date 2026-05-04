@@ -1,13 +1,8 @@
 import { getBaseUrl } from "@/lib/api-base"
 
 const CANDIDATE_BASE_URLS = [
-    getBaseUrl,
-    () => process.env.NEXT_PUBLIC_API_URL ?? "",
-    () => process.env.NEXT_PUBLIC_EXTERNAL_API_URL ?? "",
-    () => process.env.API_BASE_URL ?? "",
+    // Force use of EXTERNAL_API_URL for all backend requests
     () => process.env.EXTERNAL_API_URL ?? "",
-    () => process.env.ERP_BASE_URL ?? "",
-    () => process.env.NEXT_PUBLIC_ERP_BASE_URL ?? "",
 ]
 
 export function resolvePortalAuthApiBaseUrl() {
