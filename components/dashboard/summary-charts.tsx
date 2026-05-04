@@ -71,6 +71,7 @@ type UnifiedAreaCardProps = {
     xKey: string
     yLabel?: string
     insightCopy: string
+    stats?: Array<{ label: string; value: string; tone?: "primary" | "danger" | "neutral" }>
     nextStep?: string
     nextStepHref?: string
     config: ChartConfig
@@ -84,6 +85,7 @@ function UnifiedAreaCard({
     xKey,
     yLabel,
     insightCopy,
+    stats = [],
     nextStep,
     nextStepHref,
     config,
@@ -96,8 +98,9 @@ function UnifiedAreaCard({
             <CardHeader className="px-4 pt-4 pb-2">
                 <div className="flex flex-wrap items-center justify-between gap-2.5">
                     <div>
-                        <CardTitle className="text-sm font-semibold tracking-tight text-slate-900">{title}</CardTitle>
-                        <p className="mt-0.5 text-xs text-slate-600">Stage distribution of growth opportunities and items needing attention.</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Insights</p>
+                        <CardTitle className="mt-1 text-base font-semibold tracking-tight text-slate-900">{title}</CardTitle>
+                        <p className="mt-0.5 text-xs text-slate-600">Stage distribution across active momentum and items needing review.</p>
                     </div>
                     <div className="flex items-center gap-1.5">
                         {keys.map((key) => {
@@ -123,12 +126,38 @@ function UnifiedAreaCard({
                 </div>
             </CardHeader>
             <CardContent className="px-3 pb-2">
+                {stats.length > 0 ? (
+                    <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                        {stats.map((stat) => (
+                            <div
+                                key={stat.label}
+                                className="rounded-xl border border-slate-200/80 bg-slate-50/80 px-3 py-2.5"
+                            >
+                                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                    {stat.label}
+                                </div>
+                                <div
+                                    className={
+                                        stat.tone === "primary"
+                                            ? "mt-1 text-lg font-semibold tracking-tight text-blue-700"
+                                            : stat.tone === "danger"
+                                                ? "mt-1 text-lg font-semibold tracking-tight text-amber-700"
+                                                : "mt-1 text-lg font-semibold tracking-tight text-slate-900"
+                                    }
+                                >
+                                    {stat.value}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : null}
+
                 {data.length === 0 ? (
                     <div className="flex h-44 items-center justify-center rounded-xl border border-dashed border-slate-300/70 bg-white/70 text-sm font-medium text-slate-600">
                         No data yet
                     </div>
                 ) : (
-                    <ChartContainer config={config} className="h-[220px] w-full rounded-xl border border-slate-200/70 bg-white/75 p-2">
+                    <ChartContainer config={config} className="h-[220px] w-full rounded-xl border border-slate-200/70 bg-white p-2">
                         <BarChart accessibilityLayer data={data} margin={{ left: 4, right: 4, top: 8, bottom: 0 }}>
                             <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#CBD5E1" strokeOpacity={0.8} />
                             <XAxis
@@ -220,14 +249,14 @@ function UnifiedAreaCard({
             </CardContent>
             <CardFooter className="px-4 pt-1 pb-3">
                 <div className="flex w-full flex-wrap items-center justify-between gap-2 border-t border-slate-200/70 pt-2 text-[11px]">
-                    <div className="flex items-center gap-1.5 font-medium text-slate-800">
+                    <div className="flex items-center gap-1.5 font-medium text-slate-700">
                         {insightCopy}
-                        <TrendingUp className="h-3.5 w-3.5" />
+                        <TrendingUp className="h-3.5 w-3.5 text-slate-500" />
                     </div>
                     {nextStep && nextStepHref ? (
                         <a
                             href={nextStepHref}
-                            className="dashboard-cta dashboard-cta--sky"
+                            className="dashboard-cta dashboard-cta--slate"
                         >
                             {nextStep}
                             <MoveRight className="h-3 w-3" />
@@ -342,13 +371,16 @@ export default function SummaryCharts({ profile }: SummaryChartsProps) {
             <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 bg-white px-6 py-10">
                 <AlertCircle className="mb-4 h-10 w-10 text-muted-foreground" />
                 <p className="text-center font-medium text-muted-foreground">
-                    Failed to load dashboard analytics
+                    Dashboard insights are unavailable right now.
                 </p>
             </div>
         )
     }
 
     const activeData = isTenantView ? tenantDistributionData : supplierDistributionData
+    const totalDrivers = activeData.reduce((sum, row) => sum + safe(Number(row.drivers)), 0)
+    const totalRisks = activeData.reduce((sum, row) => sum + safe(Number(row.risks)), 0)
+    const stageCount = activeData.length
 
     const title = isTenantView ? "Tenant Pipeline Breakdown" : "Supplier Pipeline Breakdown"
 
@@ -359,7 +391,24 @@ export default function SummaryCharts({ profile }: SummaryChartsProps) {
                 data={activeData}
                 xKey="stage"
                 yLabel="Count"
-                insightCopy="Increase growth opportunities, reduce items needing attention, and improve outcomes at each stage."
+                insightCopy="Compare active work against follow-up pressure across each stage."
+                stats={[
+                    {
+                        label: isTenantView ? "Healthy" : "Active",
+                        value: totalDrivers.toLocaleString(),
+                        tone: "primary",
+                    },
+                    {
+                        label: "Watchlist",
+                        value: totalRisks.toLocaleString(),
+                        tone: "danger",
+                    },
+                    {
+                        label: "Stages",
+                        value: stageCount.toLocaleString(),
+                        tone: "neutral",
+                    },
+                ]}
                 nextStep={isTenantView ? "View tenant dashboard" : "View supplier dashboard"}
                 nextStepHref={isTenantView ? "/dashboard/tenant" : "/dashboard/supplier"}
                 config={isTenantView ? tenantConfig : supplierConfig}

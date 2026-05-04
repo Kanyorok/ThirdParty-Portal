@@ -97,56 +97,68 @@ const toneClasses: Record<
         card: string
         iconWrap: string
         icon: string
+        eyebrow: string
         label: string
         value: string
         description: string
         cta: string
+        pill: string
     }
 > = {
     primary: {
-        card: "border-sky-200/80 bg-gradient-to-br from-sky-50/95 via-white to-blue-100/70",
-        iconWrap: "border-sky-300/80 bg-sky-500/15",
+        card: "border-sky-200/70 bg-white/95 shadow-none",
+        iconWrap: "border-sky-200 bg-sky-50",
         icon: "text-sky-700",
-        label: "text-sky-900/80",
-        value: "text-sky-950",
-        description: "text-sky-900/70",
-        cta: "dashboard-cta dashboard-cta--sky",
+        eyebrow: "text-sky-700",
+        label: "text-slate-900",
+        value: "text-slate-950",
+        description: "text-slate-600",
+        cta: "text-sky-700",
+        pill: "border-sky-200 bg-sky-50 text-sky-700",
     },
     emerald: {
-        card: "border-teal-200/80 bg-gradient-to-br from-teal-50/95 via-white to-emerald-100/70",
-        iconWrap: "border-teal-300/80 bg-teal-500/15",
+        card: "border-emerald-200/70 bg-white/95 shadow-none",
+        iconWrap: "border-emerald-200 bg-emerald-50",
         icon: "text-teal-700",
-        label: "text-teal-900/80",
-        value: "text-teal-950",
-        description: "text-teal-900/70",
-        cta: "dashboard-cta dashboard-cta--teal",
+        eyebrow: "text-emerald-700",
+        label: "text-slate-900",
+        value: "text-slate-950",
+        description: "text-slate-600",
+        cta: "text-emerald-700",
+        pill: "border-emerald-200 bg-emerald-50 text-emerald-700",
     },
     sky: {
-        card: "border-blue-200/80 bg-gradient-to-br from-blue-50/95 via-white to-sky-100/70",
-        iconWrap: "border-blue-300/80 bg-blue-500/15",
+        card: "border-blue-200/70 bg-white/95 shadow-none",
+        iconWrap: "border-blue-200 bg-blue-50",
         icon: "text-blue-700",
-        label: "text-blue-900/80",
-        value: "text-blue-950",
-        description: "text-blue-900/70",
-        cta: "dashboard-cta dashboard-cta--sky",
+        eyebrow: "text-blue-700",
+        label: "text-slate-900",
+        value: "text-slate-950",
+        description: "text-slate-600",
+        cta: "text-blue-700",
+        pill: "border-blue-200 bg-blue-50 text-blue-700",
     },
     amber: {
-        card: "border-amber-200/85 bg-gradient-to-br from-amber-50/95 via-white to-orange-100/70",
-        iconWrap: "border-amber-300/80 bg-amber-500/15",
+        card: "border-amber-200/75 bg-white/95 shadow-none",
+        iconWrap: "border-amber-200 bg-amber-50",
         icon: "text-amber-700",
-        label: "text-amber-900/80",
-        value: "text-amber-950",
-        description: "text-amber-900/70",
-        cta: "dashboard-cta dashboard-cta--amber",
+        eyebrow: "text-amber-700",
+        label: "text-slate-900",
+        value: "text-slate-950",
+        description: "text-slate-600",
+        cta: "text-amber-700",
+        pill: "border-amber-200 bg-amber-50 text-amber-700",
     },
     indigo: {
-        card: "border-slate-300/85 bg-gradient-to-br from-slate-50/95 via-white to-blue-100/60",
-        iconWrap: "border-slate-300/85 bg-slate-500/10",
+        card: "border-slate-200/80 bg-white/95 shadow-none",
+        iconWrap: "border-slate-200 bg-slate-50",
         icon: "text-slate-700",
-        label: "text-slate-800/85",
-        value: "text-slate-900",
-        description: "text-slate-700/75",
-        cta: "dashboard-cta dashboard-cta--slate",
+        eyebrow: "text-slate-600",
+        label: "text-slate-900",
+        value: "text-slate-950",
+        description: "text-slate-600",
+        cta: "text-slate-700",
+        pill: "border-slate-200 bg-slate-50 text-slate-700",
     },
 }
 
@@ -185,7 +197,7 @@ export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSumma
             title: "Active Rounds",
             count: resolved.activePreq,
             icon: ClipboardCheck,
-            description: "Open prequalification opportunities.",
+            description: "Open prequalification opportunities",
             tone: "primary",
             role: "driver",
             href: "/dashboard/supplier/prequalification",
@@ -194,7 +206,7 @@ export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSumma
             title: "Direct invites (RFQs)",
             count: resolved.directInvites,
             icon: MailCheck,
-            description: "Invitations that need your response.",
+            description: "RFQs waiting for your response",
             tone: "sky",
             role: "driver",
             href: "/dashboard/supplier/rfqs",
@@ -203,7 +215,7 @@ export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSumma
             title: "Open tenders",
             count: resolved.tendersAvailable,
             icon: FileSearch,
-            description: "Open tenders you can apply to.",
+            description: "Tenders currently open for bidding",
             tone: "amber",
             role: "driver",
             href: "/dashboard/supplier/tenders",
@@ -212,7 +224,7 @@ export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSumma
             title: "Completed",
             count: resolved.completedPreq,
             icon: Trophy,
-            description: "Approved or completed outcomes.",
+            description: "Approved and completed outcomes",
             tone: "emerald",
             role: "driver",
             href: "/dashboard/supplier/prequalification",
@@ -240,16 +252,15 @@ export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSumma
             <CardHeader className="px-4 pt-4 pb-2">
                 <div className="flex flex-wrap items-center justify-between gap-2.5">
                     <div>
-                        <CardTitle className="text-sm font-semibold tracking-tight text-slate-900">Pipeline Snapshot</CardTitle>
-                        <p className="mt-0.5 text-xs text-slate-600">Current stage counts for opportunities in your pipeline.</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Overview</p>
+                        <CardTitle className="mt-1 text-base font-semibold tracking-tight text-slate-900">Pipeline summary</CardTitle>
+                        <p className="mt-0.5 text-xs text-slate-600">Current opportunity counts across your dashboard.</p>
                     </div>
                     <div className="flex items-center gap-1.5">
-                        <span className="dashboard-chip dashboard-chip--progress">
-                            {driversCount} On Track
+                        <span className="dashboard-chip dashboard-chip--neutral">
+                            {cards.length} signals
                         </span>
-                        <span className="dashboard-chip dashboard-chip--attention">
-                            {riskCount} Needs Attention
-                        </span>
+                        {riskCount > 0 ? <span className="dashboard-chip dashboard-chip--attention">{riskCount} at risk</span> : null}
                     </div>
                 </div>
             </CardHeader>
@@ -289,11 +300,15 @@ export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSumma
                                                 t.card
                                             )}
                                         >
-                                            <div className="pointer-events-none absolute -right-5 -bottom-8 h-24 w-24 rounded-full bg-white/50 blur-xl" />
                                             <CardContent className="relative flex h-full flex-col p-3">
                                                 <div className="flex items-start justify-between gap-3">
-                                                    <div className={cn("text-[11px] font-semibold uppercase tracking-[0.28em]", t.label)}>
-                                                        {item.title}
+                                                    <div className="space-y-1">
+                                                        <div className={cn("text-[11px] font-semibold uppercase tracking-[0.24em]", t.eyebrow)}>
+                                                            {item.role === "risk" ? "Attention" : "Summary"}
+                                                        </div>
+                                                        <div className={cn("text-sm font-semibold tracking-tight", t.label)}>
+                                                            {item.title}
+                                                        </div>
                                                     </div>
                                                     <div
                                                         className={cn(
@@ -315,9 +330,12 @@ export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSumma
                                                     {item.description}
                                                 </p>
 
-                                                <div className="mt-auto pt-3">
-                                                    <div className={cn("text-[11px]", t.cta)}>
-                                                        View details
+                                                <div className="mt-auto flex items-center justify-between gap-2 pt-3">
+                                                    <span className={cn("inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em]", t.pill)}>
+                                                        {item.role === "risk" ? "Needs review" : "In flow"}
+                                                    </span>
+                                                    <div className={cn("inline-flex items-center gap-1 text-[11px] font-semibold", t.cta)}>
+                                                        Open
                                                         <ChevronRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
                                                     </div>
                                                 </div>

@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { motion, type Variants } from "framer-motion"
-import { ArrowUpRight, Sparkles } from "lucide-react"
+import { ArrowUpRight } from "lucide-react"
 import { Button } from "@/components/common/button"
 
 type Action = { label: string; href: string }
@@ -61,39 +61,32 @@ export function WelcomeHeader({
       variants={headerShellVariants}
       initial="hidden"
       animate="visible"
-      className="dashboard-shell dashboard-shell--hero w-full rounded-2xl px-5 py-5 md:px-6 md:py-6"
+      className="dashboard-shell dashboard-shell--hero w-full rounded-2xl px-5 py-4 md:px-6 md:py-5"
     >
-      <motion.div
-        aria-hidden
-        animate={{ opacity: [0.12, 0.2, 0.12], scale: [1, 1.03, 1] }}
-        transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-        className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-primary/15"
-      />
-      <motion.div
-        aria-hidden
-        animate={{ opacity: [0.08, 0.14, 0.08], y: [0, -2, 0] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.8 }}
-        className="pointer-events-none absolute -bottom-12 left-1/2 h-28 w-28 rounded-full bg-cyan-500/10"
-      />
+      <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="space-y-3">
+          <motion.div variants={headerItemVariants} className="flex flex-wrap items-center gap-2">
+            <span className="dashboard-chip dashboard-chip--neutral px-3 py-1 text-[11px] normal-case tracking-normal text-slate-700">
+              {contextLabel}
+            </span>
+            <span className="dashboard-chip border-blue-200 bg-blue-50 px-3 py-1 text-[11px] normal-case tracking-normal text-blue-700">
+              Dashboard
+            </span>
+          </motion.div>
 
-      <div className="relative flex flex-col gap-4">
-        <motion.div variants={headerItemVariants} className="dashboard-chip w-fit border-primary/25 bg-primary/10 px-3 py-1 text-primary">
-          <Sparkles className="h-3.5 w-3.5" />
-          <span className="text-[11px] font-semibold tracking-tight">{contextLabel}</span>
-        </motion.div>
+          <motion.div variants={headerItemVariants} className="space-y-1">
+            <motion.h1
+              className="text-2xl font-semibold tracking-tight text-foreground sm:text-[2rem]"
+            >
+              {greeting && `${greeting}, ${firstName || "there"}.`}
+            </motion.h1>
+            <p className="max-w-2xl text-sm text-muted-foreground">
+              Review pipeline movement, keep active work visible, and act on the next best step.
+            </p>
+          </motion.div>
+        </div>
 
-        <motion.div variants={headerItemVariants} className="space-y-1">
-          <motion.h1
-            className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl"
-          >
-            {greeting && `${greeting}, ${firstName || "there"}.`}
-          </motion.h1>
-          <p className="text-sm text-muted-foreground">
-            Focus on the highest-impact actions and move opportunities forward faster.
-          </p>
-        </motion.div>
-
-        <motion.div variants={headerItemVariants} className="flex flex-wrap items-center gap-2.5">
+        <motion.div variants={headerItemVariants} className="flex flex-wrap items-center gap-2.5 lg:justify-end">
           <Button
             asChild
             className="dashboard-cta dashboard-cta--primary h-10 px-4"
