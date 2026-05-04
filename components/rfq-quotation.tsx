@@ -94,6 +94,7 @@ import {
   normalizeSupplierId,
 } from "@/lib/rfq-response"
 import type { RfqInvitation } from "@/types/rfq"
+import { RfqSection } from '../types/rfq';
 
 type AnyRecord = Record<string, any>
 
@@ -1194,6 +1195,7 @@ export function RfqQuotation() {
 
     return {
       rfqId: typeof rfqIdValue === "number" ? rfqIdValue : Number(rfqIdValue),
+      supplierId: supplierIdValue,
       currency: String(meta.currency).trim().toUpperCase(),
       durationDays: meta.duration,
       isDraft: asDraft,
@@ -1812,7 +1814,7 @@ export function RfqQuotation() {
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200/70 bg-indigo-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-indigo-700">
               <ListChecks className="h-3.5 w-3.5" />
-              RFQ quotation workspace
+              RFQs
             </div>
 
             <div>

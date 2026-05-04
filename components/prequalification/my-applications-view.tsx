@@ -483,13 +483,14 @@ export default function MyApplicationsView({
                                             {cats.map((app) => {
                                                 const s = getS(app.status)
                                                 const pct = app.progressPercent ?? 0
-
+                                                // Prefer categoryId if present, fallback to id
+                                                const categoryId = (app as any).categoryId ?? app.id
                                                 return (
                                                     <button
                                                         key={app.applicationId}
                                                         type="button"
                                                         className="w-full border-b border-border/60 px-4 py-4 text-left last:border-b-0"
-                                                        onClick={() => openPrequalificationRound(round.id, app.id)}
+                                                        onClick={() => openPrequalificationRound(round.id, categoryId)}
                                                     >
                                                         <div className="flex items-start justify-between gap-3">
                                                             <div className="min-w-0 flex-1">
@@ -538,6 +539,8 @@ export default function MyApplicationsView({
                                                     {cats.map((app) => {
                                                         const s = getS(app.status)
                                                         const pct = app.progressPercent ?? 0
+                                                        // Prefer categoryId if present, fallback to id
+                                                        const categoryId = (app as any).categoryId ?? app.id
                                                         return (
                                                             <TableRow
                                                                 key={app.applicationId}
@@ -545,11 +548,11 @@ export default function MyApplicationsView({
                                                                 role="button"
                                                                 tabIndex={0}
                                                                 aria-label={`Open prequalification application for ${app.name}`}
-                                                                onClick={() => openPrequalificationRound(round.id, app.id)}
+                                                                onClick={() => openPrequalificationRound(round.id, categoryId)}
                                                                 onKeyDown={(e) => {
                                                                     if (e.key === "Enter" || e.key === " ") {
                                                                         e.preventDefault()
-                                                                        openPrequalificationRound(round.id, app.id)
+                                                                        openPrequalificationRound(round.id, categoryId)
                                                                     }
                                                                 }}
                                                             >

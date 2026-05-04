@@ -43,7 +43,7 @@ export const useProcurementStore = create<ProcurementState>((set) => ({
     fetchRounds: async () => {
         set({ isLoading: true, error: null })
         try {
-            const res = await fetch("/api/prequalification/rounds", {
+            const res = await fetch("/api/v1/prequalification/rounds", {
                 headers: { Accept: "application/json" },
                 credentials: "same-origin",
             })
@@ -59,7 +59,7 @@ export const useProcurementStore = create<ProcurementState>((set) => ({
     fetchRoundDetails: async (roundId: number) => {
         set({ isLoading: true, error: null })
         try {
-            const res = await fetch(`/api/prequalification/rounds/${roundId}`, {
+            const res = await fetch(`/api/v1/prequalification/rounds/${roundId}`, {
                 headers: { Accept: "application/json" },
                 credentials: "same-origin",
             })

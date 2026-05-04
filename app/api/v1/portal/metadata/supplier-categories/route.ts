@@ -1,0 +1,1 @@
+export { GET } from "@/app/api/portal/auth/metadata/supplier-categories/route"

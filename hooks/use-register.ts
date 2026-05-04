@@ -6,9 +6,11 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 
 import {
+    canonicalizeBusinessTypeValue,
     emptyRegistrationMetadata,
     fetchLocalJson,
     isCompanyLikeBusinessType,
+    normalizePhoneNumber,
     normalizeLookupItems,
     pickLookupItems,
     type CountryItem,
@@ -59,6 +61,30 @@ const SERVER_FIELD_FALLBACK_MESSAGES: Record<string, string> = {
     user_Password: "Please enter a valid password.",
     user_Password_confirmation: "Please confirm your password.",
     logo: "Please attach a valid logo image.",
+}
+
+const SERVER_ERROR_FIELD_ALIASES: Record<string, string> = {
+    name: "Name",
+    tradingName: "TradingName",
+    businessType: "BusinessType",
+    legalForm: "BusinessType",
+    registrationNumber: "RegistrationNumber",
+    taxPin: "TaxPIN",
+    vatNumber: "VATNumber",
+    email: "Email",
+    phone: "Phone",
+    physicalAddress: "PhysicalAddress",
+    website: "Website",
+    country: "Country",
+    location: "Location",
+    supplierCategoryId: "supplier_category_id",
+    userFirstName: "user_FirstName",
+    userLastName: "user_LastName",
+    userEmail: "user_Email",
+    userPhone: "user_Phone",
+    userGender: "user_Gender",
+    userPassword: "user_Password",
+    userPasswordConfirmation: "user_Password_confirmation",
 }
 
 const emptyToUndefined = (value: unknown) => {
@@ -124,7 +150,10 @@ const optionalLookupField = (label: string, maxLength: number) =>
     ).optional()
 
 const phoneField = (requiredMessage: string) =>
-    z.string().trim().min(1, requiredMessage).regex(PHONE_REGEX, "Phone number must be 8 to 15 digits and may start with +")
+    z.preprocess(
+        (value) => normalizePhoneNumber(value) ?? value,
+        z.string().trim().min(1, requiredMessage).regex(PHONE_REGEX, "Phone number must be 8 to 15 digits and may start with +"),
+    )
 
 const optionalPhoneField = (requiredMessage: string) => z.preprocess(emptyToUndefined, phoneField(requiredMessage)).optional()
 
@@ -548,16 +577,15 @@ export const useRegisterForm = () => {
         const isSupplier = values.types.includes("SU")
         const isTenant = values.types.includes("TN")
         const isCustomer = values.types.includes("CU")
+        const businessType = canonicalizeBusinessTypeValue(values.BusinessType)
 
         const payload: Record<string, unknown> = {
             Name: normalizeText(values.Name),
             TradingName: normalizeText(values.TradingName),
-            BusinessType: normalizeText(values.BusinessType),
+            BusinessType: businessType,
             RegistrationNumber: normalizeText(values.RegistrationNumber),
             TaxPIN: normalizeText(values.TaxPIN),
             VATNumber: normalizeText(values.VATNumber),
-            Email: normalizeText(values.Email),
-            Phone: normalizeText(values.Phone),
             PhysicalAddress: normalizeText(values.PhysicalAddress),
             Website: normalizeText(values.Website),
             Country: normalizeText(values.Country),
@@ -566,9 +594,20 @@ export const useRegisterForm = () => {
             createUser: values.createUser,
         }
 
+        if (!values.createUser) {
+            payload.Phone = normalizePhoneNumber(values.Phone) ?? ""
+            const orgEmail = normalizeText(values.Email)
+            if (orgEmail) payload.Email = orgEmail
+        } else {
+            const orgPhone = normalizePhoneNumber(values.Phone) ?? normalizePhoneNumber(values.user_Phone)
+            const orgEmail = normalizeText(values.Email) ?? normalizeText(values.user_Email)
+            if (orgPhone) payload.Phone = orgPhone
+            if (orgEmail) payload.Email = orgEmail
+        }
+
         if (isSupplier) {
             payload.supplier_category_id = values.supplier_category_id ?? undefined
-            payload.legalForm = normalizeText(values.BusinessType)
+            payload.legalForm = businessType
         }
 
         if (isSupplier && isCompanyLikeBusinessType(values.BusinessType)) {
@@ -579,8 +618,8 @@ export const useRegisterForm = () => {
                 ? normalizeText(values.user_Email)
                 : normalizeText(values.Email)
             payload.contactPersonPhone = values.createUser
-                ? normalizeText(values.user_Phone)
-                : normalizeText(values.Phone)
+                ? normalizePhoneNumber(values.user_Phone)
+                : normalizePhoneNumber(values.Phone)
         }
 
         if (isTenant) {
@@ -598,13 +637,14 @@ export const useRegisterForm = () => {
             payload.user_FirstName = normalizeText(values.user_FirstName)
             payload.user_LastName = normalizeText(values.user_LastName)
             payload.user_Email = normalizeText(values.user_Email)
-            payload.user_Phone = normalizeText(values.user_Phone)
+            payload.user_Phone = normalizePhoneNumber(values.user_Phone)
             payload.user_Gender = normalizeText(values.user_Gender)
             payload.user_Password = values.user_Password
             payload.user_Password_confirmation = values.user_Password_confirmation
         }
 
         Object.keys(payload).forEach((key) => {
+            if (key === "Phone" && !values.createUser) return
             const value = payload[key]
             if (value === undefined || value === null || value === "") {
                 delete payload[key]
@@ -640,7 +680,7 @@ export const useRegisterForm = () => {
                 return
             }
 
-            const fieldKey = key === "legalForm" ? "BusinessType" : key
+            const fieldKey = SERVER_ERROR_FIELD_ALIASES[key] ?? key
             form.setError(fieldKey as never, { message: getSafeServerFieldMessage(fieldKey, first) })
             hasFieldErrors = true
         })

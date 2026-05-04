@@ -23,7 +23,7 @@ export default function ThirdPartyDashboard() {
     const [isModalOpen, setIsModalOpen] = useState(false)
     const { profile, updateProfile, createProfile, isLoading } = useThirdPartyProfile()
     const { data: countriesData } = useSWR<{ data: CountryOption[] }>("/api/countries", fetcher)
-    const { data: supplierCategoriesData } = useSWR<{ data: SupplierCategoryOption[] }>("/portal/metadata/supplier-categories", fetcher)
+    const { data: supplierCategoriesData } = useSWR<{ data: SupplierCategoryOption[] }>("/api/v1/portal/metadata/supplier-categories", fetcher)
     const countries = useMemo(() => countriesData?.data ?? [], [countriesData?.data])
     const supplierCategories = useMemo(() => supplierCategoriesData?.data ?? [], [supplierCategoriesData?.data])
 

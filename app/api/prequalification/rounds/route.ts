@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     if (q) params.set("q", q);
 
     try {
-        const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/supplier/prequalification/rounds?${params.toString()}`;
+        const backendUrl = `${process.env.EXTERNAL_API_URL}/api/v1/supplier/prequalification/rounds?${params.toString()}`;
         const res = await fetch(backendUrl, {
             headers: {
                 Accept: "application/json",

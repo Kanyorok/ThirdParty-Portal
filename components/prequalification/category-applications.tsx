@@ -37,7 +37,6 @@ import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { mapApiRound } from "@/lib/rounds"
 
-/* ── Status theming ──────────────────────────────────────────────── */
 
 const STATUS_THEME: Record<
     string,
@@ -95,8 +94,6 @@ const safeFormatDate = (value?: string, fmt = "dd MMM yyyy") => {
     return format(parsed, fmt)
 }
 
-/* ── Progress helpers ────────────────────────────────────────────── */
-
 type AppSummary = {
     total: number
     approved: number
@@ -129,8 +126,6 @@ function overallStatus(s: AppSummary): string {
     return "Draft"
 }
 
-/* ── Document type (from API) ────────────────────────────────────── */
-
 type CategoryDocument = {
     id: number | string
     file_name?: string
@@ -142,14 +137,19 @@ type CategoryDocument = {
     uploaded_at?: string
     uploadedAt?: string
     created_at?: string
+    dmsDocument?: {
+        name?: string
+        mimeType?: string
+        createdOn?: string
+        current?: {
+            name?: string
+        }
+    }
 }
 
-/* ── Tab trigger classes (matches Tenders) ───────────────────────── */
 
 const tabTriggerClass =
     "rounded-lg px-3 py-2 text-[11px] font-semibold text-slate-600 transition-all duration-150 hover:text-slate-900 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:border data-[state=active]:border-slate-200/80"
-
-/* ── Component ───────────────────────────────────────────────────── */
 
 interface CategoryApplicationsProps {
     round: Round
@@ -184,7 +184,7 @@ export default function CategoryApplications({ round: roundProp, className, vari
         if (!isOpen || detailRound) return
         let cancelled = false
         setDetailLoading(true)
-        fetch(`/api/prequalification/rounds/${encodeURIComponent(roundProp.id)}`, {
+        fetch(`/api/v1/prequalification/rounds/${encodeURIComponent(roundProp.id)}`, {
             credentials: "include",
             headers: { Accept: "application/json" },
         })
@@ -199,8 +199,6 @@ export default function CategoryApplications({ round: roundProp, className, vari
         return () => { cancelled = true }
     }, [isOpen, roundProp.id, detailRound])
 
-    // Merge detail fetch with list data — preserve categories from whichever
-    // source has them (detail fetch may omit categories via whenLoaded).
     const round: Round = useMemo(() => {
         if (!detailRound) return roundProp
         const detailHasCats = (detailRound.categories?.length ?? 0) > 0
@@ -300,7 +298,6 @@ export default function CategoryApplications({ round: roundProp, className, vari
         }
     }, [selectedIds, round.id])
 
-    /* ── Document fetching ── */
     const fetchDocuments = useCallback(async () => {
         if (appliedCategories.length === 0) return
         setDocsLoading(true)
@@ -317,7 +314,7 @@ export default function CategoryApplications({ round: roundProp, className, vari
                         const json = await res.json()
                         results[catId] = Array.isArray(json?.data) ? json.data : Array.isArray(json) ? json : []
                     }
-                } catch { /* skip */ }
+                } catch { /* skip @kasee */ }
             })
         )
         setCategoryDocs(results)
@@ -337,7 +334,7 @@ export default function CategoryApplications({ round: roundProp, className, vari
         try {
             const formData = new FormData()
             formData.append("file", file)
-            // Backend requires section_id — use the first available section from the round
+            formData.append("file_name", file.name)
             const defaultSectionId = round.sections?.[0]?.sectionId ?? round.sections?.[0]?.id
             if (defaultSectionId) formData.append("section_id", String(defaultSectionId))
             const res = await fetch(
@@ -364,13 +361,12 @@ export default function CategoryApplications({ round: roundProp, className, vari
                 toast.error(body?.message ?? "Upload failed")
             }
         } catch {
-            toast.error("Upload failed — network error")
+            toast.error("Upload failed! Try again buddy!")
         } finally {
             setUploading(null)
         }
     }, [round.id, round.sections])
 
-    /* ── Document download ── */
     const downloadDocument = useCallback((categoryId: string, docId: string | number, fileName?: string) => {
         const url = `/api/prequalification/applications/${encodeURIComponent(round.id)}/categories/${encodeURIComponent(categoryId)}/documents/${encodeURIComponent(docId)}/download`
         const a = document.createElement("a")
@@ -387,7 +383,6 @@ export default function CategoryApplications({ round: roundProp, className, vari
     const startDateText = safeFormatDate(round.startDate)
     const endDateText = safeFormatDate(round.endDate)
 
-    /* ── Reset on re-open ── */
     const handleOpenChange = useCallback((v: boolean) => {
         setIsOpen(v)
         if (v) {
@@ -494,7 +489,6 @@ export default function CategoryApplications({ round: roundProp, className, vari
                         {detailLoading && (
                             <div className="mb-3 flex items-center gap-2 rounded-xl border border-indigo-100 bg-indigo-50/50 px-3 py-2 text-xs text-indigo-700">
                                 <Spinner className="h-3.5 w-3.5" />
-                                Loading round details
                             </div>
                         )}
                         {/* ── Overview tab ── */}
@@ -533,11 +527,11 @@ export default function CategoryApplications({ round: roundProp, className, vari
                                         </div>
                                         <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
                                             <div>
-                                                <p className="text-xs font-medium text-slate-500">Categories</p>
+                                                <p className="text-xs font-medium text-slate-500">Total Categories</p>
                                                 <p className="text-sm font-semibold text-slate-900">{totalCategories}</p>
                                             </div>
                                             <div>
-                                                <p className="text-xs font-medium text-slate-500">Applied</p>
+                                                <p className="text-xs font-medium text-slate-500">Categories Applied</p>
                                                 <p className="text-sm font-semibold text-slate-900">{appliedCategories.length}</p>
                                             </div>
                                             {startDateText && (
@@ -552,16 +546,9 @@ export default function CategoryApplications({ round: roundProp, className, vari
                                                     <p className="text-sm text-slate-900">{endDateText}</p>
                                                 </div>
                                             )}
-                                            {round.maxVendors ? (
-                                                <div>
-                                                    <p className="text-xs font-medium text-slate-500">Max vendors</p>
-                                                    <p className="text-sm text-slate-900">{round.maxVendors}</p>
-                                                </div>
-                                            ) : null}
                                         </div>
                                     </div>
 
-                                    {/* Quick category summary */}
                                     <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-none">
                                         <div className="relative flex items-center gap-2 pl-3 text-sm font-semibold text-slate-900 before:absolute before:left-0 before:top-1 before:h-5 before:w-1 before:rounded-full before:bg-indigo-500/80 before:content-['']">
                                             <Users className="h-4 w-4 text-indigo-600" />
@@ -588,38 +575,6 @@ export default function CategoryApplications({ round: roundProp, className, vari
                                             </Button>
                                         )}
                                     </div>
-
-                                    {/* Evaluation sections (from detail API) */}
-                                    {round.sections && round.sections.length > 0 && (
-                                        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-none">
-                                            <div className="relative flex items-center gap-2 pl-3 text-sm font-semibold text-slate-900 before:absolute before:left-0 before:top-1 before:h-5 before:w-1 before:rounded-full before:bg-indigo-500/80 before:content-['']">
-                                                <FileText className="h-4 w-4 text-indigo-600" />
-                                                Evaluation criteria
-                                            </div>
-                                            <div className="mt-3 space-y-2">
-                                                {round.sections.map((section) => (
-                                                    <div key={section.id ?? section.sectionId ?? section.name} className="rounded-xl border border-slate-100 bg-slate-50/50 p-2.5">
-                                                        <div className="flex items-center justify-between text-xs">
-                                                            <span className="font-medium text-slate-700">{section.name}</span>
-                                                            {section.weight != null && (
-                                                                <span className="tabular-nums font-semibold text-indigo-600">{section.weight}%</span>
-                                                            )}
-                                                        </div>
-                                                        {section.criteria && section.criteria.length > 0 && (
-                                                            <div className="mt-1.5 space-y-1">
-                                                                {section.criteria.map((c) => (
-                                                                    <div key={c.id ?? c.criteriaId} className="flex items-center justify-between text-[11px] text-slate-500">
-                                                                        <span>Criteria #{c.criteriaId ?? c.id}</span>
-                                                                        {c.maxScore != null && <span>Max: {c.maxScore}</span>}
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
                                 </div>
                             </div>
                         </TabsContent>
@@ -636,8 +591,8 @@ export default function CategoryApplications({ round: roundProp, className, vari
                                 <div className="flex items-center justify-between rounded-xl border border-indigo-100 bg-indigo-50/40 px-3 py-2">
                                     <p className="text-xs text-indigo-700">
                                         {selectedIds.size === 0
-                                            ? `${unappliedCategories.length} ${unappliedCategories.length === 1 ? "category" : "categories"} available — select to apply`
-                                            : `${selectedIds.size} selected`}
+                                            ? `${unappliedCategories.length} ${unappliedCategories.length === 1 ? "category" : "categories"} available`
+                                            : `${selectedIds.size} chosen`}
                                     </p>
                                     <div className="flex items-center gap-2">
                                         {selectedIds.size > 0 && (
@@ -766,7 +721,6 @@ export default function CategoryApplications({ round: roundProp, className, vari
                                 {docsLoading ? (
                                     <div className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-sm text-slate-500">
                                         <Spinner className="h-4 w-4" />
-                                        Loading documents
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
@@ -809,7 +763,7 @@ export default function CategoryApplications({ round: roundProp, className, vari
                                                                 ) : (
                                                                     <Upload className="mr-1 h-3 w-3" />
                                                                 )}
-                                                                Upload
+                                                                Click to Upload
                                                             </Button>
                                                         </div>
                                                     </div>
@@ -822,9 +776,15 @@ export default function CategoryApplications({ round: roundProp, className, vari
                                                     ) : (
                                                         <div className="divide-y divide-slate-50">
                                                             {docs.map((doc) => {
-                                                                const name = resolveProcurementDocumentName(doc)
-                                                                const type = doc.file_type ?? doc.fileType
-                                                                const date = doc.uploaded_at ?? doc.uploadedAt ?? doc.created_at
+                                                                let name = resolveProcurementDocumentName(doc, "Document")
+                                                                if ((!name || name === "Document") && doc.dmsDocument) {
+                                                                    name = resolveProcurementDocumentName(doc.dmsDocument, "Document")
+                                                                }
+                                                                if ((!name || name === "Document") && doc.dmsDocument?.current) {
+                                                                    name = resolveProcurementDocumentName(doc.dmsDocument.current, "Document")
+                                                                }
+                                                                const type = doc.file_type ?? doc.fileType ?? doc.dmsDocument?.mimeType
+                                                                const date = doc.uploaded_at ?? doc.uploadedAt ?? doc.created_at ?? doc.dmsDocument?.createdOn
 
                                                                 return (
                                                                     <div key={doc.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-slate-50/50">

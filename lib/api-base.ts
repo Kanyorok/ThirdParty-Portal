@@ -70,10 +70,11 @@ function getRuntimeBaseUrl(): string {
 }
 
 export function getBaseUrl() {
-    return getRuntimeBaseUrl() || normalizeBaseUrl(
-        process.env.API_BASE_URL ??
+    // Force use of EXTERNAL_API_URL for all backend requests
+    return normalizeBaseUrl(
+        process.env.EXTERNAL_API_URL ??
         process.env.NEXT_PUBLIC_API_URL ??
-        process.env.EXTERNAL_API_URL
+        process.env.API_BASE_URL
     )
 }
 
@@ -277,11 +278,11 @@ export async function getRounds<T = unknown>(q?: Record<string, string | undefin
     }
 
     const queryString = params.toString()
-    return apiFetch<T>(`/api/prequalification/rounds${queryString ? `?${queryString}` : ""}`)
+    return apiFetch<T>(`/api/v1/prequalification/rounds${queryString ? `?${queryString}` : ""}`)
 }
 
 export async function getSupplierCategories<T = unknown>(): Promise<T> {
-    return apiFetch<T>("/portal/metadata/supplier-categories")
+    return apiFetch<T>("/api/v1/portal/auth/metadata/supplier-categories")
 }
 
 function validateApplicationPayload(roundId: number, categoryIds: number[]) {
@@ -314,8 +315,11 @@ export async function submitApplication(roundId: number, categoryIds: number[]) 
 
 export async function submitApplicationSafe(roundId: number, categoryIds: number[]) {
     const payload = validateApplicationPayload(roundId, categoryIds)
+    const path = typeof window !== "undefined"
+        ? `${window.location.origin}/api/prequalification/applications`
+        : "/api/prequalification/applications"
 
-    return executeApiRequest<Record<string, unknown>>("/api/prequalification/applications", {
+    return executeApiRequest<Record<string, unknown>>(path, {
         method: "POST",
         body: JSON.stringify(payload),
         allowError: true,
