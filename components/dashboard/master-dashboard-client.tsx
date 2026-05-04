@@ -191,22 +191,23 @@ export function MasterDashboardClient({
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="w-full space-y-4"
+      className="w-full space-y-3"
     >
-      <motion.div custom={0} variants={shellSectionVariants}>
+      <motion.section custom={0} variants={shellSectionVariants} className="space-y-2.5">
         <WelcomeHeader
           firstName={firstName}
           contextLabel={registry.contextLabel}
           primaryAction={registry.primaryAction}
           secondaryAction={registry.secondaryAction}
         />
-      </motion.div>
 
-      <motion.div custom={1} variants={shellSectionVariants}>
-        <div className="dashboard-control-bar">
-          <div className="dashboard-chip dashboard-chip--neutral gap-2 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden />
-            {visibleWidgetsCount} widgets active
+        <div className="dashboard-control-bar border-slate-200/80 bg-slate-50/80 px-4 py-2.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="dashboard-chip dashboard-chip--neutral gap-2 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden />
+              {visibleWidgetsCount} widgets active
+            </div>
+            <p className="text-xs text-slate-500">Keep the most useful signals in view.</p>
           </div>
           <Button
             size="sm"
@@ -218,28 +219,28 @@ export function MasterDashboardClient({
             Customize home
           </Button>
         </div>
-      </motion.div>
+      </motion.section>
 
       {widgetPreferences.priority && (
-        <motion.section custom={2} variants={shellSectionVariants}>
+        <motion.section custom={1} variants={shellSectionVariants}>
           <PriorityActions profile={renderProfile} />
         </motion.section>
       )}
 
       {widgetPreferences.overview && (
-        <motion.section custom={3} variants={shellSectionVariants}>
+        <motion.section custom={2} variants={shellSectionVariants}>
           <RequestSummaryCards />
         </motion.section>
       )}
 
       {widgetPreferences.activity && (
-        <motion.section custom={4} variants={shellSectionVariants}>
+        <motion.section custom={3} variants={shellSectionVariants}>
           <SummaryCharts profile={renderProfile} />
         </motion.section>
       )}
 
       {visibleWidgetsCount === 0 && (
-        <motion.section custom={5} variants={shellSectionVariants}>
+        <motion.section custom={4} variants={shellSectionVariants}>
           <div className="dashboard-empty-state">
             <p className="text-sm text-muted-foreground">
               No widgets enabled yet. Turn on the sections you want to track.

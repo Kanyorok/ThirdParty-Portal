@@ -91,7 +91,7 @@ const normalizeBooleanFormValue = (value: string) => {
     return value
 }
 
-const normalizePhoneFields = (source: FormData | Record<string, unknown>) => {
+const normalizePhoneFields = <T extends FormData | Record<string, unknown>>(source: T): T => {
     if (source instanceof FormData) {
         PHONE_FORM_KEYS.forEach((key) => {
             const current = source.get(key)
@@ -202,20 +202,25 @@ export async function POST(request: Request) {
         const contentType = request.headers.get("content-type") ?? ""
         const isMultipart = contentType.includes("multipart/form-data")
         const upstreamUrl = `${apiBase.replace(/\/$/, "")}/api/v1/portal/auth/register/validate-step`
-        const incomingBody = isMultipart ? await request.formData() : await request.json()
-        const stepFields = isMultipart
-            ? incomingBody.getAll("fields").filter((value): value is string => typeof value === "string")
-            : Array.isArray(incomingBody?.fields)
+        let stepFields: string[] = []
+        let upstreamRequestBody: BodyInit
+
+        if (isMultipart) {
+            const incomingBody = await request.formData()
+            stepFields = incomingBody.getAll("fields").filter((value: FormDataEntryValue): value is string => typeof value === "string")
+            upstreamRequestBody = withRegistrationAliasesFormData(incomingBody)
+        } else {
+            const incomingBody = await request.json() as Record<string, unknown>
+            stepFields = Array.isArray(incomingBody.fields)
                 ? incomingBody.fields.filter((value: unknown): value is string => typeof value === "string")
                 : []
-        const upstreamBody = isMultipart
-            ? withRegistrationAliasesFormData(incomingBody)
-            : withRegistrationAliases(incomingBody)
+            upstreamRequestBody = JSON.stringify(withRegistrationAliases(incomingBody))
+        }
 
         const response = await fetch(upstreamUrl, {
             method: "POST",
             headers: isMultipart ? { Accept: "application/json" } : { Accept: "application/json", "Content-Type": "application/json" },
-            body: isMultipart ? upstreamBody : JSON.stringify(upstreamBody),
+            body: upstreamRequestBody,
         })
 
         const body = await response.json().catch(() => null)

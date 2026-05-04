@@ -294,7 +294,7 @@ const appendFormValue = (target: FormData, key: string, value: unknown) => {
 
 const PHONE_FORM_KEYS = ["Phone", "phone", "user_Phone", "userPhone", "contactPersonPhone"] as const
 
-const normalizeRegistrationPhoneFields = (source: FormData | Record<string, unknown>) => {
+const normalizeRegistrationPhoneFields = <T extends FormData | Record<string, unknown>>(source: T): T => {
     if (source instanceof FormData) {
         PHONE_FORM_KEYS.forEach((key) => {
             const current = source.get(key)
@@ -316,7 +316,7 @@ const normalizeRegistrationPhoneFields = (source: FormData | Record<string, unkn
     return source
 }
 
-const applyRegistrationContactFallbacks = (source: FormData | Record<string, unknown>) => {
+const applyRegistrationContactFallbacks = <T extends FormData | Record<string, unknown>>(source: T): T => {
     if (source instanceof FormData) {
         const createUserValue = String(source.get("createUser") ?? source.get("create_user") ?? "").trim().toLowerCase()
         const usesSeparateUser = ["1", "true", "yes", "on"].includes(createUserValue)
@@ -358,7 +358,7 @@ const applyRegistrationContactFallbacks = (source: FormData | Record<string, unk
     return source
 }
 
-const applyBusinessTypeFallbacks = (source: FormData | Record<string, unknown>) => {
+const applyBusinessTypeFallbacks = <T extends FormData | Record<string, unknown>>(source: T): T => {
     if (source instanceof FormData) {
         const businessType = String(source.get("BusinessType") ?? source.get("businessType") ?? source.get("legalForm") ?? "").trim()
         const canonicalBusinessType = canonicalizeBusinessTypeValue(businessType)
