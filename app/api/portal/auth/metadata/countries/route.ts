@@ -24,7 +24,7 @@ function normalizeCountries(payload: unknown) {
         .map((row) => ({
             id: Number(row.id ?? row.Id ?? 0),
             name: String(row.name ?? row.Name ?? "").trim(),
-            code: String(row.code ?? row.Code ?? "").trim(),
+            code: String(row.code ?? row.Code ?? row.iso2 ?? row.Iso2 ?? "").trim(),
             iso2: String(row.iso2 ?? row.Iso2 ?? "").trim() || null,
             flag: String(row.flag ?? row.Flag ?? "").trim() || null,
         }))

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerAccessToken } from "@/lib/auth/server-token"
+import { getBaseUrl } from "@/lib/api-base"
 
 const PUBLIC_ENUMS = new Set([
     "third-party-types",
@@ -29,7 +30,12 @@ export async function GET(
         }
     }
 
-    const externalUrl = `${process.env.NEXT_PUBLIC_EXTERNAL_API_URL}/api/enums/${encodeURIComponent(endpoint)}`
+    const apiBaseUrl = getBaseUrl()
+    if (!apiBaseUrl) {
+        return NextResponse.json({ message: "Enums service is not configured" }, { status: 500 })
+    }
+
+    const externalUrl = `${apiBaseUrl}/api/enums/${encodeURIComponent(endpoint)}`
 
     const headers: Record<string, string> = { Accept: "application/json" }
     if (token) headers.Authorization = `Bearer ${token}`

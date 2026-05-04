@@ -1,60 +1,54 @@
+# syntax=docker.io/docker/dockerfile:1
 
-# --- Builder Stage ---
-FROM node:20-bookworm-slim AS builder
+FROM node:20-alpine AS base
 
-# Declare all build-time variables
-ARG NEXT_PUBLIC_EXTERNAL_API_URL=http://127.0.0.1:8000
-ARG NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
-ARG EXTERNAL_API_URL=http://127.0.0.1:8000
-ARG NEXTAUTH_URL=http://localhost:3000
-ARG API_BASE_URL=http://127.0.0.1:8000
-ARG SANCTUM_STATEFUL_DOMAINS=127.0.0.1:3000
-
-# Set build-time environment variables
-ENV TAILWIND_DISABLE_OXIDE=1 \
-    NEXT_TELEMETRY_DISABLED=1 \
-    NEXT_PUBLIC_EXTERNAL_API_URL=${NEXT_PUBLIC_EXTERNAL_API_URL} \
-    NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL} \
-    EXTERNAL_API_URL=${EXTERNAL_API_URL} \
-    NEXTAUTH_URL=${NEXTAUTH_URL} \
-    API_BASE_URL=${API_BASE_URL} \
-    SANCTUM_STATEFUL_DOMAINS=${SANCTUM_STATEFUL_DOMAINS}
+# 1. Install dependencies only when needed
+FROM base AS deps
+# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
+RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 
-COPY package.json ./
-RUN npm install --legacy-peer-deps
+# Install dependencies based on the preferred package manager
+COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* .npmrc* ./
+RUN \
+    if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
+    elif [ -f package-lock.json ]; then npm ci; \
+    elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i; \
+    else npm install --legacy-peer-deps; \
+    fi
 
+
+# 2. Rebuild the source code only when needed
+FROM base AS builder
+WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED=1
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
-# Build with all relevant env vars
 RUN npm run build
 
-# --- Production Stage ---
-FROM node:20-bookworm-slim AS runner
-
+# 3. Production image, copy all the files and run next
+FROM base AS runner
 WORKDIR /app
 
-# Set runtime environment variables (only those needed at runtime)
-ENV NODE_ENV=production \
-    PORT=3000 \
-    NEXT_TELEMETRY_DISABLED=1 \
-    NEXTAUTH_URL=http://localhost:3000 \
-    NEXT_PUBLIC_API_URL=http://127.0.0.1:8000 \
-    NEXT_PUBLIC_EXTERNAL_API_URL=http://127.0.0.1:8000 \
-    EXTERNAL_API_URL=http://127.0.0.1:8000 \
-    API_BASE_URL=http://127.0.0.1:8000 \
-    SANCTUM_STATEFUL_DOMAINS=127.0.0.1:3000
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Create non-root user
-RUN groupadd -g 1001 nodejs && \
-    useradd -m -u 1001 -g nodejs nextjs
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nextjs -u 1001
 
-# Copy built application
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder /app/public ./public
+
+# Automatically leverage output traces to reduce image size
+# https://nextjs.org/docs/advanced-features/output-file-tracing
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+
 USER nextjs
+
 EXPOSE 3000
-CMD ["node", "server.js"]
+
+ENV PORT=3000
+
+CMD HOSTNAME="0.0.0.0" node server.js

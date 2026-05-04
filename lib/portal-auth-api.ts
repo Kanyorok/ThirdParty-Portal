@@ -1,4 +1,4 @@
-import { getBaseUrl } from "@/lib/api-base"
+import { parseJsonResponse } from "@/lib/parse-json-response"
 
 const CANDIDATE_BASE_URLS = [
     // Force use of EXTERNAL_API_URL for all backend requests
@@ -27,16 +27,26 @@ export async function fetchFirstAvailableJson(candidatePaths: string[]) {
         }
     }
 
-    let lastStatus = 500
+    let lastStatus = 502
     let lastBody: unknown = { message: "Upstream Error" }
 
     for (const path of candidatePaths) {
-        const response = await fetch(`${apiBase}${path}`, {
-            headers: { Accept: "application/json" },
-            cache: "no-store",
-        })
+        let response: Response
 
-        const body = await response.json().catch(() => null)
+        try {
+            response = await fetch(`${apiBase}${path}`, {
+                headers: { Accept: "application/json" },
+                cache: "no-store",
+            })
+        } catch (error) {
+            lastStatus = 502
+            lastBody = {
+                message: error instanceof Error ? error.message : "Upstream request failed",
+            }
+            continue
+        }
+
+        const body = await parseJsonResponse(response)
 
         if (response.ok) {
             return {

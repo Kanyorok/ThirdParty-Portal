@@ -22,10 +22,11 @@ function normalizeBusinessTypes(payload: unknown) {
         .map((row) => {
             const name = String(row.name ?? row.Name ?? row.description ?? row.Description ?? "").trim()
             const description = String(row.description ?? row.Description ?? name).trim()
-            const value = String(row.value ?? row.Value ?? "").trim()
+            const rawId = row.id ?? row.Id
+            const value = String(row.value ?? row.Value ?? rawId ?? name ?? description ?? "").trim()
 
             return {
-                id: Number(row.id ?? row.Id ?? 0),
+                id: Number(rawId ?? 0),
                 name,
                 value,
                 description,
