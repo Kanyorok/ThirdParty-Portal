@@ -38,6 +38,7 @@ function normalizeBusinessTypes(payload: unknown) {
 
 export const GET = createMetadataGetHandler(
     [
+        "/portal/auth/metadata/business-types",
         "/portal/metadata/business-types",
         "/api/v1/portal/auth/metadata/business-types",
     ],
