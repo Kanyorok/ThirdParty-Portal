@@ -94,7 +94,6 @@ import {
   normalizeSupplierId,
 } from "@/lib/rfq-response"
 import type { RfqInvitation } from "@/types/rfq"
-import { RfqSection } from '../types/rfq';
 
 type AnyRecord = Record<string, any>
 
