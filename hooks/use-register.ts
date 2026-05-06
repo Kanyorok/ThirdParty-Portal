@@ -24,6 +24,7 @@ const ROLE_VALUES = ["SU", "TN", "CU"] as const
 type RoleValue = (typeof ROLE_VALUES)[number]
 
 const PHONE_REGEX = /^\+?[0-9]{8,15}$/
+const TAX_IDENTIFIER_REGEX = /^[A-Z][0-9]{9}[A-Z]$/
 const GENERIC_REGISTRATION_ERROR = "We couldn't complete registration. Please correct the highlighted fields and try again."
 const SENSITIVE_ERROR_PATTERN = /(exception|stack|trace|sql|syntax|internal server|undefined|vendor|route|line\s+\d+)/i
 const DOCUMENT_KEY_PATTERN = /^registration_documents\.(\d+)$/
@@ -48,7 +49,7 @@ const SERVER_FIELD_FALLBACK_MESSAGES: Record<string, string> = {
     PhysicalAddress: "Please enter a valid physical address.",
     Website: "Please enter a valid website URL.",
     types: "Please select at least one business role.",
-    supplier_category_id: "Please select a supplier category.",
+    category_ids: "Please select at least one supplier category.",
     user_Remarks: "Please provide tenant remarks.",
     user_DateOfBirth: "Please provide a valid date of birth.",
     user_MaritalStatus: "Please select a valid marital status.",
@@ -77,7 +78,19 @@ const SERVER_ERROR_FIELD_ALIASES: Record<string, string> = {
     website: "Website",
     country: "Country",
     location: "Location",
-    supplierCategoryId: "supplier_category_id",
+    supplierCategoryId: "category_ids",
+    supplier_category_id: "category_ids",
+    primary_category_id: "category_ids",
+    category_ids: "category_ids",
+    categoryIds: "category_ids",
+    contact_person_name: "contactPersonName",
+    contact_person_email: "contactPersonEmail",
+    contact_person_phone: "contactPersonPhone",
+    tenant_Remarks: "user_Remarks",
+    customer_DateOfBirth: "user_DateOfBirth",
+    customer_MaritalStatus: "user_MaritalStatus",
+    customer_Occupation: "user_Occupation",
+    customer_Gender: "user_Gender",
     userFirstName: "user_FirstName",
     userLastName: "user_LastName",
     userEmail: "user_Email",
@@ -85,6 +98,47 @@ const SERVER_ERROR_FIELD_ALIASES: Record<string, string> = {
     userGender: "user_Gender",
     userPassword: "user_Password",
     userPasswordConfirmation: "user_Password_confirmation",
+}
+
+const NORMALIZED_SERVER_ERROR_FIELD_ALIASES: Record<string, string> = {
+    physicaladdress: "PhysicalAddress",
+    physical_address: "PhysicalAddress",
+    taxpin: "TaxPIN",
+    vatnumber: "VATNumber",
+    registrationnumber: "RegistrationNumber",
+    tradingname: "TradingName",
+    businesstype: "BusinessType",
+    legalform: "BusinessType",
+    categoryids: "category_ids",
+    suppliercategoryid: "category_ids",
+    country: "Country",
+    location: "Location",
+    email: "Email",
+    phone: "Phone",
+    website: "Website",
+    name: "Name",
+    userfirstname: "user_FirstName",
+    userlastname: "user_LastName",
+    useremail: "user_Email",
+    userphone: "user_Phone",
+    usergender: "user_Gender",
+    userpassword: "user_Password",
+    userpasswordconfirmation: "user_Password_confirmation",
+    userremarks: "user_Remarks",
+    userdateofbirth: "user_DateOfBirth",
+    usermaritalstatus: "user_MaritalStatus",
+    useroccupation: "user_Occupation",
+}
+
+const resolveServerErrorFieldKey = (rawKey: string) => {
+    const directAlias = SERVER_ERROR_FIELD_ALIASES[rawKey]
+    if (directAlias) return directAlias
+
+    const trimmedKey = rawKey.trim()
+    if (!trimmedKey) return rawKey
+
+    const normalizedKey = trimmedKey.toLowerCase().replace(/[^a-z0-9_]+/g, "")
+    return NORMALIZED_SERVER_ERROR_FIELD_ALIASES[normalizedKey] ?? trimmedKey
 }
 
 const emptyToUndefined = (value: unknown) => {
@@ -99,9 +153,53 @@ const normalizeText = (value: unknown) => {
     return trimmed.length > 0 ? trimmed : undefined
 }
 
+const normalizeTaxIdentifier = (value: unknown) => {
+    const normalized = normalizeText(value)
+    return normalized ? normalized.toUpperCase() : undefined
+}
+
 const joinContactPersonName = (firstName?: string, lastName?: string) => {
     const parts = [normalizeText(firstName), normalizeText(lastName)].filter(Boolean)
     return parts.length > 0 ? parts.join(" ") : undefined
+}
+
+const validateDocumentFile = (requirement: SupplierDocumentRequirement, file: File | null | undefined) => {
+    if (!(file instanceof File)) {
+        return requirement.isRequired ? `${requirement.name} is required.` : null
+    }
+
+    const allowedExtensions = requirement.allowedExtensions
+        .map((extension) => extension.trim().replace(/^\./, "").toLowerCase())
+        .filter(Boolean)
+    const fileExtension = file.name.includes(".")
+        ? file.name.slice(file.name.lastIndexOf(".") + 1).toLowerCase()
+        : ""
+
+    if (allowedExtensions.length > 0 && (!fileExtension || !allowedExtensions.includes(fileExtension))) {
+        return `${requirement.name} must be one of: ${allowedExtensions.map((extension) => `.${extension}`).join(", ")}.`
+    }
+
+    if (requirement.maxFileSizeKb && file.size > requirement.maxFileSizeKb * 1024) {
+        return `${requirement.name} must be ${requirement.maxFileSizeKb} KB or smaller.`
+    }
+
+    return null
+}
+
+const appendRequestValue = (target: FormData, key: string, value: unknown) => {
+    if (value == null || value === "") return
+
+    if (value instanceof File) {
+        target.append(key, value, value.name)
+        return
+    }
+
+    if (Array.isArray(value)) {
+        value.forEach((entry) => appendRequestValue(target, `${key}[]`, entry))
+        return
+    }
+
+    target.append(key, String(value))
 }
 
 const optionalTextField = (label: string, maxLength: number) =>
@@ -256,8 +354,14 @@ const registerSchema = z
         TradingName: optionalTextField("Trading name", 100),
         BusinessType: z.string().trim().min(1, "Business type is required"),
         RegistrationNumber: z.string().trim().min(1, "Registration number is required").max(50, "Registration number must be 50 characters or fewer"),
-        TaxPIN: z.string().trim().min(1, "Tax PIN is required").max(50, "Tax PIN must be 50 characters or fewer"),
-        VATNumber: z.string().trim().min(1, "VAT number is required").max(50, "VAT number must be 50 characters or fewer"),
+        TaxPIN: z.preprocess(
+            normalizeTaxIdentifier,
+            z.string().regex(TAX_IDENTIFIER_REGEX, "Tax PIN must be exactly 11 characters, like P123456789X.").max(50, "Tax PIN must be 50 characters or fewer"),
+        ),
+        VATNumber: z.preprocess(
+            normalizeTaxIdentifier,
+            z.string().regex(TAX_IDENTIFIER_REGEX, "VAT number must be exactly 11 characters, like P123456789X.").max(50, "VAT number must be 50 characters or fewer"),
+        ),
         Country: z.string().trim().min(2, "Country is required").max(3, "Please select a valid country code"),
         Location: z.coerce.number().int("Please select a valid location").min(1, "Location is required"),
         Email: optionalEmailField("Business email"),
@@ -265,7 +369,10 @@ const registerSchema = z
         PhysicalAddress: optionalTextField("Physical address", 200),
         Website: optionalHttpsUrlField("Website", 255),
         types: z.array(z.enum(ROLE_VALUES)).min(1, "Select at least one business role"),
-        supplier_category_id: z.preprocess((value) => (value === "" ? null : value), z.coerce.number().int().positive().nullable().optional()),
+        category_ids: z.array(z.coerce.number().int().positive()).optional(),
+        contactPersonName: optionalTextField("Contact person name", 120),
+        contactPersonEmail: optionalEmailField("Contact person email"),
+        contactPersonPhone: optionalPhoneField("Contact person phone is required"),
         user_Remarks: optionalTextField("Tenant remarks", 500),
         user_DateOfBirth: optionalTextField("Date of birth", 25),
         user_MaritalStatus: optionalLookupField("Marital status", 100),
@@ -284,28 +391,38 @@ const registerSchema = z
         const tenantFlow = hasRole(data.types, "TN")
         const customerFlow = hasRole(data.types, "CU")
 
-        if (!data.createUser && !data.Phone) {
+        if (!data.Phone) {
             ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["Phone"], message: "Phone number is required." })
         }
 
-        if (supplierFlow && !data.supplier_category_id) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["supplier_category_id"], message: "Select a supplier category." })
+        if (data.TaxPIN && data.VATNumber && data.TaxPIN !== data.VATNumber) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["VATNumber"], message: "VAT number must match Tax PIN." })
+        }
+
+        if (supplierFlow && (!data.category_ids || data.category_ids.length === 0)) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["category_ids"], message: "Select at least one supplier category." })
         }
 
         if (supplierFlow && isCompanyLikeBusinessType(data.BusinessType)) {
-            const derivedContactName = data.createUser
+            const derivedContactName = normalizeText(data.contactPersonName) ?? (data.createUser
                 ? joinContactPersonName(data.user_FirstName, data.user_LastName)
-                : normalizeText(data.Name)
-            const derivedContactEmail = data.createUser
+                : normalizeText(data.Name))
+            const derivedContactEmail = normalizeText(data.contactPersonEmail) ?? (data.createUser
                 ? normalizeText(data.user_Email)
-                : normalizeText(data.Email)
-            const derivedContactPhone = data.createUser
+                : normalizeText(data.Email))
+            const derivedContactPhone = normalizeText(data.contactPersonPhone) ?? (data.createUser
                 ? normalizeText(data.user_Phone)
-                : normalizeText(data.Phone)
+                : normalizeText(data.Phone))
 
-            if (!derivedContactName) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["Name"], message: "A contact name is required." })
-            if (!derivedContactEmail) ctx.addIssue({ code: z.ZodIssueCode.custom, path: [data.createUser ? "user_Email" : "Email"], message: "A contact email is required." })
-            if (!derivedContactPhone) ctx.addIssue({ code: z.ZodIssueCode.custom, path: [data.createUser ? "user_Phone" : "Phone"], message: "A contact phone is required." })
+            if (!derivedContactName) {
+                ctx.addIssue({ code: z.ZodIssueCode.custom, path: [data.createUser ? "user_FirstName" : "Name"], message: "A contact name is required." })
+            }
+            if (!derivedContactEmail) {
+                ctx.addIssue({ code: z.ZodIssueCode.custom, path: [data.createUser ? "user_Email" : "Email"], message: "A contact email is required." })
+            }
+            if (!derivedContactPhone) {
+                ctx.addIssue({ code: z.ZodIssueCode.custom, path: [data.createUser ? "user_Phone" : "Phone"], message: "A contact phone is required." })
+            }
         }
 
         if (tenantFlow && !(data.user_Remarks ?? "").trim()) {
@@ -377,7 +494,10 @@ export const useRegisterForm = () => {
             PhysicalAddress: "",
             Website: "",
             types: [],
-            supplier_category_id: null,
+            category_ids: [],
+            contactPersonName: "",
+            contactPersonEmail: "",
+            contactPersonPhone: "",
             user_Remarks: "",
             user_DateOfBirth: "",
             user_MaritalStatus: "",
@@ -542,10 +662,18 @@ export const useRegisterForm = () => {
         setDocumentFiles((prev) => ({ ...prev, [requirementId]: file }))
         setDocumentErrors((prev) => {
             const next = { ...prev }
-            delete next[requirementId]
+            const requirement = metadata.supplierDocumentRequirements.find((entry) => entry.id === requirementId)
+            const validationMessage = requirement ? validateDocumentFile(requirement, file) : null
+
+            if (validationMessage) {
+                next[requirementId] = validationMessage
+            } else {
+                delete next[requirementId]
+            }
+
             return next
         })
-    }, [])
+    }, [metadata.supplierDocumentRequirements])
 
     const setRegistrationDocumentNote = useCallback((requirementId: number, note: string) => {
         setDocumentNotes((prev) => ({ ...prev, [requirementId]: note }))
@@ -564,8 +692,9 @@ export const useRegisterForm = () => {
 
         const nextDocumentErrors: Record<number, string> = {}
         metadata.supplierDocumentRequirements.forEach((requirement) => {
-            if (requirement.isRequired && !documentFiles[requirement.id]) {
-                nextDocumentErrors[requirement.id] = `${requirement.name} is required.`
+            const validationMessage = validateDocumentFile(requirement, documentFiles[requirement.id])
+            if (validationMessage) {
+                nextDocumentErrors[requirement.id] = validationMessage
             }
         })
 
@@ -578,14 +707,15 @@ export const useRegisterForm = () => {
         const isTenant = values.types.includes("TN")
         const isCustomer = values.types.includes("CU")
         const businessType = canonicalizeBusinessTypeValue(values.BusinessType)
-
+        const taxPin = normalizeTaxIdentifier(values.TaxPIN)
+        const vatNumber = normalizeTaxIdentifier(values.VATNumber)
         const payload: Record<string, unknown> = {
             Name: normalizeText(values.Name),
             TradingName: normalizeText(values.TradingName),
             BusinessType: businessType,
             RegistrationNumber: normalizeText(values.RegistrationNumber),
-            TaxPIN: normalizeText(values.TaxPIN),
-            VATNumber: normalizeText(values.VATNumber),
+            TaxPIN: taxPin,
+            VATNumber: vatNumber,
             PhysicalAddress: normalizeText(values.PhysicalAddress),
             Website: normalizeText(values.Website),
             Country: normalizeText(values.Country),
@@ -606,20 +736,15 @@ export const useRegisterForm = () => {
         }
 
         if (isSupplier) {
-            payload.supplier_category_id = values.supplier_category_id ?? undefined
-            payload.legalForm = businessType
-        }
+            const categoryIds = values.category_ids ?? []
+            const primaryCategoryId = categoryIds[0]
 
-        if (isSupplier && isCompanyLikeBusinessType(values.BusinessType)) {
-            payload.contactPersonName = values.createUser
-                ? joinContactPersonName(values.user_FirstName, values.user_LastName)
-                : normalizeText(values.Name)
-            payload.contactPersonEmail = values.createUser
-                ? normalizeText(values.user_Email)
-                : normalizeText(values.Email)
-            payload.contactPersonPhone = values.createUser
-                ? normalizePhoneNumber(values.user_Phone)
-                : normalizePhoneNumber(values.Phone)
+            payload.category_ids = categoryIds
+            if (primaryCategoryId != null) {
+                payload.supplier_category_id = primaryCategoryId
+                payload.primary_category_id = primaryCategoryId
+            }
+            payload.legalForm = businessType
         }
 
         if (isTenant) {
@@ -680,7 +805,7 @@ export const useRegisterForm = () => {
                 return
             }
 
-            const fieldKey = SERVER_ERROR_FIELD_ALIASES[key] ?? key
+            const fieldKey = resolveServerErrorFieldKey(key)
             form.setError(fieldKey as never, { message: getSafeServerFieldMessage(fieldKey, first) })
             hasFieldErrors = true
         })
@@ -696,14 +821,52 @@ export const useRegisterForm = () => {
         clearUploadErrors()
         form.clearErrors(fields as never)
 
-        const response = await fetch("/api/portal/auth/register/validate-step", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Accept: "application/json" },
-            body: JSON.stringify({
+        const payload = buildPayload(values)
+        const stepPayload = Object.fromEntries(
+            Object.entries(payload).filter(([key]) => fields.includes(key))
+        )
+
+        if (fields.includes("category_ids")) {
+            if (payload.supplier_category_id != null) {
+                stepPayload.supplier_category_id = payload.supplier_category_id
+            }
+
+            if (payload.primary_category_id != null) {
+                stepPayload.primary_category_id = payload.primary_category_id
+            }
+        }
+
+        const isSupplierMultipartStep = step === "supplier" && values.types.includes("SU")
+        const headers: HeadersInit = isSupplierMultipartStep
+            ? { Accept: "application/json" }
+            : { "Content-Type": "application/json", Accept: "application/json" }
+        const body: BodyInit = isSupplierMultipartStep
+            ? (() => {
+                const requestBody = new FormData()
+                appendRequestValue(requestBody, "step", step)
+                fields.forEach((field) => requestBody.append("fields", field))
+                Object.entries(stepPayload).forEach(([key, value]) => appendRequestValue(requestBody, key, value))
+                Object.entries(documentFiles).forEach(([key, file]) => {
+                    if (!(file instanceof File)) return
+                    requestBody.append(`registration_documents[${key}]`, file)
+                })
+                Object.entries(documentNotes).forEach(([key, note]) => {
+                    const normalizedNote = normalizeText(note)
+                    if (!normalizedNote) return
+                    requestBody.append(`registration_document_notes[${key}]`, normalizedNote)
+                })
+                return requestBody
+            })()
+            : JSON.stringify({
                 step,
                 fields,
-                ...buildPayload(values),
-            }),
+                ...stepPayload,
+            })
+
+        const response = await fetch("/api/portal/auth/register/validate-step", {
+            method: "POST",
+            headers,
+            body,
         })
 
         const result = await response.json().catch(() => null)
@@ -722,7 +885,7 @@ export const useRegisterForm = () => {
             valid: false,
             message,
         }
-    }, [applyServerValidationErrors, buildPayload, clearUploadErrors, form])
+    }, [applyServerValidationErrors, buildPayload, clearUploadErrors, documentFiles, documentNotes, form])
 
     const registerThirdParty = useCallback(async (values: RegisterFormInputs): Promise<RegisterThirdPartyResult> => {
         lastRegisterResponseRef.current = null

@@ -2,8 +2,8 @@ import { Metadata } from "next"
 import { getServerSession } from "next-auth"
 import { redirect } from "next/navigation"
 
-import RegisterForm from "@/components/signin/register-form"
 import { authOptions } from "@/lib/auth-options"
+import RegisterForm from "@/components/signin/register-form"
 
 export const metadata: Metadata = {
   title: "Create Account | Portal",

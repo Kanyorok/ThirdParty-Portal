@@ -5,25 +5,43 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
     AlertCircle,
+    ArrowRight,
     BriefcaseBusiness,
     Building2,
+    Check,
     CheckCircle2,
     ChevronLeft,
     ChevronRight,
+    ChevronsUpDown,
     CircleCheck,
     Eye,
     EyeClosed,
-    FileCheck2,
-    LucideIcon,
-    ShieldCheck,
-    X,
     UserCog,
+    X,
 } from "lucide-react"
 
-import Loading from "../common/custom_loader"
 import { Button } from "../common/button"
+import { Checkbox } from "../common/checkbox"
+import { Field as SharedField, FieldLabel as SharedFieldLabel, FieldLegend, FieldSet } from "../common/field"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "../common/dialog"
 import { Alert, AlertDescription, AlertTitle } from "../common/alert"
+import {
+    Command,
+    CommandEmpty,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from "../common/command"
 import { Input } from "../common/input"
+import { Popover, PopoverContent, PopoverTrigger } from "../common/popover"
+import { RadioGroup, RadioGroupItem } from "../common/radio-group"
 import { Textarea } from "../common/textarea"
 import {
     Select,
@@ -32,33 +50,38 @@ import {
     SelectTrigger,
     SelectValue,
 } from "../common/select"
+import { toast } from "sonner"
 import { cn } from "../../lib/utils"
-import { CLIENT_APP_NAME_STRING } from "../../config/client-config"
 import { type RegisterFormInputs, type RegisterRole, type RegisterThirdPartyResult, useRegisterForm } from "../../hooks/use-register"
 
-const ROLE_OPTIONS: Array<{ id: RegisterRole; label: string; icon: LucideIcon }> = [
-    { id: "SU", label: "Supplier", icon: BriefcaseBusiness },
-    { id: "TN", label: "Tenant", icon: Building2 },
-    { id: "CU", label: "Customer", icon: UserCog },
+const ROLE_OPTIONS: Array<{ id: RegisterRole; label: string }> = [
+    { id: "SU", label: "Supplier" },
+    { id: "TN", label: "Tenant" },
+    { id: "CU", label: "Customer" },
 ]
 
-const labelStyle = "flex min-h-5 items-center gap-2 text-[14px] font-semibold leading-5 tracking-[0.01em] text-slate-950"
-const inputBaseClass = "h-12 rounded-[6px] border-slate-300 bg-white px-3.5 text-[15px] font-semibold text-slate-950 caret-primary transition-[border-color,background-color,box-shadow] placeholder:text-sm placeholder:font-medium placeholder:text-slate-500 hover:border-slate-400 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/14 focus-visible:shadow-[0_0_0_1px_rgba(0,92,144,0.14)]"
-const inputErrorClass = "border-rose-400 bg-rose-50 focus-visible:border-rose-500 focus-visible:ring-rose-200 focus-visible:shadow-none"
+const labelStyle = "flex min-h-5 items-center gap-2 text-xs font-bold uppercase tracking-[0.1em] text-slate-600"
+const inputBaseClass = "h-11 rounded-lg border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-950 transition-[border-color,background-color,box-shadow] placeholder:text-sm placeholder:font-normal placeholder:text-slate-400 hover:border-slate-300 focus-visible:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-100 focus-visible:shadow-[0_0_0_3px_rgba(59,130,246,0.1)]"
+const inputErrorClass = "border-red-300 bg-red-50 focus-visible:border-red-500 focus-visible:ring-red-100 focus-visible:shadow-none hover:border-red-300"
 const inputStyle = `${inputBaseClass} pr-10`
-const textAreaStyle = "min-h-28 rounded-[6px] border-slate-300 bg-white px-3.5 py-3 text-[15px] font-semibold text-slate-950 transition-[border-color,background-color,box-shadow] placeholder:text-sm placeholder:font-medium placeholder:text-slate-500 hover:border-slate-400 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/14 focus-visible:shadow-[0_0_0_1px_rgba(0,92,144,0.14)]"
-const fileInputStyle = "h-12 rounded-[6px] border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-[border-color,background-color,box-shadow] file:mr-3 file:rounded-[4px] file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-slate-700 hover:border-slate-400 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/14"
-const selectStyle = "h-12 w-full rounded-[6px] border-slate-300 bg-white px-3.5 text-[15px] font-semibold text-slate-950 transition-[border-color,background-color,box-shadow] hover:border-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/14 focus:shadow-[0_0_0_1px_rgba(0,92,144,0.14)]"
-const errorStyle = "mt-1.5 flex items-center gap-1 text-sm font-medium text-rose-600"
-const endButtonClass = "absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-500 hover:text-slate-800"
-const submitButtonClass = "group h-[54px] w-full rounded-[8px] bg-primary text-sm font-bold tracking-[0.08em] uppercase shadow-[0_16px_28px_-18px_rgba(0,92,144,0.42)] ring-1 ring-primary/20 transition-[transform,background-color,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:bg-[var(--primary-hover)] hover:shadow-[0_18px_30px_-18px_rgba(0,92,144,0.48)] active:translate-y-0 active:shadow-[0_10px_16px_-14px_rgba(0,92,144,0.34)] disabled:translate-y-0 disabled:bg-primary/70 disabled:shadow-none"
-const secondaryButtonClass = "h-[54px] w-full rounded-[8px] border border-slate-300 bg-white text-sm font-bold tracking-[0.08em] uppercase text-slate-700 transition-[border-color,color,background-color] hover:border-slate-400 hover:text-slate-950"
-const linkClass = "transition-[color,opacity,transform,text-decoration-color] duration-200 ease-out hover:text-primary hover:underline hover:underline-offset-4"
-const signInLinkClass = "group inline-flex w-full items-center justify-center gap-2 rounded-[12px] border border-slate-300 bg-white px-4 py-3.5 text-sm font-bold text-slate-800 transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_12px_20px_-18px_rgba(15,23,42,0.4)] sm:w-auto"
-const sectionCardClass = "p-0"
-const formSectionGridClass = "mt-5 grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2 md:items-start"
-const fieldBlockClass = "grid content-start gap-2.5"
-type StepId = "role-setup" | "business" | "supplier-documents" | "profile-details" | "user-access"
+const textAreaStyle = "min-h-28 rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-medium text-slate-950 transition-[border-color,background-color,box-shadow] placeholder:text-sm placeholder:font-normal placeholder:text-slate-400 hover:border-slate-300 focus-visible:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-100 focus-visible:shadow-[0_0_0_3px_rgba(59,130,246,0.1)]"
+const fileInputStyle = "h-11 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-[border-color,background-color,box-shadow] file:mr-2.5 file:rounded-md file:border-0 file:bg-slate-100 file:px-2.5 file:py-1.5 file:text-xs file:font-medium file:text-slate-700 hover:border-slate-300 focus-visible:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-100"
+const selectStyle = "h-11 w-full rounded-lg border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-950 transition-[border-color,background-color,box-shadow] hover:border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-100 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.1)]"
+const endButtonClass = "absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+const submitButtonClass = "h-11 w-full rounded-full border border-slate-950 bg-slate-950 px-5 text-sm font-semibold tracking-[0.01em] text-white transition-[background-color,border-color,color,transform] duration-150 hover:-translate-y-0.5 hover:border-slate-800 hover:bg-slate-800 active:translate-y-0 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300 disabled:text-white/90"
+const secondaryButtonClass = "h-11 w-full rounded-full border border-slate-300 bg-white px-5 text-sm font-semibold tracking-[0.01em] text-slate-900 transition-[border-color,background-color,color,transform] duration-150 hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50 active:translate-y-0"
+const navigationPrimaryButtonClass = "h-11 w-full rounded-lg border border-slate-950 bg-slate-950 px-5 text-sm font-semibold text-white transition-[background-color,border-color,color] duration-150 hover:border-slate-800 hover:bg-slate-800 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300 disabled:text-white/90"
+const navigationSecondaryButtonClass = "h-11 w-full rounded-lg border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-900 transition-[border-color,background-color,color] duration-150 hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
+const linkClass = "text-blue-600 transition-colors duration-150 hover:text-blue-700 hover:underline"
+const signInLinkClass = "inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 transition-[border-color,background-color,color,transform] duration-150 hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50 sm:w-auto"
+const sectionCardClass = "pt-4 sm:pt-5 lg:pt-6"
+const formSectionGridClass = "mt-4 grid grid-cols-1 gap-4 sm:mt-5 sm:gap-5 md:grid-cols-2 md:items-start"
+const fieldBlockClass = "grid content-start gap-2"
+const popoverTriggerClass = "h-11 w-full justify-between rounded-lg border-slate-200 bg-white px-3.5 text-sm font-medium shadow-none hover:bg-white"
+const popoverContentClass = "w-[var(--radix-popover-trigger-width)] min-w-[var(--radix-popover-trigger-width)] border-slate-200 bg-white p-0 shadow-none"
+const popoverItemClass = "gap-2.5 px-3 py-2.5"
+
+type StepId = "business" | "account" | "type-specific"
 
 type StepMeta = {
     id: StepId
@@ -67,35 +90,150 @@ type StepMeta = {
     fields: string[]
 }
 
-function AuthAlert({ id, message, onDismiss }: { id: string; message: string; onDismiss?: () => void }) {
+const SERVER_STEP_BY_FORM_STEP: Record<StepId, "business" | "account" | "supplier"> = {
+    business: "business",
+    account: "account",
+    "type-specific": "supplier",
+}
+
+const FIELD_LABELS: Partial<Record<string, string>> = {
+    types: "business role",
+    Name: "legal name",
+    TradingName: "trading name",
+    BusinessType: "business type",
+    category_ids: "supplier categories",
+    RegistrationNumber: "registration number",
+    TaxPIN: "tax PIN",
+    VATNumber: "VAT number",
+    Email: "business email",
+    Phone: "company phone number",
+    PhysicalAddress: "physical address",
+    Website: "website",
+    Country: "country",
+    Location: "location",
+    registration_documents: "supplier documents",
+    registration_document_notes: "document notes",
+    user_Remarks: "tenant remarks",
+    user_DateOfBirth: "date of birth",
+    user_MaritalStatus: "marital status",
+    user_Occupation: "occupation",
+    user_Gender: "gender",
+    user_FirstName: "first name",
+    user_LastName: "last name",
+    user_Email: "email",
+    user_Phone: "phone number",
+    user_Password: "password",
+    user_Password_confirmation: "confirm password",
+}
+
+const SELECT_FIELDS = new Set(["BusinessType", "Country", "Location", "user_MaritalStatus", "user_Occupation", "user_Gender"])
+const GENERIC_ERROR_PATTERN = /^(required|validation error|this field is required\.?|please review this field\.?)$/i
+
+const getFieldLabel = (field?: string, fallback?: string) => {
+    if (fallback) return fallback
+    if (!field) return "this field"
+    return FIELD_LABELS[field] ?? field.replace(/_/g, " ").toLowerCase()
+}
+
+const getFieldPrompt = (field?: string, fallback?: string) => {
+    const label = getFieldLabel(field, fallback)
+    if (SELECT_FIELDS.has(String(field))) return `Select ${label}.`
+    return `Enter ${label}.`
+}
+
+const normalizeErrorMessage = (message?: string | null, label?: string, showGeneric = true) => {
+    if (!message) return null
+
+    const normalized = message.trim().replace(/\s+/g, " ")
+    if (!normalized) return null
+    if (GENERIC_ERROR_PATTERN.test(normalized)) {
+        if (!showGeneric) return null
+        return label ? `${label} is required.` : "This field is required."
+    }
+
+    return normalized
+}
+
+const isRequiredOnlyMessage = (message?: string | null, label?: string) => {
+    const normalized = normalizeErrorMessage(message, label, true)
+    if (!normalized) return false
+
+    if (normalized === "This field is required.") return true
+    if (!label) return false
+
+    return normalized.toLowerCase() === `${label.toLowerCase()} is required.`
+}
+
+function FeedbackAlert({
+    id,
+    tone = "error",
+    title,
+    message,
+    onDismiss,
+    summarize = false,
+}: {
+    id?: string
+    tone?: "error" | "success"
+    title?: string
+    message: string
+    onDismiss?: () => void
+    summarize?: boolean
+}) {
     const items = message
         .split("\n")
         .map((item) => item.trim())
         .filter(Boolean)
         .map((item) => item.replace(/^-+\s*/, ""))
+        .map((item) => normalizeErrorMessage(item, undefined, false) ?? item)
+
     const issueCount = items.length
-    const title = issueCount > 1 ? `${issueCount} issues need attention` : "Validation error"
+    const computedTitle = title ?? (tone === "success"
+        ? "Success"
+        : issueCount > 1
+            ? `Review ${issueCount} fields`
+            : "Please review")
+    const Icon = tone === "success" ? CheckCircle2 : AlertCircle
 
     return (
-        <Alert id={id} variant="destructive" aria-live="assertive" aria-atomic="true" className="rounded-[10px] border-rose-300/80 bg-rose-50/95 pr-11 text-rose-700 [&>svg]:text-rose-700">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle className="text-rose-900">{title}</AlertTitle>
-            <AlertDescription className="text-rose-700">
-                {items.length > 1 ? (
-                    <ul className="list-disc space-y-1 pl-5">
-                        {items.map((item, index) => (
-                            <li key={`${item}-${index}`}>{item}</li>
-                        ))}
-                    </ul>
-                ) : (
-                    <p>{items[0] || message}</p>
-                )}
-            </AlertDescription>
+        <Alert
+            id={id}
+            variant={tone === "error" ? "destructive" : "default"}
+            aria-live={tone === "error" ? "assertive" : "polite"}
+            aria-atomic="true"
+            className={cn(
+                "relative rounded-xl border px-4 py-4 pr-10 shadow-none",
+                tone === "error"
+                    ? "border-red-200 bg-red-50/90 text-red-950"
+                    : "border-emerald-200 bg-emerald-50/90 text-emerald-950"
+            )}
+        >
+            <Icon className={cn("h-4 w-4", tone === "error" ? "text-red-600" : "text-emerald-600")} />
+            <AlertTitle className={cn("text-sm font-semibold", tone === "error" ? "text-red-950" : "text-emerald-950")}>
+                {computedTitle}
+            </AlertTitle>
+            {!summarize ? (
+                <AlertDescription className={cn("mt-1.5 text-sm leading-5", tone === "error" ? "text-red-900" : "text-emerald-900")}>
+                    {items.length > 1 ? (
+                        <ul className="list-disc space-y-0.5 pl-5">
+                            {items.map((item, index) => (
+                                <li key={`${item}-${index}`}>{item}</li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p>{items[0] || message}</p>
+                    )}
+                </AlertDescription>
+            ) : null}
             {onDismiss ? (
                 <button
                     type="button"
                     onClick={onDismiss}
-                    className="absolute right-2 top-2 inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-rose-600 transition-colors hover:bg-rose-100 hover:text-rose-800"
+                    className={cn(
+                        "absolute right-3 top-3 inline-flex h-6 w-6 items-center justify-center rounded-md transition-colors",
+                        tone === "error"
+                            ? "text-red-400 hover:bg-red-100 hover:text-red-700"
+                            : "text-emerald-500 hover:bg-emerald-100 hover:text-emerald-700"
+                    )}
                     aria-label="Dismiss alert"
                 >
                     <X className="h-4 w-4" />
@@ -105,78 +243,56 @@ function AuthAlert({ id, message, onDismiss }: { id: string; message: string; on
     )
 }
 
-function StatusAlert({ message }: { message: string }) {
-    return (
-        <Alert role="status" aria-live="polite" aria-atomic="true" className="rounded-[10px] border-emerald-300/80 bg-emerald-50/95 text-emerald-700 [&>svg]:text-emerald-700">
-            <CheckCircle2 className="h-4 w-4" />
-            <AlertTitle className="text-emerald-900">Progress update</AlertTitle>
-            <AlertDescription className="text-emerald-700">
-                <p>{message}</p>
-            </AlertDescription>
-        </Alert>
-    )
-}
-
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
     return (
         <label className={labelStyle}>
             {children}
-            {required ? <span className="text-rose-600"> *</span> : null}
+            {required ? <span className="text-red-500"> *</span> : null}
         </label>
     )
 }
 
-function FieldError({ message }: { message?: string | null }) {
-    if (!message) return null
-    return (
-        <p className={errorStyle}>
-            <AlertCircle className="h-3 w-3" />
-            {message}
-        </p>
-    )
-}
-
-function SectionTitle({
-    title,
-    description,
-    icon: Icon,
-}: {
-    title: string
-    description?: string
-    icon?: LucideIcon
-}) {
-    return (
-        <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-                {Icon ? <Icon className="h-4 w-4 text-primary" /> : null}
-                <h2 className="text-[17px] font-bold tracking-tight text-slate-950">{title}</h2>
-            </div>
-            {description ? <p className="text-sm font-medium leading-6 text-slate-600">{description}</p> : null}
-        </div>
-    )
+function FieldError({ message, label, touched = true }: { message?: string | null; label?: string; touched?: boolean }) {
+    return null
 }
 
 function FieldShell({
     label,
+    errorLabel,
+    touched,
     required,
     error,
-    hint,
     className,
     children,
 }: {
     label: React.ReactNode
+    errorLabel?: string
+    touched?: boolean
     required?: boolean
     error?: string | null
-    hint?: React.ReactNode
     className?: string
     children: React.ReactNode
 }) {
     return (
-        <div className={cn("grid gap-2.5", className)}>
+        <div className={cn("grid gap-1.5", className)}>
             <FieldLabel required={required}>{label}</FieldLabel>
             {children}
-            {hint ? <p className="text-sm font-medium leading-6 text-slate-500">{hint}</p> : null}
-            <FieldError message={error} />
+            <FieldError message={error} label={errorLabel} touched={touched} />
+        </div>
+    )
+}
+
+function CenteredAuthLoading({ label, className }: { label: string; className?: string }) {
+    return (
+        <div className={cn("flex h-full min-h-[12rem] w-full items-center justify-center", className)}>
+            <div className="flex flex-col items-center justify-center gap-3 text-center">
+                <span className="loader-bars loader-bars--inline [&>span]:bg-slate-900 [&>span]:shadow-none" aria-hidden="true">
+                    <span />
+                    <span />
+                    <span />
+                </span>
+                <p className="text-sm font-medium text-slate-600">{label}</p>
+            </div>
         </div>
     )
 }
@@ -190,7 +306,7 @@ function SelectFieldBlock({
     onValueChange,
     options,
     disabled,
-    hint,
+    touched,
     className,
 }: {
     label: React.ReactNode
@@ -201,13 +317,13 @@ function SelectFieldBlock({
     onValueChange: (value: string) => void
     options: Array<{ value: string; label: string }>
     disabled?: boolean
-    hint?: React.ReactNode
+    touched?: boolean
     className?: string
 }) {
     const controlledValue = value ?? ""
 
     return (
-        <FieldShell label={label} required={required} error={error} hint={hint} className={className}>
+        <FieldShell label={label} errorLabel={typeof label === "string" ? label : undefined} touched={touched} required={required} error={error} className={className}>
             <Select value={controlledValue} onValueChange={onValueChange} disabled={disabled}>
                 <SelectTrigger className={cn(selectStyle, error && inputErrorClass)} aria-required={required ? "true" : undefined}>
                     <SelectValue placeholder={placeholder} />
@@ -224,6 +340,87 @@ function SelectFieldBlock({
     )
 }
 
+function CompactComboboxField({
+    label,
+    required,
+    error,
+    placeholder,
+    value,
+    onChange,
+    options,
+    disabled,
+    touched,
+    className,
+    searchPlaceholder,
+    emptyMessage,
+}: {
+    label: React.ReactNode
+    required?: boolean
+    error?: string | null
+    placeholder: string
+    value?: string
+    onChange: (value: string) => void
+    options: Array<{ value: string; label: string }>
+    disabled?: boolean
+    touched?: boolean
+    className?: string
+    searchPlaceholder?: string
+    emptyMessage?: string
+}) {
+    const [open, setOpen] = React.useState(false)
+    const selectedOption = options.find((option) => option.value === value)
+
+    return (
+        <FieldShell label={label} errorLabel={typeof label === "string" ? label : undefined} touched={touched} required={required} error={error} className={className}>
+            <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        disabled={disabled}
+                        className={cn(
+                            popoverTriggerClass,
+                            error && inputErrorClass,
+                        )}
+                        aria-required={required ? "true" : undefined}
+                    >
+                        <span className={cn("truncate", selectedOption ? "text-slate-950" : "text-slate-500")}>
+                            {selectedOption?.label ?? placeholder}
+                        </span>
+                        <ChevronsUpDown className="h-4 w-4 text-slate-400" />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className={popoverContentClass} align="start">
+                    <Command className="rounded-lg bg-white">
+                        <CommandInput placeholder={searchPlaceholder ?? placeholder} />
+                        <CommandList className="max-h-64">
+                            <CommandEmpty>{emptyMessage ?? "No results found."}</CommandEmpty>
+                            {options.map((option) => {
+                                const selected = option.value === value
+
+                                return (
+                                    <CommandItem
+                                        key={option.value}
+                                        value={option.label}
+                                        onSelect={() => {
+                                            onChange(option.value)
+                                            setOpen(false)
+                                        }}
+                                        className={popoverItemClass}
+                                    >
+                                        <Check className={cn("h-4 w-4", selected ? "text-primary opacity-100" : "opacity-0")} />
+                                        <span className="truncate text-sm text-slate-700">{option.label}</span>
+                                    </CommandItem>
+                                )
+                            })}
+                        </CommandList>
+                    </Command>
+                </PopoverContent>
+            </Popover>
+        </FieldShell>
+    )
+}
+
 function FileFieldBlock({
     label,
     required,
@@ -231,7 +428,7 @@ function FileFieldBlock({
     accept,
     onChange,
     selectedFileName,
-    hint,
+    touched,
     className,
 }: {
     label: React.ReactNode
@@ -240,11 +437,11 @@ function FileFieldBlock({
     accept?: string
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
     selectedFileName?: string | null
-    hint?: React.ReactNode
+    touched?: boolean
     className?: string
 }) {
     return (
-        <FieldShell label={label} required={required} error={error} hint={hint} className={className}>
+        <FieldShell label={label} errorLabel={typeof label === "string" ? label : undefined} touched={touched} required={required} error={error} className={className}>
             <Input type="file" accept={accept} onChange={onChange} className={cn(fileInputStyle, error && inputErrorClass)} />
             {selectedFileName ? (
                 <p className="inline-flex items-center gap-1.5 text-sm font-medium leading-6 text-slate-500">
@@ -256,18 +453,217 @@ function FileFieldBlock({
     )
 }
 
+function RoleSelector({
+    selectedTypes,
+    onToggle,
+    error,
+}: {
+    selectedTypes: RegisterRole[]
+    onToggle: (role: RegisterRole) => void
+    error?: string | null
+}) {
+    const [open, setOpen] = React.useState(false)
+    const selectedRoles = ROLE_OPTIONS.filter((option) => selectedTypes.includes(option.id))
+    const summaryLabel = selectedRoles.length === 0
+        ? "Select business profiles"
+        : selectedRoles.length === 1
+            ? selectedRoles[0].label
+            : `${selectedRoles[0].label} +${selectedRoles.length - 1}`
+
+    return (
+        <FieldSet className="w-full gap-3">
+            <FieldLegend variant="label" className="mb-0 text-sm font-bold uppercase tracking-[0.08em] text-slate-800">
+                Choose a profile
+            </FieldLegend>
+            <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className={cn(
+                            popoverTriggerClass,
+                            error && inputErrorClass,
+                        )}
+                    >
+                        <span className={cn("truncate", selectedRoles.length > 0 ? "text-slate-950" : "text-slate-500")}>
+                            {summaryLabel}
+                        </span>
+                        <ChevronsUpDown className="h-4 w-4 text-slate-400" />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className={popoverContentClass} align="start">
+                    <Command className="rounded-lg bg-white">
+                        <CommandInput placeholder="Search profiles" />
+                        <CommandList className="max-h-64">
+                            <CommandEmpty>No profiles found.</CommandEmpty>
+                            {ROLE_OPTIONS.map((option) => {
+                                const selected = selectedTypes.includes(option.id)
+
+                                return (
+                                    <CommandItem
+                                        key={option.id}
+                                        value={option.label}
+                                        onSelect={() => onToggle(option.id)}
+                                        className={popoverItemClass}
+                                    >
+                                        <Check className={cn("h-4 w-4", selected ? "text-primary opacity-100" : "opacity-0")} />
+                                        <span className="truncate text-sm text-slate-700">{option.label}</span>
+                                    </CommandItem>
+                                )
+                            })}
+                        </CommandList>
+                    </Command>
+                </PopoverContent>
+            </Popover>
+
+            <div className="min-h-5">
+                {error ? <FieldError message={error} label="Business role" /> : null}
+            </div>
+        </FieldSet>
+    )
+}
+
+function CreateUserSelector({
+    value,
+    onChange,
+}: {
+    value: boolean
+    onChange: (nextValue: boolean) => void
+}) {
+    return (
+        <FieldSet className="w-full gap-3">
+            <FieldLegend variant="label" className="mb-0 text-sm font-bold uppercase tracking-[0.08em] text-slate-800">
+                Create a user?
+            </FieldLegend>
+            <RadioGroup
+                value={value ? "yes" : "no"}
+                onValueChange={(nextValue) => onChange(nextValue === "yes")}
+                className="gap-2"
+            >
+                <SharedField
+                    orientation="horizontal"
+                    className={cn(
+                        "min-h-0 cursor-pointer items-center gap-2 py-1 shadow-none transition-colors",
+                        value ? "text-slate-950" : "text-slate-600 hover:text-slate-900",
+                    )}
+                >
+                    <RadioGroupItem value="yes" id="create-user-yes" className="border-slate-300" />
+                    <SharedFieldLabel htmlFor="create-user-yes" className="w-auto flex-none font-normal text-sm text-current">
+                        Yes
+                    </SharedFieldLabel>
+                </SharedField>
+                <SharedField
+                    orientation="horizontal"
+                    className={cn(
+                        "min-h-0 cursor-pointer items-center gap-2 py-1 shadow-none transition-colors",
+                        !value ? "text-slate-950" : "text-slate-600 hover:text-slate-900",
+                    )}
+                >
+                    <RadioGroupItem value="no" id="create-user-no" className="border-slate-300" />
+                    <SharedFieldLabel htmlFor="create-user-no" className="w-auto flex-none font-normal text-sm text-current">
+                        No
+                    </SharedFieldLabel>
+                </SharedField>
+            </RadioGroup>
+        </FieldSet>
+    )
+}
+
+function SupplierCategorySelector({
+    categories,
+    selectedCategoryIds,
+    selectedCategories,
+    onChange,
+    error,
+    className,
+}: {
+    categories: Array<{ id: number; name: string }>
+    selectedCategoryIds: number[]
+    selectedCategories: Array<{ id: number; name: string }>
+    onChange: (nextValue: number[]) => void
+    error?: string | null
+    className?: string
+}) {
+    const [open, setOpen] = React.useState(false)
+
+    const summaryLabel = selectedCategories.length === 0
+        ? "Select supplier categories"
+        : selectedCategories.length === 1
+            ? selectedCategories[0].name
+            : `${selectedCategories[0].name} +${selectedCategories.length - 1}`
+
+    const toggleCategory = (categoryId: number) => {
+        const nextValues = selectedCategoryIds.includes(categoryId)
+            ? selectedCategoryIds.filter((entry) => entry !== categoryId)
+            : [...selectedCategoryIds, categoryId]
+
+        onChange(nextValues)
+    }
+
+    return (
+        <FieldShell
+            label="Supplier Categories"
+            required
+            error={error}
+            className={className}
+        >
+            <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className={cn(
+                            popoverTriggerClass,
+                            error && inputErrorClass,
+                        )}
+                    >
+                        <span className={cn("truncate", selectedCategories.length > 0 ? "text-slate-950" : "text-slate-500")}>
+                            {summaryLabel}
+                        </span>
+                        <ChevronsUpDown className="h-4 w-4 text-slate-400" />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className={popoverContentClass} align="start">
+                    <Command className="rounded-lg bg-white">
+                        <CommandInput placeholder="Search supplier categories" />
+                        <CommandList className="max-h-64">
+                            <CommandEmpty>No supplier categories found.</CommandEmpty>
+                            {categories.map((item) => {
+                                const selected = selectedCategoryIds.includes(item.id)
+
+                                return (
+                                    <CommandItem
+                                        key={item.id}
+                                        value={item.name}
+                                        onSelect={() => toggleCategory(item.id)}
+                                        className={popoverItemClass}
+                                    >
+                                        <Check className={cn("h-4 w-4", selected ? "text-primary opacity-100" : "opacity-0")} />
+                                        <span className="truncate text-sm text-slate-700">{item.name}</span>
+                                    </CommandItem>
+                                )
+                            })}
+                        </CommandList>
+                    </Command>
+                </PopoverContent>
+            </Popover>
+        </FieldShell>
+    )
+}
+
 export default function RegisterForm() {
     const router = useRouter()
     const authErrorId = React.useId()
     const [authError, setAuthError] = React.useState<string | null>(null)
-    const [success, setSuccess] = React.useState(false)
+    const [successDialogOpen, setSuccessDialogOpen] = React.useState(false)
     const [successTitle, setSuccessTitle] = React.useState("Registration successful")
     const [successDescription, setSuccessDescription] = React.useState("Your account has been created successfully.")
     const [submitState, setSubmitState] = React.useState<"idle" | "posting" | "success" | "error">("idle")
-    const [submitNotice, setSubmitNotice] = React.useState<string | null>(null)
+    const [pendingAction, setPendingAction] = React.useState<"idle" | "next" | "submit">("idle")
     const [showPassword, setShowPassword] = React.useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = React.useState(false)
-    const [currentStepId, setCurrentStepId] = React.useState<StepId>("role-setup")
+    const [currentStepId, setCurrentStepId] = React.useState<StepId>("business")
+    const [openDocumentNotes, setOpenDocumentNotes] = React.useState<Record<number, boolean>>({})
 
     const {
         form,
@@ -277,7 +673,6 @@ export default function RegisterForm() {
         metadataError,
         isLoadingLocalities,
         isSubmitting,
-        toggleType,
         selectedTypes,
         isSupplier,
         isTenant,
@@ -293,11 +688,12 @@ export default function RegisterForm() {
         validateSupplierDocuments,
         validateRegistrationStep,
         registerThirdParty,
+        toggleType,
     } = useRegisterForm()
 
     const createUser = form.watch("createUser")
     const businessTypeValue = form.watch("BusinessType")
-    const supplierCategoryValue = form.watch("supplier_category_id")
+    const supplierCategoryValues = form.watch("category_ids") ?? []
     const countryValue = form.watch("Country")
     const locationValue = form.watch("Location")
     const genderValue = form.watch("user_Gender")
@@ -305,76 +701,62 @@ export default function RegisterForm() {
     const occupationValue = form.watch("user_Occupation")
 
     const isPosting = submitState === "posting"
-    const isBusy = isSubmitting || isPosting
+    const isBusy = isSubmitting || isPosting || pendingAction !== "idle"
+    const isAdvancing = pendingAction === "next"
+    const isSubmittingAction = isSubmitting || isPosting || pendingAction === "submit"
     const formDescriptionIds = [authError ? authErrorId : null].filter(Boolean).join(" ")
+    const selectedSupplierCategories = React.useMemo(
+        () => metadata.supplierCategories.filter((item) => supplierCategoryValues.includes(item.id)),
+        [metadata.supplierCategories, supplierCategoryValues],
+    )
 
-    const steps = React.useMemo<StepMeta[]>(() => {
-        const dynamicSteps: StepMeta[] = [
-            {
-                id: "role-setup",
-                title: "Roles",
-                description: "Choose the portal profiles and whether to create login access.",
-                fields: ["types"],
-            },
-            {
-                id: "business",
-                title: "Business",
-                description: createUser
-                    ? "Register the organization using official business details."
-                    : "Register the organization using official business details and primary contact information.",
-                fields: [
-                    "Name",
-                    "TradingName",
-                    "BusinessType",
-                    "RegistrationNumber",
-                    "TaxPIN",
-                    "VATNumber",
-                    ...(!createUser ? ["Email", "Phone"] : []),
-                    "Country",
-                    "Location",
-                    "PhysicalAddress",
-                    "Website",
-                    ...(isSupplier ? ["supplier_category_id"] : []),
-                ],
-            },
-        ]
-
-        if (isSupplier) {
-            dynamicSteps.push({
-                id: "supplier-documents",
-                title: "Documents",
-                description: "Upload supplier documents required by the backend.",
-                fields: [],
-            })
-        }
-
-        if (isTenant || isCustomer) {
-            dynamicSteps.push({
-                id: "profile-details",
-                title: "Profile",
-                description: "Provide the extra details required for tenant or customer profiles.",
-                fields: [
-                    ...(isTenant ? ["user_Remarks"] : []),
-                    ...(isCustomer ? ["user_DateOfBirth", "user_MaritalStatus", "user_Occupation", "user_Gender"] : []),
-                ],
-            })
-        }
-
-        if (createUser) {
-            dynamicSteps.push({
-                id: "user-access",
-                title: "Primary Contact",
-                description: "Use one set of details for the primary contact and login account.",
-                fields: ["user_FirstName", "user_LastName", "user_Email", "user_Phone", "user_Gender", "user_Password", "user_Password_confirmation"],
-            })
-        }
-
-        return dynamicSteps
-    }, [createUser, isCustomer, isSupplier, isTenant])
+    const steps = React.useMemo<StepMeta[]>(() => ([
+        {
+            id: "business",
+            title: "Business",
+            description: "",
+            fields: [
+                "types",
+                "Name",
+                "TradingName",
+                "BusinessType",
+                "RegistrationNumber",
+                "TaxPIN",
+                "VATNumber",
+                "Phone",
+                ...(!createUser ? ["Email"] : []),
+                ...(isSupplier ? ["category_ids"] : []),
+                "Country",
+                "Location",
+                "PhysicalAddress",
+                "Website",
+            ],
+        },
+        {
+            id: "account",
+            title: "Account",
+            description: "",
+            fields: [
+                "createUser",
+                ...(createUser ? ["user_FirstName", "user_LastName", "user_Email", "user_Phone", "user_Gender", "user_Password", "user_Password_confirmation"] : []),
+            ],
+        },
+        {
+            id: "type-specific",
+            title: "Type-Specific",
+            description: "",
+            fields: [
+                "types",
+                ...(isSupplier ? ["registration_documents", "registration_document_notes"] : []),
+                ...(isTenant ? ["user_Remarks"] : []),
+                ...(isCustomer ? ["user_DateOfBirth", "user_MaritalStatus", "user_Occupation", "user_Gender"] : []),
+            ],
+        },
+    ]), [createUser, isCustomer, isSupplier, isTenant])
 
     React.useEffect(() => {
         if (!steps.some((step) => step.id === currentStepId)) {
-            setCurrentStepId(steps[steps.length - 1]?.id ?? "role-setup")
+            setCurrentStepId(steps[0]?.id ?? "business")
         }
     }, [currentStepId, steps])
 
@@ -391,11 +773,13 @@ export default function RegisterForm() {
         for (const field of fields) {
             if (errorsMap[field]?.message) {
                 if (!firstField) firstField = field
-                messages.push(errorsMap[field].message as string)
+                const rawMessage = errorsMap[field].message as string
+                const normalizedMessage = normalizeErrorMessage(rawMessage, getFieldLabel(field), false)
+                messages.push(normalizedMessage ?? getFieldPrompt(field))
             }
         }
 
-        if (currentStep?.id === "supplier-documents") {
+        if (currentStep?.id === "type-specific") {
             for (const message of Object.values(documentErrors)) {
                 if (message) messages.push(message)
             }
@@ -437,37 +821,46 @@ export default function RegisterForm() {
             values.createUser ||
             /verify|verification|confirm.+email/i.test(backendMessage)
         const verificationEmail = pickVerificationEmail(values)
+        const approvalMessage = values.types.includes("SU")
+            ? "Supplier approval may still continue after verification."
+            : ""
 
         setSubmitState("success")
-        setSubmitNotice("Registration completed.")
 
         if (verificationRequired) {
-            setSuccessTitle("Check your email")
+            setSuccessTitle("Verify your email")
             setSuccessDescription(
                 verificationEmail
-                    ? `We sent a verification link to ${verificationEmail}.`
-                    : "We sent a verification link to your email address.",
+                    ? approvalMessage
+                        ? `A verification link was sent to ${verificationEmail}.\n${approvalMessage}`
+                        : `A verification link was sent to ${verificationEmail}.`
+                    : approvalMessage
+                        ? `A verification link was sent to your email address.\n${approvalMessage}`
+                        : "A verification link was sent to your email address.",
             )
         } else {
             setSuccessTitle("Registration successful")
-            setSuccessDescription("Your account has been created successfully.")
+            setSuccessDescription(
+                approvalMessage
+                    ? `Your account is ready.\n${approvalMessage}`
+                    : "Your account is ready.",
+            )
         }
 
-        setSuccess(true)
+        setSuccessDialogOpen(true)
     }, [extractRegisterMessage, pickVerificationEmail])
 
     const validateCurrentStep = React.useCallback(async () => {
         setAuthError(null)
-        setSubmitNotice(null)
 
         const fields = currentStep?.fields ?? []
         const formValid = fields.length > 0 ? await form.trigger(fields as never) : true
-        const documentsValid = currentStep?.id === "supplier-documents" ? validateSupplierDocuments() : true
+        const documentsValid = currentStep?.id === "type-specific" ? validateSupplierDocuments() : true
         const valid = formValid && documentsValid
 
         if (!valid) {
             const stepErrors = getStepFieldErrors(fields)
-            const fallbackMessage = "Please fix the validation errors before continuing."
+            const fallbackMessage = "Complete the highlighted fields before continuing."
             const combinedMessage = stepErrors.messages.length > 0
                 ? stepErrors.messages.join("\n")
                 : fallbackMessage
@@ -477,17 +870,22 @@ export default function RegisterForm() {
             return false
         }
 
-        const requiresServerValidation = currentStep?.id === "business"
-        if (requiresServerValidation && currentStep) {
-            const serverValidation = await validateRegistrationStep(currentStep.id, form.getValues(), fields)
+        const serverStep = currentStep ? SERVER_STEP_BY_FORM_STEP[currentStep.id] : undefined
+        if (serverStep && currentStep) {
+            const serverValidation = await validateRegistrationStep(serverStep, form.getValues(), fields)
             if (!serverValidation.valid) {
                 const stepErrors = getStepFieldErrors(fields)
-                const fallbackMessage = serverValidation.message ?? "Please fix the highlighted fields before continuing."
+                const fallbackMessage = stepErrors.messages.length > 0
+                    ? "Complete the highlighted fields before continuing."
+                    : (serverValidation.message || "We couldn't validate this step right now. Try again.")
                 const combinedMessage = stepErrors.messages.length > 0
                     ? stepErrors.messages.join("\n")
                     : fallbackMessage
 
                 setAuthError(combinedMessage)
+                if (stepErrors.messages.length === 0 && serverValidation.message) {
+                    toast.error(serverValidation.message)
+                }
                 if (stepErrors.firstField) form.setFocus(stepErrors.firstField as never)
                 return false
             }
@@ -498,13 +896,18 @@ export default function RegisterForm() {
 
     const handleNextStep = async () => {
         if (isBusy || !currentStep) return
-        const valid = await validateCurrentStep()
-        if (!valid) return
+        setPendingAction("next")
+        try {
+            const valid = await validateCurrentStep()
+            if (!valid) return
 
-        const nextStep = steps[currentStepIndex + 1]
-        if (nextStep) {
-            setCurrentStepId(nextStep.id)
-            window.scrollTo({ top: 0, behavior: "smooth" })
+            const nextStep = steps[currentStepIndex + 1]
+            if (nextStep) {
+                setCurrentStepId(nextStep.id)
+                window.scrollTo({ top: 0, behavior: "smooth" })
+            }
+        } finally {
+            setPendingAction("idle")
         }
     }
 
@@ -522,35 +925,36 @@ export default function RegisterForm() {
         event.preventDefault()
         if (isBusy) return
 
-        const valid = await validateCurrentStep()
-        if (!valid) return
-
+        setPendingAction("submit")
         try {
+            const valid = await validateCurrentStep()
+            if (!valid) return
+
             setSubmitState("posting")
-            setSubmitNotice("Submitting registration")
             const values = form.getValues()
             const registerResponse = await registerThirdParty(values)
             if (registerResponse?.success) handleRegistrationSuccess(values, registerResponse)
-        } catch (error: unknown) {
+        } catch {
             setSubmitState("error")
-            setSubmitNotice("Registration could not be completed.")
-            setAuthError(error instanceof Error ? error.message : "Registration could not be completed. Please try again.")
+            const errorMessage = "Registration could not be completed. Check the highlighted fields and try again."
+            setAuthError(errorMessage)
+            toast.error(errorMessage)
+        } finally {
+            setPendingAction("idle")
         }
     }
 
     const getSubmitButtonLabel = () => {
-        if (submitState === "posting") return "Submitting registration"
+        if (isSubmittingAction) return "Submitting registration"
         if (submitState === "error") return "Try Again"
         return "Create Account"
     }
 
     if (isLoadingMetadata) {
         return (
-            <main className="relative flex min-h-dvh items-center bg-slate-50 px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
-                <div className="relative mx-auto flex w-full max-w-6xl items-center justify-center">
-                    <div className="w-full px-1 sm:px-2 lg:px-4">
-                        <Loading fullScreen={false} className="py-24" />
-                    </div>
+            <main className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-50 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+                <div className="relative mx-auto flex w-full max-w-3xl items-center justify-center">
+                    <CenteredAuthLoading label="Loading registration" className="min-h-[16rem]" />
                 </div>
             </main>
         )
@@ -558,40 +962,10 @@ export default function RegisterForm() {
 
     if (metadataError) {
         return (
-            <main className="relative flex min-h-dvh items-center bg-slate-50 px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
-                <div className="relative mx-auto flex w-full max-w-6xl items-center justify-center">
-                    <section className="w-full max-w-[820px] rounded-[10px] border border-slate-300 bg-transparent px-5 py-7 shadow-[0_18px_36px_-30px_rgba(15,23,42,0.16)] sm:rounded-[12px] sm:px-8 sm:py-9 lg:px-10 lg:py-10">
-                        <AuthAlert id={authErrorId} message={metadataError} />
-                    </section>
-                </div>
-            </main>
-        )
-    }
-
-    if (success) {
-        return (
-            <main className="relative flex min-h-dvh items-center bg-slate-50 px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
-                <div className="relative mx-auto flex w-full max-w-5xl items-center justify-center">
-                    <section className="w-full max-w-[560px] rounded-[10px] border border-slate-300 bg-transparent px-5 py-7 shadow-[0_18px_36px_-30px_rgba(15,23,42,0.16)] sm:rounded-[12px] sm:px-8 sm:py-9 lg:px-10 lg:py-10">
-                        <div className="mx-auto w-full max-w-md space-y-8 text-center">
-                            <header className="space-y-5 border-b border-slate-300 pb-6">
-                                <div className="space-y-3">
-                                    <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-600" />
-                                    <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-[2rem]">{successTitle}</h1>
-                                    <p className="mx-auto max-w-md rounded-[6px] bg-emerald-50 px-4 py-2.5 text-sm font-medium leading-6 text-emerald-700">{successDescription}</p>
-                                </div>
-                                <div className="mx-auto h-px w-16 bg-primary/70" />
-                            </header>
-
-                            <div className="grid gap-4">
-                                <Button onClick={() => router.replace("/signin")} className={submitButtonClass}>
-                                    <span className="inline-flex items-center gap-2.5">
-                                        <CircleCheck className="h-4 w-4" />
-                                        <span>Sign in</span>
-                                    </span>
-                                </Button>
-                            </div>
-                        </div>
+            <main className="relative flex min-h-dvh items-center bg-slate-50 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+                <div className="relative mx-auto flex w-full max-w-3xl items-center justify-center">
+                    <section className="w-full max-w-[720px] rounded-[10px] border border-slate-300 bg-white px-5 py-6 shadow-[0_18px_36px_-30px_rgba(15,23,42,0.16)] sm:rounded-[12px] sm:px-8 sm:py-8 lg:px-10 lg:py-9">
+                        <FeedbackAlert id={authErrorId} message={metadataError} />
                     </section>
                 </div>
             </main>
@@ -599,498 +973,517 @@ export default function RegisterForm() {
     }
 
     return (
-        <main className="relative flex min-h-dvh items-center bg-slate-50 px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
-            <div className="relative mx-auto flex w-full max-w-6xl items-center justify-center">
-                <div className="w-full px-1 sm:px-2 lg:px-4">
-                    {isPosting ? (
-                        <div className="absolute inset-0 z-20 bg-white/85 backdrop-blur-[1px]">
-                            <Loading message="Submitting your registration" fullScreen={false} className="h-full bg-transparent py-0" />
-                        </div>
-                    ) : null}
-
-                    <div className="mx-auto w-full max-w-5xl space-y-9">
-                        <header className="space-y-5 border-b border-slate-300 pb-6 text-center">
-                            <div className="space-y-3">
-                                <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-[2rem]">Create your account</h1>
-                                <p className="mx-auto max-w-md rounded-[6px] bg-slate-100 px-4 py-2.5 text-sm font-medium leading-6 text-slate-600">
-                                    Complete your registration details to continue to {CLIENT_APP_NAME_STRING}.
-                                </p>
+        <>
+            <Dialog open={successDialogOpen} onOpenChange={setSuccessDialogOpen}>
+                <DialogContent className="max-w-[calc(100%-2rem)] rounded-2xl border border-slate-200 bg-white p-5 shadow-none sm:max-w-md sm:p-6">
+                    <DialogHeader className="space-y-0 text-left">
+                        <DialogTitle className="sr-only">{successTitle}</DialogTitle>
+                        <DialogDescription className="sr-only">{successDescription}</DialogDescription>
+                        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 sm:p-5">
+                            <div className="flex items-start gap-3">
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                                    <CheckCircle2 className="h-5 w-5" />
+                                </div>
+                                <div className="min-w-0 space-y-1.5">
+                                    <h2 className="text-base font-semibold text-slate-950">{successTitle}</h2>
+                                    <div className="space-y-1 text-sm leading-6 text-slate-600">
+                                        {successDescription.split("\n").filter(Boolean).map((line) => (
+                                            <p key={line}>{line}</p>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
-                            <div className="mx-auto h-px w-16 bg-primary/70" />
-                        </header>
+                        </div>
+                    </DialogHeader>
+                    <DialogFooter className="mt-5 gap-3 sm:flex-col sm:justify-center">
+                        <Button
+                            type="button"
+                            onClick={() => router.replace("/signin")}
+                            className="h-11 w-full rounded-lg border border-slate-950 bg-slate-950 px-5 text-sm font-semibold text-white transition-[background-color,border-color] duration-150 hover:border-slate-800 hover:bg-slate-800"
+                        >
+                            <span className="inline-flex items-center gap-2.5">
+                                <span>Continue to sign in</span>
+                                <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+                            </span>
+                        </Button>
+                        <Button type="button" className="h-11 w-full rounded-lg border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-900 transition-[border-color,background-color] duration-150 hover:border-slate-400 hover:bg-slate-50" onClick={() => setSuccessDialogOpen(false)}>
+                            Close
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            <main className="relative flex min-h-dvh items-center bg-slate-50 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+                <div className="relative mx-auto flex w-full max-w-5xl items-center justify-center">
+                    <section className="relative w-full max-w-[980px] rounded-[10px] border border-slate-300 bg-white shadow-[0_18px_36px_-30px_rgba(15,23,42,0.16)] sm:rounded-[12px]">
+                        {isPosting ? (
+                            <div className="absolute inset-0 z-20 rounded-[10px] bg-white/85 backdrop-blur-sm sm:rounded-[12px]">
+                                <CenteredAuthLoading label="Submitting your registration" className="min-h-0" />
+                            </div>
+                        ) : null}
 
-                        <div className="mx-auto w-full max-w-4xl">
-                            <form onSubmit={handleSubmitForm} className={cn("grid gap-7", isPosting && "pointer-events-none")} noValidate aria-busy={isPosting} aria-describedby={formDescriptionIds || undefined}>
-                                {authError ? <AuthAlert id={authErrorId} message={authError} onDismiss={() => setAuthError(null)} /> : null}
-                                {submitNotice && submitState !== "error" ? <StatusAlert message={submitNotice} /> : null}
+                        <div className="mx-auto w-full max-w-4xl space-y-6 px-5 py-6 sm:space-y-7 sm:px-8 sm:py-8 lg:px-10 lg:py-9">
+                            <header className="space-y-2 pb-1 text-center sm:space-y-3 sm:pb-2">
+                                <div className="space-y-2 sm:space-y-3">
+                                    <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-[2rem]">Create your account</h1>
+                                    <p className="mx-auto max-w-md rounded-[6px] bg-slate-100 px-4 py-2.5 text-sm font-medium leading-6 text-slate-600">
+                                        Complete the details below to register and continue.
+                                    </p>
+                                </div>
+                            </header>
 
-                                {currentStep?.id === "role-setup" ? (
-                                    <section className={sectionCardClass}>
-                                        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
-                                            <div className="rounded-[14px] border border-slate-200 bg-white p-4 sm:p-5">
-                                                <div className="mb-4 flex items-center justify-between gap-3">
-                                                    <h3 className="text-sm font-bold uppercase tracking-[0.08em] text-slate-700">Select profiles</h3>
+                            <div className="grid gap-5 sm:gap-6">
+                                <form onSubmit={handleSubmitForm} className={cn("grid gap-6 sm:gap-7", isPosting && "pointer-events-none")} noValidate aria-busy={isPosting} aria-describedby={formDescriptionIds || undefined}>
+                                    {currentStep?.id === "business" ? (
+                                        <section className={sectionCardClass}>
+                                            <div className={formSectionGridClass}>
+                                                <div className="md:col-span-2 grid gap-4 sm:gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(260px,0.85fr)] lg:items-start">
+                                                    <RoleSelector
+                                                        selectedTypes={selectedTypes ?? []}
+                                                        onToggle={toggleType}
+                                                        error={errors.types?.message as string | undefined}
+                                                    />
+
+                                                    <CreateUserSelector
+                                                        value={createUser}
+                                                        onChange={(nextValue) => form.setValue("createUser", nextValue, { shouldDirty: true, shouldValidate: true })}
+                                                    />
                                                 </div>
 
-                                                <div aria-label="Business role" className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3" role="group">
-                                                    {ROLE_OPTIONS.map((type) => (
-                                                        <button
-                                                            key={type.id}
-                                                            type="button"
-                                                            onClick={() => toggleType(type.id)}
-                                                            className={cn(
-                                                                "group relative min-h-[84px] rounded-[12px] border px-4 py-3.5 text-left transition-[border-color,color,box-shadow,transform]",
-                                                                selectedTypes?.includes(type.id)
-                                                                    ? "border-primary text-primary shadow-[0_12px_20px_-18px_rgba(0,92,144,0.42)] ring-1 ring-primary/20"
-                                                                    : "border-slate-300 text-slate-700 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_12px_18px_-16px_rgba(15,23,42,0.35)]",
-                                                            )}
-                                                            aria-pressed={selectedTypes?.includes(type.id)}
-                                                            aria-label={type.label}
-                                                        >
-                                                            <div className="flex h-full items-center gap-3">
-                                                                <span
-                                                                    className={cn(
-                                                                        "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] border",
-                                                                        selectedTypes?.includes(type.id)
-                                                                            ? "border-primary/30 bg-primary/10"
-                                                                            : "border-slate-200 bg-slate-50",
-                                                                    )}
-                                                                >
-                                                                    <type.icon className={cn("h-5 w-5", selectedTypes?.includes(type.id) ? "text-primary" : "text-slate-500")} />
-                                                                </span>
-                                                                <span className="grid gap-0.5 pr-6">
-                                                                    <span className="text-base font-semibold leading-5 text-current">{type.label}</span>
-                                                                </span>
-                                                                {selectedTypes?.includes(type.id) ? (
-                                                                    <span className="absolute right-2.5 top-2.5 inline-flex items-center justify-center rounded-full bg-primary/10 p-1 text-primary" aria-label="Selected">
-                                                                        <CheckCircle2 className="h-3.5 w-3.5" />
-                                                                    </span>
-                                                                ) : null}
-                                                            </div>
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                                <div className="mt-2.5">
-                                                    <FieldError message={errors.types?.message as string | undefined} />
-                                                </div>
-                                            </div>
-
-                                            <div className="rounded-[14px] border border-slate-200 bg-white p-4 sm:p-5">
-                                                <div className="space-y-1">
-                                                    <h3 className="text-sm font-bold uppercase tracking-[0.08em] text-slate-700">Account User</h3>
+                                                <div className="md:col-span-2">
+                                                    <FieldLabel required>Legal Name</FieldLabel>
+                                                    <Input required autoComplete="organization" {...form.register("Name")} placeholder="Daniel Logistics Limited" className={cn(inputStyle, errors.Name && inputErrorClass)} />
+                                                    <FieldError message={errors.Name?.message as string | undefined} label="Legal name" />
                                                 </div>
 
-                                                <div className="mt-4">
-                                                    <Select
-                                                        value={createUser ? "create" : "skip"}
-                                                        onValueChange={(value) => form.setValue("createUser", value === "create", { shouldDirty: true, shouldValidate: true })}
-                                                    >
-                                                        <SelectTrigger className={cn(selectStyle, "h-12 rounded-[10px] border-slate-300 bg-white font-semibold text-slate-900")}>
-                                                            <SelectValue placeholder="Select login access" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="create">Set Up Login</SelectItem>
-                                                            <SelectItem value="skip">Skip for now</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
+                                                <div className={fieldBlockClass}>
+                                                    <FieldLabel>Trading Name</FieldLabel>
+                                                    <Input {...form.register("TradingName")} placeholder="Daniel Logistics" className={cn(inputStyle, errors.TradingName && inputErrorClass)} />
+                                                    <FieldError message={errors.TradingName?.message as string | undefined} label="Trading name" />
                                                 </div>
-                                            </div>
-                                        </div>
-                                    </section>
-                                ) : null}
 
-                                {currentStep?.id === "business" ? (
-                                    <section className={sectionCardClass}>
-                                        <SectionTitle title="Business" icon={BriefcaseBusiness} />
-                                        <div className={formSectionGridClass}>
-                                            <div className="md:col-span-2">
-                                                <FieldLabel required>Legal Name</FieldLabel>
-                                                <Input required autoComplete="organization" {...form.register("Name")} placeholder="Daniel Logistics Limited" className={cn(inputStyle, errors.Name && inputErrorClass)} />
-                                                <FieldError message={errors.Name?.message as string | undefined} />
-                                            </div>
-
-                                            <div className={fieldBlockClass}>
-                                                <FieldLabel>Trading Name</FieldLabel>
-                                                <Input {...form.register("TradingName")} placeholder="Daniel Logistics" className={cn(inputStyle, errors.TradingName && inputErrorClass)} />
-                                                <FieldError message={errors.TradingName?.message as string | undefined} />
-                                            </div>
-
-                                            <div className="md:col-span-2 grid gap-4 lg:grid-cols-2">
-                                                <SelectFieldBlock
+                                                <CompactComboboxField
                                                     label="Business Type"
                                                     required
                                                     value={businessTypeValue || undefined}
-                                                    onValueChange={(value) => form.setValue("BusinessType", value, { shouldDirty: true, shouldValidate: true })}
+                                                    onChange={(value) => form.setValue("BusinessType", value, { shouldDirty: true, shouldValidate: true })}
                                                     options={metadata.businessTypes.map((item) => ({ value: item.value, label: item.label }))}
                                                     placeholder="Select business type"
                                                     error={errors.BusinessType?.message as string | undefined}
+                                                    className={fieldBlockClass}
+                                                    searchPlaceholder="Search business type"
+                                                    emptyMessage="No business types found."
                                                 />
 
                                                 {isSupplier ? (
-                                                    <SelectFieldBlock
-                                                        label="Supplier Category"
-                                                        required
-                                                        value={supplierCategoryValue != null ? String(supplierCategoryValue) : undefined}
-                                                        onValueChange={(value) => form.setValue("supplier_category_id", Number(value), { shouldDirty: true, shouldValidate: true })}
-                                                        options={metadata.supplierCategories.map((item) => ({ value: String(item.id), label: item.name }))}
-                                                        placeholder="Select supplier category"
-                                                        error={errors.supplier_category_id?.message as string | undefined}
+                                                    <SupplierCategorySelector
+                                                        categories={metadata.supplierCategories}
+                                                        selectedCategoryIds={supplierCategoryValues}
+                                                        selectedCategories={selectedSupplierCategories}
+                                                        onChange={(nextValues) => form.setValue("category_ids", nextValues, { shouldDirty: true, shouldValidate: true })}
+                                                        error={errors.category_ids?.message as string | undefined}
+                                                        className={fieldBlockClass}
                                                     />
                                                 ) : null}
-                                            </div>
 
-                                            <div className={fieldBlockClass}>
-                                                <FieldLabel required>Registration Number</FieldLabel>
-                                                <Input required {...form.register("RegistrationNumber")} placeholder="REG-12345" className={cn(inputStyle, errors.RegistrationNumber && inputErrorClass)} />
-                                                <FieldError message={errors.RegistrationNumber?.message as string | undefined} />
-                                            </div>
+                                                <div className={fieldBlockClass}>
+                                                    <FieldLabel required>Registration Number</FieldLabel>
+                                                    <Input required {...form.register("RegistrationNumber")} placeholder="REG-12345" className={cn(inputStyle, errors.RegistrationNumber && inputErrorClass)} />
+                                                    <FieldError message={errors.RegistrationNumber?.message as string | undefined} label="Registration number" />
+                                                </div>
 
-                                            <div className={fieldBlockClass}>
-                                                <FieldLabel required>Tax PIN</FieldLabel>
-                                                <Input required {...form.register("TaxPIN")} placeholder="Enter tax PIN" className={cn(inputStyle, errors.TaxPIN && inputErrorClass)} />
-                                                <FieldError message={errors.TaxPIN?.message as string | undefined} />
-                                            </div>
+                                                <div className={fieldBlockClass}>
+                                                    <FieldLabel required>Tax PIN</FieldLabel>
+                                                    <Input required {...form.register("TaxPIN")} placeholder="P123456789X" className={cn(inputStyle, errors.TaxPIN && inputErrorClass)} />
+                                                    <FieldError message={errors.TaxPIN?.message as string | undefined} label="Tax PIN" />
+                                                </div>
 
-                                            <div className={fieldBlockClass}>
-                                                <FieldLabel required>VAT Number</FieldLabel>
-                                                <Input required {...form.register("VATNumber")} placeholder="VAT-00991" className={cn(inputStyle, errors.VATNumber && inputErrorClass)} />
-                                                <FieldError message={errors.VATNumber?.message as string | undefined} />
-                                            </div>
+                                                <div className={fieldBlockClass}>
+                                                    <FieldLabel required>VAT Number</FieldLabel>
+                                                    <Input required {...form.register("VATNumber")} placeholder="P123456789X" className={cn(inputStyle, errors.VATNumber && inputErrorClass)} />
+                                                    <FieldError message={errors.VATNumber?.message as string | undefined} label="VAT number" />
+                                                </div>
 
-                                            {!createUser ? (
-                                                <>
-                                                    <div className="md:col-span-2 mt-2 border-t border-slate-200 pt-5">
-                                                        <div className="space-y-1.5">
-                                                            <h3 className="text-sm font-bold uppercase tracking-[0.08em] text-slate-700">Primary Contact</h3>
-                                                            <p className="text-sm font-medium leading-6 text-slate-500">These fields are required when you are not creating a separate login account.</p>
-                                                        </div>
-                                                    </div>
-
+                                                {!createUser ? (
                                                     <div className={fieldBlockClass}>
                                                         <FieldLabel>Business Email</FieldLabel>
                                                         <Input type="email" autoComplete="email" {...form.register("Email")} placeholder="procurement@company.com" className={cn(inputStyle, errors.Email && inputErrorClass)} />
-                                                        <FieldError message={errors.Email?.message as string | undefined} />
+                                                        <FieldError message={errors.Email?.message as string | undefined} label="Business email" />
                                                     </div>
+                                                ) : null}
 
-                                                    <div className={fieldBlockClass}>
-                                                        <FieldLabel required>Phone Number</FieldLabel>
-                                                        <Input type="tel" inputMode="tel" pattern="[+]?[0-9]{8,15}" required autoComplete="tel" {...form.register("Phone")} placeholder="+254712345678" className={cn(inputStyle, errors.Phone && inputErrorClass)} />
-                                                        <p className="text-sm font-medium leading-6 text-slate-500">Use 8-15 digits, with optional +.</p>
-                                                        <FieldError message={errors.Phone?.message as string | undefined} />
-                                                    </div>
-                                                </>
-                                            ) : null}
-
-                                            <SelectFieldBlock
-                                                label="Country"
-                                                required
-                                                value={countryValue || undefined}
-                                                onValueChange={(value) => form.setValue("Country", value, { shouldDirty: true, shouldValidate: true })}
-                                                options={metadata.countries.map((item) => ({ value: item.code, label: item.name }))}
-                                                placeholder="Select country"
-                                                error={errors.Country?.message as string | undefined}
-                                            />
-
-                                            <SelectFieldBlock
-                                                label="Location"
-                                                required
-                                                value={locationValue != null ? String(locationValue) : undefined}
-                                                onValueChange={(value) => form.setValue("Location", Number(value), { shouldDirty: true, shouldValidate: true })}
-                                                options={metadata.localities.map((item) => ({ value: String(item.id), label: item.name }))}
-                                                placeholder={isLoadingLocalities ? "Loading locations" : "Select location"}
-                                                disabled={isLoadingLocalities || metadata.localities.length === 0}
-                                                error={errors.Location?.message as string | undefined}
-                                            />
-
-                                            <div className={cn(fieldBlockClass, "md:col-span-2")}>
-                                                <FieldLabel>Physical Address</FieldLabel>
-                                                <Input {...form.register("PhysicalAddress")} placeholder="Building, street, city" className={cn(inputStyle, errors.PhysicalAddress && inputErrorClass)} />
-                                                <FieldError message={errors.PhysicalAddress?.message as string | undefined} />
-                                            </div>
-
-                                            <div className={cn(fieldBlockClass, "md:col-span-2")}>
-                                                <FieldLabel>Website</FieldLabel>
-                                                <Input {...form.register("Website")} placeholder="https://example.com" className={cn(inputStyle, errors.Website && inputErrorClass)} />
-                                                <p className="text-sm font-medium leading-6 text-slate-500">If provided, the URL must start with https://.</p>
-                                                <FieldError message={errors.Website?.message as string | undefined} />
-                                            </div>
-
-                                            <FileFieldBlock
-                                                label="Company Logo"
-                                                accept="image/*"
-                                                onChange={(event) => setLogoFile(event.target.files?.[0] ?? null)}
-                                                selectedFileName={logoFile?.name}
-                                                error={logoError}
-                                                className="md:col-span-2"
-                                            />
-                                        </div>
-                                    </section>
-                                ) : null}
-
-                                {currentStep?.id === "supplier-documents" ? (
-                                    <section className={sectionCardClass}>
-                                        <SectionTitle title="Supplier Documents" icon={FileCheck2} description="Upload the supporting documents required for supplier registration." />
-                                        <div className="grid gap-5">
-                                            {metadata.supplierDocumentRequirements.length > 0 ? (
-                                                metadata.supplierDocumentRequirements.map((requirement) => {
-                                                    const selectedFile = documentFiles[requirement.id]
-                                                    const noteValue = documentNotes[requirement.id] ?? ""
-                                                    const allowedExtensions = requirement.allowedExtensions
-                                                        .map((extension) => extension.trim())
-                                                        .filter(Boolean)
-                                                    const accept = allowedExtensions.length > 0
-                                                        ? allowedExtensions.map((extension) => (extension.startsWith(".") ? extension : `.${extension}`)).join(",")
-                                                        : undefined
-                                                    const metadataHint = [
-                                                        allowedExtensions.length > 0 ? `Allowed: ${allowedExtensions.join(", ")}` : null,
-                                                        requirement.maxFileSizeKb ? `Max size: ${requirement.maxFileSizeKb} KB` : null,
-                                                    ].filter(Boolean).join(". ")
-
-                                                    return (
-                                                        <div key={requirement.id} className="rounded-[14px] border border-slate-200 bg-white p-4 sm:p-5">
-                                                            <div className="space-y-1.5">
-                                                                <h3 className="text-sm font-bold uppercase tracking-[0.08em] text-slate-700">
-                                                                    {requirement.name}
-                                                                    {requirement.isRequired ? <span className="text-rose-600"> *</span> : null}
-                                                                </h3>
-                                                                {requirement.description ? (
-                                                                    <p className="text-sm font-medium leading-6 text-slate-600">{requirement.description}</p>
-                                                                ) : null}
-                                                                {metadataHint ? (
-                                                                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">{metadataHint}</p>
-                                                                ) : null}
-                                                            </div>
-
-                                                            <div className="mt-4 grid gap-4 md:grid-cols-2 md:items-start">
-                                                                <FileFieldBlock
-                                                                    label="Document File"
-                                                                    required={requirement.isRequired}
-                                                                    accept={accept}
-                                                                    onChange={(event) => setRegistrationDocumentFile(requirement.id, event.target.files?.[0] ?? null)}
-                                                                    selectedFileName={selectedFile?.name ?? null}
-                                                                    error={documentErrors[requirement.id]}
-                                                                />
-
-                                                                <FieldShell
-                                                                    label="Document Note"
-                                                                    hint="Optional note for reviewers or document context."
-                                                                >
-                                                                    <Textarea
-                                                                        value={noteValue}
-                                                                        onChange={(event) => setRegistrationDocumentNote(requirement.id, event.target.value)}
-                                                                        placeholder="Add a note for this document"
-                                                                        className={textAreaStyle}
-                                                                    />
-                                                                </FieldShell>
-                                                            </div>
-                                                        </div>
-                                                    )
-                                                })
-                                            ) : (
-                                                <div className="rounded-[14px] border border-dashed border-slate-300 bg-white p-5">
-                                                    <p className="text-sm font-medium leading-6 text-slate-600">
-                                                        No supplier document requirements were returned for the current registration metadata.
-                                                    </p>
+                                                <div className={fieldBlockClass}>
+                                                    <FieldLabel required>Company Phone</FieldLabel>
+                                                    <Input type="tel" inputMode="tel" pattern="[+]?[0-9]{8,15}" required autoComplete="tel" {...form.register("Phone")} placeholder="+254712345678" className={cn(inputStyle, errors.Phone && inputErrorClass)} />
+                                                    <FieldError message={errors.Phone?.message as string | undefined} label="Company phone" />
                                                 </div>
-                                            )}
-                                        </div>
-                                    </section>
-                                ) : null}
 
-                                {currentStep?.id === "profile-details" ? (
-                                    <section className={sectionCardClass}>
-                                        <SectionTitle title="Profile Details" icon={UserCog} />
-                                        <div className={formSectionGridClass}>
-                                            {isTenant ? (
-                                                <div className="md:col-span-2">
-                                                    <FieldLabel required>Tenant Remarks</FieldLabel>
-                                                    <Textarea
-                                                        required
-                                                        {...form.register("user_Remarks")}
-                                                        placeholder="Primary tenant account"
-                                                        className={cn(textAreaStyle, errors.user_Remarks && inputErrorClass)}
-                                                    />
-                                                    <FieldError message={errors.user_Remarks?.message as string | undefined} />
-                                                </div>
-                                            ) : null}
-
-                                            {isCustomer ? (
-                                                <>
-                                                    <div className={fieldBlockClass}>
-                                                        <FieldLabel required>Date of Birth</FieldLabel>
-                                                        <Input type="date" required {...form.register("user_DateOfBirth")} className={cn(inputStyle, errors.user_DateOfBirth && inputErrorClass)} />
-                                                        <FieldError message={errors.user_DateOfBirth?.message as string | undefined} />
-                                                    </div>
-
-                                                    <SelectFieldBlock
-                                                        label="Marital Status"
-                                                        required
-                                                        value={maritalStatusValue || undefined}
-                                                        onValueChange={(value) => form.setValue("user_MaritalStatus", value, { shouldDirty: true, shouldValidate: true })}
-                                                        options={metadata.maritalStatuses.map((item) => ({ value: item.value, label: item.label }))}
-                                                        placeholder="Select marital status"
-                                                        error={errors.user_MaritalStatus?.message as string | undefined}
-                                                    />
-
-                                                    <SelectFieldBlock
-                                                        label="Occupation"
-                                                        required
-                                                        value={occupationValue || undefined}
-                                                        onValueChange={(value) => form.setValue("user_Occupation", value, { shouldDirty: true, shouldValidate: true })}
-                                                        options={metadata.occupations.map((item) => ({ value: item.value, label: item.label }))}
-                                                        placeholder="Select occupation"
-                                                        error={errors.user_Occupation?.message as string | undefined}
-                                                    />
-
-                                                    <SelectFieldBlock
-                                                        label="Gender"
-                                                        required
-                                                        value={genderValue || undefined}
-                                                        onValueChange={(value) => form.setValue("user_Gender", value, { shouldDirty: true, shouldValidate: true })}
-                                                        options={metadata.genders.map((item) => ({ value: item.value, label: item.label }))}
-                                                        placeholder="Select gender"
-                                                        error={errors.user_Gender?.message as string | undefined}
-                                                    />
-                                                </>
-                                            ) : null}
-                                        </div>
-                                    </section>
-                                ) : null}
-
-                                {currentStep?.id === "user-access" ? (
-                                    <section className={sectionCardClass}>
-                                        <SectionTitle title="Primary Contact" description="These details will be used for both the primary contact and account login." icon={ShieldCheck} />
-                                        <div className={formSectionGridClass}>
-                                            <div className={fieldBlockClass}>
-                                                <FieldLabel required>First Name</FieldLabel>
-                                                <Input required autoComplete="given-name" {...form.register("user_FirstName")} placeholder="Jane" className={cn(inputStyle, errors.user_FirstName && inputErrorClass)} />
-                                                <FieldError message={errors.user_FirstName?.message as string | undefined} />
-                                            </div>
-
-                                            <div className={fieldBlockClass}>
-                                                <FieldLabel required>Last Name</FieldLabel>
-                                                <Input required autoComplete="family-name" {...form.register("user_LastName")} placeholder="Doe" className={cn(inputStyle, errors.user_LastName && inputErrorClass)} />
-                                                <FieldError message={errors.user_LastName?.message as string | undefined} />
-                                            </div>
-
-                                            <div className={fieldBlockClass}>
-                                                <FieldLabel required>Email</FieldLabel>
-                                                <Input type="email" required autoComplete="email" {...form.register("user_Email")} placeholder="admin@company.com" className={cn(inputStyle, errors.user_Email && inputErrorClass)} />
-                                                <FieldError message={errors.user_Email?.message as string | undefined} />
-                                            </div>
-
-                                            <div className={fieldBlockClass}>
-                                                <FieldLabel required>Phone Number</FieldLabel>
-                                                <Input type="tel" inputMode="tel" pattern="[+]?[0-9]{8,15}" required autoComplete="tel" {...form.register("user_Phone")} placeholder="+254711111111" className={cn(inputStyle, errors.user_Phone && inputErrorClass)} />
-                                                <FieldError message={errors.user_Phone?.message as string | undefined} />
-                                            </div>
-
-                                            {!isCustomer ? (
-                                                <SelectFieldBlock
-                                                    label="Gender"
+                                                <CompactComboboxField
+                                                    label="Country"
                                                     required
-                                                    value={genderValue || undefined}
-                                                    onValueChange={(value) => form.setValue("user_Gender", value, { shouldDirty: true, shouldValidate: true })}
-                                                    options={metadata.genders.map((item) => ({ value: item.value, label: item.label }))}
-                                                    placeholder="Select gender"
-                                                    error={errors.user_Gender?.message as string | undefined}
+                                                    value={countryValue || undefined}
+                                                    onChange={(value) => form.setValue("Country", value, { shouldDirty: true, shouldValidate: true })}
+                                                    options={metadata.countries.map((item) => ({ value: item.code, label: item.name }))}
+                                                    placeholder="Select country"
+                                                    error={errors.Country?.message as string | undefined}
+                                                    searchPlaceholder="Search country"
+                                                    emptyMessage="No countries found."
+                                                />
+
+                                                <CompactComboboxField
+                                                    label="Location"
+                                                    required
+                                                    value={locationValue != null ? String(locationValue) : undefined}
+                                                    onChange={(value) => form.setValue("Location", Number(value), { shouldDirty: true, shouldValidate: true })}
+                                                    options={metadata.localities.map((item) => ({ value: String(item.id), label: item.name }))}
+                                                    placeholder={isLoadingLocalities ? "Loading locations" : "Select location"}
+                                                    disabled={isLoadingLocalities || metadata.localities.length === 0}
+                                                    error={errors.Location?.message as string | undefined}
+                                                    searchPlaceholder={isLoadingLocalities ? "Loading locations" : "Search location"}
+                                                    emptyMessage="No locations found."
+                                                />
+
+                                                <div className={cn(fieldBlockClass, "md:col-span-2")}>
+                                                    <FieldLabel>Physical Address</FieldLabel>
+                                                    <Input {...form.register("PhysicalAddress")} placeholder="Building, street, city" className={cn(inputStyle, errors.PhysicalAddress && inputErrorClass)} />
+                                                    <FieldError message={errors.PhysicalAddress?.message as string | undefined} label="Physical address" />
+                                                </div>
+
+                                                <div className={cn(fieldBlockClass, "md:col-span-2")}>
+                                                    <FieldLabel>Website</FieldLabel>
+                                                    <Input {...form.register("Website")} placeholder="https://example.com" className={cn(inputStyle, errors.Website && inputErrorClass)} />
+                                                    <FieldError message={errors.Website?.message as string | undefined} label="Website" />
+                                                </div>
+
+                                                <FileFieldBlock
+                                                    label="Company Logo"
+                                                    accept="image/*"
+                                                    onChange={(event) => setLogoFile(event.target.files?.[0] ?? null)}
+                                                    selectedFileName={logoFile?.name}
+                                                    error={logoError}
                                                     className="md:col-span-2"
                                                 />
-                                            ) : null}
-
-                                            <div className="relative grid content-start gap-2.5">
-                                                <FieldLabel required>Password</FieldLabel>
-                                                <Input
-                                                    type={showPassword ? "text" : "password"}
-                                                    required
-                                                    autoComplete="new-password"
-                                                    {...form.register("user_Password")}
-                                                    placeholder="At least 8 characters"
-                                                    className={cn(inputStyle, errors.user_Password && inputErrorClass)}
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowPassword(!showPassword)}
-                                                    className={endButtonClass}
-                                                    aria-label={showPassword ? "Hide password" : "Show password"}
-                                                >
-                                                    {showPassword ? <EyeClosed className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                                </button>
-                                                <FieldError message={errors.user_Password?.message as string | undefined} />
                                             </div>
+                                        </section>
+                                    ) : null}
 
-                                            <div className="relative grid content-start gap-2.5">
-                                                <FieldLabel required>Confirm Password</FieldLabel>
-                                                <Input
-                                                    type={showConfirmPassword ? "text" : "password"}
-                                                    required
-                                                    autoComplete="new-password"
-                                                    {...form.register("user_Password_confirmation")}
-                                                    placeholder="Repeat password"
-                                                    className={cn(inputStyle, errors.user_Password_confirmation && inputErrorClass)}
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                                    className={endButtonClass}
-                                                    aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
-                                                >
-                                                    {showConfirmPassword ? <EyeClosed className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                                </button>
-                                                <FieldError message={errors.user_Password_confirmation?.message as string | undefined} />
+                                    {currentStep?.id === "account" ? (
+                                        <section className={sectionCardClass}>
+                                            <div className={formSectionGridClass}>
+                                                {!createUser ? (
+                                                    <div className="md:col-span-2 rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
+                                                        <p className="text-sm leading-6 text-slate-600">
+                                                            Login setup is off. Turn it on from Business if needed.
+                                                        </p>
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <div className={fieldBlockClass}>
+                                                            <FieldLabel required>First Name</FieldLabel>
+                                                            <Input required autoComplete="given-name" {...form.register("user_FirstName")} placeholder="Jane" className={cn(inputStyle, errors.user_FirstName && inputErrorClass)} />
+                                                            <FieldError message={errors.user_FirstName?.message as string | undefined} label="First name" />
+                                                        </div>
+
+                                                        <div className={fieldBlockClass}>
+                                                            <FieldLabel required>Last Name</FieldLabel>
+                                                            <Input required autoComplete="family-name" {...form.register("user_LastName")} placeholder="Doe" className={cn(inputStyle, errors.user_LastName && inputErrorClass)} />
+                                                            <FieldError message={errors.user_LastName?.message as string | undefined} label="Last name" />
+                                                        </div>
+
+                                                        <div className={fieldBlockClass}>
+                                                            <FieldLabel required>Email</FieldLabel>
+                                                            <Input type="email" required autoComplete="email" {...form.register("user_Email")} placeholder="portal.user@example.com" className={cn(inputStyle, errors.user_Email && inputErrorClass)} />
+                                                            <FieldError message={errors.user_Email?.message as string | undefined} label="Email" />
+                                                        </div>
+
+                                                        <div className={fieldBlockClass}>
+                                                            <FieldLabel required>Phone Number</FieldLabel>
+                                                            <Input type="tel" inputMode="tel" pattern="[+]?[0-9]{8,15}" required autoComplete="tel" {...form.register("user_Phone")} placeholder="+254722222222" className={cn(inputStyle, errors.user_Phone && inputErrorClass)} />
+                                                            <FieldError message={errors.user_Phone?.message as string | undefined} label="Phone number" />
+                                                        </div>
+
+                                                        <CompactComboboxField
+                                                            label="Gender"
+                                                            required
+                                                            value={genderValue || undefined}
+                                                            onChange={(value) => form.setValue("user_Gender", value, { shouldDirty: true, shouldValidate: true })}
+                                                            options={metadata.genders.map((item) => ({ value: item.value, label: item.label }))}
+                                                            placeholder="Select gender"
+                                                            error={errors.user_Gender?.message as string | undefined}
+                                                            className="md:col-span-2"
+                                                            searchPlaceholder="Search gender"
+                                                            emptyMessage="No genders found."
+                                                        />
+
+                                                        <div className="relative grid content-start gap-2">
+                                                            <FieldLabel required>Password</FieldLabel>
+                                                            <div className="relative">
+                                                                <Input
+                                                                    type={showPassword ? "text" : "password"}
+                                                                    required
+                                                                    autoComplete="new-password"
+                                                                    {...form.register("user_Password")}
+                                                                    placeholder="At least 8 characters"
+                                                                    className={cn(inputStyle, errors.user_Password && inputErrorClass)}
+                                                                />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setShowPassword(!showPassword)}
+                                                                    className={endButtonClass}
+                                                                    aria-label={showPassword ? "Hide password" : "Show password"}
+                                                                >
+                                                                    {showPassword ? <EyeClosed className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                                </button>
+                                                            </div>
+                                                            <FieldError message={errors.user_Password?.message as string | undefined} label="Password" />
+                                                        </div>
+
+                                                        <div className="relative grid content-start gap-2">
+                                                            <FieldLabel required>Confirm Password</FieldLabel>
+                                                            <div className="relative">
+                                                                <Input
+                                                                    type={showConfirmPassword ? "text" : "password"}
+                                                                    required
+                                                                    autoComplete="new-password"
+                                                                    {...form.register("user_Password_confirmation")}
+                                                                    placeholder="Repeat password"
+                                                                    className={cn(inputStyle, errors.user_Password_confirmation && inputErrorClass)}
+                                                                />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                                    className={endButtonClass}
+                                                                    aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                                                                >
+                                                                    {showConfirmPassword ? <EyeClosed className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                                </button>
+                                                            </div>
+                                                            <FieldError message={errors.user_Password_confirmation?.message as string | undefined} label="Confirm password" />
+                                                        </div>
+                                                    </>
+                                                )}
                                             </div>
-                                        </div>
-                                    </section>
-                                ) : null}
+                                        </section>
+                                    ) : null}
 
-                                <div className="grid gap-4 border-t border-slate-300 pt-7 sm:grid-cols-2">
-                                    <Button type="button" onClick={handlePreviousStep} disabled={isFirstStep || isBusy} className={secondaryButtonClass}>
-                                        <span className="inline-flex items-center gap-2.5">
-                                            <ChevronLeft className="h-4 w-4" />
-                                            <span>Previous</span>
-                                        </span>
-                                    </Button>
+                                    {currentStep?.id === "type-specific" ? (
+                                        <section className={sectionCardClass}>
+                                            <div className={formSectionGridClass}>
+                                                {isSupplier ? (
+                                                    <>
+                                                        <div className="md:col-span-2 grid gap-4 sm:gap-5">
+                                                            {metadata.supplierDocumentRequirements.length > 0 ? (
+                                                                metadata.supplierDocumentRequirements.map((requirement) => {
+                                                                    const selectedFile = documentFiles[requirement.id]
+                                                                    const noteValue = documentNotes[requirement.id] ?? ""
+                                                                    const hasNote = noteValue.trim().length > 0
+                                                                    const noteOpen = openDocumentNotes[requirement.id] || hasNote
+                                                                    const allowedExtensions = requirement.allowedExtensions
+                                                                        .map((extension) => extension.trim())
+                                                                        .filter(Boolean)
+                                                                    const accept = allowedExtensions.length > 0
+                                                                        ? allowedExtensions.map((extension) => (extension.startsWith(".") ? extension : `.${extension}`)).join(",")
+                                                                        : undefined
+                                                                    const acceptedExtensionsLabel = allowedExtensions.length > 0
+                                                                        ? allowedExtensions.map((extension) => (extension.startsWith(".") ? extension : `.${extension}`).toUpperCase()).join(" · ")
+                                                                        : null
 
-                                    {isLastStep ? (
-                                        <Button type="submit" disabled={isBusy} className={submitButtonClass}>
-                                            {isBusy ? (
-                                                <span className="inline-flex items-center gap-2.5">
-                                                    <span className="loader-bars loader-bars--inline [&>span]:bg-white [&>span]:shadow-none" aria-hidden="true">
-                                                        <span />
-                                                        <span />
-                                                        <span />
+                                                                    return (
+                                                                        <div key={requirement.id} className="rounded-xl border border-slate-200 bg-white p-3.5 sm:p-4">
+                                                                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                                                                <h3 className="text-sm font-semibold tracking-[0.02em] text-slate-950">
+                                                                                    {requirement.name}
+                                                                                    {requirement.isRequired ? <span className="text-rose-600"> *</span> : null}
+                                                                                </h3>
+                                                                                {acceptedExtensionsLabel ? (
+                                                                                    <span className="inline-flex w-fit rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-600">
+                                                                                        {acceptedExtensionsLabel}
+                                                                                    </span>
+                                                                                ) : null}
+                                                                            </div>
+
+                                                                            <div className="mt-3 grid gap-3">
+                                                                                <div
+                                                                                    className={cn(
+                                                                                        "flex flex-col gap-3 rounded-lg border px-3 py-3 sm:flex-row sm:items-center sm:justify-between",
+                                                                                        documentErrors[requirement.id]
+                                                                                            ? "border-red-300 bg-red-50"
+                                                                                            : "border-slate-200 bg-slate-50",
+                                                                                    )}
+                                                                                >
+                                                                                    <div className="min-w-0">
+                                                                                        <span className="text-xs font-bold uppercase tracking-[0.1em] text-slate-600">Upload file</span>
+                                                                                        <div className="mt-1 inline-flex max-w-full items-center gap-2 text-sm text-slate-900">
+                                                                                            {selectedFile ? <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" /> : null}
+                                                                                            <span className={cn("truncate", selectedFile ? "font-medium" : "text-slate-500")}>{selectedFile?.name ?? "No file selected"}</span>
+                                                                                        </div>
+                                                                                    </div>
+
+                                                                                    <label className="inline-flex h-10 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 transition-colors hover:border-slate-400 hover:bg-slate-100">
+                                                                                        <input
+                                                                                            type="file"
+                                                                                            accept={accept}
+                                                                                            onChange={(event) => setRegistrationDocumentFile(requirement.id, event.target.files?.[0] ?? null)}
+                                                                                            className="sr-only"
+                                                                                        />
+                                                                                        {selectedFile ? "Replace file" : "Choose file"}
+                                                                                    </label>
+                                                                                </div>
+
+                                                                                <div className="grid gap-2">
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        onClick={() => setOpenDocumentNotes((current) => ({
+                                                                                            ...current,
+                                                                                            [requirement.id]: !noteOpen,
+                                                                                        }))}
+                                                                                        className="inline-flex w-fit items-center gap-2 rounded-md px-0 text-sm font-semibold text-slate-700 transition-colors hover:text-slate-950"
+                                                                                    >
+                                                                                        <span>{noteOpen ? "Hide note" : "Add note"}</span>
+                                                                                    </button>
+
+                                                                                    {noteOpen ? (
+                                                                                        <FieldShell label="Note">
+                                                                                            <Textarea
+                                                                                                value={noteValue}
+                                                                                                onChange={(event) => setRegistrationDocumentNote(requirement.id, event.target.value)}
+                                                                                                placeholder="Add note"
+                                                                                                className={cn(textAreaStyle, "min-h-24")}
+                                                                                            />
+                                                                                        </FieldShell>
+                                                                                    ) : null}
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    )
+                                                                })
+                                                            ) : (
+                                                                <div className="rounded-xl border border-dashed border-slate-300 bg-white p-4 sm:p-5">
+                                                                    <p className="text-sm leading-6 text-slate-600">
+                                                                        No supplier document requirements were returned for the current registration metadata.
+                                                                    </p>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </>
+                                                ) : null}
+
+                                                {isTenant ? (
+                                                    <div className="md:col-span-2">
+                                                        <FieldLabel required>Tenant Remarks</FieldLabel>
+                                                        <Textarea required {...form.register("user_Remarks")} placeholder="Requires portal access for tenancy onboarding." className={cn(textAreaStyle, errors.user_Remarks && inputErrorClass)} />
+                                                        <FieldError message={errors.user_Remarks?.message as string | undefined} label="Tenant remarks" />
+                                                    </div>
+                                                ) : null}
+
+                                                {isCustomer ? (
+                                                    <>
+                                                        <div className={fieldBlockClass}>
+                                                            <FieldLabel required>Date of Birth</FieldLabel>
+                                                            <Input type="date" required {...form.register("user_DateOfBirth")} className={cn(inputStyle, errors.user_DateOfBirth && inputErrorClass)} />
+                                                            <FieldError message={errors.user_DateOfBirth?.message as string | undefined} label="Date of birth" />
+                                                        </div>
+
+                                                        <SelectFieldBlock
+                                                            label="Marital Status"
+                                                            required
+                                                            value={maritalStatusValue || undefined}
+                                                            onValueChange={(value) => form.setValue("user_MaritalStatus", value, { shouldDirty: true, shouldValidate: true })}
+                                                            options={metadata.maritalStatuses.map((item) => ({ value: item.value, label: item.label }))}
+                                                            placeholder="Select marital status"
+                                                            error={errors.user_MaritalStatus?.message as string | undefined}
+                                                        />
+
+                                                        <SelectFieldBlock
+                                                            label="Occupation"
+                                                            required
+                                                            value={occupationValue || undefined}
+                                                            onValueChange={(value) => form.setValue("user_Occupation", value, { shouldDirty: true, shouldValidate: true })}
+                                                            options={metadata.occupations.map((item) => ({ value: item.value, label: item.label }))}
+                                                            placeholder="Select occupation"
+                                                            error={errors.user_Occupation?.message as string | undefined}
+                                                        />
+
+                                                        <SelectFieldBlock
+                                                            label="Gender"
+                                                            required
+                                                            value={genderValue || undefined}
+                                                            onValueChange={(value) => form.setValue("user_Gender", value, { shouldDirty: true, shouldValidate: true })}
+                                                            options={metadata.genders.map((item) => ({ value: item.value, label: item.label }))}
+                                                            placeholder="Select gender"
+                                                            error={errors.user_Gender?.message as string | undefined}
+                                                        />
+                                                    </>
+                                                ) : null}
+                                            </div>
+                                        </section>
+                                    ) : null}
+
+                                    <div className={cn(
+                                        "grid w-full gap-3 pt-2 sm:pt-4",
+                                        isFirstStep ? "grid-cols-1" : "sm:grid-cols-2",
+                                    )}>
+                                        {!isFirstStep && (
+                                            <Button type="button" onClick={handlePreviousStep} disabled={isBusy} className={navigationSecondaryButtonClass}>
+                                                <span className="inline-flex items-center gap-2">
+                                                    <ChevronLeft className="h-4 w-4" />
+                                                    <span>Back</span>
+                                                </span>
+                                            </Button>
+                                        )}
+
+                                        {isLastStep ? (
+                                            <Button type="submit" disabled={isBusy} className={navigationPrimaryButtonClass}>
+                                                {isBusy ? (
+                                                    <span className="inline-flex w-full items-center justify-center gap-2.5">
+                                                        <span className="loader-bars loader-bars--inline [&>span]:bg-white [&>span]:shadow-none" aria-hidden="true">
+                                                            <span />
+                                                            <span />
+                                                            <span />
+                                                        </span>
+                                                        <span>{getSubmitButtonLabel()}</span>
                                                     </span>
-                                                    <span>{getSubmitButtonLabel()}</span>
-                                                </span>
-                                            ) : (
-                                                <span className="inline-flex items-center gap-2.5">
-                                                    <CircleCheck className="h-4 w-4 transition-transform duration-200 group-hover:scale-105" />
-                                                    <span>{getSubmitButtonLabel()}</span>
-                                                </span>
-                                            )}
-                                        </Button>
-                                    ) : (
-                                        <Button type="button" onClick={handleNextStep} disabled={isBusy} className={submitButtonClass}>
-                                            <span className="inline-flex items-center gap-2.5">
-                                                <span>Next Step</span>
-                                                <ChevronRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-                                            </span>
-                                        </Button>
-                                    )}
-                                </div>
+                                                ) : (
+                                                    <span className="inline-flex items-center gap-2">
+                                                        <span>{getSubmitButtonLabel()}</span>
+                                                        <CircleCheck className="h-4 w-4 transition-transform duration-200 hover:scale-110" />
+                                                    </span>
+                                                )}
+                                            </Button>
+                                        ) : (
+                                            <Button type="button" onClick={handleNextStep} disabled={isBusy} className={navigationPrimaryButtonClass}>
+                                                {isAdvancing ? (
+                                                    <span className="inline-flex w-full items-center justify-center gap-2.5">
+                                                        <span className="loader-bars loader-bars--inline [&>span]:bg-white [&>span]:shadow-none" aria-hidden="true">
+                                                            <span />
+                                                            <span />
+                                                            <span />
+                                                        </span>
+                                                        <span>Checking details</span>
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center gap-2">
+                                                        <span>Continue</span>
+                                                        <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+                                                    </span>
+                                                )}
+                                            </Button>
+                                        )}
+                                    </div>
+                                </form>
+                            </div>
 
-                            </form>
+                            <div className="flex justify-center pt-2 text-center sm:pt-4">
+                                <p className="text-sm text-slate-600">
+                                    Already have an Account?{" "}
+                                    <Link href="/signin" className={cn("font-semibold text-primary", linkClass)}>
+                                        Sign in
+                                    </Link>
+                                </p>
+                            </div>
                         </div>
-
-                        <div className="mx-auto grid w-full max-w-4xl gap-4 border-t border-slate-300 pt-7 text-left">
-                            <Link href="/signin" className={cn(signInLinkClass, linkClass)}>
-                                <span>Already registered? Sign in</span>
-                                <ChevronRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-                            </Link>
-                        </div>
-                    </div>
+                    </section>
                 </div>
-            </div>
-        </main>
+            </main>
+        </>
     )
 }
