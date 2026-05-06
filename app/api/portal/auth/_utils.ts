@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 
 const SENSITIVE_ERROR_PATTERN = /(exception|stack|trace|sql|syntax|internal server|undefined|vendor|route|line\s+\d+)/i
+const TRANSLATION_KEY_PATTERN = /^(validation|auth|passwords)\.[a-z0-9_.-]+$/i
 const DOCUMENT_KEY_PATTERN = /^registration_documents\.(\d+)$/
 const DOCUMENT_NOTE_KEY_PATTERN = /^registration_document_notes\.(\d+)$/
 
@@ -23,6 +24,7 @@ const FIELD_FALLBACK_MESSAGES: Record<string, string> = {
     Website: "Please enter a valid website URL.",
     types: "Please select at least one business role.",
     supplier_category_id: "Please select a supplier category.",
+    category_ids: "Please select at least one supplier category.",
     user_Remarks: "Please provide tenant remarks.",
     user_DateOfBirth: "Please provide a valid date of birth.",
     user_MaritalStatus: "Please select a valid marital status.",
@@ -48,7 +50,7 @@ export function sanitizeFieldErrorMessage(field: string, candidate: unknown) {
     if (typeof candidate !== "string") return fallback
 
     const normalized = candidate.replace(/\s+/g, " ").trim()
-    if (!normalized || normalized.length > 140 || SENSITIVE_ERROR_PATTERN.test(normalized)) {
+    if (!normalized || normalized.length > 140 || SENSITIVE_ERROR_PATTERN.test(normalized) || TRANSLATION_KEY_PATTERN.test(normalized)) {
         return fallback
     }
 

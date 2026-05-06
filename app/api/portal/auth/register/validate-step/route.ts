@@ -21,7 +21,16 @@ const REGISTRATION_ALIASES: Record<string, string[]> = {
     Website: ["website"],
     Country: ["country"],
     Location: ["location"],
+    category_ids: ["categoryIds", "supplier_category_id", "supplierCategoryId", "primary_category_id"],
     supplier_category_id: ["supplierCategoryId"],
+    contactPersonName: ["contact_person_name", "contactPerson"],
+    contactPersonEmail: ["contact_person_email"],
+    contactPersonPhone: ["contact_person_phone"],
+    user_Remarks: ["tenant_Remarks"],
+    user_DateOfBirth: ["customer_DateOfBirth"],
+    user_MaritalStatus: ["customer_MaritalStatus"],
+    user_Occupation: ["customer_Occupation"],
+    user_Gender: ["customer_Gender"],
     user_FirstName: ["userFirstName"],
     user_LastName: ["userLastName"],
     user_Email: ["userEmail"],
@@ -39,6 +48,8 @@ const REGISTRATION_ERROR_FIELD_MAP = Object.fromEntries(
 ) as Record<string, string>
 
 REGISTRATION_ERROR_FIELD_MAP.legalForm = "BusinessType"
+REGISTRATION_ERROR_FIELD_MAP.supplier_category_id = "category_ids"
+REGISTRATION_ERROR_FIELD_MAP.primary_category_id = "category_ids"
 
 const normalizeRegistrationErrors = (errors: unknown) => {
     if (!errors || typeof errors !== "object" || Array.isArray(errors)) return {}
@@ -116,8 +127,9 @@ const normalizeRegistrationFormData = (source: FormData) => {
     const createUserValue = next.get("createUser")
 
     if (typeof createUserValue === "string") {
-        next.set("create_user", normalizeBooleanFormValue(createUserValue))
-        next.delete("createUser")
+        const normalizedCreateUser = normalizeBooleanFormValue(createUserValue)
+        next.set("createUser", normalizedCreateUser)
+        next.set("create_user", normalizedCreateUser)
     }
 
     BOOLEAN_FORM_KEYS.forEach((key) => {
@@ -125,6 +137,15 @@ const normalizeRegistrationFormData = (source: FormData) => {
         if (typeof current !== "string") return
         next.set(key, normalizeBooleanFormValue(current))
     })
+
+    const normalizedCreateUser = next.get("createUser")
+    const normalizedCreateUserSnake = next.get("create_user")
+    if (typeof normalizedCreateUser === "string" && !normalizedCreateUserSnake) {
+        next.set("create_user", normalizedCreateUser)
+    }
+    if (typeof normalizedCreateUserSnake === "string" && !normalizedCreateUser) {
+        next.set("createUser", normalizedCreateUserSnake)
+    }
 
     return normalizePhoneFields(next)
 }
@@ -135,7 +156,9 @@ const withRegistrationAliases = (payload: Record<string, unknown>) => {
     if (next.createUser != null && next.create_user == null) {
         next.create_user = next.createUser
     }
-    delete next.createUser
+    if (next.create_user != null && next.createUser == null) {
+        next.createUser = next.create_user
+    }
 
     Object.entries(REGISTRATION_ALIASES).forEach(([sourceKey, aliases]) => {
         const value = next[sourceKey]
@@ -180,13 +203,25 @@ const toAliasSet = (fields: string[]) => {
     return allowed
 }
 
+const hasDocumentFieldAllowance = (allowed: Set<string>, field: string) => {
+    if (DOCUMENT_KEY_PATTERN.test(field)) {
+        return allowed.has("registration_documents") || allowed.has("registration_documents[]")
+    }
+
+    if (DOCUMENT_NOTE_KEY_PATTERN.test(field)) {
+        return allowed.has("registration_document_notes") || allowed.has("registration_document_notes[]")
+    }
+
+    return false
+}
+
 const filterErrorsForStep = (errors: unknown, fields: string[]) => {
     if (!errors || typeof errors !== "object" || Array.isArray(errors)) return {}
 
     const allowed = toAliasSet(fields)
 
     return Object.fromEntries(
-        Object.entries(errors as Record<string, unknown>).filter(([field]) => allowed.has(field))
+        Object.entries(errors as Record<string, unknown>).filter(([field]) => allowed.has(field) || hasDocumentFieldAllowance(allowed, field))
     )
 }
 
@@ -228,7 +263,15 @@ export async function POST(request: Request) {
         if (!response.ok) {
             const stepErrors = filterErrorsForStep(normalizeRegistrationErrors(body?.errors), stepFields)
             if (!hasStepRelevantErrors(stepErrors)) {
-                return NextResponse.json({ success: true, ignoredErrors: true }, { status: 200 })
+                return NextResponse.json(
+                    {
+                        message: typeof body?.message === "string" && body.message.trim()
+                            ? body.message.trim()
+                            : "We couldn't validate this step right now. Please review your details and try again.",
+                        errors: {},
+                    },
+                    { status: response.status }
+                )
             }
 
             const safeErrors = sanitizeFieldErrors(stepErrors)
