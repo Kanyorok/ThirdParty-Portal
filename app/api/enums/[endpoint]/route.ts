@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerAccessToken } from "@/lib/auth/server-token"
 import { getBaseUrl } from "@/lib/api-base"
+import { fetchFirstAvailableJson } from "@/lib/portal-auth-api"
+import { normalizeLookupItems, pickLookupItems } from "@/lib/register-shared"
 
 const PUBLIC_ENUMS = new Set([
     "third-party-types",
     "BusinessType",
+    "Gender",
+    "MaritalStatus",
+    "Occupation",
+])
+
+const LOOKUP_BULK_ENUMS = new Set([
     "Gender",
     "MaritalStatus",
     "Occupation",
@@ -22,6 +30,33 @@ export async function GET(
 
     const isPublic = PUBLIC_ENUMS.has(endpoint)
     let token: string | null = null
+
+    if (LOOKUP_BULK_ENUMS.has(endpoint)) {
+        const response = await fetchFirstAvailableJson([
+            `/portal/auth/lookups/bulk?codes=${encodeURIComponent(endpoint)}`,
+            `/api/v1/portal/auth/lookups/bulk?codes=${encodeURIComponent(endpoint)}`,
+        ])
+
+        if (response.ok) {
+            const groups = (response.body as Record<string, unknown> | null | undefined)?.data ?? response.body
+            const items = pickLookupItems(groups as Record<string, unknown> | null | undefined, endpoint)
+            return NextResponse.json(items)
+        }
+    }
+
+    if (endpoint === "BusinessType") {
+        const response = await fetchFirstAvailableJson([
+            "/portal/metadata/business-types",
+            "/api/v1/portal/auth/metadata/business-types",
+        ])
+
+        if (response.ok) {
+            const rows = Array.isArray(response.body)
+                ? response.body
+                : ((response.body as { data?: unknown } | null | undefined)?.data ?? [])
+            return NextResponse.json(normalizeLookupItems(rows))
+        }
+    }
 
     if (!isPublic) {
         token = await getServerAccessToken(request)
@@ -49,3 +84,4 @@ export async function GET(
 
     return NextResponse.json(data)
 }
+
