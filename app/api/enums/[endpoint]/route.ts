@@ -46,6 +46,7 @@ export async function GET(
 
     if (endpoint === "BusinessType") {
         const response = await fetchFirstAvailableJson([
+            "/portal/auth/metadata/business-types",
             "/portal/metadata/business-types",
             "/api/v1/portal/auth/metadata/business-types",
         ])
@@ -56,6 +57,8 @@ export async function GET(
                 : ((response.body as { data?: unknown } | null | undefined)?.data ?? [])
             return NextResponse.json(normalizeLookupItems(rows))
         }
+
+        return NextResponse.json(response.body ?? { message: "Failed to fetch business types" }, { status: response.status })
     }
 
     if (!isPublic) {
