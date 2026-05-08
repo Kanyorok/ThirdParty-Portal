@@ -10,9 +10,6 @@ const BOOLEAN_FORM_KEYS = ["createUser", "create_user"] as const
 const DOCUMENT_KEY_PATTERN = /^registration_documents\.(\d+)$/
 const DOCUMENT_NOTE_KEY_PATTERN = /^registration_document_notes\.(\d+)$/
 
-const DOCUMENT_KEY_PATTERN = /^registration_documents\.(\d+)$/
-const DOCUMENT_NOTE_KEY_PATTERN = /^registration_document_notes\.(\d+)$/
-
 const REGISTRATION_ALIASES: Record<string, string[]> = {
     Name: ["name"],
     TradingName: ["tradingName"],
