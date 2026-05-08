@@ -8,6 +8,9 @@ const STEP_META_KEYS = new Set(["step", "fields", "createUser", "create_user", "
 
 const BOOLEAN_FORM_KEYS = ["createUser", "create_user"] as const
 
+const DOCUMENT_KEY_PATTERN = /^registration_documents\.(\d+)$/
+const DOCUMENT_NOTE_KEY_PATTERN = /^registration_document_notes\.(\d+)$/
+
 const REGISTRATION_ALIASES: Record<string, string[]> = {
     Name: ["name"],
     TradingName: ["tradingName"],
@@ -30,12 +33,11 @@ const REGISTRATION_ALIASES: Record<string, string[]> = {
     user_DateOfBirth: ["customer_DateOfBirth"],
     user_MaritalStatus: ["customer_MaritalStatus"],
     user_Occupation: ["customer_Occupation"],
-    user_Gender: ["customer_Gender"],
+    user_Gender: ["customer_Gender", "userGender"],
     user_FirstName: ["userFirstName"],
     user_LastName: ["userLastName"],
     user_Email: ["userEmail"],
     user_Phone: ["userPhone"],
-    user_Gender: ["userGender"],
     user_Password: ["userPassword"],
     user_Password_confirmation: ["userPasswordConfirmation"],
 }
