@@ -65,6 +65,26 @@ function extractTenantIdFromPayload(payload: unknown, depth = 0): number | null 
   return null
 }
 
+function firstAuthFieldError(errors: unknown): string | null {
+  if (!errors || typeof errors !== "object") return null
+
+  for (const value of Object.values(errors as Record<string, unknown>)) {
+    if (!Array.isArray(value)) continue
+
+    const firstMessage = value.find((item): item is string => typeof item === "string" && item.trim().length > 0)
+    if (firstMessage) return firstMessage.trim()
+  }
+
+  return null
+}
+
+function serializeAuthError(errorCode: string, message?: string | null): string {
+  const normalizedCode = errorCode.trim() || "SERVER_ERROR"
+  const normalizedMessage = typeof message === "string" ? message.trim() : ""
+
+  return normalizedMessage ? `${normalizedCode}:${normalizedMessage}` : normalizedCode
+}
+
 async function resolveTenantMaintenanceId(userPayload: any, accessToken: string): Promise<number | null> {
   const directCandidates = [
     userPayload,
@@ -101,7 +121,7 @@ async function resolveTenantMaintenanceId(userPayload: any, accessToken: string)
       const resolved = extractTenantIdFromPayload(payload)
       if (resolved != null) return resolved
     } catch {
-      // ignore
+      // @@ignore
     }
   }
 
@@ -146,16 +166,28 @@ export const authOptions: NextAuthOptions = {
         }
 
         if (!res.ok) {
+          const validationMessage = firstAuthFieldError(data?.errors)
+          const errorMessage =
+            validationMessage ??
+            (typeof data?.message === "string" && data.message.trim() ? data.message.trim() : null)
+
           const errorCode =
             typeof data?.error === "string" && data.error.trim()
               ? data.error.trim()
-              : "SERVER_ERROR"
+              : res.status === 422
+                ? "VALIDATION_ERROR"
+                : "SERVER_ERROR"
 
-          throw new Error(errorCode)
+          throw new Error(serializeAuthError(errorCode, errorMessage))
         }
 
         if (data?.success !== true || !data?.user || !data?.token) {
-          throw new Error(typeof data?.error === "string" ? data.error : "SERVER_ERROR")
+          throw new Error(
+            serializeAuthError(
+              typeof data?.error === "string" ? data.error : "SERVER_ERROR",
+              typeof data?.message === "string" ? data.message : null,
+            ),
+          )
         }
 
         const u = data.user
@@ -221,6 +253,21 @@ export const authOptions: NextAuthOptions = {
         session.accessToken = token.accessToken as string
       }
       return session
+    },
+    async redirect({ url, baseUrl }) {
+      if (url === baseUrl || url === `${baseUrl}/` || url === "/") {
+        return `${baseUrl}/signin`
+      }
+
+      if (url.startsWith("/")) {
+        return `${baseUrl}${url}`
+      }
+
+      if (url.startsWith(baseUrl)) {
+        return url
+      }
+
+      return `${baseUrl}/signin`
     },
   },
   pages: { signIn: "/signin", error: "/signin" },

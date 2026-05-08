@@ -6,9 +6,10 @@ import { useRouter } from "next/navigation"
 import { useForm, useWatch, type UseFormRegisterReturn } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Mail, Lock, AlertCircle, Eye, X, EyeClosed, CircleCheck, type LucideIcon } from "lucide-react"
+import { Mail, Lock, Eye, X, EyeClosed, CircleCheck, type LucideIcon } from "lucide-react"
 import { signIn } from "next-auth/react"
 
+import { AlertBanner } from "@/components/auth/alert-banner"
 import { Button } from "@/components/common/button"
 import { Input } from "@/components/common/input"
 import { cn } from "@/lib/utils"
@@ -26,8 +27,15 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
     ACCOUNT_DISABLED: "Your account is disabled.",
     ACCOUNT_NOT_APPROVED: "Your account is pending approval.",
     PROFILE_NOT_AUTHORIZED: "This account is not authorized for the selected portal profile.",
+    VALIDATION_ERROR: "Please review your login details and try again.",
     SERVER_ERROR: "An unexpected error occurred. Please try again later.",
 }
+
+const RAW_AUTH_MESSAGE_MAP: Array<[RegExp, string]> = [
+    [/^the given data was invalid\.?$/i, AUTH_ERROR_MESSAGES.VALIDATION_ERROR],
+    [/profile[_\s-]*type/i, "We could not determine which portal profile to use for this account. Contact support if this continues."],
+    [/(email|password).*(required|invalid)/i, AUTH_ERROR_MESSAGES.VALIDATION_ERROR],
+]
 
 const fieldIconClass = "h-4 w-4 text-slate-700"
 const inputBaseClass = "h-12 rounded-[6px] border-slate-300 bg-white px-3.5 pr-10 text-[15px] font-semibold text-slate-950 caret-primary transition-[border-color,background-color,box-shadow] placeholder:text-sm placeholder:font-medium placeholder:text-slate-500 hover:border-slate-400 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/14 focus-visible:shadow-[0_0_0_1px_rgba(0,92,144,0.14)]"
@@ -36,13 +44,44 @@ const endButtonClass = "absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-sla
 const submitButtonClass = "group h-12 w-full rounded-[6px] bg-primary text-sm font-bold tracking-[0.08em] uppercase shadow-[0_16px_28px_-18px_rgba(0,92,144,0.42)] ring-1 ring-primary/20 transition-[transform,background-color,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:bg-[var(--primary-hover)] hover:shadow-[0_18px_30px_-18px_rgba(0,92,144,0.48)] active:translate-y-0 active:shadow-[0_10px_16px_-14px_rgba(0,92,144,0.34)] disabled:translate-y-0 disabled:bg-primary/70 disabled:shadow-none"
 const linkClass = "transition-[color,opacity,transform,text-decoration-color] duration-200 ease-out hover:text-primary hover:underline hover:underline-offset-4"
 
-function AuthAlert({ id, message }: { id: string, message: string }) {
-    return (
-        <div id={id} role="alert" aria-live="polite" className="flex flex-col items-center justify-center gap-2 rounded-[6px] border border-rose-300/80 bg-rose-50/95 px-4 py-3 text-center text-rose-700">
-            <AlertCircle className="h-4 w-4 shrink-0" />
-            <p className="text-sm font-medium leading-6">{message}</p>
-        </div>
-    )
+function parseAuthResultError(error: string | undefined) {
+    if (!error) {
+        return {
+            code: "SERVER_ERROR",
+            rawMessage: "",
+        }
+    }
+
+    const separatorIndex = error.indexOf(":")
+    if (separatorIndex === -1) {
+        return {
+            code: error.trim() || "SERVER_ERROR",
+            rawMessage: "",
+        }
+    }
+
+    return {
+        code: error.slice(0, separatorIndex).trim() || "SERVER_ERROR",
+        rawMessage: error.slice(separatorIndex + 1).trim(),
+    }
+}
+
+function getFriendlyAuthMessage(error: string | undefined) {
+    const { code, rawMessage } = parseAuthResultError(error)
+    const mappedCodeMessage = AUTH_ERROR_MESSAGES[code]
+
+    if (mappedCodeMessage && code !== "VALIDATION_ERROR") {
+        return mappedCodeMessage
+    }
+
+    if (rawMessage) {
+        const matchedPattern = RAW_AUTH_MESSAGE_MAP.find(([pattern]) => pattern.test(rawMessage))
+        if (matchedPattern) return matchedPattern[1]
+
+        if (rawMessage.length <= 160) return rawMessage
+    }
+
+    return mappedCodeMessage || AUTH_ERROR_MESSAGES.SERVER_ERROR
 }
 
 interface FormFieldProps {
@@ -128,20 +167,20 @@ export default function LoginPage() {
             })
 
             if (result?.error) {
-                const errorCode = result.error.split(":")[0]?.trim() || "SERVER_ERROR"
+                const { code: errorCode } = parseAuthResultError(result.error)
 
                 if (errorCode === "EMAIL_NOT_VERIFIED") {
                     router.push(`/verify-email/expired?email=${encodeURIComponent(data.email)}`)
                     return
                 }
 
-                setAuthError(AUTH_ERROR_MESSAGES[errorCode] || AUTH_ERROR_MESSAGES.SERVER_ERROR)
+                setAuthError(getFriendlyAuthMessage(result.error))
                 return
             }
 
             router.replace("/dashboard")
         } catch {
-            setAuthError("An unexpected error occurred. Please try again later.")
+            setAuthError(AUTH_ERROR_MESSAGES.SERVER_ERROR)
         }
     }
 
@@ -162,7 +201,11 @@ export default function LoginPage() {
 
                         <div className="grid gap-6">
                             <form noValidate aria-busy={isSubmitting} aria-describedby={formDescriptionIds || undefined} onSubmit={handleSubmit(onSubmit)} className="grid gap-6">
-                                {authError && <AuthAlert id={authErrorId} message={authError} />}
+                                {authError ? (
+                                    <div id={authErrorId} aria-live="assertive" aria-atomic="true">
+                                        <AlertBanner type="error" message={authError} />
+                                    </div>
+                                ) : null}
 
                                 <div className="grid gap-5">
                                     <FormField
