@@ -95,24 +95,17 @@ function ChartContainer({ config, className, children, ...props }: ChartContaine
 
 const ChartTooltip = RechartsTooltip
 
-type ChartTooltipPayloadItem = {
-    color?: string
-    dataKey?: string | number
-    name?: string | number
-    payload?: Record<string, unknown>
-    value?: number | string | null
-}
 
-type ChartTooltipContentProps = React.ComponentProps<"div"> &
-{
+
+type ChartTooltipContentProps = React.ComponentProps<"div"> & {
     active?: boolean
-    payload?: ChartTooltipPayloadItem[]
-    label?: string | number
+    payload?: any[]
+    label?: any
     hideLabel?: boolean
     formatter?: (
         value: number | string,
         name: string,
-        item: ChartTooltipPayloadItem,
+        item: any,
         index: number
     ) => React.ReactNode
 }
@@ -138,7 +131,7 @@ function ChartTooltipContent({
                 <p className="mb-1 font-medium text-foreground">{String(label)}</p>
             ) : null}
             <div className="space-y-1">
-                {payload.map((entry, index) => {
+                {payload.map((entry: any, index: number) => {
                     const key = String(entry.dataKey ?? "")
                     const conf = config[key]
                     const markerColor = entry.color ?? conf?.color ?? "hsl(var(--muted-foreground))"

@@ -8,7 +8,7 @@ import { Button } from "@/components/common/button"
 
 type Action = { label: string; href: string }
 
-const headerEase = [0.22, 1, 0.36, 1] as const
+const headerEase: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94]
 
 const headerShellVariants: Variants = {
   hidden: { opacity: 0, y: 16 },

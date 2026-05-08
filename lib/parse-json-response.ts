@@ -1,4 +1,4 @@
-export async function parseJsonResponse<T = Record<string, any>>(res: Response): Promise<T | null> {
+export async function parseJsonResponse<T = any>(res: Response): Promise<T | null> {
     const contentType = res.headers.get("content-type") || ""
 
     if (!contentType.includes("application/json")) {

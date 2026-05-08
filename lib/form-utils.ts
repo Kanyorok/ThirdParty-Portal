@@ -69,7 +69,7 @@ export const transformThirdPartyDetailsForApi = (formData: ThirdPartyDetailsForm
         Country: formData.country,
         PhysicalAddress: formData.physicalAddress,
         Email: formData.email,
-        Phone: normalizeToE164(formData.phone),
+        Phone: normalizeToE164(formData.phone || ""),
         Website: formData.website,
         ThirdPartyType: formData.userType === "supplier" ? "S" : formData.userType === "tenant" ? "T" : "C",
     };

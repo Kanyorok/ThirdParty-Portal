@@ -28,7 +28,7 @@ import {
 import { Label } from "@/components/common/label"
 import { Checkbox } from "@/components/common/checkbox"
 
-const shellEase = [0.22, 1, 0.36, 1] as const
+const shellEase: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94]
 
 const shellSectionVariants: Variants = {
   hidden: { opacity: 0, y: 14 },

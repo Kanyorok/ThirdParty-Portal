@@ -315,10 +315,10 @@ export default function TendersFilter() {
         `/api/tenders${params.toString() ? `?${params}` : ""}`,
         { signal, headers: { Accept: "application/json" } }
       )
-      const json = await parseJsonResponse<({ data?: unknown[]; message?: string; error?: string }) | unknown[]>(res)
+      const json: any = await parseJsonResponse(res)
       const message = Array.isArray(json) ? null : json?.message ?? json?.error ?? null
       if (!res.ok) throw new Error(message ?? "Failed to load tenders")
-      if (!Array.isArray(json) && Array.isArray(json?.data)) setTenders(json.data)
+      if (json && Array.isArray(json.data)) setTenders(json.data)
       else if (Array.isArray(json)) setTenders(json)
       else setTenders([])
     } catch (e: unknown) {
