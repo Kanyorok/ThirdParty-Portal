@@ -14,7 +14,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     const response = await fetch(endpoint, config)
 
     if (response.status === 401) {
-        await signOut({ callbackUrl: '/signin' })
+        await signOut({ callbackUrl: typeof window !== 'undefined' ? `${window.location.origin}/signin` : '/signin' })
         throw new Error('Unauthorized')
     }
 

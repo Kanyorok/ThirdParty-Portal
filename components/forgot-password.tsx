@@ -50,7 +50,8 @@ export function ForgotPasswordForm() {
 
     const submitResetRequest = async (email: string) => {
         setState({ type: "idle", message: "" })
-        const result: AuthResult = await requestPasswordReset(email)
+        const frontendOrigin = typeof window !== "undefined" ? window.location.origin : undefined
+        const result: AuthResult = await requestPasswordReset(email, frontendOrigin)
 
         if (result.success) {
             setState({

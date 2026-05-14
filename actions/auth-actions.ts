@@ -41,6 +41,17 @@ type FrontendRequestContext = {
     port?: string
 }
 
+function normalizeFrontendOrigin(value?: string | null) {
+    if (!value) return undefined
+    try {
+        const parsed = new URL(value)
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return undefined
+        return parsed.origin
+    } catch {
+        return undefined
+    }
+}
+
 async function getFrontendRequestContext(): Promise<FrontendRequestContext> {
     const headerStore = await headers()
     const forwardedHost = headerStore.get("x-forwarded-host")?.trim()
@@ -49,17 +60,8 @@ async function getFrontendRequestContext(): Promise<FrontendRequestContext> {
     const explicitOrigin = headerStore.get("origin")?.trim()
     const requestUrl = headerStore.get("x-url")?.trim() || headerStore.get("referer")?.trim() || undefined
 
-    const parseOrigin = (value?: string | null) => {
-        if (!value) return undefined
-        try {
-            return new URL(value).origin
-        } catch {
-            return undefined
-        }
-    }
-
-    const requestOrigin = parseOrigin(requestUrl)
-    const origin = parseOrigin(explicitOrigin) || requestOrigin || (host && protocol ? `${protocol}://${host}` : undefined)
+    const requestOrigin = normalizeFrontendOrigin(requestUrl)
+    const origin = normalizeFrontendOrigin(explicitOrigin) || requestOrigin || (host && protocol ? `${protocol}://${host}` : undefined)
 
     let port: string | undefined
     try {
@@ -86,18 +88,33 @@ function withFrontendHeaders(baseHeaders: Record<string, string>, context: Front
         nextHeaders.Origin = context.origin
         nextHeaders.Referer = `${context.origin}${path.startsWith("/") ? path : `/${path}`}`
         nextHeaders["X-Frontend-Origin"] = context.origin
+        nextHeaders["X-Origin"] = context.origin
     }
 
     if (context.host) {
         nextHeaders["X-Forwarded-Host"] = context.host
+        nextHeaders["X-Original-Host"] = context.host
     }
 
     if (context.protocol) {
         nextHeaders["X-Forwarded-Proto"] = context.protocol
+        nextHeaders["X-Original-Proto"] = context.protocol
     }
 
     if (context.port) {
         nextHeaders["X-Forwarded-Port"] = context.port
+        nextHeaders["X-Original-Port"] = context.port
+    }
+
+    if (context.host || context.protocol) {
+        const forwardedSegments = [
+            context.protocol ? `proto=${context.protocol}` : null,
+            context.host ? `host=${context.host}` : null,
+        ].filter(Boolean)
+
+        if (forwardedSegments.length > 0) {
+            nextHeaders.Forwarded = forwardedSegments.join(";")
+        }
     }
 
     return nextHeaders
@@ -121,7 +138,7 @@ function firstFieldError(errors?: Record<string, string[]>) {
     return undefined
 }
 
-export async function requestPasswordReset(email: string): Promise<AuthResult> {
+export async function requestPasswordReset(email: string, frontendOrigin?: string | null): Promise<AuthResult> {
     const baseUrl = getApiBaseUrl()
     if (!baseUrl) {
         return {
@@ -133,14 +150,30 @@ export async function requestPasswordReset(email: string): Promise<AuthResult> {
 
     try {
         const frontendRequestContext = await getFrontendRequestContext()
+        const resolvedFrontendOrigin = normalizeFrontendOrigin(frontendOrigin) || frontendRequestContext.origin
+        const resetUrl = resolvedFrontendOrigin ? `${resolvedFrontendOrigin}/reset-password` : undefined
         const response = await fetch(`${baseUrl}/api/v1/portal/auth/password/forgot`, {
             method: 'POST',
             headers: withFrontendHeaders({
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
-            }, frontendRequestContext, '/forgot-password'),
-            body: JSON.stringify({ email }),
+            }, {
+                ...frontendRequestContext,
+                origin: resolvedFrontendOrigin,
+                host: resolvedFrontendOrigin ? new URL(resolvedFrontendOrigin).host : frontendRequestContext.host,
+                protocol: resolvedFrontendOrigin ? new URL(resolvedFrontendOrigin).protocol.replace(/:$/, "") : frontendRequestContext.protocol,
+                port: resolvedFrontendOrigin ? new URL(resolvedFrontendOrigin).port || undefined : frontendRequestContext.port,
+            }, '/forgot-password'),
+            body: JSON.stringify({
+                email,
+                origin: resolvedFrontendOrigin,
+                app_url: resolvedFrontendOrigin,
+                callback_url: resetUrl,
+                redirect_url: resetUrl,
+                frontend_url: resolvedFrontendOrigin,
+                reset_url: resetUrl,
+            }),
             cache: 'no-store'
         });
 

@@ -100,7 +100,7 @@ function UtilityMenuSheet({
             >
                 <div>
                     <div className="px-3 py-2.5">
-                                        <div className="text-[12px] font-semibold tracking-tight text-foreground">Account & Help</div>
+                        <div className="text-[12px] font-semibold tracking-tight text-foreground">Account & Help</div>
                     </div>
 
                     <div className="px-2 pb-2">
@@ -351,7 +351,7 @@ export function AppSidebar({ className, collapsible = "icon", variant = "sidebar
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton
-                            onClick={() => signOut({ callbackUrl: "/signin" })}
+                            onClick={() => signOut({ callbackUrl: typeof window !== "undefined" ? `${window.location.origin}/signin` : "/signin" })}
                             tooltip="Logout"
                             className={cn(
                                 "group h-8.5 w-full rounded-[0.8rem] text-sidebar-foreground/62 transition-all hover:bg-rose-500/[0.06] hover:text-rose-600 dark:hover:text-rose-300 sm:rounded-[0.85rem]",

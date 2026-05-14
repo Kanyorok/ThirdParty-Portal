@@ -23,7 +23,7 @@ export async function fetchFirstAvailableJson(candidatePaths: string[]) {
             apiBase,
             ok: false,
             status: 500,
-            body: { message: "Registration service is not configured." } as unknown,
+            body: { message: "No Registration service." } as unknown,
         }
     }
 
@@ -41,7 +41,7 @@ export async function fetchFirstAvailableJson(candidatePaths: string[]) {
         } catch (error) {
             lastStatus = 502
             lastBody = {
-                message: error instanceof Error ? error.message : "Upstream request failed",
+                message: error instanceof Error ? error.message : "Request failed",
             }
             continue
         }

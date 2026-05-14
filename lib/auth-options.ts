@@ -263,6 +263,20 @@ export const authOptions: NextAuthOptions = {
         return `${baseUrl}${url}`
       }
 
+      try {
+        const targetUrl = new URL(url)
+        const normalizedBaseUrl = new URL(baseUrl)
+
+        if (
+          targetUrl.protocol === normalizedBaseUrl.protocol &&
+          targetUrl.hostname === normalizedBaseUrl.hostname
+        ) {
+          return targetUrl.toString()
+        }
+      } catch {
+        // Ignore malformed absolute redirect URLs and fall through.
+      }
+
       if (url.startsWith(baseUrl)) {
         return url
       }
