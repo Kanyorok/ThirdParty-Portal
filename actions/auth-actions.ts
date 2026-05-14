@@ -1,5 +1,7 @@
 "use server"
 
+import { headers } from "next/headers"
+
 import { getBaseUrl } from "@/lib/api-base"
 
 export interface AuthResult {
@@ -32,6 +34,75 @@ function getApiBaseUrl() {
     return getBaseUrl()
 }
 
+type FrontendRequestContext = {
+    origin?: string
+    host?: string
+    protocol?: string
+    port?: string
+}
+
+async function getFrontendRequestContext(): Promise<FrontendRequestContext> {
+    const headerStore = await headers()
+    const forwardedHost = headerStore.get("x-forwarded-host")?.trim()
+    const host = forwardedHost || headerStore.get("host")?.trim() || undefined
+    const protocol = headerStore.get("x-forwarded-proto")?.trim() || undefined
+    const explicitOrigin = headerStore.get("origin")?.trim()
+    const requestUrl = headerStore.get("x-url")?.trim() || headerStore.get("referer")?.trim() || undefined
+
+    const parseOrigin = (value?: string | null) => {
+        if (!value) return undefined
+        try {
+            return new URL(value).origin
+        } catch {
+            return undefined
+        }
+    }
+
+    const requestOrigin = parseOrigin(requestUrl)
+    const origin = parseOrigin(explicitOrigin) || requestOrigin || (host && protocol ? `${protocol}://${host}` : undefined)
+
+    let port: string | undefined
+    try {
+        if (origin) {
+            const parsed = new URL(origin)
+            port = parsed.port || undefined
+        }
+    } catch {
+        port = undefined
+    }
+
+    return {
+        origin,
+        host,
+        protocol,
+        port,
+    }
+}
+
+function withFrontendHeaders(baseHeaders: Record<string, string>, context: FrontendRequestContext, path: string) {
+    const nextHeaders = { ...baseHeaders }
+
+    if (context.origin) {
+        nextHeaders.Origin = context.origin
+        nextHeaders.Referer = `${context.origin}${path.startsWith("/") ? path : `/${path}`}`
+        nextHeaders["X-Frontend-Origin"] = context.origin
+    }
+
+    if (context.host) {
+        nextHeaders["X-Forwarded-Host"] = context.host
+    }
+
+    if (context.protocol) {
+        nextHeaders["X-Forwarded-Proto"] = context.protocol
+    }
+
+    if (context.port) {
+        nextHeaders["X-Forwarded-Port"] = context.port
+    }
+
+    return nextHeaders
+}
+
 async function parsePayload(response: Response): Promise<ApiPayload> {
     const text = await response.text().catch(() => "")
     if (!text) return {}
@@ -61,13 +132,14 @@ export async function requestPasswordReset(email: string): Promise<AuthResult> {
     }
 
     try {
+        const frontendRequestContext = await getFrontendRequestContext()
         const response = await fetch(`${baseUrl}/api/v1/portal/auth/password/forgot`, {
             method: 'POST',
-            headers: {
+            headers: withFrontendHeaders({
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
-            },
+            }, frontendRequestContext, '/forgot-password'),
             body: JSON.stringify({ email }),
             cache: 'no-store'
         });
@@ -139,13 +211,14 @@ export async function resetPassword(token: string, newPassword: string, email: s
     }
 
     try {
+        const frontendRequestContext = await getFrontendRequestContext()
         const response = await fetch(`${baseUrl}/api/v1/portal/auth/password/reset`, {
             method: 'POST',
-            headers: {
+            headers: withFrontendHeaders({
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
-            },
+            }, frontendRequestContext, '/reset-password'),
             body: JSON.stringify({
                 token: token,
                 email: email,
@@ -190,3 +263,4 @@ export async function resetPassword(token: string, newPassword: string, email: s
         };
     }
 }
+

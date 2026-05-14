@@ -360,7 +360,7 @@ const registerSchema = z
         ),
         VATNumber: z.preprocess(
             normalizeTaxIdentifier,
-            z.string().regex(TAX_IDENTIFIER_REGEX, "VAT number must be exactly 11 characters, like P123456789X.").max(50, "VAT number must be 50 characters or fewer"),
+            z.string().regex(TAX_IDENTIFIER_REGEX, "Enter VAT number e.g. P123456789X.").max(50, "VAT number must be 50 characters or fewer").optional(),
         ),
         Country: z.string().trim().min(2, "Country is required").max(3, "Please select a valid country code"),
         Location: z.coerce.number().int("Please select a valid location").min(1, "Location is required"),
