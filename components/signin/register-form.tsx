@@ -1098,8 +1098,8 @@ export default function RegisterForm() {
                                                 </div>
 
                                                 <div className={fieldBlockClass}>
-                                                    <FieldLabel required>VAT Number</FieldLabel>
-                                                    <Input required {...form.register("VATNumber")} placeholder="P123456789X" className={cn(inputStyle, errors.VATNumber && inputErrorClass)} />
+                                                    <FieldLabel>VAT Number</FieldLabel>
+                                                    <Input {...form.register("VATNumber")} placeholder="P123456789X" className={cn(inputStyle, errors.VATNumber && inputErrorClass)} />
                                                     <FieldError message={errors.VATNumber?.message as string | undefined} label="VAT number" />
                                                 </div>
 

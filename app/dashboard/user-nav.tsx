@@ -11,7 +11,7 @@ export const UserNav = () => {
 
     const handleLogout = useCallback(() => {
         startTransition(async () => {
-            await signOut({ callbackUrl: "/signin" })
+            await signOut({ callbackUrl: typeof window !== "undefined" ? `${window.location.origin}/signin` : "/signin" })
         })
     }, [])
 

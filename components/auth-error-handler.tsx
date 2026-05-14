@@ -18,7 +18,7 @@ const AuthErrorHandler = ({ children }: Props) => {
 
     useEffect(() => {
         if (session?.error === "RefreshAccessTokenError") {
-            signOut({ callbackUrl: "/signin", redirect: true })
+            signOut({ callbackUrl: typeof window !== "undefined" ? `${window.location.origin}/signin` : "/signin", redirect: true })
         }
     }, [session])
 
