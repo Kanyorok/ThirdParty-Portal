@@ -75,7 +75,7 @@ export default function DangerZoneCard() {
             toast.success(response?.message || "Account deactivated successfully.")
             setDialogOpen(false)
             resetFormState()
-            await signOut({ callbackUrl: "/signin", redirect: true })
+            await signOut({ callbackUrl: typeof window !== "undefined" ? `${window.location.origin}/signin` : "/signin", redirect: true })
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : "Account deactivation failed."
             setPasswordError(message)
