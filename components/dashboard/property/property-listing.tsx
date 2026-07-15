@@ -789,8 +789,9 @@ function PropertyCard({ property, locationName, stats, imageUrl }: { property: P
 }
 
 function PropertyDetailsSheet({ property, locationName, stats, imageUrl, children }: { property: Property, locationName: string, stats: PropertyStats, imageUrl?: string | null, children: React.ReactNode }) {
-    const { data: session } = useSession()
+    const { data: session, status } = useSession()
     const accessToken = resolveSessionAccessToken(session as any) || null
+    const isAuthenticated = status === "authenticated"
     const totalVacant = stats.vacantUnits
     const totalUnits = stats.totalUnits
     const today = new Date().toISOString().split("T")[0]
@@ -854,13 +855,13 @@ function PropertyDetailsSheet({ property, locationName, stats, imageUrl, childre
 
     useEffect(() => {
         if (!isInterestDialogOpen) return
-        if (!accessToken) return
+        if (!isAuthenticated) return
         if (paymentFrequencyOptions.length > 0) return
 
         let active = true
         setIsLoadingPaymentFrequency(true)
 
-        getPaymentFrequencyCodeDetails(accessToken)
+        getPaymentFrequencyCodeDetails(accessToken || "")
             .then((options) => {
                 if (!active) return
                 setPaymentFrequencyOptions(options)
@@ -880,12 +881,15 @@ function PropertyDetailsSheet({ property, locationName, stats, imageUrl, childre
         return () => {
             active = false
         }
-    }, [accessToken, isInterestDialogOpen, paymentFrequencyId, paymentFrequencyOptions.length])
+    }, [accessToken, isAuthenticated, isInterestDialogOpen, paymentFrequencyId, paymentFrequencyOptions.length])
 
-    const openInterestDialog = () => {
-        if (!accessToken) {
+    const openInterestDialog = (unitId?: number | string) => {
+        if (!isAuthenticated) {
             toast.error("Session expired. Sign in again to continue.")
             return
+        }
+        if (unitId !== undefined) {
+            setSelectedUnitId(String(unitId))
         }
         setIsInterestDialogOpen(true)
     }
@@ -893,7 +897,7 @@ function PropertyDetailsSheet({ property, locationName, stats, imageUrl, childre
     const submitInterest = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault()
 
-        if (!accessToken) {
+        if (!isAuthenticated) {
             toast.error("Session expired. Sign in again to continue.")
             return
         }
@@ -927,13 +931,13 @@ function PropertyDetailsSheet({ property, locationName, stats, imageUrl, childre
                 additional_information: additionalInformation.trim() || undefined,
             }
 
-            const created = await createLeaseInterest(payload, accessToken)
+            const created = await createLeaseInterest(payload, accessToken || "")
             const createdId = Number((created as any)?.data?.id ?? (created as any)?.data?.Id ?? NaN)
             let verificationFailed = false
 
             try {
                 if (Number.isFinite(createdId) && createdId > 0) {
-                    await getLeaseInterestById(createdId, accessToken)
+                    await getLeaseInterestById(createdId, accessToken || "")
                 }
             } catch {
                 verificationFailed = true
@@ -1100,14 +1104,26 @@ function PropertyDetailsSheet({ property, locationName, stats, imageUrl, childre
                                                                         {unit.unitSize} sq ft
                                                                     </div>
                                                                 </div>
-                                                                <Badge className={cn(
-                                                                    "rounded-lg border px-2.5 py-1 text-[10px] font-semibold uppercase",
-                                                                    unit.availabilityLabel === "Vacant"
-                                                                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                                                                        : "border-slate-200 bg-slate-100 text-slate-600"
-                                                                )}>
-                                                                    {unit.availabilityLabel}
-                                                                </Badge>
+                                                                <div className="flex items-center gap-2">
+                                                                    <Badge className={cn(
+                                                                        "rounded-lg border px-2.5 py-1 text-[10px] font-semibold uppercase",
+                                                                        unit.availabilityLabel === "Vacant"
+                                                                            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                                                            : "border-slate-200 bg-slate-100 text-slate-600"
+                                                                    )}>
+                                                                        {unit.availabilityLabel}
+                                                                    </Badge>
+                                                                    {String(unit.availabilityLabel || "").toLowerCase() === "vacant" ? (
+                                                                        <Button
+                                                                            type="button"
+                                                                            size="sm"
+                                                                            onClick={() => openInterestDialog(unit.id)}
+                                                                            className="h-8 rounded-lg bg-blue-600 px-3 text-[11px] font-semibold text-white hover:bg-blue-700"
+                                                                        >
+                                                                            Show interest
+                                                                        </Button>
+                                                                    ) : null}
+                                                                </div>
                                                             </div>
                                                         ))}
                                                     </div>
@@ -1141,7 +1157,7 @@ function PropertyDetailsSheet({ property, locationName, stats, imageUrl, childre
                                 </Button>
                                 <Button
                                     disabled={totalVacant === 0}
-                                    onClick={openInterestDialog}
+                                    onClick={() => openInterestDialog()}
                                     className={cn(
                                         "h-11 rounded-xl px-5 text-xs font-semibold shadow-none transition-colors focus-visible:ring-4 focus-visible:ring-blue-50",
                                         totalVacant === 0
@@ -1149,7 +1165,7 @@ function PropertyDetailsSheet({ property, locationName, stats, imageUrl, childre
                                             : "bg-blue-600 text-white hover:bg-blue-700"
                                     )}
                                 >
-                                    {totalVacant === 0 ? "No vacant units right now" : `Request this space (${totalVacant})`}
+                                    {totalVacant === 0 ? "No vacant units right now" : `Choose a unit (${totalVacant})`}
                                 </Button>
                             </div>
                         </div>
@@ -1286,7 +1302,7 @@ function PropertyDetailsSheet({ property, locationName, stats, imageUrl, childre
                             <Button
                                 type="submit"
                                 className="h-10 rounded-lg bg-blue-600 px-4 text-xs font-semibold text-white hover:bg-blue-700"
-                                disabled={isSubmittingInterest || !accessToken}
+                                disabled={isSubmittingInterest || !isAuthenticated}
                             >
                                 {isSubmittingInterest ? <><Spinner className="mr-1.5 h-4 w-4" />Submitting interest</> : "Send interest"}
                             </Button>

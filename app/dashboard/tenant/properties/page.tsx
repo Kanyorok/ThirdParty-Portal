@@ -49,12 +49,12 @@ export default function PropertyRegistry() {
     const { data: session, status } = useSession()
     const accessToken = resolveSessionAccessToken(session as any)
     const isSessionLoading = status === "loading"
-    const externalApiBaseUrl = process.env.NEXT_PUBLIC_EXTERNAL_API_URL
+    const externalApiBaseUrl = process.env.NEXT_PUBLIC_EXTERNAL_API_URL ?? process.env.NEXT_PUBLIC_API_URL
 
     const { data, isLoading, isError, refetch, isFetching } = useQuery({
-        queryKey: ['rentable-properties', page, accessToken],
+        queryKey: ['rentable-properties', page],
         queryFn: () => getRentableProperties(page, accessToken),
-        enabled: Boolean(accessToken),
+        enabled: status === "authenticated",
         placeholderData: (previousData) => previousData,
     })
 

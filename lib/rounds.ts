@@ -1,4 +1,4 @@
-import { Round, RoundCategory } from "@/types/types"
+import { CategoryDocumentRequirement, Round, RoundCategory } from "@/types/types"
 
 const extractInstructionSegment = (text?: string | null) => {
     if (!text) return undefined
@@ -43,6 +43,38 @@ const normalizeCategoryStatus = (status?: string | null) => {
 const normalizeCategory = (category: any): RoundCategory => {
     const categoryId = category.category_id ?? category.id ?? category.categoryId ?? category.SupplierCategoryID ?? ""
     const name = category.category_name ?? category.name ?? category.CategoryName ?? ""
+    const rawDocumentTypes = category.documentTypes
+        ?? category.document_types
+        ?? category.requiredDocumentTypes
+        ?? category.required_document_types
+        ?? []
+    const documentTypes = (Array.isArray(rawDocumentTypes) ? rawDocumentTypes : [])
+        .map((documentType: any) => {
+            const id = documentType.documentTypeId
+                ?? documentType.document_type_id
+                ?? documentType.DocumentTypeID
+                ?? documentType.id
+                ?? documentType.ID
+            const documentName = String(documentType.name ?? documentType.description ?? documentType.Description ?? "").trim()
+            if (id == null || !documentName) return null
+
+            return {
+                id,
+                document_type_id: id,
+                name: documentName,
+                description: documentType.description ?? documentType.Description,
+                value: documentType.value ?? documentType.Value,
+                required: Boolean(
+                    documentType.isRequired
+                    ?? documentType.is_required
+                    ?? documentType.isMandatory
+                    ?? documentType.is_mandatory
+                    ?? documentType.required
+                ),
+            }
+        })
+        .filter(Boolean) as CategoryDocumentRequirement[]
+
     return {
         category_id: categoryId,
         category_name: name,
@@ -55,7 +87,9 @@ const normalizeCategory = (category: any): RoundCategory => {
         stage_label: category.stage_label ?? category.stageLabel ?? category.stage,
         updated_on: category.updated_on ?? category.updatedOn,
         rejection_reason: category.rejection_reason ?? category.rejectionReason,
-        decision_date: category.decision_date ?? category.decisionDate
+        decision_date: category.decision_date ?? category.decisionDate,
+        document_types: documentTypes,
+        required_document_types: documentTypes.filter((documentType) => documentType.required),
     }
 }
 

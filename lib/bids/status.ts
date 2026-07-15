@@ -8,6 +8,12 @@ const SUBMITTED_TOKENS = [
   "accepted",
   "closed",
   "sent",
+  "opened",
+  "responsive",
+  "non-responsive",
+  "evaluated",
+  "evaluation",
+  "under review",
 ]
 
 const DRAFT_TOKENS = [

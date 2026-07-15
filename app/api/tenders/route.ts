@@ -39,36 +39,25 @@ export async function GET(request: NextRequest) {
         signal: AbortSignal.timeout(10000)
       })
 
-      if (response.ok) {
-        const data = await response.json()
-        return NextResponse.json(data)
-      } else {
-        const errorText = await response.text()
-        console.error(`ERP /api/v1/supplier/tenders returned error ${response.status}:`, errorText)
+      const data = await response.json().catch(() => null)
 
-        if (response.status === 401) {
-          return NextResponse.json({
-            data: [],
-            total: 0,
-            page: 1,
-            limit: 10,
-            pages: 0,
-            message: "Authentication with ERP failed. Try logging out and in again."
-          })
-        }
+      if (!response.ok) {
+        const message = data?.message || data?.error || "ERP failed to load tenders"
+        console.error(`ERP /api/v1/supplier/tenders returned error ${response.status}:`, message)
+        return NextResponse.json(
+          { ...(data && typeof data === "object" ? data : {}), message },
+          { status: response.status }
+        )
       }
+
+      return NextResponse.json(data)
     } catch (e) {
       console.warn('ERP /api/v1/supplier/tenders call failed:', e)
+      return NextResponse.json(
+        { error: "Unable to reach the ERP tender service" },
+        { status: 502 }
+      )
     }
-
-    return NextResponse.json({
-      data: [],
-      total: 0,
-      page: 1,
-      limit: 10,
-      pages: 0,
-      fallback: false
-    })
 
   } catch (error) {
     console.error('Failed to fetch tenders:', error)

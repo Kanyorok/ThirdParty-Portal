@@ -78,6 +78,9 @@ export type DashboardSummary = {
         myBids?: number
         submittedBids?: number
         draftBids?: number
+        approvedPurchaseOrders?: number
+        purchaseOrderValue?: number
+        purchaseOrderCurrency?: string
     }
     breakdowns?: {
         prequalification?: PreqBreakdown

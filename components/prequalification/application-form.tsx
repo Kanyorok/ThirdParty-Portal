@@ -20,7 +20,7 @@ import type { Round, RoundSection, SupplierCategory } from "@/types/prequalifica
 type LoadingState = "idle" | "loading" | "success" | "error" | "submitting" | "warning";
 
 type UploadStatus = 'pending' | 'uploading' | 'done' | 'error';
-type UploadItem = { id: string; file?: File | null; sectionId?: number | null; fileType?: string; categoryId: string; status: UploadStatus; error?: string; serverId?: number | null };
+type UploadItem = { id: string; file?: File | null; sectionId?: number | null; fileType?: string; documentTypeId?: number | string | null; categoryId: string; status: UploadStatus; error?: string; serverId?: number | null };
 type UnknownSection = Record<string, unknown>;
 type UnknownCriteria = Record<string, unknown>;
 const firstOf = <T = unknown>(o: unknown, keys: string[]): T | undefined => {
@@ -147,6 +147,34 @@ const CategoryApiItemSchema = z.object({
         description: z.string().optional(),
         required: z.boolean().optional(),
         isRequired: z.boolean().optional(),
+        maxFileSizeMb: z.number().optional(),
+        max_file_size_mb: z.number().optional(),
+        maxFileSize: z.number().optional(),
+        max_file_size: z.number().optional(),
+    })).optional(),
+    documentTypes: z.array(z.object({
+        id: z.union([z.number(), z.string()]).optional(),
+        documentTypeId: z.union([z.number(), z.string()]).optional(),
+        label: z.string().optional(),
+        name: z.string().optional(),
+        description: z.string().optional(),
+        required: z.boolean().optional(),
+        isRequired: z.boolean().optional(),
+        isMandatory: z.boolean().optional(),
+        maxFileSizeMb: z.number().optional(),
+        max_file_size_mb: z.number().optional(),
+        maxFileSize: z.number().optional(),
+        max_file_size: z.number().optional(),
+    })).optional(),
+    document_types: z.array(z.object({
+        id: z.union([z.number(), z.string()]).optional(),
+        documentTypeId: z.union([z.number(), z.string()]).optional(),
+        label: z.string().optional(),
+        name: z.string().optional(),
+        description: z.string().optional(),
+        required: z.boolean().optional(),
+        isRequired: z.boolean().optional(),
+        isMandatory: z.boolean().optional(),
         maxFileSizeMb: z.number().optional(),
         max_file_size_mb: z.number().optional(),
         maxFileSize: z.number().optional(),
@@ -447,14 +475,20 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                 id: String(c.id ?? c.supplierCategoryID ?? ""),
                 name: c.name ?? c.categoryName ?? "Unnamed Category",
                 is_active: c.is_active ?? true,
-                documentRules: (c.requiredDocuments ?? c.required_documents ?? c.documentRules ?? c.document_rules ?? [])
-                    .map((rule) => ({
-                        id: rule.id,
-                        label: String(rule.label ?? rule.name ?? "").trim(),
-                        required: rule.required ?? rule.isRequired ?? false,
-                        description: rule.description,
-                        maxFileSizeMb: rule.maxFileSizeMb ?? rule.max_file_size_mb ?? rule.maxFileSize ?? rule.max_file_size ?? null,
-                    }))
+                documentRules: (c.requiredDocuments ?? c.required_documents ?? c.documentRules ?? c.document_rules ?? c.documentTypes ?? c.document_types ?? [])
+                    .map((rule) => {
+                        const normalizedRule = rule as typeof rule & {
+                            documentTypeId?: number | string
+                            isMandatory?: boolean
+                        }
+                        return {
+                            id: normalizedRule.documentTypeId ?? normalizedRule.id,
+                            label: String(normalizedRule.label ?? normalizedRule.name ?? "").trim(),
+                            required: normalizedRule.required ?? normalizedRule.isRequired ?? normalizedRule.isMandatory ?? false,
+                            description: normalizedRule.description,
+                            maxFileSizeMb: normalizedRule.maxFileSizeMb ?? normalizedRule.max_file_size_mb ?? normalizedRule.maxFileSize ?? normalizedRule.max_file_size ?? null,
+                        }
+                    })
                     .filter((rule) => rule.label.length > 0),
             }));
             const active = mapped.filter((c) => c.is_active);
@@ -593,24 +627,24 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
 
     const uploadFile = useCallback(async (u: UploadItem) => {
         const rid = effectiveRoundId;
-        if (!rid || !u.file) return;
+        if (!rid || !u.file) return false;
         try {
             const fd = new FormData();
             fd.append('file', u.file as Blob);
             const sectionId = u.sectionId ?? (roundMetaById[String(rid)]?.sections?.[0]?.sectionId ?? null);
-            if (!sectionId) {
-                throw new Error('Please select a document type (section) for each file.');
-            }
-            fd.append('section_id', String(sectionId));
+            if (sectionId) fd.append('section_id', String(sectionId));
             if (u.fileType) fd.append('file_type', u.fileType);
+            if (u.documentTypeId) fd.append('document_type_id', String(u.documentTypeId));
             fd.append('description', (form.getValues('descriptions') as Record<string, string> | undefined)?.[u.categoryId] || '');
             const url = `/api/procurement/prequalification/applications/${encodeURIComponent(String(rid))}/categories/${encodeURIComponent(String(u.categoryId))}/documents`;
             const res = await fetch(url, { method: 'POST', body: fd, cache: 'no-store' });
             if (!res.ok) throw new Error(await res.text());
             setUploads((list) => list.map((x) => x.id === u.id ? { ...x, status: 'done' } : x));
+            return true;
         } catch (e: unknown) {
             const message = e instanceof Error ? e.message : String(e);
             setUploads((list) => list.map((x) => x.id === u.id ? { ...x, status: 'error', error: message } : x));
+            return false;
         }
     }, [effectiveRoundId, form, roundMetaById]);
 
@@ -631,10 +665,10 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
             }
             const categoryIds = values.categoryIds.map((id) => parseInt(id, 10));
             const staged = uploads.filter(u => (u.status === 'pending' || u.status === 'error') && categoryIds.includes(parseInt(u.categoryId, 10)));
-            const missingDocumentMeta = staged.filter((u) => !u.sectionId || !(u.fileType || '').trim());
+            const missingDocumentMeta = staged.filter((u) => !(u.fileType || '').trim());
             if (missingDocumentMeta.length > 0) {
                 setFormLoadingState("error");
-                setFormMessage({ type: "error", message: "Add a document type and label for every staged category document before submitting your application." });
+                setFormMessage({ type: "error", message: "Select a document label for every staged category document before submitting your application." });
                 return;
             }
             const missingRequiredRules = values.categoryIds.flatMap((categoryId) => {
@@ -659,16 +693,21 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                 return;
             }
             try {
+                // The ERP enforces mandatory documents before creating the
+                // application, so upload all staged category files first.
+                for (const upload of staged) {
+                    setUploads((list) => list.map((item) => item.id === upload.id ? { ...item, status: 'uploading' } : item));
+                    const uploaded = await uploadFile(upload);
+                    if (!uploaded) {
+                        setFormLoadingState("error");
+                        setFormMessage({ type: "error", message: `Could not upload ${upload.file?.name ?? "a mandatory document"}. Please correct the file and try again.` });
+                        return;
+                    }
+                }
+
                 const resp = await submitApplicationSafe(roundId, categoryIds);
                 const respData = (resp.data ?? {}) as Record<string, unknown>;
                 const application = (respData.application ?? null) as Record<string, unknown> | null;
-                // After submit, upload any staged files for the selected categories
-                if (resp.status === 201) {
-                    for (const u of staged) {
-                        setUploads((list) => list.map((x) => x.id === u.id ? { ...x, status: 'uploading' } : x));
-                        await uploadFile(u);
-                    }
-                }
                 if (resp.status === 201) {
                     setFormMessage({ type: "success", message: "" });
                     setFormLoadingState("success");
@@ -951,7 +990,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                                                             <div className="flex items-center justify-between">
                                                                                 <div className="flex flex-col gap-1">
                                                                                     <div className="text-sm font-medium text-slate-900">{category?.name || 'Category'}</div>
-                                                                                    <div className="text-xs text-slate-600">{requiredRules.length > 0 ? 'Required document rules are active for this category.' : 'Optional notes and supporting documents'}</div>
+                                                                                    <div className="text-xs text-slate-600">{requiredRules.length > 0 ? 'Mandatory document rules are active for this category.' : 'Optional notes and supporting documents'}</div>
                                                                                 </div>
                                                                             </div>
                                                                             {documentRules.length > 0 ? (
@@ -966,7 +1005,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                                                                                 </div>
                                                                                                 <div className="flex shrink-0 items-center gap-2">
                                                                                                     {rule.maxFileSizeMb ? <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-slate-600">Max {rule.maxFileSizeMb} MB</span> : null}
-                                                                                                    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${rule.required ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-slate-200 bg-white text-slate-600'}`}>{rule.required ? 'Required' : 'Optional'}</span>
+                                                                                                    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${rule.required ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-slate-200 bg-white text-slate-600'}`}>{rule.required ? 'Mandatory' : 'Optional'}</span>
                                                                                                 </div>
                                                                                             </div>
                                                                                         ))}
@@ -1033,12 +1072,19 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                                                                                     {documentRules.length > 0 ? (
                                                                                                         <select
                                                                                                             className="sm:col-span-2 h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-100"
-                                                                                                            value={u.fileType || ''}
-                                                                                                            onChange={(ev) => setUploads((list) => list.map((x) => x.id === u.id ? { ...x, fileType: ev.target.value || undefined } : x))}
+                                                                                                            value={u.documentTypeId != null ? String(u.documentTypeId) : ''}
+                                                                                                            onChange={(ev) => {
+                                                                                                                const selectedRule = documentRules.find((rule) => String(rule.id) === ev.target.value);
+                                                                                                                setUploads((list) => list.map((x) => x.id === u.id ? {
+                                                                                                                    ...x,
+                                                                                                                    documentTypeId: selectedRule?.id ?? null,
+                                                                                                                    fileType: selectedRule?.label || undefined,
+                                                                                                                } : x));
+                                                                                                            }}
                                                                                                         >
                                                                                                             <option value="">Select document label</option>
                                                                                                             {documentRules.map((rule, index) => (
-                                                                                                                <option key={`${String(rule.id ?? index)}-${rule.label}`} value={rule.label}>{rule.label}{rule.required ? ' (required)' : ''}</option>
+                                                                                                                <option key={`${String(rule.id ?? index)}-${rule.label}`} value={String(rule.id ?? '')}>{rule.label}{rule.required ? ' (mandatory)' : ' (optional)'}</option>
                                                                                                             ))}
                                                                                                         </select>
                                                                                                     ) : (

@@ -60,6 +60,15 @@ interface BidRecord {
   envelope_status?: string
   is_complete?: number
   remarks?: string | null
+  supplier_lifecycle?: {
+    has_bid?: boolean
+    stage?: string | null
+    stage_label?: string | null
+    outcome?: string | null
+    is_winner?: boolean
+    award_status?: string | null
+    award_date?: string | null
+  } | null
 }
 
 type BidStatusFilter = "all" | "draft" | "submitted" | "unknown"
@@ -73,6 +82,62 @@ function statusBadge(status: BidStatus) {
     return "border-amber-300 text-amber-700 dark:border-amber-800/80 dark:text-amber-300"
   }
   return "border-slate-300 text-slate-700 dark:border-slate-700 dark:text-slate-300"
+}
+
+function lifecycleStatusLabel(bid: BidRecord, fallbackStatus: BidStatus) {
+  return bid.supplier_lifecycle?.stage_label?.trim() || bidStatusLabel(fallbackStatus)
+}
+
+function lifecycleStatusBadge(bid: BidRecord, fallbackStatus: BidStatus) {
+  const stage = String(bid.supplier_lifecycle?.stage ?? "").toLowerCase()
+  if (stage === "awarded") {
+    return "border-emerald-300 text-emerald-700 dark:border-emerald-800/80 dark:text-emerald-300"
+  }
+  if (stage === "not_awarded" || stage === "non_responsive") {
+    return "border-rose-300 text-rose-700 dark:border-rose-800/80 dark:text-rose-300"
+  }
+  if (stage === "award_pending" || stage.includes("evaluation") || stage === "bid_opened") {
+    return "border-blue-300 text-blue-700 dark:border-blue-800/80 dark:text-blue-300"
+  }
+  return statusBadge(fallbackStatus)
+}
+
+function lifecycleGuidance(bid: BidRecord, fallbackStatus: BidStatus) {
+  const stage = String(bid.supplier_lifecycle?.stage ?? "").toLowerCase()
+  if (stage === "awarded") {
+    return {
+      title: "Bid awarded",
+      message: "Your bid has been approved for award. Award and contract details are available under Awards & Contracts.",
+    }
+  }
+  if (stage === "not_awarded") {
+    return {
+      title: "Award decision completed",
+      message: "This bid was not selected for award.",
+    }
+  }
+  if (stage === "award_pending") {
+    return {
+      title: "Award decision pending approval",
+      message: "Procurement has recorded an award decision, but it is still awaiting final approval.",
+    }
+  }
+  if (stage === "evaluation_complete") {
+    return { title: "Evaluation complete", message: "The bid evaluation is complete and the award decision is pending." }
+  }
+  if (stage === "evaluation_in_progress" || stage === "bid_opened") {
+    return { title: lifecycleStatusLabel(bid, fallbackStatus), message: "Your bid is being processed by the procurement team." }
+  }
+  if (fallbackStatus === "submitted") {
+    return {
+      title: "Submission received",
+      message: `This bid was submitted on ${formatDate(bid.submitted_at || bid.received_at)}.`,
+    }
+  }
+  return {
+    title: "Action recommended",
+    message: "Complete any missing details from the tender workspace before the deadline.",
+  }
 }
 
 function rowTone(status: BidStatus) {
@@ -97,9 +162,16 @@ function normalizeBidRow(row: any): BidRecord {
     String(row?.submitted_at ?? row?.submittedAt ?? row?.received_at ?? row?.receivedAt ?? "").trim() || null
   const receivedAt =
     String(row?.received_at ?? row?.receivedAt ?? row?.submitted_at ?? row?.submittedAt ?? "").trim() || null
-  const status = resolveBidStatus(row?.bid_status ?? row?.status, {
+  const lifecycle = row?.supplier_lifecycle ?? row?.supplierLifecycle ?? null
+  let status = resolveBidStatus(
+    row?.bid_status ?? row?.bidStatus ?? row?.BidStatus ?? lifecycle?.bid_status ?? row?.status,
+    {
     hasSubmittedTimestamp: Boolean(submittedAt || receivedAt),
-  })
+    }
+  )
+  if (status === "unknown" && lifecycle?.has_bid && String(lifecycle?.stage ?? "").toLowerCase() !== "draft") {
+    status = "submitted"
+  }
   const documentsCount = parseNumber(
     row?.documents_count ?? row?.documentsCount ?? row?.docs_count ?? row?.docsCount
   )
@@ -129,6 +201,7 @@ function normalizeBidRow(row: any): BidRecord {
     ).trim(),
     envelope_status: String(row?.envelope_status ?? row?.envelopeStatus ?? "").trim(),
     remarks: String(row?.remarks ?? "").trim() || null,
+    supplier_lifecycle: lifecycle,
   }
 }
 
@@ -408,7 +481,7 @@ export default function SupplierBids() {
 
               <div className="space-y-2">
                 {section.items.map(({ bid, normalized }) => {
-                  const statusText = bidStatusLabel(normalized)
+                  const statusText = lifecycleStatusLabel(bid, normalized)
                   const actionLabel = statusActionLabel(normalized)
 
                   return (
@@ -458,7 +531,7 @@ export default function SupplierBids() {
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <Badge className={cn("rounded-full border px-2.5 py-1 text-[11px] font-semibold", statusBadge(normalized))}>
+                        <Badge className={cn("rounded-full border px-2.5 py-1 text-[11px] font-semibold", lifecycleStatusBadge(bid, normalized))}>
                           {statusText}
                         </Badge>
                         <Button
@@ -496,14 +569,16 @@ export default function SupplierBids() {
                   <Badge
                     className={cn(
                       "rounded-full border px-2 py-0.5 text-[10px] font-semibold",
-                      statusBadge(
+                      lifecycleStatusBadge(
+                        selectedBid,
                         resolveBidStatus(selectedBid.bid_status || selectedBid.status, {
                           hasSubmittedTimestamp: Boolean(selectedBid.submitted_at || selectedBid.received_at),
                         })
                       )
                     )}
                   >
-                    {bidStatusLabel(
+                    {lifecycleStatusLabel(
+                      selectedBid,
                       resolveBidStatus(selectedBid.bid_status || selectedBid.status, {
                         hasSubmittedTimestamp: Boolean(selectedBid.submitted_at || selectedBid.received_at),
                       })
@@ -515,18 +590,20 @@ export default function SupplierBids() {
               <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
                 <div className="rounded-xl border border-primary/20 px-3.5 py-3">
                   <p className="text-xs font-semibold text-foreground">
-                    {resolveBidStatus(selectedBid.bid_status || selectedBid.status, {
-                      hasSubmittedTimestamp: Boolean(selectedBid.submitted_at || selectedBid.received_at),
-                    }) === "submitted"
-                      ? "Submission received"
-                      : "Action recommended"}
+                    {lifecycleGuidance(
+                      selectedBid,
+                      resolveBidStatus(selectedBid.bid_status || selectedBid.status, {
+                        hasSubmittedTimestamp: Boolean(selectedBid.submitted_at || selectedBid.received_at),
+                      })
+                    ).title}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {resolveBidStatus(selectedBid.bid_status || selectedBid.status, {
-                      hasSubmittedTimestamp: Boolean(selectedBid.submitted_at || selectedBid.received_at),
-                    }) === "submitted"
-                      ? `This bid was submitted on ${formatDate(selectedBid.submitted_at || selectedBid.received_at)}.`
-                      : "Complete any missing details from the tender workspace before the deadline."}
+                    {lifecycleGuidance(
+                      selectedBid,
+                      resolveBidStatus(selectedBid.bid_status || selectedBid.status, {
+                        hasSubmittedTimestamp: Boolean(selectedBid.submitted_at || selectedBid.received_at),
+                      })
+                    ).message}
                   </p>
                 </div>
 
@@ -540,7 +617,8 @@ export default function SupplierBids() {
                   <div className="rounded-xl border border-border/70 px-3 py-2.5">
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Status</p>
                     <p className="mt-1 text-sm font-semibold text-foreground">
-                      {bidStatusLabel(
+                      {lifecycleStatusLabel(
+                        selectedBid,
                         resolveBidStatus(selectedBid.bid_status || selectedBid.status, {
                           hasSubmittedTimestamp: Boolean(selectedBid.submitted_at || selectedBid.received_at),
                         })

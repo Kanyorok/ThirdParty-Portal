@@ -87,11 +87,14 @@ import { ProcurementCollectionLoading } from "@/components/procurement/shared/co
 import { useRfqPortalContext } from "@/hooks/procurement/use-rfq-portal-context"
 import {
   buildSubmitResponseItems,
+  calculateRfqTaxBreakdown,
   collectMissingUnitPriceLineIds,
   formatSupplierOptionLabel,
   getClarificationsLocked,
+  getRfqTaxTreatment,
   parseSupplierId,
   normalizeSupplierId,
+  type RfqTaxTreatment,
 } from "@/lib/rfq-response"
 import type { RfqInvitation } from "@/types/rfq"
 
@@ -616,6 +619,7 @@ export function RfqQuotation() {
   const [currencies, setCurrencies] = useState<Currency[]>([])
   const [currenciesLoading, setCurrenciesLoading] = useState(false)
   const [durationDays, setDurationDays] = useState("30")
+  const [taxTreatment, setTaxTreatment] = useState<RfqTaxTreatment | "">("")
   const [_draftSavedAt, setDraftSavedAt] = useState<Date | null>(null)
   const [missingLineIds, setMissingLineIds] = useState<string[]>([])
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false)
@@ -923,7 +927,10 @@ export function RfqQuotation() {
     if (typeof window === "undefined") return
 
     const existing = window.localStorage.getItem(draftKey)
-    if (!existing) return
+    if (!existing) {
+      setTaxTreatment("")
+      return
+    }
 
     try {
       const parsed = JSON.parse(existing) as {
@@ -933,6 +940,7 @@ export function RfqQuotation() {
         lines?: QuoteLine[]
         currency?: string
         durationDays?: string | number
+        taxTreatment?: RfqTaxTreatment
       }
       if (typeof parsed.remarks === "string") setRemarks(parsed.remarks)
       if (Array.isArray(parsed.lines)) setQuoteLines(parsed.lines)
@@ -947,6 +955,9 @@ export function RfqQuotation() {
       }
       if (typeof parsed.savedAt === "number" && Number.isFinite(parsed.savedAt)) {
         setDraftSavedAt(new Date(parsed.savedAt))
+      }
+      if (["vat_exclusive", "vat_inclusive", "no_vat"].includes(String(parsed.taxTreatment))) {
+        setTaxTreatment(parsed.taxTreatment as RfqTaxTreatment)
       }
     } catch {
       // ignore corrupted drafts
@@ -968,12 +979,13 @@ export function RfqQuotation() {
         window.localStorage.setItem(
           draftKey,
           JSON.stringify({
-            version: 2,
+            version: 3,
             savedAt,
             remarks,
             lines: quoteLines,
             currency: quoteCurrency,
             durationDays,
+            taxTreatment,
           })
         )
         setDraftSavedAt(new Date(savedAt))
@@ -985,7 +997,7 @@ export function RfqQuotation() {
     return () => {
       if (saveTimer.current) window.clearTimeout(saveTimer.current)
     }
-  }, [draftKey, normalizedRfqId, quoteLines, remarks, quoteCurrency, durationDays])
+  }, [draftKey, normalizedRfqId, quoteLines, remarks, quoteCurrency, durationDays, taxTreatment])
 
   const quoteById = useMemo(() => {
     const map = new Map<string, QuoteLine>()
@@ -1037,18 +1049,19 @@ export function RfqQuotation() {
   }, [lines, quoteById])
 
   const totals = useMemo(() => {
-    let grandTotal = 0
+    let enteredTotal = 0
     let filledCount = 0
     for (const l of enrichedLines) {
       const qty = parsePositiveNumber(l.quantity)
       const price = parsePositiveNumber(l.unitPrice)
       if (qty != null && price != null) {
         filledCount++
-        grandTotal += qty * price
+        enteredTotal += qty * price
       }
     }
-    return { grandTotal, filledCount, totalLines: enrichedLines.length }
-  }, [enrichedLines])
+    const tax = calculateRfqTaxBreakdown(enteredTotal, taxTreatment)
+    return { ...tax, grandTotal: tax.grossAmount, filledCount, totalLines: enrichedLines.length }
+  }, [enrichedLines, taxTreatment])
 
   useEffect(() => {
     const cur = String(supplierResponse?.currency ?? "").trim()
@@ -1056,6 +1069,11 @@ export function RfqQuotation() {
       setQuoteCurrency(cur)
     }
   }, [supplierResponse?.currency, currencyTouched])
+
+  useEffect(() => {
+    const responseItem = Array.isArray(supplierResponse?.items) ? supplierResponse.items[0] : null
+    if (responseItem) setTaxTreatment(getRfqTaxTreatment(responseItem))
+  }, [supplierResponse?.id, supplierResponse?.items])
 
   useEffect(() => {
     let cancelled = false
@@ -1121,6 +1139,10 @@ export function RfqQuotation() {
     const cur = String(quoteCurrency || "").trim()
     if (!cur) {
       errors.currency = ["Currency is required"]
+    }
+
+    if (!taxTreatment) {
+      errors.taxTreatment = ["Select how VAT applies to the quoted prices"]
     }
 
     const dur = Number(durationDays)
@@ -1190,7 +1212,7 @@ export function RfqQuotation() {
     meta: ReturnType<typeof validateSubmitMeta>,
     asDraft: boolean
   ) => {
-    const items = buildSubmitResponseItems(enrichedLines)
+    const items = buildSubmitResponseItems(enrichedLines, taxTreatment as RfqTaxTreatment)
 
     return {
       rfqId: typeof rfqIdValue === "number" ? rfqIdValue : Number(rfqIdValue),
@@ -1317,12 +1339,13 @@ export function RfqQuotation() {
           window.localStorage.setItem(
             draftKey,
             JSON.stringify({
-              version: 2,
+              version: 3,
               savedAt,
               remarks,
               lines: quoteLines,
               currency: quoteCurrency,
               durationDays,
+              taxTreatment,
             })
           )
         }
@@ -1696,6 +1719,7 @@ export function RfqQuotation() {
     enrichedLines.length > 0 &&
     submitMeta.ok &&
     totals.totalLines > 0 &&
+    Boolean(taxTreatment) &&
     totals.filledCount === totals.totalLines
 
   const currencyOk = Boolean(
@@ -2071,7 +2095,7 @@ export function RfqQuotation() {
                                 Currency
                               </TableHead>
                               <TableHead className="w-[156px] px-3 py-2 text-[11px] font-semibold uppercase text-slate-500">
-                                Unit price
+                                {taxTreatment === "vat_exclusive" ? "Unit price excl. VAT" : taxTreatment === "vat_inclusive" ? "Unit price incl. VAT" : taxTreatment === "no_vat" ? "Unit price (no VAT)" : "Unit price"}
                               </TableHead>
                               <TableHead className="w-[150px] px-3 py-2 text-[11px] font-semibold uppercase text-slate-500">
                                 Total
@@ -2196,7 +2220,7 @@ export function RfqQuotation() {
                                       <span className="uppercase tracking-widest">
                                         {(quoteCurrency || currency || "—").toUpperCase()}
                                       </span>
-                                      <span>Unit price</span>
+                                      <span>{taxTreatment === "vat_exclusive" ? "Unit price excl. VAT" : taxTreatment === "vat_inclusive" ? "Unit price incl. VAT" : taxTreatment === "no_vat" ? "Unit price (no VAT)" : "Unit price"}</span>
                                     </span>
                                   </div>
                                   <Input
@@ -2358,12 +2382,42 @@ export function RfqQuotation() {
                     </div>
                   </div>
 
+                  <div className="space-y-1.5">
+                    <div className={`text-xs font-medium ${META_TEXT}`}>VAT treatment</div>
+                    <Select value={taxTreatment} disabled={isLocked} onValueChange={(value) => {
+                      setTaxTreatment(value as RfqTaxTreatment)
+                      setSubmitFieldErrors((previous) => {
+                        const { taxTreatment: _taxTreatment, ...rest } = previous
+                        return rest
+                      })
+                    }}>
+                      <SelectTrigger className={cn("h-10 text-sm", submitFieldErrors.taxTreatment && "border-destructive")}>
+                        <SelectValue placeholder="Select how VAT applies" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="vat_exclusive">VAT exclusive - add 16% VAT</SelectItem>
+                        <SelectItem value="vat_inclusive">VAT inclusive - extract VAT from my price</SelectItem>
+                        <SelectItem value="no_vat">No VAT / tax exempt</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className={`text-xs ${META_TEXT}`}>
+                      {taxTreatment === "vat_exclusive" ? "Enter prices before VAT. The ERP will add 16% VAT."
+                        : taxTreatment === "vat_inclusive" ? "Enter prices including VAT. The ERP will calculate the VAT portion out of your price."
+                          : taxTreatment === "no_vat" ? "No VAT will be added to the quoted prices."
+                            : "Required: declare whether your entered prices include VAT."}
+                    </p>
+                  </div>
+
                   <div className="py-2">
                     <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
                       <div className="space-y-1">
                         <div className={META_TEXT}>Total payable</div>
                         <div className="text-base font-semibold text-foreground tabular-nums">
                           {toMoney(totals.grandTotal, quoteCurrency || currency)}
+                        </div>
+                        <div className={`space-y-0.5 text-xs ${META_TEXT}`}>
+                          <div>Net: {toMoney(totals.netAmount, quoteCurrency || currency)}</div>
+                          <div>VAT: {toMoney(totals.taxAmount, quoteCurrency || currency)}</div>
                         </div>
                       </div>
                       <div className="space-y-1 text-right">
@@ -2409,7 +2463,7 @@ export function RfqQuotation() {
                       </div>
                       <div className={`text-xs ${META_TEXT}`}>
                         {!submitMeta.ok
-                          ? "Add currency and validity to enable submission."
+                          ? "Add currency, validity and VAT treatment to enable submission."
                           : docsUploading
                             ? "Uploading documents… please wait."
                             : !canSubmit

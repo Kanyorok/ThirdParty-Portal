@@ -248,14 +248,18 @@ export async function getDashboardData() {
     }
 
     const apiBase = API_BASE
-    const [preqRes, rfqRes, tendersRes, bidsRes] = await Promise.allSettled([
+    const [preqRes, rfqRes, tendersRes, bidsRes, purchaseOrdersRes, contractsRes] = await Promise.allSettled([
         fetch(`${apiBase}/api/v1/supplier/prequalification/rounds`, { headers, cache: "no-store" }).then(r => r.json()),
 
         fetch(`${apiBase}/api/v1/supplier/rfqs`, { headers, cache: "no-store" }).then(r => r.json()),
 
-        fetch(`${apiBase}/api/tenders?enforce_invites=true&third_party_id=${thirdPartyId}`, { headers, cache: "no-store" }).then(r => r.json()),
+        fetch(`${apiBase}/api/v1/supplier/tenders`, { headers, cache: "no-store" }).then(r => r.json()),
 
         fetchAllBidSubmissions({ apiBase, headers, thirdPartyId }),
+
+        fetch(`${apiBase}/api/v1/supplier/purchase-orders`, { headers, cache: "no-store" }).then(r => r.json()),
+
+        fetch(`${apiBase}/api/v1/supplier/contracts`, { headers, cache: "no-store" }).then(r => r.json()),
     ])
 
     const user = session?.user as any
@@ -336,6 +340,30 @@ export async function getDashboardData() {
         ? Number((bidsVal as any)?.total)
         : bidItems.length
 
+    const purchaseOrderPayload = purchaseOrdersRes.status === "fulfilled"
+        ? purchaseOrdersRes.value
+        : null
+    const purchaseOrders = Array.isArray(purchaseOrderPayload?.data)
+        ? purchaseOrderPayload.data
+        : []
+    const approvedPurchaseOrders = Number.isFinite(Number(purchaseOrderPayload?.total))
+        ? Number(purchaseOrderPayload.total)
+        : purchaseOrders.length
+    const purchaseOrderValue = purchaseOrders.reduce(
+        (total: number, order: any) => total + (Number(order?.totals?.includingTax) || 0),
+        0
+    )
+    const purchaseOrderCurrency = String(purchaseOrders[0]?.currency || "KES")
+
+    const contractsPayload = contractsRes.status === "fulfilled" ? contractsRes.value : null
+    const supplierContracts = Array.isArray(contractsPayload?.data) ? contractsPayload.data : []
+    const approvedTenderAwards = Number.isFinite(Number(contractsPayload?.meta?.total))
+        ? Number(contractsPayload.meta.total)
+        : supplierContracts.length
+    const activeSupplierContracts = supplierContracts.filter((award: any) =>
+        !["terminated", "expired", "rejected"].includes(String(award?.contract?.stage ?? "").toLowerCase())
+    ).length
+
     let tenantBreakdown: TenantBreakdown | null = null
 
     if (hasTenantProfile) {
@@ -398,9 +426,13 @@ export async function getDashboardData() {
                 (Number(amountNodes.parkingFee) || 0)
             const taxRate = Number(invoice?.tax?.rate ?? 0)
             const taxAmount = Number.isFinite(taxRate) ? (subtotal * taxRate) / 100 : 0
-            const totalAmount = subtotal + taxAmount
+            const financeTotal = Number(invoice?.total_amount ?? invoice?.totalAmount)
+            const totalAmount = Number.isFinite(financeTotal) && financeTotal > 0
+                ? financeTotal
+                : subtotal + taxAmount
+            const financeBalance = Number(invoice?.balance)
 
-            const isPaid = status === "paid"
+            const isPaid = status === "paid" || status === "f" || status === "fully paid"
             const isOverdue = status === "o" || status === "overdue"
             if (isPaid) {
                 invoicePaid++
@@ -411,7 +443,9 @@ export async function getDashboardData() {
             }
 
             if (!isPaid) {
-                outstandingAmount += Number.isFinite(totalAmount) ? totalAmount : 0
+                outstandingAmount += Number.isFinite(financeBalance)
+                    ? Math.max(0, financeBalance)
+                    : (Number.isFinite(totalAmount) ? totalAmount : 0)
             }
         })
 
@@ -444,6 +478,11 @@ export async function getDashboardData() {
             myBids,
             submittedBids: bidBreakdown.submitted,
             draftBids: bidBreakdown.draft,
+            approvedPurchaseOrders,
+            purchaseOrderValue,
+            purchaseOrderCurrency,
+            approvedTenderAwards,
+            activeSupplierContracts,
         },
         breakdowns: {
             prequalification: preqBreakdown,

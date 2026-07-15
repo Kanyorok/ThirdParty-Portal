@@ -16,6 +16,7 @@ import { Progress } from "@/components/common/progress"
 import {
     AlertTriangle,
     ArrowRight,
+    ArrowUp,
     Calendar,
     CheckCircle2,
     Clock,
@@ -32,7 +33,7 @@ import {
 import { Spinner } from "@/components/common/spinner"
 import { resolveProcurementDocumentName } from "@/lib/procurement-document-name"
 import { format } from "date-fns"
-import { Round, CategoryProgress } from "@/types/types"
+import { CategoryDocumentRequirement, Round, CategoryProgress } from "@/types/types"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { mapApiRound } from "@/lib/rounds"
@@ -128,12 +129,16 @@ function overallStatus(s: AppSummary): string {
 
 type CategoryDocument = {
     id: number | string
+    Id?: number | string
     file_name?: string
     fileName?: string
     file_type?: string
     fileType?: string
     section_id?: number | string | null
     description?: string
+    DocumentTypeID?: number | string | null
+    documentTypeId?: number | string | null
+    document_type_id?: number | string | null
     uploaded_at?: string
     uploadedAt?: string
     created_at?: string
@@ -146,6 +151,31 @@ type CategoryDocument = {
         }
     }
 }
+
+const documentTypeId = (document: CategoryDocument) =>
+    document.document_type_id ?? document.documentTypeId ?? document.DocumentTypeID ?? null
+
+const normalizeCategoryDocument = (document: Record<string, unknown>): CategoryDocument => ({
+    ...(document as unknown as CategoryDocument),
+    id: (document.id ?? document.Id ?? "") as number | string,
+    document_type_id: (document.document_type_id
+        ?? document.documentTypeId
+        ?? document.DocumentTypeID
+        ?? null) as number | string | null,
+    documentTypeId: (document.documentTypeId
+        ?? document.document_type_id
+        ?? document.DocumentTypeID
+        ?? null) as number | string | null,
+    file_type: (document.file_type ?? document.fileType ?? document.FileType) as string | undefined,
+    fileType: (document.fileType ?? document.file_type ?? document.FileType) as string | undefined,
+    dmsDocument: (document.dmsDocument ?? document.dms_document) as CategoryDocument["dmsDocument"],
+})
+
+const categoryDocumentsFor = (category: CategoryProgress): CategoryDocumentRequirement[] =>
+    category.document_types ?? category.required_document_types ?? []
+
+const mandatoryDocumentsFor = (category: CategoryProgress): CategoryDocumentRequirement[] =>
+    categoryDocumentsFor(category).filter((document) => document.required)
 
 
 const tabTriggerClass =
@@ -162,6 +192,7 @@ export default function CategoryApplications({ round: roundProp, className, vari
     const [isOpen, setIsOpen] = useState(false)
     const [activeTab, setActiveTab] = useState("overview")
     const contentRef = useRef<HTMLDivElement | null>(null)
+    const [showBackToTop, setShowBackToTop] = useState(false)
     const [detailRound, setDetailRound] = useState<Round | null>(null)
     const [detailLoading, setDetailLoading] = useState(false)
 
@@ -254,9 +285,59 @@ export default function CategoryApplications({ round: roundProp, className, vari
         setSelectedIds(new Set())
     }, [])
 
+    const fetchCategoryDocuments = useCallback(async (categoryId: string) => {
+        const res = await fetch(
+            `/api/prequalification/applications/${encodeURIComponent(round.id)}/categories/${encodeURIComponent(categoryId)}/documents`,
+            { credentials: "include", headers: { Accept: "application/json" } }
+        )
+        if (!res.ok) {
+            setCategoryDocs((previous) => ({ ...previous, [categoryId]: [] }))
+            return [] as CategoryDocument[]
+        }
+
+        const json = await res.json()
+        const rawDocuments = Array.isArray(json?.data) ? json.data : Array.isArray(json) ? json : []
+        const documents = rawDocuments
+            .filter((document: unknown): document is Record<string, unknown> => Boolean(document && typeof document === "object"))
+            .map(normalizeCategoryDocument)
+        setCategoryDocs((previous) => ({ ...previous, [categoryId]: documents }))
+        return documents as CategoryDocument[]
+    }, [round.id])
+
+    useEffect(() => {
+        const missing = Array.from(selectedIds).filter((categoryId) => categoryDocs[categoryId] === undefined)
+        if (missing.length === 0) return
+
+        void Promise.allSettled(missing.map((categoryId) => fetchCategoryDocuments(categoryId)))
+    }, [categoryDocs, fetchCategoryDocuments, selectedIds])
+
+    const missingRequiredDocuments = useMemo(() => {
+        return Array.from(selectedIds).flatMap((categoryId) => {
+            const category = categories.find((item) => String(item.category_id) === categoryId)
+            if (!category) return []
+            const uploadedTypeIds = new Set(
+                (categoryDocs[categoryId] ?? [])
+                    .map((document) => documentTypeId(document))
+                    .filter((id) => id != null)
+                    .map(String)
+            )
+
+            return mandatoryDocumentsFor(category)
+                .filter((requirement) => !uploadedTypeIds.has(String(requirement.document_type_id)))
+                .map((requirement) => ({ categoryId, category, requirement }))
+        })
+    }, [categories, categoryDocs, selectedIds])
+
     /* ── Inline application submit ── */
     const submitApplication = useCallback(async () => {
         if (selectedIds.size === 0) return
+        if (missingRequiredDocuments.length > 0) {
+            const first = missingRequiredDocuments[0]
+            const message = `Upload ${first.requirement.name} for ${first.category.category_name} before applying.`
+            setApplyError(message)
+            toast.error(message)
+            return
+        }
         setApplying(true)
         setApplyError(null)
         try {
@@ -296,7 +377,7 @@ export default function CategoryApplications({ round: roundProp, className, vari
         } finally {
             setApplying(false)
         }
-    }, [selectedIds, round.id])
+    }, [missingRequiredDocuments, selectedIds, round.id])
 
     const fetchDocuments = useCallback(async () => {
         if (appliedCategories.length === 0) return
@@ -306,20 +387,67 @@ export default function CategoryApplications({ round: roundProp, className, vari
             appliedCategories.map(async (cat) => {
                 const catId = String(cat.category_id)
                 try {
-                    const res = await fetch(
-                        `/api/prequalification/applications/${encodeURIComponent(round.id)}/categories/${encodeURIComponent(catId)}/documents`,
-                        { credentials: "include", headers: { Accept: "application/json" } }
-                    )
-                    if (res.ok) {
-                        const json = await res.json()
-                        results[catId] = Array.isArray(json?.data) ? json.data : Array.isArray(json) ? json : []
-                    }
+                    results[catId] = await fetchCategoryDocuments(catId)
                 } catch { /* skip @kasee */ }
             })
         )
-        setCategoryDocs(results)
+        setCategoryDocs((previous) => ({ ...previous, ...results }))
         setDocsLoading(false)
-    }, [appliedCategories, round.id])
+    }, [appliedCategories, fetchCategoryDocuments])
+
+    const handleRequirementUpload = useCallback(async (
+        categoryId: string,
+        requirement: CategoryDocumentRequirement,
+        file: File,
+    ) => {
+        const preservedScrollTop = contentRef.current?.scrollTop ?? 0
+        const uploadKey = `${categoryId}:${requirement.document_type_id}`
+        setUploading(uploadKey)
+        setApplyError(null)
+        try {
+            const formData = new FormData()
+            formData.append("file", file)
+            formData.append("file_type", file.type || requirement.value || requirement.name)
+            formData.append("description", file.name)
+            formData.append("document_type_id", String(requirement.document_type_id))
+
+            const defaultSectionId = round.sections?.[0]?.sectionId ?? round.sections?.[0]?.id
+            if (defaultSectionId) formData.append("section_id", String(defaultSectionId))
+
+            const res = await fetch(
+                `/api/prequalification/applications/${encodeURIComponent(round.id)}/categories/${encodeURIComponent(categoryId)}/documents`,
+                { method: "POST", credentials: "include", body: formData }
+            )
+            const body = await res.json().catch(() => null)
+            if (!res.ok) throw new Error(body?.message ?? body?.errors?.file?.[0] ?? "Upload failed")
+
+            if (body?.data && typeof body.data === "object") {
+                const uploadedDocument = normalizeCategoryDocument(body.data as Record<string, unknown>)
+                setCategoryDocs((previous) => {
+                    const existing = previous[categoryId] ?? []
+                    return {
+                        ...previous,
+                        [categoryId]: [
+                            ...existing.filter((document) => String(documentTypeId(document)) !== String(requirement.document_type_id)),
+                            uploadedDocument,
+                        ],
+                    }
+                })
+            }
+
+            await fetchCategoryDocuments(categoryId)
+            toast.success(`${requirement.name} uploaded`)
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Upload failed"
+            setApplyError(message)
+            toast.error(message)
+        } finally {
+            setUploading(null)
+            requestAnimationFrame(() => {
+                contentRef.current?.scrollTo({ top: preservedScrollTop })
+            })
+        }
+    }, [fetchCategoryDocuments, round.id, round.sections])
 
     // Fetch documents when Documents tab is activated (once per modal open)
     useEffect(() => {
@@ -392,6 +520,7 @@ export default function CategoryApplications({ round: roundProp, className, vari
             setApplyError(null)
             docsFetchedRef.current = false
             setCategoryDocs({})
+            setShowBackToTop(false)
         }
     }, [])
 
@@ -414,7 +543,10 @@ export default function CategoryApplications({ round: roundProp, className, vari
                 </Button>
             </DialogTrigger>
 
-            <DialogContent className="h-[100dvh] w-screen max-w-[1400px] flex flex-col overflow-hidden rounded-none border-0 bg-white p-0 shadow-[-18px_0_48px_rgba(15,23,42,0.14)] sm:w-[96vw] sm:border-l sm:border-slate-200/80 md:w-[90vw] lg:w-[86vw] xl:w-[82vw] 2xl:w-[80vw] left-auto right-0 top-0 translate-x-0 translate-y-0">
+            <DialogContent
+                className="inset-y-0 left-auto right-0 top-0 grid min-h-0 w-screen max-w-[1400px] translate-x-0 translate-y-0 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-none border-0 bg-white p-0 shadow-[-18px_0_48px_rgba(15,23,42,0.14)] sm:w-[96vw] sm:border-l sm:border-slate-200/80 md:w-[90vw] lg:w-[86vw] xl:w-[82vw] 2xl:w-[80vw]"
+                style={{ height: "100dvh", minHeight: "100dvh", maxHeight: "100dvh" }}
+            >
 
                 {/* ── Header ── */}
                 <DialogHeader className="relative flex-shrink-0 border-b border-slate-200/70 bg-white px-6 py-3 lg:px-8 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-indigo-500/80 before:content-['']">
@@ -455,7 +587,7 @@ export default function CategoryApplications({ round: roundProp, className, vari
                 </DialogHeader>
 
                 {/* ── Tabs ── */}
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-1 flex-col overflow-hidden bg-slate-50/40">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-0 flex-1 flex-col overflow-hidden bg-slate-50/40">
                     <div className="mx-6 mt-2 lg:mx-8">
                         <TabsList className={cn(
                             "grid w-full gap-0.5 rounded-xl border border-slate-200/80 bg-slate-100 p-0.5 text-[11px] sm:text-xs",
@@ -485,7 +617,12 @@ export default function CategoryApplications({ round: roundProp, className, vari
                         </TabsList>
                     </div>
 
-                    <div ref={contentRef} className="flex-1 overflow-y-auto px-6 pb-24 pt-3 lg:px-8">
+                    <div
+                        ref={contentRef}
+                        className="min-h-0 flex-1 overflow-y-scroll overscroll-contain px-6 pb-6 pt-3 [overflow-anchor:none] lg:px-8"
+                        style={{ scrollbarGutter: "stable" }}
+                        onScroll={(event) => setShowBackToTop(event.currentTarget.scrollTop > 320)}
+                    >
                         {detailLoading && (
                             <div className="mb-3 flex items-center gap-2 rounded-xl border border-indigo-100 bg-indigo-50/50 px-3 py-2 text-xs text-indigo-700">
                                 <Spinner className="h-3.5 w-3.5" />
@@ -627,6 +764,14 @@ export default function CategoryApplications({ round: roundProp, className, vari
                                         const status = buildCategoryStatus(category.status)
                                         const isUnapplied = !category.has_applied
                                         const isSelected = selectedIds.has(catId)
+                                        const categoryDocuments = categoryDocumentsFor(category)
+                                        const mandatoryDocuments = mandatoryDocumentsFor(category)
+                                        const uploadedTypeIds = new Set(
+                                            (categoryDocs[catId] ?? [])
+                                                .map((document) => documentTypeId(document))
+                                                .filter((id) => id != null)
+                                                .map(String)
+                                        )
 
                                         return (
                                             <article
@@ -701,6 +846,89 @@ export default function CategoryApplications({ round: roundProp, className, vari
                                                         </div>
                                                     )}
                                                 </div>
+                                                {isSelected && (
+                                                    <div
+                                                        className="mt-4 rounded-xl border border-indigo-100 bg-white p-3"
+                                                        onClick={(event) => event.stopPropagation()}
+                                                        onKeyDown={(event) => event.stopPropagation()}
+                                                    >
+                                                        <div className="flex items-start justify-between gap-3">
+                                                            <div>
+                                                                <p className="text-xs font-semibold text-slate-900">Category documents</p>
+                                                                <p className="mt-0.5 text-[11px] text-slate-500">
+                                                                    Mandatory documents block submission; optional documents may be supplied when relevant.
+                                                                </p>
+                                                            </div>
+                                                            <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
+                                                                {mandatoryDocuments.filter((requirement) => uploadedTypeIds.has(String(requirement.document_type_id))).length}/{mandatoryDocuments.length} mandatory uploaded
+                                                            </span>
+                                                        </div>
+
+                                                        {categoryDocuments.length === 0 ? (
+                                                            <div className="mt-3 flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-[11px] text-emerald-700">
+                                                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                                                No document requirements configured for this category.
+                                                            </div>
+                                                        ) : (
+                                                            <div className="mt-3 space-y-2">
+                                                                {categoryDocuments.map((requirement) => {
+                                                                    const isUploaded = uploadedTypeIds.has(String(requirement.document_type_id))
+                                                                    const uploadKey = `${catId}:${requirement.document_type_id}`
+                                                                    const isUploading = uploading === uploadKey
+
+                                                                    return (
+                                                                        <label
+                                                                            key={String(requirement.document_type_id)}
+                                                                            className={cn(
+                                                                                "flex cursor-pointer flex-col gap-2 rounded-lg border px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between",
+                                                                                isUploaded
+                                                                                    ? "border-emerald-200 bg-emerald-50/60"
+                                                                                    : requirement.required
+                                                                                        ? "border-rose-200 bg-rose-50/40"
+                                                                                        : "border-slate-200 bg-slate-50/40"
+                                                                            )}
+                                                                        >
+                                                                            <span className="flex min-w-0 items-start gap-2">
+                                                                                {isUploaded ? (
+                                                                                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                                                                                ) : requirement.required ? (
+                                                                                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" />
+                                                                                ) : (
+                                                                                    <FileText className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
+                                                                                )}
+                                                                                <span className="min-w-0">
+                                                                                    <span className="block text-xs font-medium text-slate-900">{requirement.name}</span>
+                                                                                    <span className="block text-[10px] text-slate-500">
+                                                                                        {isUploaded
+                                                                                            ? `Uploaded — ${requirement.required ? "Mandatory" : "Optional"}`
+                                                                                            : requirement.required
+                                                                                                ? "Mandatory — required before submission"
+                                                                                                : "Optional"}
+                                                                                    </span>
+                                                                                </span>
+                                                                            </span>
+                                                                            <span className="inline-flex h-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-semibold text-slate-700">
+                                                                                {isUploading ? <Spinner className="mr-1.5 h-3 w-3" /> : <Upload className="mr-1.5 h-3 w-3" />}
+                                                                                {isUploaded ? "Replace" : "Choose file"}
+                                                                            </span>
+                                                                            <input
+                                                                                type="file"
+                                                                                className="sr-only"
+                                                                                disabled={isUploading}
+                                                                                accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.jpg,.jpeg,.png,.gif,.bmp,.tif,.tiff,.zip,.rar,.7z"
+                                                                                onChange={(event) => {
+                                                                                    const file = event.target.files?.[0]
+                                                                                    if (file) void handleRequirementUpload(catId, requirement, file)
+                                                                                    event.target.value = ""
+                                                                                }}
+                                                                            />
+                                                                        </label>
+                                                                    )
+                                                                })}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </article>
                                         )
                                     })}
@@ -915,17 +1143,32 @@ export default function CategoryApplications({ round: roundProp, className, vari
                     </div>
                 </Tabs>
 
+                {showBackToTop && (
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="absolute bottom-20 right-6 z-20 h-9 rounded-full border-slate-300 bg-white px-3 text-xs font-semibold shadow-md hover:bg-slate-50 lg:right-8"
+                        onClick={() => contentRef.current?.scrollTo({ top: 0, behavior: "smooth" })}
+                    >
+                        <ArrowUp className="mr-1.5 h-3.5 w-3.5" />
+                        Back to top
+                    </Button>
+                )}
+
                 {/* ── Sticky footer — context-aware ── */}
-                <div className="absolute inset-x-0 bottom-0 flex flex-col gap-3 border-t border-slate-100 bg-white/95 px-6 py-3 backdrop-blur sm:flex-row sm:items-center sm:justify-between lg:px-8">
+                <div className="relative z-10 flex flex-col gap-3 border-t border-slate-100 bg-white px-6 py-3 sm:flex-row sm:items-center sm:justify-between lg:px-8">
                     {activeTab === "categories" && selectedIds.size > 0 ? (
                         <>
                             <span className="text-[12px] text-slate-500">
-                                {selectedIds.size} {selectedIds.size === 1 ? "category" : "categories"} selected
+                                {missingRequiredDocuments.length > 0
+                                    ? `${missingRequiredDocuments.length} mandatory ${missingRequiredDocuments.length === 1 ? "document" : "documents"} still required`
+                                    : `${selectedIds.size} ${selectedIds.size === 1 ? "category" : "categories"} ready to submit`}
                             </span>
                             <Button
                                 size="sm"
                                 className="h-9 w-full shrink-0 rounded-full border border-indigo-600 bg-indigo-600 px-5 text-xs font-semibold text-white hover:bg-indigo-700 sm:w-auto"
-                                disabled={applying}
+                                disabled={applying || missingRequiredDocuments.length > 0}
                                 onClick={submitApplication}
                             >
                                 {applying ? (

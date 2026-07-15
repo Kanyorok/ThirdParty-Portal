@@ -154,6 +154,23 @@ function humanSize(bytes?: number | null) {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
+function distinctCurrentDocuments(documents: SupplierDocument[]) {
+    const newestFirst = [...documents].sort((a, b) => {
+        const aTime = a.createdOn ? new Date(a.createdOn).getTime() : 0
+        const bTime = b.createdOn ? new Date(b.createdOn).getTime() : 0
+        return bTime - aTime
+    })
+    const seen = new Set<string>()
+
+    return newestFirst.filter((document) => {
+        const normalizedName = document.name.trim().replace(/\s+/g, " ").toLocaleLowerCase()
+        const key = `${document.source || "other"}|${normalizedName || document.id}`
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+    })
+}
+
 /* ── Component ─────────────────────────────────────────────────── */
 
 export default function AllDocuments() {
@@ -173,7 +190,7 @@ export default function AllDocuments() {
             })
             const json = await parseJsonResponse<{ data?: SupplierDocument[]; message?: string; error?: string }>(res)
             if (!res.ok) throw new Error(json?.message || json?.error || "Failed to load documents")
-            const list: SupplierDocument[] = Array.isArray(json?.data) ? json.data : []
+            const list = distinctCurrentDocuments(Array.isArray(json?.data) ? json.data : [])
             setDocuments(list)
 
             // Auto-expand all groups

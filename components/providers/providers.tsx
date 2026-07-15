@@ -5,6 +5,7 @@ import React from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Session } from 'next-auth'
 import { SWRConfig } from 'swr'
+import { IdleSessionTimeout } from './idle-session-timeout'
 
 interface Props {
     children: React.ReactNode
@@ -32,6 +33,7 @@ export function NextAuthProvider({ children, session }: Props) {
 
     return (
         <SessionProvider session={session} refetchOnWindowFocus={false} refetchInterval={0}>
+            <IdleSessionTimeout />
             <QueryClientProvider client={queryClient}>
                 <SWRConfig
                     value={{

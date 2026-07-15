@@ -25,8 +25,6 @@ import { toast } from "sonner"
 interface InvoiceDetailSheetProps {
   id: number | null
   onClose: () => void
-  tenantId?: number | null
-  accessToken?: string
 }
 
 function displayText(value: unknown, fallback = "-") {
@@ -64,7 +62,7 @@ function formatDateTime(value: string | null | undefined) {
   }).format(parsed)
 }
 
-function resolveCurrencyCode(currency: Invoice["currency"]) {
+function resolveCurrencyCode(currency: Invoice["currency"] | null | undefined) {
   if (typeof currency === "object" && currency) {
     const code = String(currency.code ?? "").trim()
     return code ? code.toUpperCase() : "KES"
@@ -92,6 +90,14 @@ function formatAmountKey(key: string) {
 function resolveStatusMeta(status: unknown) {
   const raw = String(status ?? "").trim()
   const normalized = raw.toLowerCase()
+
+  if (normalized.includes("partial")) {
+    return {
+      label: "Partially paid",
+      badgeClass: "border-sky-200 text-sky-700 bg-sky-50",
+      Icon: Clock3,
+    }
+  }
 
   if (raw === "Paid" || normalized.includes("paid") || normalized.includes("settled")) {
     return {
@@ -127,10 +133,12 @@ function resolveStatusMeta(status: unknown) {
 function calculateInvoiceTotals(invoice: Invoice) {
   const amounts = invoice?.amounts ?? {}
   const entries = Object.entries(amounts)
-  const subtotal = entries.reduce((sum, [, amount]) => sum + toNumber(amount), 0)
+  const legacySubtotal = entries.reduce((sum, [, amount]) => sum + toNumber(amount), 0)
+  const hasFinanceTotals = Boolean(invoice.financeInvoiceId || invoice.totalAmount > 0)
+  const subtotal = hasFinanceTotals ? invoice.subtotal : legacySubtotal
   const taxRate = toNumber(invoice?.tax?.rate)
-  const taxAmount = taxRate > 0 ? (subtotal * taxRate) / 100 : 0
-  const total = subtotal + taxAmount
+  const taxAmount = hasFinanceTotals ? invoice.taxAmount : (taxRate > 0 ? (subtotal * taxRate) / 100 : 0)
+  const total = hasFinanceTotals ? invoice.totalAmount : subtotal + taxAmount
 
   return { entries, subtotal, taxRate, taxAmount, total }
 }
@@ -161,17 +169,17 @@ function HeaderMetric({
   )
 }
 
-export function InvoiceDetailSheet({ id, onClose, tenantId, accessToken }: InvoiceDetailSheetProps) {
+export function InvoiceDetailSheet({ id, onClose }: InvoiceDetailSheetProps) {
   const { data: response, isLoading } = useQuery({
-    queryKey: ["invoice", id, tenantId, accessToken],
-    queryFn: () => getInvoiceDetails(id as number, tenantId, accessToken),
-    enabled: Boolean(id && accessToken),
+    queryKey: ["tenant-invoice", id],
+    queryFn: () => getInvoiceDetails(id as number),
+    enabled: Boolean(id),
   })
 
   const invoice = response?.data
   const statusMeta = resolveStatusMeta(invoice?.status)
   const StatusIcon = statusMeta.Icon
-  const currencyCode = resolveCurrencyCode(invoice?.currency ?? "")
+  const currencyCode = resolveCurrencyCode(invoice?.currency)
   const totals = invoice ? calculateInvoiceTotals(invoice) : null
 
   const handleEmail = () => {
@@ -184,7 +192,7 @@ export function InvoiceDetailSheet({ id, onClose, tenantId, accessToken }: Invoi
   const handleDownload = async () => {
     if (!id) return
     try {
-      await downloadInvoicePdf(id, accessToken)
+      await downloadInvoicePdf(id)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Invoice download failed")
     }
@@ -198,6 +206,12 @@ export function InvoiceDetailSheet({ id, onClose, tenantId, accessToken }: Invoi
       }}
     >
       <SheetContent className="sm:max-w-[760px] bg-white border-l border-slate-200 p-0 flex flex-col">
+        <SheetTitle className="sr-only">
+          {invoice ? `Invoice ${invoice.invoiceNumber}` : "Invoice details"}
+        </SheetTitle>
+        <SheetDescription className="sr-only">
+          View the issued invoice, line items, payment balance, and tenant PDF.
+        </SheetDescription>
         {isLoading && !invoice ? (
           <div className="px-8 py-8 space-y-6">
             <Skeleton className="h-24 w-full rounded-2xl" />
@@ -210,7 +224,7 @@ export function InvoiceDetailSheet({ id, onClose, tenantId, accessToken }: Invoi
               <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
             </div>
             <p className="text-sm font-medium">
-              {accessToken ? "Unable to load invoice details." : "Session expired. Sign in again to continue."}
+              Unable to load invoice details.
             </p>
           </div>
         ) : (
@@ -219,12 +233,12 @@ export function InvoiceDetailSheet({ id, onClose, tenantId, accessToken }: Invoi
               <SheetHeader className="space-y-4 text-left">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <SheetTitle className="text-2xl font-semibold tracking-tight text-slate-900">
+                    <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
                       {displayText(invoice.invoiceNumber, `Invoice #${invoice.id}`)}
-                    </SheetTitle>
-                    <SheetDescription className="mt-1.5 text-sm font-medium text-slate-600">
+                    </h2>
+                    <p className="mt-1.5 text-sm font-medium text-slate-600">
                       {displayText(invoice.lease?.leaseNumber ?? invoice.leaseNumber)} · {displayText(invoice.billingMonth)}
-                    </SheetDescription>
+                    </p>
                   </div>
                   <Badge className={cn("h-7 rounded-full border px-3 text-xs font-semibold", statusMeta.badgeClass)}>
                     <StatusIcon className="mr-1 h-3.5 w-3.5" />
@@ -276,7 +290,57 @@ export function InvoiceDetailSheet({ id, onClose, tenantId, accessToken }: Invoi
                       <span className="font-semibold text-slate-700">Total</span>
                       <span className="font-semibold text-slate-900">{formatMoney(totals?.total ?? 0, currencyCode)}</span>
                     </div>
+
+                    {invoice.amountPaid > 0 ? (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium text-slate-600">Amount paid</span>
+                        <span className="font-semibold text-emerald-700">{formatMoney(invoice.amountPaid, currencyCode)}</span>
+                      </div>
+                    ) : null}
+
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-semibold text-slate-700">Balance due</span>
+                      <span className="font-semibold text-blue-700">{formatMoney(invoice.balance, currencyCode)}</span>
+                    </div>
                   </div>
+                </div>
+              </section>
+
+              <section className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Receipt className="h-4 w-4 text-blue-600" />
+                  <h4 className="text-xs font-semibold uppercase tracking-wide text-blue-700">Invoice line items</h4>
+                </div>
+
+                <div className="overflow-x-auto rounded-xl border border-slate-200">
+                  <table className="w-full min-w-[680px] text-sm">
+                    <thead className="bg-slate-50 text-[10px] uppercase tracking-wide text-slate-500">
+                      <tr>
+                        <th className="px-3 py-2.5 text-left">Item</th>
+                        <th className="px-3 py-2.5 text-right">Qty</th>
+                        <th className="px-3 py-2.5 text-right">Unit price</th>
+                        <th className="px-3 py-2.5 text-right">Tax</th>
+                        <th className="px-3 py-2.5 text-right">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {invoice.lines.map((line) => (
+                        <tr key={line.id} className="border-t border-slate-200">
+                          <td className="px-3 py-3">
+                            <div className="font-semibold text-slate-900">{displayText(line.name, "Charge")}</div>
+                            {line.description ? <div className="mt-0.5 text-xs text-slate-500">{line.description}</div> : null}
+                          </td>
+                          <td className="px-3 py-3 text-right text-slate-700">{line.quantity.toLocaleString()}</td>
+                          <td className="px-3 py-3 text-right text-slate-700">{formatMoney(line.unitPrice, currencyCode)}</td>
+                          <td className="px-3 py-3 text-right text-slate-700">{formatMoney(line.taxAmount, currencyCode)}</td>
+                          <td className="px-3 py-3 text-right font-semibold text-slate-900">{formatMoney(line.lineTotal, currencyCode)}</td>
+                        </tr>
+                      ))}
+                      {invoice.lines.length === 0 ? (
+                        <tr><td colSpan={5} className="px-3 py-8 text-center text-slate-500">No invoice lines were returned.</td></tr>
+                      ) : null}
+                    </tbody>
+                  </table>
                 </div>
               </section>
 
@@ -292,8 +356,11 @@ export function InvoiceDetailSheet({ id, onClose, tenantId, accessToken }: Invoi
                   <DetailRow label="Lease number" value={invoice.lease?.leaseNumber ?? invoice.leaseNumber} />
                   <DetailRow label="Billing month" value={invoice.billingMonth} />
                   <DetailRow label="Invoice date" value={formatDate(invoice.invoiceDate)} />
+                  <DetailRow label="Due date" value={formatDate(invoice.dueDate)} />
                   <DetailRow label="Currency" value={currencyCode} />
                   <DetailRow label="Status" value={statusMeta.label} />
+                  <DetailRow label="Property" value={invoice.lease?.property} />
+                  <DetailRow label="Unit" value={invoice.lease?.unit} />
                   <DetailRow label="Created on" value={formatDateTime(invoice.createdOn)} />
                 </div>
               </section>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useEffect, useId, useMemo, useState, useTransition } from "react"
 import { Button } from "@/components/common/button"
 import {
     Sheet,
@@ -23,58 +23,72 @@ import { Textarea } from "@/components/common/textarea"
 import { toast } from "sonner"
 import { Loader2, Plus, UploadCloud, Wrench } from "lucide-react"
 import { MAINTENANCE_CATEGORIES, PRIORITY_LEVELS, CreateMaintenanceRequestPayload } from "@/types/maintenance"
-import { useSession } from "next-auth/react"
-import { resolveSessionAccessToken } from "@/lib/auth/server-token"
 import { maintenanceService } from "@/lib/api/maintenance"
+import { useQuery } from "@tanstack/react-query"
 
 export function MaintenanceRequestSheet({
     children,
-    accessToken,
-    tenantId,
     onSuccess
 }: {
     children?: React.ReactNode
-    accessToken?: string
-    tenantId?: number | null
     onSuccess?: () => void
 }) {
     const [open, setOpen] = useState(false)
     const [isPending, startTransition] = useTransition()
-    const { data: session } = useSession()
+    const attachmentInputId = useId()
+    const formId = useId()
 
-    const properties = [
-        { id: 1, name: "Sunset Apartments - Unit 101" },
-        { id: 2, name: "Downtown Loft - Unit 3B" }
-    ]
+    const { data: options, isLoading: isLoadingOptions, isError: optionsFailed } = useQuery({
+        queryKey: ["tenant-maintenance-options"],
+        queryFn: () => maintenanceService.getOptions(),
+        enabled: open,
+        staleTime: 60_000,
+    })
+
+    const units = options?.units ?? []
+    const categoryOptions = useMemo(
+        () => options?.categories?.length
+            ? options.categories.map((option) => option.description)
+            : MAINTENANCE_CATEGORIES,
+        [options?.categories]
+    )
+    const priorityOptions = useMemo(
+        () => options?.priorities?.length
+            ? options.priorities.map((option) => ({ value: option.description, label: option.description, color: "bg-slate-400" }))
+            : PRIORITY_LEVELS,
+        [options?.priorities]
+    )
 
     const [formData, setFormData] = useState<Partial<CreateMaintenanceRequestPayload>>({
         priority: "Medium",
         category: "Plumbing"
     })
 
+    useEffect(() => {
+        if (!options) return
+
+        setFormData((previous) => ({
+            ...previous,
+            category: categoryOptions.includes(String(previous.category ?? ""))
+                ? previous.category
+                : categoryOptions[0],
+            priority: priorityOptions.some((option) => option.value === previous.priority)
+                ? previous.priority
+                : priorityOptions[0]?.value,
+        }))
+    }, [options, categoryOptions, priorityOptions])
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
 
-        if (!formData.title || !formData.description || !formData.propertyId) {
+        if (!formData.title || !formData.description || !formData.propertyId || !formData.unitId) {
             toast.error("Please fill in all required fields")
             return
         }
 
         startTransition(async () => {
             try {
-                const resolvedAccessToken = accessToken || resolveSessionAccessToken(session as any)
-                if (!resolvedAccessToken) {
-                    throw new Error("You must be logged in to submit a request")
-                }
-                if (typeof tenantId !== "number" || !Number.isFinite(tenantId)) {
-                    throw new Error("Tenant profile mapping missing. Please contact support.")
-                }
-
-                await maintenanceService.createRequest(
-                    formData as CreateMaintenanceRequestPayload,
-                    resolvedAccessToken,
-                    tenantId
-                )
+                await maintenanceService.createRequest(formData as CreateMaintenanceRequestPayload)
                 toast.success("Maintenance request submitted successfully")
                 setOpen(false)
                 setFormData({ priority: "Medium", category: "Plumbing" })
@@ -110,22 +124,34 @@ export function MaintenanceRequestSheet({
                     </SheetHeader>
                 </div>
 
-                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
+                <form id={formId} onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
                     <div className="space-y-5">
                         <div className="space-y-2">
                             <Label className="text-[11px] font-medium text-slate-600">Property <span className="text-rose-500">*</span></Label>
-                            <Select
-                                onValueChange={(val) => setFormData(prev => ({ ...prev, propertyId: parseInt(val) }))}
-                            >
+                            <Select value={formData.unitId ? String(formData.unitId) : ""} onValueChange={(val) => {
+                                const selected = units.find((unit) => String(unit.unitId) === val)
+                                setFormData(prev => ({
+                                    ...prev,
+                                    propertyId: selected?.propertyId,
+                                    unitId: selected?.unitId,
+                                }))
+                            }}>
                                 <SelectTrigger className="h-11 rounded-lg bg-slate-50 border-slate-200 text-sm focus:ring-1 focus:ring-slate-950">
                                     <SelectValue placeholder="Select relevant property/unit" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-white border-slate-200">
-                                    {properties.map(prop => (
-                                        <SelectItem key={prop.id} value={prop.id.toString()} className="text-sm">
-                                            {prop.name}
+                                    {units.map(unit => (
+                                        <SelectItem key={`${unit.leaseId}-${unit.unitId}`} value={unit.unitId.toString()} className="text-sm">
+                                            {unit.propertyName} - {unit.unitCode} ({unit.leaseNumber})
                                         </SelectItem>
                                     ))}
+                                    {!isLoadingOptions && units.length === 0 ? (
+                                        <div className="px-3 py-2 text-xs text-slate-500">
+                                            {optionsFailed
+                                                ? "Unable to load your rented units. Close this panel and try again."
+                                                : "No approved leased units are available."}
+                                        </div>
+                                    ) : null}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -144,14 +170,14 @@ export function MaintenanceRequestSheet({
                             <div className="space-y-2">
                                 <Label className="text-[11px] font-medium text-slate-600">Category</Label>
                                 <Select
-                                    defaultValue="Plumbing"
+                                    value={formData.category || ""}
                                     onValueChange={(val) => setFormData(prev => ({ ...prev, category: val }))}
                                 >
                                     <SelectTrigger className="h-11 rounded-lg bg-slate-50 border-slate-200 text-sm">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent className="bg-white border-slate-200">
-                                        {MAINTENANCE_CATEGORIES.map(cat => (
+                                        {categoryOptions.map(cat => (
                                             <SelectItem key={cat} value={cat} className="text-sm">{cat}</SelectItem>
                                         ))}
                                     </SelectContent>
@@ -161,14 +187,14 @@ export function MaintenanceRequestSheet({
                             <div className="space-y-2">
                                 <Label className="text-[11px] font-medium text-slate-600">Priority</Label>
                                 <Select
-                                    defaultValue="Medium"
+                                    value={formData.priority || ""}
                                     onValueChange={(val) => setFormData(prev => ({ ...prev, priority: val }))}
                                 >
                                     <SelectTrigger className="h-11 rounded-lg bg-slate-50 border-slate-200 text-sm">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent className="bg-white border-slate-200">
-                                        {PRIORITY_LEVELS.map(level => (
+                                        {priorityOptions.map(level => (
                                             <SelectItem key={level.value} value={level.value} className="text-sm">
                                                 <div className="flex items-center gap-2">
                                                     <div className={`h-1.5 w-1.5 rounded-full ${level.color}`} />
@@ -193,12 +219,27 @@ export function MaintenanceRequestSheet({
 
                         <div className="space-y-2">
                             <Label className="text-[11px] font-medium text-slate-600">Attachments</Label>
-                            <div className="border border-dashed border-slate-200 rounded-lg p-6 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-all cursor-pointer group">
+                            <input
+                                id={attachmentInputId}
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                multiple
+                                className="sr-only"
+                                onChange={(event) => setFormData((previous) => ({
+                                    ...previous,
+                                    images: Array.from(event.target.files ?? []).slice(0, 5),
+                                }))}
+                            />
+                            <label htmlFor={attachmentInputId} className="border border-dashed border-slate-200 rounded-lg p-6 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-all cursor-pointer group">
                                 <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center mb-2 group-hover:bg-slate-900 transition-colors">
                                     <UploadCloud className="h-4 w-4 text-slate-500 group-hover:text-white" />
                                 </div>
-                                <p className="text-xs font-medium text-slate-500">Click to upload media</p>
-                            </div>
+                                <p className="text-xs font-medium text-slate-500">
+                                    {formData.images?.length
+                                        ? `${formData.images.length} attachment${formData.images.length === 1 ? "" : "s"} selected`
+                                        : "Click to upload up to 5 images"}
+                                </p>
+                            </label>
                         </div>
                     </div>
                 </form>
@@ -215,9 +256,9 @@ export function MaintenanceRequestSheet({
                     </Button>
                     <Button
                         type="submit"
-                        onClick={handleSubmit}
+                        form={formId}
                         className="flex-1 h-11 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white"
-                        disabled={isPending}
+                        disabled={isPending || isLoadingOptions || optionsFailed || units.length === 0}
                     >
                         {isPending && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
                         Submit Ticket

@@ -1,10 +1,10 @@
 import { UserProfile, NavSection, NavMainItem, NavSubItem } from "@/types/profile-types"
 import {
     LayoutGrid, ReceiptText, BriefcaseBusiness,
-    ClipboardList, FolderKanban, ShieldCheck, BookOpen,
+    ClipboardList, FolderKanban, ShieldCheck, BookOpen, ShoppingBag,
     Settings2, CircleHelp, Ticket,
     Construction,
-    Building2,
+    Building2, Trophy,
     Files
 } from "lucide-react"
 
@@ -77,6 +77,8 @@ export const sidebarItems: readonly NavSection[] = [
             }, ["Supplier"]),
             withProfiles({ title: "Find RFQs", url: "/dashboard/supplier/rfqs", icon: ClipboardList, description: "Browse requests for quotation" }, ["Supplier"]),
             withProfiles({ title: "Find Tenders", url: "/dashboard/supplier/tenders", icon: BriefcaseBusiness, description: "Explore available tenders" }, ["Supplier"]),
+            withProfiles({ title: "Awards & Contracts", url: "/dashboard/supplier/contracts", icon: Trophy, description: "Track approved wins and contract stages" }, ["Supplier"]),
+            withProfiles({ title: "Purchase Orders", url: "/dashboard/supplier/orders", icon: ShoppingBag, description: "View approved orders issued to your company" }, ["Supplier"]),
             withProfiles({ title: "All Documents", url: "/dashboard/supplier/documents", icon: FolderKanban, description: "Contracts, files & uploads" }, ["Supplier"]),
         ],
     },

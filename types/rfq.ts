@@ -74,6 +74,12 @@ export interface RfqResponseItem {
     uom: string | null
     quotedPrice: number | null
     totalPayable: number | null
+    taxType?: "VAT" | "Exempt" | "WithholdingTax" | string | null
+    taxRate?: number | null
+    isTaxInclusive?: boolean | null
+    netAmount?: number | null
+    taxAmount?: number | null
+    grossAmount?: number | null
 }
 
 export interface RfqMyResponse {
@@ -155,6 +161,9 @@ export interface SubmitResponseLineItem {
     rfqLineId: number
     quotedPrice: number
     totalPayable: number
+    taxType: "VAT" | "Exempt"
+    taxRate: number
+    isTaxInclusive: boolean
 }
 
 export interface SubmitRfqResponsePayload {

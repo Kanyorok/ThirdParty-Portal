@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { PaginationProvider } from "@/components/providers/pagination-provider"
 import { SharedPagination } from "@/components/common/shared-pagination"
@@ -11,11 +11,6 @@ import { useDebounce } from "@/hooks/use-debounce"
 import { cn } from "@/lib/utils"
 import { useSearchParams } from "next/navigation"
 import { useSession } from "next-auth/react"
-import {
-  resolveTenantIdFromProfilesPayload,
-  resolveTenantIdFromSessionUser,
-} from "@/lib/profile/resolve-tenant-id"
-import { resolveUserIdFromSessionUser } from "@/lib/profile/resolve-user-id"
 import { resolveSessionAccessToken } from "@/lib/auth/server-token"
 import {
   getLeaseInterests,
@@ -23,6 +18,7 @@ import {
   type LeaseInterest,
 } from "@/lib/api/lease-interests"
 import { InterestsListing } from "@/components/dashboard/property/interests-listing"
+import { TenantOffersPanel } from "@/components/dashboard/property/tenant-offers-panel"
 import {
   Select,
   SelectContent,
@@ -122,11 +118,7 @@ export default function InterestsRegistryPage() {
 
   const { data: session, status } = useSession()
   const accessToken = resolveSessionAccessToken(session as any)
-  const sessionTenantId = resolveTenantIdFromSessionUser(session?.user)
-  const [tenantId, setTenantId] = useState<number | null>(sessionTenantId)
-  const userId = resolveUserIdFromSessionUser(session?.user)
   const isSessionLoading = status === "loading"
-  const hasTenantId = typeof tenantId === "number" && Number.isFinite(tenantId)
 
   const sessionTenantName = useMemo(() => {
     const user = (session as any)?.user ?? {}
@@ -155,35 +147,6 @@ export default function InterestsRegistryPage() {
     return undefined
   }, [session])
 
-  useEffect(() => {
-    setTenantId(sessionTenantId)
-  }, [sessionTenantId])
-
-  useEffect(() => {
-    if (tenantId) return
-    if (!session?.user) return
-
-    let active = true
-
-    fetch("/api/portal/profiles", { cache: "no-store" })
-      .then(async (res) => {
-        if (!res.ok) return null
-        return res.json().catch(() => null)
-      })
-      .then((payload) => {
-        if (!active || !payload) return
-        const resolved = resolveTenantIdFromProfilesPayload(payload, [userId])
-        if (resolved) setTenantId(resolved)
-      })
-      .catch(() => {
-        // Best effort fallback only.
-      })
-
-    return () => {
-      active = false
-    }
-  }, [tenantId, session?.user, userId])
-
   const {
     data,
     isLoading,
@@ -191,21 +154,20 @@ export default function InterestsRegistryPage() {
     isFetching,
     refetch,
   } = useQuery({
-    queryKey: ["lease-interests", page, debouncedSearch, tenantId, accessToken],
+    queryKey: ["lease-interests", page, debouncedSearch],
     queryFn: () =>
       getLeaseInterests(accessToken, {
-        tenantId: hasTenantId ? tenantId : undefined,
         page,
         search: debouncedSearch || undefined,
       }),
-    enabled: Boolean(accessToken),
+    enabled: status === "authenticated",
     placeholderData: (previousData) => previousData,
   })
 
   const { data: paymentFrequencyOptions } = useQuery({
-    queryKey: ["payment-frequencies", accessToken],
+    queryKey: ["payment-frequencies"],
     queryFn: () => getPaymentFrequencyCodeDetails(accessToken),
-    enabled: Boolean(accessToken),
+    enabled: status === "authenticated",
     staleTime: 5 * 60 * 1000,
   })
 
@@ -439,6 +401,10 @@ export default function InterestsRegistryPage() {
           </div>
         </div>
       </header>
+
+      {!isLoading && !isSessionLoading && data ? (
+        <TenantOffersPanel interests={data.data} />
+      ) : null}
 
       {(isLoading || isSessionLoading) && !data ? (
         <div className="rounded-[2rem] border border-border/40 bg-background/60 overflow-hidden">

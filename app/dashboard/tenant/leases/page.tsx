@@ -113,34 +113,9 @@ export default function LeaseRegistry() {
     }, [tenantId, session?.user, userId])
 
     const { data, isLoading, isError, refetch, isFetching } = useQuery({
-        queryKey: ['leases', page, debouncedSearch, tenantId, fallbackTenantIds.join(","), accessToken],
-        queryFn: async () => {
-            const candidates = Array.from(
-                new Set(
-                    [tenantId, ...fallbackTenantIds]
-                        .map((value) => toFiniteNumber(value))
-                        .filter((value): value is number => value != null && value > 0)
-                )
-            )
-
-            if (candidates.length === 0) {
-                throw new Error("No tenant profile ID is available for this session.")
-            }
-
-            let lastError: unknown = null
-            for (const candidate of candidates) {
-                try {
-                    const response = await getLeases(page, debouncedSearch, candidate, accessToken)
-                    if (candidate !== tenantId) setTenantId(candidate)
-                    return response
-                } catch (error) {
-                    lastError = error
-                }
-            }
-
-            throw lastError ?? new Error("Unable to load leases for this account.")
-        },
-        enabled: Boolean(accessToken && canAttemptLeaseFetch),
+        queryKey: ['leases', page, debouncedSearch],
+        queryFn: () => getLeases(page, debouncedSearch, tenantId, accessToken),
+        enabled: status === "authenticated",
         placeholderData: (previousData) => previousData,
     })
 

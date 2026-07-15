@@ -5,11 +5,6 @@ import {
     requireQueryId,
 } from "@/lib/api/property-client"
 
-function normalizeTenantId(tenantId?: number | null) {
-    if (typeof tenantId === "number" && Number.isFinite(tenantId)) return tenantId
-    return undefined
-}
-
 function numberOr(value: unknown, fallback = 0) {
     const parsed = Number(value)
     return Number.isFinite(parsed) ? parsed : fallback
@@ -20,6 +15,40 @@ function toRecord(value: unknown) {
         return value as Record<string, unknown>
     }
     return {}
+}
+
+async function leaseRequest(
+    query: Record<string, string | number | undefined>,
+    accessToken?: string
+): Promise<unknown> {
+    if (typeof window !== "undefined") {
+        const params = new URLSearchParams()
+        Object.entries(query).forEach(([key, value]) => {
+            if (value !== undefined && value !== "") params.set(key, String(value))
+        })
+
+        const response = await fetch(`/api/property/leases?${params.toString()}`, {
+            method: "GET",
+            cache: "no-store",
+        })
+        const payload = await response.json().catch(() => null)
+        if (!response.ok) {
+            throw new Error(payload?.message || `Unable to load leases (${response.status})`)
+        }
+        return payload
+    }
+
+    const isDetail = query.lease_id !== undefined
+    return propertyRequest<unknown>(
+        isDetail
+            ? "/api/v1/property/leases/tenant/show"
+            : "/api/v1/property/leases/tenant",
+        {
+            method: "GET",
+            accessToken,
+            query,
+        }
+    )
 }
 
 function normalizeLease(raw: unknown): Lease {
@@ -155,21 +184,13 @@ export interface Lease {
 export async function getLeases(
     page: number = 1,
     search: string = "",
-    tenantId?: number | null,
+    _tenantId?: number | null,
     accessToken?: string
 ): Promise<PaginatedResponse<Lease>> {
-    const resolvedTenantId = normalizeTenantId(tenantId)
-    requireQueryId("tenantId", resolvedTenantId)
-
-    const payload = await propertyRequest<unknown>("/api/v1/property/leases/tenant", {
-        method: "GET",
-        accessToken,
-        query: {
-            page,
-            id: resolvedTenantId,
-            search: search || undefined,
-        },
-    })
+    const payload = await leaseRequest({
+        page,
+        search: search || undefined,
+    }, accessToken)
     const normalized = normalizePaginatedResponse<unknown>(payload)
     return {
         ...normalized,
@@ -178,22 +199,13 @@ export async function getLeases(
 }
 
 export async function getLeaseDetails(
-    tenantId: number | null | undefined,
+    _tenantId: number | null | undefined,
     leaseId: number,
     accessToken?: string
 ): Promise<Lease> {
-    const resolvedTenantId = normalizeTenantId(tenantId)
-    requireQueryId("tenantId", resolvedTenantId)
     requireQueryId("leaseId", leaseId)
 
-    const payload = await propertyRequest<unknown>("/api/v1/property/leases/tenant/show", {
-        method: "GET",
-        accessToken,
-        query: {
-            id: resolvedTenantId,
-            lease_id: leaseId,
-        },
-    })
+    const payload = await leaseRequest({ lease_id: leaseId }, accessToken)
 
     return normalizeLease(pickLeaseFromPayload(payload))
 }
