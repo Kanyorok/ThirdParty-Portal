@@ -5,7 +5,7 @@ import { signOut } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence, Variants } from 'framer-motion'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import {
@@ -248,10 +248,10 @@ export default function RegisterThirdPartyDetails() {
         mode: 'onChange',
     })
 
-    const selectedType = form.watch('types')
+    const selectedType = useWatch({ control: form.control, name: 'types' })
     const isTenant = selectedType === 'TN'
     const isCustomer = selectedType === 'CU'
-    const selectedCountry = form.watch('Country')
+    const selectedCountry = useWatch({ control: form.control, name: 'Country' })
 
     useEffect(() => {
         let active = true

@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 
@@ -513,8 +513,8 @@ export const useRegisterForm = () => {
         },
     })
 
-    const selectedCountryCode = form.watch("Country")
-    const selectedTypes = form.watch("types")
+    const selectedCountryCode = useWatch({ control: form.control, name: "Country" })
+    const selectedTypes = useWatch({ control: form.control, name: "types" })
 
     const resetVerifyEmailUrl = useCallback(() => {
         lastVerifyEmailUrlRef.current = null
