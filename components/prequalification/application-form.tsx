@@ -2,7 +2,7 @@
 
 import { Spinner } from "@/components/common/spinner";
 import { useEffect, useMemo, useState, useCallback, useRef } from "react"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { CheckCircle2, AlertCircle, Clock, RefreshCw, Info, X, Send, Users, Calendar, Frown, XCircle, CheckCheck, Check, InfoIcon } from "lucide-react"
@@ -383,8 +383,8 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
         mode: "onChange",
     });
 
-    const selectedCategoryIds = form.watch("categoryIds");
-    const selectedRoundId = form.watch("roundId");
+    const selectedCategoryIds = useWatch({ control: form.control, name: "categoryIds" });
+    const selectedRoundId = useWatch({ control: form.control, name: "roundId" });
 
     const fetchRounds = useCallback(async () => {
         if (!isAuthenticated) return;
@@ -780,7 +780,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
 
     const roundValidationState = form.formState.errors.roundId ? "invalid" : "valid";
     const currentRound = useMemo(() => rounds.find(r => String(r.id) === selectedRoundId) || (defaultRoundId ? rounds[0] : undefined), [rounds, selectedRoundId, defaultRoundId]);
-    const descriptionsMap = form.watch("descriptions") as Record<string, string> | undefined;
+    const descriptionsMap = useWatch({ control: form.control, name: "descriptions" }) as Record<string, string> | undefined;
     // round/category validity handled via submitEnabled below
 
     // Effective round id and submit gate
@@ -865,7 +865,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                         {roundsLoadingState === "error" && <ErrorState error={roundError} onRetry={fetchRounds} />}
                                         {roundsLoadingState === "success" && rounds.length > 0 && (
                                             <>
-                                                <Select value={form.watch("roundId")} onValueChange={(value) => form.setValue("roundId", value, { shouldValidate: true })}>
+                                                <Select value={selectedRoundId} onValueChange={(value) => form.setValue("roundId", value, { shouldValidate: true })}>
                                                     <SelectTrigger
                                                         id="roundId"
                                                         className={cn(
