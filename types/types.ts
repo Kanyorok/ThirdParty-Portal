@@ -97,6 +97,18 @@ export type RoundCategory = {
     updated_on?: string;
     decision_date?: string;
     rejection_reason?: string;
+
+    document_types?: CategoryDocumentRequirement[];
+    required_document_types?: CategoryDocumentRequirement[];
+}
+
+export type CategoryDocumentRequirement = {
+    id: number | string;
+    document_type_id: number | string;
+    name: string;
+    description?: string;
+    value?: string;
+    required: boolean;
 }
 
 export type CategoryProgress = RoundCategory;

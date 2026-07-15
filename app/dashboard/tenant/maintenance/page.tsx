@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useMemo, useState } from "react"
 import useSWR from "swr"
 import { useSession } from "next-auth/react"
 import { MaintenanceList } from "@/components/dashboard/maintenance/maintenance-listing"
@@ -13,142 +13,23 @@ import { Button } from "@/components/common/button"
 import { maintenanceService } from "@/lib/api/maintenance"
 import { useSearchParams } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { resolveSessionAccessToken } from "@/lib/auth/server-token"
-import {
-    resolveTenantIdFromProfilesPayload,
-    resolveTenantIdFromSessionUser,
-} from "@/lib/profile/resolve-tenant-id"
-import { resolveUserIdFromSessionUser } from "@/lib/profile/resolve-user-id"
-
-function toFiniteNumber(value: unknown): number | null {
-    if (typeof value === "number" && Number.isFinite(value)) return value
-    if (typeof value === "string" && value.trim() && Number.isFinite(Number(value))) {
-        return Number(value)
-    }
-    return null
-}
 
 export default function MaintenancePage() {
-    const { data: session, status } = useSession()
-    const accessToken = resolveSessionAccessToken(session as any)
+    const { status } = useSession()
     const searchParams = useSearchParams()
     const page = parseInt(searchParams?.get("page") || "1", 10)
-    const sessionTenantId = resolveTenantIdFromSessionUser(session?.user)
-    const [tenantId, setTenantId] = useState<number | null>(sessionTenantId)
-    const userId = resolveUserIdFromSessionUser(session?.user)
     const isSessionLoading = status === "loading"
 
     const [searchQuery, setSearchQuery] = useState("")
     const [statusFilter, setStatusFilter] = useState<string | null>(null)
     const [priorityFilter, setPriorityFilter] = useState<string | null>(null)
 
-    const hasTenantId = typeof tenantId === "number" && Number.isFinite(tenantId)
-    const fallbackTenantIds = useMemo(() => {
-        const user = (session as any)?.user ?? {}
-        const rawCandidates = [
-            user?.tenantId,
-            user?.tenant_id,
-            user?.tenantMaintenanceId,
-            user?.tenant_maintenance_id,
-            user?.profile?.tenantId,
-            user?.profile?.tenant_id,
-            user?.profile?.tenant_data?.tenantId,
-            user?.profile?.tenant_data?.tenant_id,
-            user?.profile?.tenant_data?.id,
-            user?.profile?.tenantData?.tenantId,
-            user?.profile?.tenantData?.tenant_id,
-            user?.profile?.tenantData?.id,
-            user?.thirdParty?.tenantId,
-            user?.thirdParty?.tenant_id,
-            user?.third_party?.tenantId,
-            user?.third_party?.tenant_id,
-            user?.thirdPartyId,
-            user?.third_party_id,
-            user?.thirdParty?.id,
-            user?.third_party?.id,
-            user?.userId,
-            user?.user_id,
-            user?.id,
-        ]
-
-        return Array.from(
-            new Set(
-                rawCandidates
-                    .map((value) => toFiniteNumber(value))
-                    .filter((value): value is number => value != null && value > 0)
-            )
-        )
-    }, [session])
-    const canAttemptMaintenanceFetch = hasTenantId || fallbackTenantIds.length > 0
-
-    useEffect(() => {
-        setTenantId(sessionTenantId)
-    }, [sessionTenantId])
-
-    useEffect(() => {
-        if (hasTenantId) return
-        if (fallbackTenantIds.length === 0) return
-        setTenantId(fallbackTenantIds[0])
-    }, [hasTenantId, fallbackTenantIds])
-
-    useEffect(() => {
-        if (tenantId) return
-        if (!session?.user) return
-
-        let active = true
-        fetch("/api/portal/profiles", { cache: "no-store" })
-            .then(async (res) => {
-                if (!res.ok) return null
-                return res.json().catch(() => null)
-            })
-            .then((payload) => {
-                if (!active || !payload) return
-                const resolved = resolveTenantIdFromProfilesPayload(payload, [userId])
-                if (resolved) setTenantId(resolved)
-            })
-            .catch(() => {
-                // Best effort fallback only.
-            })
-
-        return () => {
-            active = false
-        }
-    }, [tenantId, session?.user, userId])
-
     const { data, error, isLoading, mutate } = useSWR<any>(
-        accessToken && canAttemptMaintenanceFetch
-            ? ["/api/property/maintenancerequest", accessToken, page, searchQuery, tenantId, fallbackTenantIds.join(",")]
+        status === "authenticated"
+            ? ["/api/property/maintenance-requests", page, searchQuery]
             : null,
-        async ([_, token, p, s]) => {
-            const candidates = Array.from(
-                new Set(
-                    [tenantId, ...fallbackTenantIds]
-                        .map((value) => toFiniteNumber(value))
-                        .filter((value): value is number => value != null && value > 0)
-                )
-            )
-
-            if (candidates.length === 0) {
-                throw new Error("No tenant profile ID is available for this session.")
-            }
-
-            let lastError: unknown = null
-            for (const candidate of candidates) {
-                try {
-                    const response = await maintenanceService.getRequests(
-                        String(token),
-                        Number(p),
-                        String(s ?? ""),
-                        candidate
-                    )
-                    if (candidate !== tenantId) setTenantId(candidate)
-                    return response
-                } catch (fetchError) {
-                    lastError = fetchError
-                }
-            }
-
-            throw lastError ?? new Error("Unable to load maintenance requests for this account.")
+        async ([_, p, s]) => {
+            return maintenanceService.getRequests(Number(p), String(s ?? ""))
         },
         {
             keepPreviousData: true,
@@ -181,10 +62,10 @@ export default function MaintenancePage() {
                         <p className="text-sm text-slate-600">Create tickets, track progress, and keep your unit running smoothly.</p>
                     </div>
 
-                    <MaintenanceRequestSheet accessToken={accessToken} tenantId={tenantId} onSuccess={() => mutate()}>
+                    <MaintenanceRequestSheet onSuccess={() => mutate()}>
                         <Button
                             className="h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-5 text-xs font-semibold transition-colors shadow-none disabled:opacity-50"
-                            disabled={!accessToken || !canAttemptMaintenanceFetch}
+                            disabled={status !== "authenticated"}
                         >
                             <Hammer className="h-4 w-4 mr-2" />
                             New request
@@ -256,6 +137,9 @@ export default function MaintenancePage() {
                 <div className="h-64 flex flex-col items-center justify-center rounded-2xl border border-rose-100 bg-rose-50/30 text-rose-600 p-6 text-center">
                     <AlertCircle className="h-8 w-8 mb-3 opacity-50" />
                     <p className="text-sm font-bold uppercase tracking-tight mb-2">Failed to load requests</p>
+                    <p className="mb-3 max-w-xl text-xs text-rose-500">
+                        {error instanceof Error ? error.message : "The ERP maintenance service could not be reached."}
+                    </p>
                     <Button
                         variant="outline"
                         size="sm"
@@ -265,7 +149,7 @@ export default function MaintenancePage() {
                         Retry Connection
                     </Button>
                 </div>
-            ) : !accessToken ? (
+            ) : status === "unauthenticated" ? (
                 <div className="w-full h-80 flex flex-col items-center justify-center rounded-[3rem] border-2 border-dashed border-border/60 bg-secondary/[0.02]">
                     <div className="h-20 w-20 rounded-[2rem] bg-background border border-border/40 flex items-center justify-center mb-6 text-muted-foreground/20">
                         <FileText className="h-10 w-10" />
@@ -273,16 +157,6 @@ export default function MaintenancePage() {
                     <h3 className="text-lg font-black text-foreground uppercase tracking-widest">Session Expired</h3>
                     <p className="text-sm text-muted-foreground/70 mt-2 font-medium">
                         Sign in again to load maintenance records.
-                    </p>
-                </div>
-            ) : !canAttemptMaintenanceFetch ? (
-                <div className="w-full h-80 flex flex-col items-center justify-center rounded-[3rem] border-2 border-dashed border-border/60 bg-secondary/[0.02]">
-                    <div className="h-20 w-20 rounded-[2rem] bg-background border border-border/40 flex items-center justify-center mb-6 text-muted-foreground/20">
-                        <FileText className="h-10 w-10" />
-                    </div>
-                    <h3 className="text-lg font-black text-foreground uppercase tracking-widest">Tenant Profile Mapping Missing</h3>
-                    <p className="text-sm text-muted-foreground/70 mt-2 font-medium">
-                        Maintenance requests require your tenant profile ID to load records.
                     </p>
                 </div>
             ) : (

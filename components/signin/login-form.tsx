@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useForm, useWatch, type UseFormRegisterReturn } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -22,6 +22,9 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>
 
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
+    IdleTimeout: "You were signed out after 5 minutes of inactivity. Please sign in again.",
+    SessionExpired: "Your session has expired. Please sign in again.",
+    SessionRequired: "Please sign in to access this page.",
     INVALID_CREDENTIALS: "Invalid email or password.",
     EMAIL_NOT_VERIFIED: "Your email address is not verified yet.",
     ACCOUNT_DISABLED: "Your account is disabled.",
@@ -135,6 +138,7 @@ function FormField({
 
 export default function LoginPage() {
     const router = useRouter()
+    const searchParams = useSearchParams()
     const authInfoId = React.useId()
     const authErrorId = React.useId()
     const [authError, setAuthError] = React.useState<string | null>(null)
@@ -152,6 +156,13 @@ export default function LoginPage() {
     })
 
     const emailValue = useWatch({ control, name: "email" })
+    const queryError = searchParams?.get("error")
+
+    React.useEffect(() => {
+        if (queryError) {
+            setAuthError(getFriendlyAuthMessage(queryError))
+        }
+    }, [queryError])
 
     const hasFieldError = (field: keyof FormValues) =>
         (touchedFields[field] || isSubmitted) && !!errors[field]
@@ -178,7 +189,9 @@ export default function LoginPage() {
                 return
             }
 
-            router.replace("/dashboard")
+            // A full navigation ensures the server layout and SessionProvider both
+            // observe the newly-issued session immediately after an idle sign-out.
+            window.location.replace("/dashboard")
         } catch {
             setAuthError(AUTH_ERROR_MESSAGES.SERVER_ERROR)
         }

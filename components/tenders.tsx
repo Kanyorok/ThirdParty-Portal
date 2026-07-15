@@ -106,6 +106,10 @@ const STATUS: Record<string, { label: string; text: string; dot: string; ring: s
   ARCHIVED: { label: "Archived", text: "text-slate-500", dot: "bg-slate-400", ring: "ring-slate-400/20" },
   OPENING: { label: "Opening", text: "text-violet-600", dot: "bg-violet-500", ring: "ring-violet-500/20" },
   INVITE: { label: "Direct invite", text: "text-indigo-600", dot: "bg-indigo-500", ring: "ring-indigo-500/20" },
+  AWARDED: { label: "Bid awarded", text: "text-emerald-700", dot: "bg-emerald-500", ring: "ring-emerald-500/20" },
+  NOT_AWARDED: { label: "Not awarded", text: "text-slate-600", dot: "bg-slate-400", ring: "ring-slate-400/20" },
+  AWARD_PENDING: { label: "Award pending", text: "text-amber-700", dot: "bg-amber-500", ring: "ring-amber-500/20" },
+  EVALUATION: { label: "Evaluation", text: "text-violet-600", dot: "bg-violet-500", ring: "ring-violet-500/20" },
   UNKNOWN: { label: "Unknown", text: "text-muted-foreground", dot: "bg-muted-foreground/40", ring: "ring-muted-foreground/20" },
 }
 
@@ -154,6 +158,12 @@ const SECTION_THEME = {
     text: "text-blue-600",
     badge: "bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400",
   },
+  outcomes: {
+    trigger: "border-border bg-card hover:bg-muted/50",
+    triggerOpen: "border-violet-200 bg-violet-50 dark:border-violet-900/60 dark:bg-violet-950/30",
+    text: "text-violet-600",
+    badge: "bg-violet-100 text-violet-700 dark:bg-violet-950/40 dark:text-violet-400",
+  },
 } as const
 
 /* ── Normalized tender row data ──────────────────── */
@@ -170,6 +180,10 @@ interface NormalizedTender {
   lifecycle: TenderLifecycle
   isDirectInvite: boolean
   invitation: AnyRecord | undefined
+  hasBid: boolean
+  stageKey: string
+  stageLabel: string
+  outcome: string
 }
 
 function normalizeTender(t: unknown, invitationMap: Record<string, AnyRecord>): NormalizedTender {
@@ -187,10 +201,23 @@ function normalizeTender(t: unknown, invitationMap: Record<string, AnyRecord>): 
       : "No deadline"
   const deadline = deadlineMeta(deadlineRaw || null)
   const invitation = invitationMap[id]
+  const supplierLifecycle = isRecord(o.supplier_lifecycle) ? o.supplier_lifecycle : undefined
+  const hasBid = Boolean(supplierLifecycle?.has_bid)
+  const stage = String(supplierLifecycle?.stage ?? "").trim().toLowerCase()
+  const stageLabel = String(supplierLifecycle?.stage_label ?? "").trim()
+  const outcome = String(supplierLifecycle?.outcome ?? "").trim().toLowerCase()
   const accessType = resolveAccessFilter(typeValue, Boolean(invitation))
   const typeText = accessType === "direct-invites" ? "Direct invite" : "Open to all"
   const lifecycle = resolveLifecycle(statusValue, deadline.closed)
-  const statusKey = resolveStatusKey(statusValue, deadline)
+  const statusKey = stage === "awarded"
+    ? "AWARDED"
+    : stage === "not_awarded"
+      ? "NOT_AWARDED"
+      : stage === "award_pending"
+        ? "AWARD_PENDING"
+        : hasBid && ["evaluation_complete", "evaluation_in_progress", "bid_opened", "non_responsive"].includes(stage)
+          ? "EVALUATION"
+          : resolveStatusKey(statusValue, deadline)
 
   return {
     key: id || `${ref}-${title}`,
@@ -204,6 +231,10 @@ function normalizeTender(t: unknown, invitationMap: Record<string, AnyRecord>): 
     lifecycle,
     isDirectInvite: accessType === "direct-invites",
     invitation,
+    hasBid,
+    stageKey: stage,
+    stageLabel: stageLabel || getStatusTheme(statusKey).label,
+    outcome,
   }
 }
 
@@ -260,7 +291,7 @@ function TenderRow({
           <TableCell className="text-right">
             <span className="inline-flex items-center gap-1.5">
               <span className={cn("h-1.5 w-1.5 rounded-full ring-2", sTheme.dot, sTheme.ring)} />
-              <span className={cn("text-[11px] font-medium", sTheme.text)}>{sTheme.label}</span>
+              <span className={cn("text-[11px] font-medium", sTheme.text)}>{tender.stageLabel}</span>
             </span>
           </TableCell>
         </TableRow>
@@ -277,6 +308,7 @@ export default function TendersFilter() {
   const [accessFilter, setAccessFilter] = useState<TenderAccessFilter>("all")
   const [loading, setLoading] = useState(true)
   const [tenders, setTenders] = useState<unknown[]>([])
+  const [invitedTenders, setInvitedTenders] = useState<unknown[]>([])
   const [error, setError] = useState<string | null>(null)
   const [invitationMap, setInvitationMap] = useState<Record<string, AnyRecord>>({})
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({})
@@ -287,21 +319,26 @@ export default function TendersFilter() {
     try {
       const res = await fetch("/api/tender-invitations", {
         signal,
+        cache: "no-store",
         headers: { Accept: "application/json" },
       })
       if (!res.ok) return
       const json = await parseJsonResponse<{ data?: AnyRecord[] }>(res)
       const list = Array.isArray(json?.data) ? json.data : []
       const map: Record<string, AnyRecord> = {}
+      const invitationTenders: unknown[] = []
       list.forEach((entry: AnyRecord) => {
         const invitation = isRecord(entry) && isRecord(entry.invitation) ? (entry.invitation as AnyRecord) : entry
+        const invitedTender = isRecord(entry) && isRecord(entry.tender) ? entry.tender : undefined
         const tenderId = String(
           invitation?.TenderId ?? invitation?.tenderId ??
-          (entry?.tender as AnyRecord)?.id ?? (entry?.tender as AnyRecord)?.Id ?? ""
+          invitedTender?.id ?? invitedTender?.Id ?? ""
         ).trim()
         if (tenderId) map[tenderId] = invitation
+        if (invitedTender) invitationTenders.push(invitedTender)
       })
       setInvitationMap(map)
+      setInvitedTenders(invitationTenders)
     } catch { /* keep responsive */ }
   }, [])
 
@@ -313,7 +350,7 @@ export default function TendersFilter() {
       if (debounced) params.set("search", debounced)
       const res = await fetch(
         `/api/tenders${params.toString() ? `?${params}` : ""}`,
-        { signal, headers: { Accept: "application/json" } }
+        { signal, cache: "no-store", headers: { Accept: "application/json" } }
       )
       const json: any = await parseJsonResponse(res)
       const message = Array.isArray(json) ? null : json?.message ?? json?.error ?? null
@@ -348,9 +385,22 @@ export default function TendersFilter() {
 
   /* ── Normalize all tenders ── */
 
+  const visibleTenders = useMemo(() => {
+    const merged = new Map<string, unknown>()
+    const allTenders = [...tenders, ...invitedTenders]
+    allTenders.forEach((tender, index) => {
+      const record = isRecord(tender) ? tender : {}
+      const id = String(pick(record, ["id", "Id", "TenderID", "tender_id"]) ?? "").trim()
+      const fallback = `${String(pick(record, ["TenderNo", "tenderNo"]) ?? "")}-${index}`
+      const key = id || fallback
+      if (!merged.has(key)) merged.set(key, tender)
+    })
+    return Array.from(merged.values())
+  }, [tenders, invitedTenders])
+
   const normalized = useMemo(
-    () => tenders.map((t) => normalizeTender(t, invitationMap)),
-    [tenders, invitationMap]
+    () => visibleTenders.map((t) => normalizeTender(t, invitationMap)),
+    [visibleTenders, invitationMap]
   )
 
   /* ── Stats ── */
@@ -371,12 +421,14 @@ export default function TendersFilter() {
 
   const filtered = useMemo(() => {
     return normalized.filter((t) => {
+      const term = debounced.trim().toLowerCase()
+      if (term && !`${t.ref} ${t.title}`.toLowerCase().includes(term)) return false
       if (statusFilter !== "all" && t.lifecycle !== statusFilter) return false
       if (accessFilter === "open-to-all" && t.isDirectInvite) return false
       if (accessFilter === "direct-invites" && !t.isDirectInvite) return false
       return true
     })
-  }, [normalized, statusFilter, accessFilter])
+  }, [normalized, statusFilter, accessFilter, debounced])
 
   /* ── Sections ── */
 
@@ -390,12 +442,15 @@ export default function TendersFilter() {
     )
     const priorityIds = new Set(priority.map((t) => t.key))
     const activeItems = filtered.filter((t) => !priorityIds.has(t.key) && t.lifecycle === "active")
-    const closedItems = filtered.filter((t) => !priorityIds.has(t.key) && t.lifecycle === "closed")
+    const outcomeItems = filtered.filter((t) => !priorityIds.has(t.key) && t.lifecycle === "closed" && t.hasBid)
+    const outcomeIds = new Set(outcomeItems.map((t) => t.key))
+    const closedItems = filtered.filter((t) => !priorityIds.has(t.key) && !outcomeIds.has(t.key) && t.lifecycle === "closed")
     const archivedItems = filtered.filter((t) => !priorityIds.has(t.key) && t.lifecycle === "archived")
 
     const grouped: Array<{ id: string; title: string; items: NormalizedTender[] }> = []
     if (priority.length) grouped.push({ id: "priority", title: "Priority opportunities", items: priority })
     if (activeItems.length) grouped.push({ id: "active", title: "Active tenders", items: activeItems })
+    if (outcomeItems.length) grouped.push({ id: "outcomes", title: "Bid progress & outcomes", items: outcomeItems })
     if (closedItems.length) grouped.push({ id: "closed", title: "Closed", items: closedItems })
     if (archivedItems.length) grouped.push({ id: "archived", title: "Archived", items: archivedItems })
     return grouped
@@ -471,7 +526,7 @@ export default function TendersFilter() {
 
   /* ── Empty ── */
 
-  if (tenders.length === 0) return (
+  if (visibleTenders.length === 0) return (
     <div className="space-y-5">
       {header}
       <div className="flex flex-col items-center py-20 text-center">

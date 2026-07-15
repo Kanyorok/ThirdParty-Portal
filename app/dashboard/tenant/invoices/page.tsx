@@ -1,261 +1,113 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
+import { useSearchParams } from "next/navigation"
+import { useSession } from "next-auth/react"
+import { AlertCircle, FileText, Layers, RefreshCw, Search, Sparkles } from "lucide-react"
 import { InvoicesList } from "@/components/dashboard/property/invoices-listing"
 import { Skeleton } from "@/components/common/skeleton"
 import { SharedPagination } from "@/components/common/shared-pagination"
 import { PaginationProvider } from "@/components/providers/pagination-provider"
-import { AlertCircle, RefreshCw, Search, FileText, Layers, Sparkles } from "lucide-react"
 import { Input } from "@/components/common/input"
 import { useDebounce } from "@/hooks/use-debounce"
 import { cn } from "@/lib/utils"
-import { useSearchParams } from "next/navigation"
 import { getInvoices } from "@/lib/api/invoices"
-import { useSession } from "next-auth/react"
-import {
-    resolveTenantIdFromProfilesPayload,
-    resolveTenantIdFromSessionUser,
-} from "@/lib/profile/resolve-tenant-id"
-import { resolveUserIdFromSessionUser } from "@/lib/profile/resolve-user-id"
-import { resolveSessionAccessToken } from "@/lib/auth/server-token"
-
-function toFiniteNumber(value: unknown): number | null {
-    if (typeof value === "number" && Number.isFinite(value)) return value
-    if (typeof value === "string" && value.trim() && Number.isFinite(Number(value))) {
-        return Number(value)
-    }
-    return null
-}
 
 export default function InvoicesRegistry() {
     const [searchQuery, setSearchQuery] = useState("")
     const debouncedSearch = useDebounce(searchQuery, 400)
     const searchParams = useSearchParams()
-
     const page = Number(searchParams?.get("page")) || 1
-    const { data: session, status } = useSession()
-    const sessionTenantId = resolveTenantIdFromSessionUser(session?.user)
-    const [tenantId, setTenantId] = useState<number | null>(sessionTenantId)
-    const userId = resolveUserIdFromSessionUser(session?.user)
-    const accessToken = resolveSessionAccessToken(session as any)
-    const isSessionLoading = status === "loading"
-    const hasTenantId = typeof tenantId === "number" && Number.isFinite(tenantId)
-    const fallbackTenantIds = useMemo(() => {
-        const user = (session as any)?.user ?? {}
-        const rawCandidates = [
-            user?.tenantId,
-            user?.tenant_id,
-            user?.tenantMaintenanceId,
-            user?.tenant_maintenance_id,
-            user?.profile?.tenantId,
-            user?.profile?.tenant_id,
-            user?.profile?.tenant_data?.tenantId,
-            user?.profile?.tenant_data?.tenant_id,
-            user?.profile?.tenant_data?.id,
-            user?.profile?.tenantData?.tenantId,
-            user?.profile?.tenantData?.tenant_id,
-            user?.profile?.tenantData?.id,
-            user?.thirdParty?.tenantId,
-            user?.thirdParty?.tenant_id,
-            user?.third_party?.tenantId,
-            user?.third_party?.tenant_id,
-            user?.thirdPartyId,
-            user?.third_party_id,
-            user?.thirdParty?.id,
-            user?.third_party?.id,
-            user?.userId,
-            user?.user_id,
-            user?.id,
-        ]
-
-        return Array.from(
-            new Set(
-                rawCandidates
-                    .map((value) => toFiniteNumber(value))
-                    .filter((value): value is number => value != null && value > 0)
-            )
-        )
-    }, [session])
-    const canAttemptInvoiceFetch = hasTenantId || fallbackTenantIds.length > 0
-
-    useEffect(() => {
-        setTenantId(sessionTenantId)
-    }, [sessionTenantId])
-
-    useEffect(() => {
-        if (hasTenantId) return
-        if (fallbackTenantIds.length === 0) return
-        setTenantId(fallbackTenantIds[0])
-    }, [hasTenantId, fallbackTenantIds])
-
-    useEffect(() => {
-        if (tenantId) return
-        if (!session?.user) return
-
-        let active = true
-        fetch("/api/portal/profiles", { cache: "no-store" })
-            .then(async (res) => {
-                if (!res.ok) return null
-                return res.json().catch(() => null)
-            })
-            .then((payload) => {
-                if (!active || !payload) return
-                const resolved = resolveTenantIdFromProfilesPayload(payload, [userId])
-                if (resolved) setTenantId(resolved)
-            })
-            .catch(() => {
-                // Best effort fallback only.
-            })
-
-        return () => {
-            active = false
-        }
-    }, [tenantId, session?.user, userId])
+    const { status } = useSession()
 
     const { data, isLoading, isError, refetch, isFetching } = useQuery({
-        queryKey: ['invoices', page, debouncedSearch, tenantId, fallbackTenantIds.join(","), accessToken],
-        queryFn: async () => {
-            const candidates = Array.from(
-                new Set(
-                    [tenantId, ...fallbackTenantIds]
-                        .map((value) => toFiniteNumber(value))
-                        .filter((value): value is number => value != null && value > 0)
-                )
-            )
-
-            if (candidates.length === 0) {
-                throw new Error("No tenant profile ID is available for this session.")
-            }
-
-            let lastError: unknown = null
-            for (const candidate of candidates) {
-                try {
-                    const response = await getInvoices(page, candidate, debouncedSearch, accessToken)
-                    if (candidate !== tenantId) setTenantId(candidate)
-                    return response
-                } catch (error) {
-                    lastError = error
-                }
-            }
-
-            throw lastError ?? new Error("Unable to load invoices for this account.")
-        },
-        enabled: Boolean(accessToken && canAttemptInvoiceFetch),
+        queryKey: ["tenant-invoices", page, debouncedSearch],
+        queryFn: () => getInvoices(page, null, debouncedSearch),
+        enabled: status === "authenticated",
         placeholderData: (previousData) => previousData,
     })
 
-    if (isError) return (
-        <div className="flex flex-col items-center justify-center min-h-[450px] space-y-6 bg-destructive/[0.01] rounded-[3rem] border-2 border-dashed border-destructive/10">
-            <div className="h-20 w-20 bg-destructive/10 rounded-[2rem] flex items-center justify-center text-destructive animate-pulse">
-                <AlertCircle className="h-10 w-10" />
+    if (isError) {
+        return (
+            <div className="flex min-h-[450px] flex-col items-center justify-center space-y-6 rounded-[3rem] border-2 border-dashed border-destructive/10 bg-destructive/[0.01]">
+                <div className="flex h-20 w-20 animate-pulse items-center justify-center rounded-[2rem] bg-destructive/10 text-destructive">
+                    <AlertCircle className="h-10 w-10" />
+                </div>
+                <div className="space-y-2 text-center">
+                    <h3 className="text-xl font-black tracking-tight text-foreground">Unable to load invoices</h3>
+                    <p className="text-sm font-medium text-muted-foreground">The billing register could not be reached.</p>
+                </div>
+                <button
+                    onClick={() => refetch()}
+                    className="group flex items-center gap-3 rounded-2xl bg-foreground px-8 py-3 text-[11px] font-black uppercase tracking-[0.2em] text-background transition-all hover:bg-sky-600 active:scale-95"
+                >
+                    <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
+                    Refresh registry
+                </button>
             </div>
-            <div className="text-center space-y-2">
-                <h3 className="text-xl font-black text-foreground tracking-tight">Fetch Interrupted</h3>
-                <p className="text-sm text-muted-foreground font-medium uppercase tracking-widest">Unable to reach invoice gateway</p>
-            </div>
-            <button
-                onClick={() => refetch()}
-                className="group px-8 py-3 bg-foreground text-background rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] hover:bg-sky-600 transition-all flex items-center gap-3 active:scale-95"
-            >
-                <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
-                Refresh Registry
-            </button>
-        </div>
-    )
+        )
+    }
 
-    const hasData = !!data?.data && data.data.length > 0;
+    const hasData = Boolean(data?.data?.length)
 
     return (
         <div className="w-full space-y-8 antialiased">
             <header className="space-y-6">
                 <div className="space-y-2.5">
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5">
                         <Sparkles className="h-3.5 w-3.5 text-blue-600" />
                         <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-700">Invoices</span>
                     </div>
-                    <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Billing & invoices</h1>
-                    <p className="text-sm text-slate-600">View statements, track status, and download PDFs.</p>
+                    <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Billing &amp; invoices</h1>
+                    <p className="text-sm text-slate-600">View issued finance invoices, track balances, and download tenant PDFs.</p>
                 </div>
 
-                <div className="flex flex-col lg:flex-row gap-4">
-                    <div className="relative flex-1 group">
-                        <Search
-                            className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors"
-                            strokeWidth={2}
-                        />
-                        <Input
-                            placeholder="Search by invoice number, lease, or month…"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-11 pr-10 h-11 rounded-xl bg-white border border-slate-200 focus:border-blue-300 focus:ring-4 focus:ring-blue-50 transition-all text-sm placeholder:text-slate-400"
-                        />
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 rounded-lg flex items-center justify-center">
-                            {isFetching ? (
-                                <RefreshCw className="h-4 w-4 animate-spin text-blue-600" strokeWidth={2} />
-                            ) : (
-                                <Layers className="h-4 w-4 text-slate-300" strokeWidth={2} />
-                            )}
-                        </div>
+                <div className="relative flex-1 group">
+                    <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-blue-500" />
+                    <Input
+                        placeholder="Search by invoice number, lease, or month..."
+                        value={searchQuery}
+                        onChange={(event) => setSearchQuery(event.target.value)}
+                        className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-10 text-sm transition-all placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-50"
+                    />
+                    <div className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg">
+                        {isFetching ? <RefreshCw className="h-4 w-4 animate-spin text-blue-600" /> : <Layers className="h-4 w-4 text-slate-300" />}
                     </div>
                 </div>
             </header>
 
-            {(isLoading || isSessionLoading) && !data ? (
-                <div className="rounded-[2.5rem] border border-border/40 bg-background/50 overflow-hidden">
-                    <div className="h-20 bg-sky-50/50 dark:bg-sky-950/20 border-b border-sky-100 dark:border-sky-900/30 px-10 flex items-center gap-6">
-                        <Skeleton className="h-5 w-40 rounded-full" />
-                        <Skeleton className="h-5 w-24 rounded-full" />
-                    </div>
-                    <div className="p-4 space-y-3">
-                        {[...Array(6)].map((_, i) => (
-                            <div key={i} className="p-8 flex items-center justify-between border-b border-border/5 last:border-0 rounded-2xl">
-                                <div className="flex items-center gap-6 flex-1">
-                                    <Skeleton className="h-14 w-14 rounded-2xl" />
-                                    <div className="space-y-3">
-                                        <Skeleton className="h-5 w-64 rounded-full" />
-                                        <Skeleton className="h-4 w-40 rounded-full" />
-                                    </div>
+            {(isLoading || status === "loading") && !data ? (
+                <div className="space-y-3 overflow-hidden rounded-[2.5rem] border border-border/40 bg-background/50 p-4">
+                    {[...Array(4)].map((_, index) => (
+                        <div key={index} className="flex items-center justify-between rounded-2xl border-b border-border/5 p-8">
+                            <div className="flex flex-1 items-center gap-6">
+                                <Skeleton className="h-14 w-14 rounded-2xl" />
+                                <div className="space-y-3">
+                                    <Skeleton className="h-5 w-64 rounded-full" />
+                                    <Skeleton className="h-4 w-40 rounded-full" />
                                 </div>
-                                <Skeleton className="h-10 w-32 rounded-xl" />
                             </div>
-                        ))}
-                    </div>
+                            <Skeleton className="h-10 w-32 rounded-xl" />
+                        </div>
+                    ))}
                 </div>
             ) : data?.meta ? (
                 <PaginationProvider meta={data.meta}>
-                    <div className="relative group/registry px-2">
-                        <div className={cn(
-                            "transition-all duration-700 ease-in-out",
-                            isFetching && data ? 'opacity-30 grayscale blur-[3px] pointer-events-none' : 'opacity-100'
-                        )}>
-                            <InvoicesList initialData={data} tenantId={tenantId} accessToken={accessToken} />
+                    <div className="relative px-2">
+                        <div className={cn("transition-all duration-300", isFetching && data && "pointer-events-none opacity-40")}>
+                            <InvoicesList initialData={data} />
                         </div>
-
-                        {hasData && (
-                            <div className="mt-10 p-8 rounded-[2rem] bg-background border border-border/40">
-                                <SharedPagination />
-                            </div>
-                        )}
+                        {hasData && <div className="mt-10 rounded-[2rem] border border-border/40 bg-background p-8"><SharedPagination /></div>}
                     </div>
                 </PaginationProvider>
-            ) : !canAttemptInvoiceFetch ? (
-                <div className="w-full h-80 flex flex-col items-center justify-center rounded-[3rem] border-2 border-dashed border-border/60 bg-secondary/[0.02]">
-                    <div className="h-20 w-20 rounded-[2rem] bg-background border border-border/40 flex items-center justify-center mb-6 text-muted-foreground/20">
-                        <FileText className="h-10 w-10" />
-                    </div>
-                    <h3 className="text-lg font-black text-foreground uppercase tracking-widest">Tenant Profile Mapping Missing</h3>
-                    <p className="text-sm text-muted-foreground/70 mt-2 font-medium">
-                        Invoices require your tenant profile ID to load records.
-                    </p>
-                </div>
             ) : (
-                <div className="w-full h-80 flex flex-col items-center justify-center rounded-[3rem] border-2 border-dashed border-border/60 bg-secondary/[0.02]">
-                    <div className="h-20 w-20 rounded-[2rem] bg-background border border-border/40 flex items-center justify-center mb-6 text-muted-foreground/20 shadow-xl shadow-black/[0.02]">
+                <div className="flex h-80 w-full flex-col items-center justify-center rounded-[3rem] border-2 border-dashed border-border/60 bg-secondary/[0.02]">
+                    <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[2rem] border border-border/40 bg-background text-muted-foreground/20">
                         <FileText className="h-10 w-10" />
                     </div>
-                    <h3 className="text-lg font-black text-foreground uppercase tracking-widest">Zero Matches Found</h3>
-                    <p className="text-sm text-muted-foreground/60 mt-2 font-medium">Adjust your filters to locate the record.</p>
+                    <h3 className="text-lg font-black uppercase tracking-widest text-foreground">No invoices found</h3>
+                    <p className="mt-2 text-sm font-medium text-muted-foreground/60">Issued tenant invoices will appear here.</p>
                 </div>
             )}
         </div>

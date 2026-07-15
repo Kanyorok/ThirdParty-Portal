@@ -36,6 +36,7 @@ const loginSchema = z.object({
 type LoginFormInputs = z.infer<typeof loginSchema>
 
 const ERROR_MESSAGES: Record<string, string> = {
+    IdleTimeout: "You were signed out after 5 minutes of inactivity. Please sign in again.",
     SessionExpired: "Your session has expired. Please sign in again.",
     SessionRequired: "Please sign in to access this page.",
     AccountNotApproved: "Your account is pending approval.",

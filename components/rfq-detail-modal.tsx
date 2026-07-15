@@ -77,11 +77,14 @@ import {
 import { useRfqPortalContext } from "@/hooks/procurement/use-rfq-portal-context"
 import {
     buildSubmitResponseItems,
+    calculateRfqTaxBreakdown,
     collectMissingUnitPriceLineIds,
     formatSupplierOptionLabel,
     getClarificationsLocked,
+    getRfqTaxTreatment,
     normalizeSupplierId,
     parseSupplierId,
+    type RfqTaxTreatment,
 } from "@/lib/rfq-response"
 import type {
     RfqInvitation,
@@ -419,6 +422,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
     const [currencies, setCurrencies] = useState<Currency[]>([])
     const [currenciesLoading, setCurrenciesLoading] = useState(false)
     const [durationDays, setDurationDays] = useState("30")
+    const [taxTreatment, setTaxTreatment] = useState<RfqTaxTreatment | "">("")
     const [submitting, setSubmitting] = useState<"draft" | "submitted" | null>(null)
     const [missingLineIds, setMissingLineIds] = useState<string[]>([])
     const [submitFieldErrors, setSubmitFieldErrors] = useState<Record<string, string[]>>({})
@@ -493,28 +497,40 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
     }, [myResponse, currencyTouched])
 
     useEffect(() => {
+        if (!isOpen) return
+        const responseItem = Array.isArray(myResponse?.items) ? myResponse.items[0] : null
+        if (responseItem) setTaxTreatment(getRfqTaxTreatment(responseItem as AnyRecord))
+    }, [isOpen, myResponse?.id, myResponse?.items])
+
+    useEffect(() => {
         if (!isOpen || typeof window === "undefined") return
         const existing = window.localStorage.getItem(draftKey)
-        if (!existing) return
+        if (!existing) {
+            if (!Array.isArray(myResponse?.items) || myResponse.items.length === 0) setTaxTreatment("")
+            return
+        }
         try {
             const parsed = JSON.parse(existing)
             if (typeof parsed.remarks === "string")
                 if (Array.isArray(parsed.lines)) setQuoteLines(parsed.lines)
             if (typeof parsed.currency === "string") { setQuoteCurrency(parsed.currency); setCurrencyTouched(true) }
             if (parsed.durationDays != null) setDurationDays(String(parsed.durationDays))
+            if (["vat_exclusive", "vat_inclusive", "no_vat"].includes(parsed.taxTreatment)) {
+                setTaxTreatment(parsed.taxTreatment as RfqTaxTreatment)
+            }
         } catch { }
-    }, [isOpen, draftKey])
+    }, [isOpen, draftKey, myResponse?.items])
 
     useEffect(() => {
         if (typeof window === "undefined" || !rfqId) return
         if (saveTimer.current) window.clearTimeout(saveTimer.current)
         saveTimer.current = window.setTimeout(() => {
             try {
-                window.localStorage.setItem(draftKey, JSON.stringify({ version: 2, savedAt: Date.now(), lines: quoteLines, currency: quoteCurrency, durationDays }))
+                window.localStorage.setItem(draftKey, JSON.stringify({ version: 3, savedAt: Date.now(), lines: quoteLines, currency: quoteCurrency, durationDays, taxTreatment }))
             } catch { }
         }, 400)
         return () => { if (saveTimer.current) window.clearTimeout(saveTimer.current) }
-    }, [draftKey, rfqId, quoteLines, quoteCurrency, durationDays])
+    }, [draftKey, rfqId, quoteLines, quoteCurrency, durationDays, taxTreatment])
 
 
     const quoteById = useMemo(() => {
@@ -545,14 +561,15 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
     }, [lines, quoteById])
 
     const totals = useMemo(() => {
-        let grandTotal = 0, filledCount = 0
+        let enteredTotal = 0, filledCount = 0
         for (const l of enrichedLines) {
             const qty = parsePositiveNumber(l.quantity)
             const price = parsePositiveNumber(l.unitPrice)
-            if (qty != null && price != null) { filledCount++; grandTotal += qty * price }
+            if (qty != null && price != null) { filledCount++; enteredTotal += qty * price }
         }
-        return { grandTotal, filledCount, totalLines: enrichedLines.length }
-    }, [enrichedLines])
+        const tax = calculateRfqTaxBreakdown(enteredTotal, taxTreatment)
+        return { ...tax, grandTotal: tax.grossAmount, filledCount, totalLines: enrichedLines.length }
+    }, [enrichedLines, taxTreatment])
 
     const missingSet = useMemo(() => new Set(missingLineIds), [missingLineIds])
 
@@ -568,6 +585,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
 
     const canSubmit = !effectiveLocked && !docsUploading && submitting === null
         && enrichedLines.length > 0 && currencyOk && Number(durationDays) > 0
+        && Boolean(taxTreatment)
         && totals.filledCount === totals.totalLines
 
 
@@ -598,6 +616,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
 
         const errors: Record<string, string[]> = {}
         if (!quoteCurrency.trim()) errors.currency = ["Currency is required"]
+        if (!taxTreatment) errors.taxTreatment = ["Select how VAT applies to the quoted prices"]
         const dur = Number(durationDays)
         if (!Number.isFinite(dur) || dur <= 0) errors.durationDays = ["Duration must be positive"]
         if (Object.keys(errors).length > 0) {
@@ -608,7 +627,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
 
         try {
             setSubmitting("draft")
-            const items = buildSubmitResponseItems(enrichedLines)
+            const items = buildSubmitResponseItems(enrichedLines, taxTreatment as RfqTaxTreatment)
 
             const res = await fetch("/api/procurement/rfq-responses", {
                 method: "POST",
@@ -655,7 +674,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
             }))
 
             if (typeof window !== "undefined") {
-                window.localStorage.setItem(draftKey, JSON.stringify({ version: 2, savedAt: Date.now(), lines: quoteLines, currency: quoteCurrency, durationDays }))
+                window.localStorage.setItem(draftKey, JSON.stringify({ version: 3, savedAt: Date.now(), lines: quoteLines, currency: quoteCurrency, durationDays, taxTreatment }))
             }
             setMissingLineIds([])
             toast.success("Draft saved.", { description: "The RFQ response draft is now stored in the portal." })
@@ -673,6 +692,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
 
         const errors: Record<string, string[]> = {}
         if (!quoteCurrency.trim()) errors.currency = ["Currency is required"]
+        if (!taxTreatment) errors.taxTreatment = ["Select how VAT applies to the quoted prices"]
         const dur = Number(durationDays)
         if (!Number.isFinite(dur) || dur <= 0) errors.durationDays = ["Duration must be positive"]
         if (Object.keys(errors).length > 0) {
@@ -694,7 +714,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
 
         setSubmitting("submitted")
         try {
-            const items = buildSubmitResponseItems(enrichedLines)
+            const items = buildSubmitResponseItems(enrichedLines, taxTreatment as RfqTaxTreatment)
 
             const body = {
                 rfqId: typeof rfqIdValue === "number" ? rfqIdValue : Number(rfqIdValue),
@@ -1119,7 +1139,9 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                                                         <TableHead>Item</TableHead>
                                                         <TableHead className="w-[120px]">Qty</TableHead>
                                                         <TableHead className="w-[80px]">Currency</TableHead>
-                                                        <TableHead className="w-[140px]">Unit price</TableHead>
+                                                        <TableHead className="w-[140px]">
+                                                            {taxTreatment === "vat_exclusive" ? "Unit price excl. VAT" : taxTreatment === "vat_inclusive" ? "Unit price incl. VAT" : taxTreatment === "no_vat" ? "Unit price (no VAT)" : "Unit price"}
+                                                        </TableHead>
                                                         <TableHead className="w-[130px]">Total</TableHead>
                                                     </TableRow>
                                                 </TableHeader>
@@ -1181,7 +1203,9 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                                                                 </div>
                                                             </div>
                                                             <div className="space-y-1">
-                                                                <div className="text-[10px] font-medium text-slate-500">Unit price ({(quoteCurrency || currency || "—").toUpperCase()})</div>
+                                                                <div className="text-[10px] font-medium text-slate-500">
+                                                                    {taxTreatment === "vat_exclusive" ? "Unit price excl. VAT" : taxTreatment === "vat_inclusive" ? "Unit price incl. VAT" : taxTreatment === "no_vat" ? "Unit price (no VAT)" : "Unit price"} ({(quoteCurrency || currency || "—").toUpperCase()})
+                                                                </div>
                                                                 <Input value={l.unitPrice} disabled={effectiveLocked} inputMode="decimal"
                                                                     onChange={(e) => setLine(l.id, { unitPrice: e.target.value })}
                                                                     placeholder="0.00" className={cn("h-10 rounded-xl border-slate-200 text-sm", isMissing && "border-destructive")} />
@@ -1258,11 +1282,40 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                                                 </Popover>
                                             </div>
                                         </div>
+                                        <div className="mt-3 space-y-1">
+                                            <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">VAT treatment</div>
+                                            <Select value={taxTreatment} disabled={effectiveLocked} onValueChange={(value) => {
+                                                setTaxTreatment(value as RfqTaxTreatment)
+                                                setSubmitFieldErrors((previous) => {
+                                                    const { taxTreatment: _taxTreatment, ...rest } = previous
+                                                    return rest
+                                                })
+                                            }}>
+                                                <SelectTrigger className={cn("h-11 rounded-xl border-slate-200 text-sm", submitFieldErrors.taxTreatment && "border-destructive")}>
+                                                    <SelectValue placeholder="Select how VAT applies" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="vat_exclusive">VAT exclusive - add 16% VAT</SelectItem>
+                                                    <SelectItem value="vat_inclusive">VAT inclusive - extract VAT from my price</SelectItem>
+                                                    <SelectItem value="no_vat">No VAT / tax exempt</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <p className="text-[11px] leading-relaxed text-slate-500">
+                                                {taxTreatment === "vat_exclusive" ? "Enter prices before VAT. The ERP will add 16% VAT."
+                                                    : taxTreatment === "vat_inclusive" ? "Enter prices including VAT. The ERP will calculate the VAT portion out of your price."
+                                                        : taxTreatment === "no_vat" ? "No VAT will be added to the quoted prices."
+                                                            : "Required: declare whether your entered prices include VAT."}
+                                            </p>
+                                        </div>
                                     </div>
 
                                     <div className={cn(sheetCardClass, "p-3 md:p-4 max-w-xs w-full flex flex-col gap-2 justify-center")}>
-                                        <div className="text-[11px] font-semibold uppercase tracking-wider text-indigo-700">Quotation total</div>
+                                        <div className="text-[11px] font-semibold uppercase tracking-wider text-indigo-700">Total payable</div>
                                         <div className="text-xl font-bold tracking-tight text-slate-900 leading-tight">{toMoney(totals.grandTotal, quoteCurrency || currency)}</div>
+                                        <div className="space-y-1 border-t border-slate-100 pt-2 text-[11px] text-slate-600">
+                                            <div className="flex justify-between gap-3"><span>Net amount</span><span className="font-medium tabular-nums">{toMoney(totals.netAmount, quoteCurrency || currency)}</span></div>
+                                            <div className="flex justify-between gap-3"><span>VAT</span><span className="font-medium tabular-nums">{toMoney(totals.taxAmount, quoteCurrency || currency)}</span></div>
+                                        </div>
                                         <div className="flex flex-col gap-0.5 text-xs text-slate-700">
                                             <span className="font-medium text-slate-500">Deadline</span>
                                             <span className="font-semibold text-slate-900">{parsedDeadline ? format(parsedDeadline, "PP") : "—"}</span>

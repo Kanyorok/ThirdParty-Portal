@@ -7,6 +7,7 @@ export const BANK_DETAILS_ENDPOINT = "/api/third-parties-bank-details"
 
 export type BankDetailsWritePayload = {
   ThirdPartyId: number
+  BankID?: number
   BankName?: string
   Branch?: string
   SwiftCode?: string
@@ -74,6 +75,7 @@ export function buildWritePayload(input: unknown, thirdPartyId: number): BankDet
 
   return {
     ThirdPartyId: thirdPartyId,
+    BankID: normalizeNumber(payload.BankID ?? payload.bankId ?? payload.bankID ?? payload.bank_id),
     BankName: normalizeText(payload.BankName ?? payload.bankName),
     Branch: normalizeText(payload.Branch ?? payload.branch),
     SwiftCode: normalizeText(payload.SwiftCode ?? payload.swiftCode),
@@ -85,6 +87,9 @@ export function buildWritePayload(input: unknown, thirdPartyId: number): BankDet
 }
 
 export function validateWritePayload(payload: BankDetailsWritePayload) {
+  if (!payload.BankID) {
+    return "Bank is required."
+  }
   if (!payload.BranchID) {
     return "Branch is required."
   }

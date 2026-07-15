@@ -83,8 +83,14 @@ const cloneFormData = (source: FormData) => {
 const appendFormValue = (target: FormData, key: string, value: unknown) => {
     if (value == null || value === "") return
 
-    if (value instanceof File) {
+    if (typeof File !== "undefined" && value instanceof File) {
         target.append(key, value, value.name)
+        return
+    }
+
+    if (typeof Blob !== "undefined" && value instanceof Blob) {
+        const fileName = "name" in value && typeof value.name === "string" ? value.name : "upload"
+        target.append(key, value, fileName)
         return
     }
 
@@ -290,4 +296,3 @@ export async function POST(request: Request) {
         return NextResponse.json({ message: "Unable to validate registration step right now." }, { status: 500 })
     }
 }
-

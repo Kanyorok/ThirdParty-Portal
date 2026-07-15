@@ -13,6 +13,8 @@ import {
   MessageSquare,
   Download,
   RefreshCw,
+  Trophy,
+  Clock3,
 } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
@@ -104,10 +106,53 @@ const safeFormatDate = (value: string | null | undefined, fmt: string = "PPP p")
 
 interface TenderDocument {
   id: string | number
+  documentId: string
   name: string
   mimeType?: string | null
   visibility?: string
   downloadUrl?: string
+}
+
+interface SupplierTenderLifecycle {
+  has_bid?: boolean
+  bid_id?: number
+  bid_status?: string | null
+  submitted_at?: string | null
+  stage?: string
+  stage_label?: string
+  outcome?: string | null
+  is_winner?: boolean
+  award_status?: string | null
+  award_date?: string | null
+  contract?: {
+    reference?: string | null
+    stage?: string
+    stage_label?: string
+  } | null
+}
+
+function normalizeTenderDocuments(value: unknown, tenderId: string | number | undefined): TenderDocument[] {
+  if (!Array.isArray(value)) return []
+
+  return value.flatMap((entry) => {
+    if (!entry || typeof entry !== "object") return []
+    const document = entry as Record<string, unknown>
+    const documentId = String(document.documentId ?? document.DocumentId ?? "").trim()
+    const id = document.id ?? document.Id ?? documentId
+    const name = String(document.name ?? document.Name ?? "Document").trim()
+    if (!documentId || !id) return []
+
+    return [{
+      id: String(id),
+      documentId,
+      name,
+      mimeType: String(document.mimeType ?? document.MimeType ?? "") || null,
+      visibility: String(document.visibility ?? document.Visibility ?? ""),
+      downloadUrl: tenderId
+        ? `/api/tenders/${encodeURIComponent(String(tenderId))}/documents/${encodeURIComponent(documentId)}/download`
+        : undefined,
+    }]
+  })
 }
 
 interface Invitation {
@@ -172,7 +217,10 @@ export default function TenderDetailModal({
   }, [trigger, externalOnClose])
 
   const [activeTab, setActiveTab] = useState("overview")
-  const [documents, setDocuments] = useState<TenderDocument[]>(tender?.documents ?? [])
+  const tenderId = (tender as any)?.id ?? (tender as any)?.Id
+  const [documents, setDocuments] = useState<TenderDocument[]>(() =>
+    normalizeTenderDocuments(tender?.documents, tenderId)
+  )
   const [docsLoading, setDocsLoading] = useState(false)
   const [docsError, setDocsError] = useState<string | null>(null)
 
@@ -181,8 +229,10 @@ export default function TenderDetailModal({
   const [submittedBidAt, setSubmittedBidAt] = useState<string | null>(null)
   const [submittedBidId, setSubmittedBidId] = useState<number | null>(null)
   const [submittedBidStatus, setSubmittedBidStatus] = useState<string | null>(null)
+  const [supplierLifecycle, setSupplierLifecycle] = useState<SupplierTenderLifecycle | null>(
+    () => ((tender as any)?.supplier_lifecycle as SupplierTenderLifecycle | undefined) ?? null
+  )
 
-  const tenderId = (tender as any)?.id ?? (tender as any)?.Id
   const tenderTitle = String((tender as any)?.title ?? (tender as any)?.Title ?? "")
   const tenderStatus = String((tender as any)?.status ?? (tender as any)?.Status ?? "")
   const tenderNo = String((tender as any)?.tenderNo ?? (tender as any)?.TenderNo ?? "")
@@ -209,10 +259,7 @@ export default function TenderDetailModal({
   const currencyText = tender?.currency_code || "KES"
   const itemCategoryText = (tender?.itemCategoryRelation as any)?.Name || ""
 
-  const publicDocs = (documents || []).filter((doc) => {
-    const v = (doc.visibility || "").toLowerCase()
-    return v === "pub" || v === "public"
-  })
+  const tenderDocuments = documents || []
 
   const statusKey = tenderStatus.toLowerCase()
   const isOpenStatus = statusKey === "published" || statusKey === "pb"
@@ -258,35 +305,24 @@ export default function TenderDetailModal({
     "rounded-lg px-3 py-2 text-[11px] font-semibold text-slate-600 transition-all duration-150 hover:text-slate-900 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:border data-[state=active]:border-slate-200/80"
 
   const refreshDocuments = useCallback(async () => {
-    if (!tenderNo && !tenderId) return
+    if (!tenderId) return
     try {
       setDocsLoading(true)
       setDocsError(null)
-      const params = new URLSearchParams()
-      if (tenderNo) params.set("search", tenderNo)
-      const res = await fetch(
-        `/api/tenders${params.toString() ? `?${params.toString()}` : ""}`,
-        { headers: { Accept: "application/json" } }
-      )
+      const res = await fetch(`/api/tenders/${encodeURIComponent(String(tenderId))}`, {
+        cache: "no-store",
+        headers: { Accept: "application/json" },
+      })
       const json: any = await parseJsonResponse(res)
       const message = Array.isArray(json) ? null : json?.message ?? json?.error ?? null
       if (!res.ok) throw new Error(message ?? "Failed to refresh documents")
-      const list = !Array.isArray(json) && Array.isArray(json?.data)
-        ? json.data
-        : Array.isArray(json)
-          ? json
-          : []
-      const match = list.find(
-        (item: any) =>
-          String(item?.Id ?? item?.id) === String(tenderId) || (item?.TenderNo ?? item?.tenderNo) === tenderNo
-      )
-      setDocuments(match?.documents ?? [])
+      setDocuments(normalizeTenderDocuments(json?.data?.documents, tenderId))
     } catch (e: any) {
       setDocsError(e?.message ?? "Unable to refresh documents")
     } finally {
       setDocsLoading(false)
     }
-  }, [tenderId, tenderNo])
+  }, [tenderId])
 
   const checkBidSubmission = useCallback(async () => {
     if (!tenderId) return
@@ -315,6 +351,12 @@ export default function TenderDetailModal({
         setSubmittedBidStatus(null)
         return
       }
+
+      setSupplierLifecycle(
+        (existingBid?.supplier_lifecycle as SupplierTenderLifecycle | undefined) ??
+        ((tender as any)?.supplier_lifecycle as SupplierTenderLifecycle | undefined) ??
+        null
+      )
 
       const resolvedStatus = resolveBidStatus(
         existingBid?.bid_status ?? existingBid?.status,
@@ -419,10 +461,14 @@ export default function TenderDetailModal({
                   <Badge
                     className={cn(
                       "shrink-0 px-2.5 py-1 text-[11px] font-semibold",
-                      getStatusColor(tenderStatus)
+                      supplierLifecycle?.outcome === "awarded"
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                        : supplierLifecycle?.stage === "award_pending"
+                          ? "border-amber-200 bg-amber-50 text-amber-700"
+                          : getStatusColor(tenderStatus)
                     )}
                   >
-                    {getStatusText(tenderStatus)}
+                    {supplierLifecycle?.stage_label || getStatusText(tenderStatus)}
                   </Badge>
                 </div>
               </div>
@@ -469,6 +515,53 @@ export default function TenderDetailModal({
 
             <div ref={contentRef} className="flex-1 overflow-y-auto px-6 lg:px-8 pb-20 pt-3">
               <TabsContent value="overview" className="mt-0 space-y-3">
+                {supplierLifecycle?.has_bid && (
+                  <div
+                    className={cn(
+                      "rounded-2xl border p-3 shadow-none",
+                      supplierLifecycle.outcome === "awarded"
+                        ? "border-emerald-200 bg-emerald-50/70"
+                        : supplierLifecycle.outcome === "not_awarded"
+                          ? "border-slate-200 bg-slate-100/70"
+                          : "border-violet-200 bg-violet-50/60"
+                    )}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span
+                        className={cn(
+                          "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
+                          supplierLifecycle.outcome === "awarded"
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-white text-violet-600"
+                        )}
+                      >
+                        {supplierLifecycle.outcome === "awarded" ? (
+                          <Trophy className="h-4 w-4" />
+                        ) : (
+                          <Clock3 className="h-4 w-4" />
+                        )}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Your bid progress</p>
+                        <p className="mt-0.5 text-sm font-semibold text-slate-900">
+                          {supplierLifecycle.stage_label || "Bid submitted"}
+                        </p>
+                        {supplierLifecycle.stage === "award_pending" && (
+                          <p className="mt-1 text-xs text-slate-600">
+                            ERP has created an award decision, but it must be approved before the winner is announced.
+                          </p>
+                        )}
+                        {supplierLifecycle.outcome === "awarded" && supplierLifecycle.contract && (
+                          <p className="mt-1 text-xs text-emerald-800">
+                            {supplierLifecycle.contract.stage_label || "Contract preparation pending"}
+                            {supplierLifecycle.contract.reference ? ` · ${supplierLifecycle.contract.reference}` : ""}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {invitation && (
                   <div className="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-none">
                     <div className="flex items-center justify-between gap-4">
@@ -674,7 +767,7 @@ export default function TenderDetailModal({
               <TabsContent value="documents" className="mt-0">
                 <div className="rounded-2xl border border-slate-200/80 bg-white shadow-none overflow-hidden">
                   <div className="flex items-center justify-between px-3 py-2.5 border-b border-slate-200/70">
-                    <p className="text-sm font-semibold text-slate-900">Public documents</p>
+                    <p className="text-sm font-semibold text-slate-900">Tender documents</p>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -697,8 +790,8 @@ export default function TenderDetailModal({
                         {docsError}
                       </div>
                     )}
-                    {publicDocs.length > 0 ? (
-                      publicDocs.map((doc) => (
+                    {tenderDocuments.length > 0 ? (
+                      tenderDocuments.map((doc) => (
                         <div
                           key={doc.id}
                           className="flex flex-col gap-3 px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
@@ -743,9 +836,9 @@ export default function TenderDetailModal({
                     ) : (
                       <div className="px-3 py-8 text-center text-slate-500">
                         <FileText className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                        <p className="text-sm font-medium text-slate-700">No public documents yet</p>
+                        <p className="text-sm font-medium text-slate-700">No tender documents yet</p>
                         <p className="text-xs text-slate-500 mt-1">
-                          Documents shared by procurement will appear here.
+                          Documents attached by procurement will appear here.
                         </p>
                       </div>
                     )}

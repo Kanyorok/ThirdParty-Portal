@@ -239,18 +239,59 @@ export function collectMissingUnitPriceLineIds<T extends { id: string; raw: AnyR
         .map((line) => line.id)
 }
 
-export function buildSubmitResponseItems<T extends { id: string; raw: AnyRecord; unitPrice: string }>(lines: T[]): SubmitResponseLineItem[] {
+export const RFQ_DEFAULT_VAT_RATE = 16
+
+export type RfqTaxTreatment = "vat_exclusive" | "vat_inclusive" | "no_vat"
+
+export function getRfqTaxTreatment(item: AnyRecord | null | undefined): RfqTaxTreatment | "" {
+    if (!item) return ""
+    const taxType = String(item.taxType ?? item.TaxType ?? "").trim().toLowerCase()
+    const taxRate = Number(item.taxRate ?? item.TaxRate ?? 0)
+    if (taxType === "exempt" || taxRate === 0) return "no_vat"
+    return (item.isTaxInclusive ?? item.IsTaxInclusive) ? "vat_inclusive" : "vat_exclusive"
+}
+
+export function calculateRfqTaxBreakdown(
+    enteredTotal: number,
+    treatment: RfqTaxTreatment | "",
+    vatRate = RFQ_DEFAULT_VAT_RATE
+) {
+    const amount = Math.max(0, Number.isFinite(enteredTotal) ? enteredTotal : 0)
+    const rate = Math.max(0, Number.isFinite(vatRate) ? vatRate : 0)
+
+    if (treatment === "vat_exclusive") {
+        const taxAmount = amount * (rate / 100)
+        return { enteredTotal: amount, netAmount: amount, taxAmount, grossAmount: amount + taxAmount }
+    }
+
+    if (treatment === "vat_inclusive" && rate > 0) {
+        const netAmount = amount / (1 + rate / 100)
+        return { enteredTotal: amount, netAmount, taxAmount: amount - netAmount, grossAmount: amount }
+    }
+
+    return { enteredTotal: amount, netAmount: amount, taxAmount: 0, grossAmount: amount }
+}
+
+export function buildSubmitResponseItems<T extends { id: string; raw: AnyRecord; unitPrice: string }>(
+    lines: T[],
+    taxTreatment: RfqTaxTreatment
+): SubmitResponseLineItem[] {
+    const isExempt = taxTreatment === "no_vat"
     return lines.map((line) => {
         const rawLineId = String(line.raw?.id ?? line.id).trim()
         const parsedLineId = Number(rawLineId)
         const rfqLineId = Number.isFinite(parsedLineId) && Number.isInteger(parsedLineId) ? parsedLineId : Number(line.id)
         const quantity = getFixedRfqLineQuantity(line.raw)
         const quotedPrice = Number(String(line.unitPrice || "").replace(/,/g, "")) || 0
+        const totals = calculateRfqTaxBreakdown(quantity * quotedPrice, taxTreatment)
 
         return {
             rfqLineId,
             quotedPrice,
-            totalPayable: quantity * quotedPrice,
+            totalPayable: totals.grossAmount,
+            taxType: isExempt ? "Exempt" : "VAT",
+            taxRate: isExempt ? 0 : RFQ_DEFAULT_VAT_RATE,
+            isTaxInclusive: taxTreatment === "vat_inclusive",
         }
     })
 }

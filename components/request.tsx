@@ -13,8 +13,13 @@ import {
     ClipboardCheck,
     FileCheck2,
     FileSearch,
+    FileSignature,
     MailCheck,
+    ShoppingBag,
     Trophy,
+    Building2,
+    ReceiptText,
+    WalletCards,
 } from "lucide-react"
 import { motion } from "framer-motion"
 import { parseJsonResponse } from "@/lib/parse-json-response"
@@ -23,6 +28,7 @@ import { useProfileStore } from "@/store/use-profile-store"
 
 type DashboardSummaryResponse = {
     summary?: Record<string, any>
+    breakdowns?: Record<string, any>
     message?: string
     error?: string
 }
@@ -80,6 +86,16 @@ function resolveCounts(raw?: DashboardSummaryResponse | null) {
         summary.bidsDraft ??
         0
 
+    const approvedPurchaseOrders =
+        summary.approvedPurchaseOrders ??
+        summary.purchaseOrders ??
+        0
+
+    const purchaseOrderValue = summary.purchaseOrderValue ?? 0
+    const purchaseOrderCurrency = String(summary.purchaseOrderCurrency ?? "KES")
+    const approvedTenderAwards = summary.approvedTenderAwards ?? summary.tenderAwards ?? 0
+    const activeSupplierContracts = summary.activeSupplierContracts ?? 0
+
     return {
         activePreq: Number(activePreq) || 0,
         directInvites: Number(directInvites) || 0,
@@ -88,7 +104,20 @@ function resolveCounts(raw?: DashboardSummaryResponse | null) {
         myBids: Number(myBids) || 0,
         submittedBids: Number(submittedBids) || 0,
         draftBids: Number(draftBids) || 0,
+        approvedPurchaseOrders: Number(approvedPurchaseOrders) || 0,
+        purchaseOrderValue: Number(purchaseOrderValue) || 0,
+        purchaseOrderCurrency,
+        approvedTenderAwards: Number(approvedTenderAwards) || 0,
+        activeSupplierContracts: Number(activeSupplierContracts) || 0,
     }
+}
+
+function formatMoney(value: number, currency: string) {
+    return new Intl.NumberFormat("en-KE", {
+        style: "currency",
+        currency: currency || "KES",
+        maximumFractionDigits: 2,
+    }).format(value)
 }
 
 const toneClasses: Record<
@@ -192,7 +221,7 @@ export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSumma
     const resolved = useMemo(() => resolveCounts(data ?? fetched), [data, fetched])
     const effectiveLoading = Boolean(isLoading ?? loading)
 
-    const cards: SummaryCardItem[] = [
+    const supplierCards: SummaryCardItem[] = [
         {
             title: "Active Rounds",
             count: resolved.activePreq,
@@ -232,7 +261,27 @@ export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSumma
     ]
 
     if (activeProfile === "Supplier") {
-        cards.push({
+        supplierCards.push({
+            title: "Tender awards",
+            count: resolved.approvedTenderAwards,
+            icon: FileSignature,
+            description: `${resolved.activeSupplierContracts} active contract${resolved.activeSupplierContracts === 1 ? "" : "s"}`,
+            tone: "emerald",
+            role: "driver",
+            href: "/dashboard/supplier/contracts",
+        })
+
+        supplierCards.push({
+            title: "Purchase orders",
+            count: resolved.approvedPurchaseOrders,
+            icon: ShoppingBag,
+            description: `${formatMoney(resolved.purchaseOrderValue, resolved.purchaseOrderCurrency)} in approved orders`,
+            tone: "primary",
+            role: "driver",
+            href: "/dashboard/supplier/orders",
+        })
+
+        supplierCards.push({
             title: "Tender applications",
             count: resolved.myBids,
             icon: FileCheck2,
@@ -243,6 +292,39 @@ export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSumma
         })
     }
 
+    const tenant = (data ?? fetched)?.breakdowns?.tenant
+    const tenantLeases = tenant?.leases ?? {}
+    const tenantInvoices = tenant?.invoices ?? {}
+    const tenantCards: SummaryCardItem[] = [
+        {
+            title: "My leases",
+            count: Number(tenantLeases.total) || 0,
+            icon: Building2,
+            description: `${Number(tenantLeases.active) || 0} active or upcoming agreement${Number(tenantLeases.active) === 1 ? "" : "s"}`,
+            tone: "primary",
+            role: "driver",
+            href: "/dashboard/tenant/leases",
+        },
+        {
+            title: "Invoices",
+            count: Number(tenantInvoices.total) || 0,
+            icon: ReceiptText,
+            description: `${Number(tenantInvoices.pending) || 0} pending payment${Number(tenantInvoices.pending) === 1 ? "" : "s"}`,
+            tone: "sky",
+            role: Number(tenantInvoices.pending) > 0 ? "risk" : "driver",
+            href: "/dashboard/tenant/invoices",
+        },
+        {
+            title: "Overdue invoices",
+            count: Number(tenantInvoices.overdue) || 0,
+            icon: WalletCards,
+            description: `${formatMoney(Number(tenantInvoices.outstandingAmount) || 0, "KES")} outstanding`,
+            tone: "amber",
+            role: Number(tenantInvoices.overdue) > 0 ? "risk" : "driver",
+            href: "/dashboard/tenant/invoices",
+        },
+    ]
+    const cards = activeProfile === "Tenant" ? tenantCards : supplierCards
     const driversCount = cards.filter((card) => card.role === "driver").length
     const riskCount = cards.length - driversCount
 
@@ -266,7 +348,7 @@ export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSumma
             </CardHeader>
 
             <CardContent className="px-3 pb-2">
-                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
                     {effectiveLoading
                         ? Array.from({ length: cards.length }).map((_, i) => (
                             <Card key={i} className="rounded-2xl border border-slate-200/70 bg-slate-50/80 py-0 shadow-none">

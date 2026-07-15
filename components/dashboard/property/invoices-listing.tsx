@@ -23,8 +23,6 @@ import { toast } from "sonner"
 
 interface InvoicesListProps {
   initialData: PaginatedResponse<Invoice>
-  tenantId?: number | null
-  accessToken?: string
 }
 
 function displayText(value: unknown, fallback = "-") {
@@ -61,6 +59,15 @@ function resolveCurrencyCode(currency: Invoice["currency"]) {
 }
 
 function calculateInvoiceTotals(invoice: Invoice) {
+  if (invoice.financeInvoiceId || invoice.totalAmount > 0) {
+    return {
+      subtotal: invoice.subtotal,
+      taxRate: toNumber(invoice.tax?.rate),
+      taxAmount: invoice.taxAmount,
+      total: invoice.totalAmount,
+    }
+  }
+
   const entries = Object.values(invoice.amounts ?? {})
   const subtotal = entries.reduce((sum, amount) => sum + toNumber(amount), 0)
   const taxRate = toNumber(invoice.tax?.rate)
@@ -80,6 +87,15 @@ function formatMoney(amount: number, currencyCode: string) {
 function resolveStatusMeta(status: unknown) {
   const raw = String(status ?? "").trim()
   const normalized = raw.toLowerCase()
+
+  if (normalized.includes("partial")) {
+    return {
+      label: "Partially paid",
+      badgeClass: "border-sky-200 text-sky-700 bg-sky-50",
+      rowAccent: "border-l-sky-400",
+      Icon: Clock3,
+    }
+  }
 
   if (raw === "Paid" || normalized.includes("paid") || normalized.includes("settled")) {
     return {
@@ -120,14 +136,14 @@ function resolveLeaseNumber(invoice: Invoice) {
   return displayText(invoice.lease?.leaseNumber ?? invoice.leaseNumber, "-")
 }
 
-export function InvoicesList({ initialData, tenantId, accessToken }: InvoicesListProps) {
+export function InvoicesList({ initialData }: InvoicesListProps) {
   const { isPending } = usePagination()
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<number | null>(null)
   const invoices = Array.isArray(initialData?.data) ? initialData.data : []
 
   const handleDownload = async (id: number) => {
     try {
-      await downloadInvoicePdf(id, accessToken)
+      await downloadInvoicePdf(id)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Invoice download failed")
     }
@@ -262,8 +278,6 @@ export function InvoicesList({ initialData, tenantId, accessToken }: InvoicesLis
       <InvoiceDetailSheet
         id={selectedInvoiceId}
         onClose={() => setSelectedInvoiceId(null)}
-        tenantId={tenantId}
-        accessToken={accessToken}
       />
     </>
   )

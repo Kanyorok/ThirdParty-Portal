@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
 import { Badge } from "@/components/common/badge"
 import { Button } from "@/components/common/button"
@@ -349,9 +350,9 @@ export function InterestsListing({
   )
 
   const { data, isLoading } = useQuery({
-    queryKey: ["lease-interest-detail", selectedInterestId, accessToken],
+    queryKey: ["lease-interest-detail", selectedInterestId],
     queryFn: () => getLeaseInterestById(selectedInterestId as number, accessToken),
-    enabled: Boolean(isSheetOpen && selectedInterestId && accessToken),
+    enabled: Boolean(isSheetOpen && selectedInterestId),
     placeholderData: (previousData) => previousData,
   })
 
@@ -379,6 +380,12 @@ export function InterestsListing({
         <p className="text-sm text-muted-foreground text-center max-w-sm">
           Property interests you submit will appear here.
         </p>
+        <Button asChild className="mt-5 h-10 rounded-xl bg-blue-600 px-5 text-xs text-white hover:bg-blue-700">
+          <Link href="/dashboard/tenant/properties">
+            Browse rentable spaces
+            <ChevronRight className="h-4 w-4" />
+          </Link>
+        </Button>
       </div>
     )
   }
