@@ -1,107 +1,85 @@
-'use client'
+import { cookies, headers } from "next/headers"
+import { getDashboardData } from "@/lib/dashboard-summary-data"
+import {
+  ACTIVE_PROFILE_COOKIE_NAME,
+  parseActiveProfileCookie,
+} from "@/lib/profile/active-profile-cookie"
+import { MasterDashboardClient } from "@/components/dashboard/master-dashboard-client"
+import type { ProfileType } from "@/store/use-profile-store"
+import { resolveSessionBusinessProfiles } from "@/lib/profile/session-profiles"
 
-import React, { Suspense } from 'react'
-import { useSession } from 'next-auth/react'
-import { motion } from 'framer-motion'
-import { WelcomeHeader } from '@/components/dashboard/welcome-header'
-import { ErrorState } from '@/components/dashboard/error-state'
-import { DashboardSkeleton } from '@/components/dashboard/dashboard-skeleton'
-import { RequestSummaryCards } from '@/components/request'
-import { containerVariants, itemVariants } from '@/lib/dashboard-animations'
-import { usePageTitle } from '@/hooks/use-page-title'
+export const dynamic = "force-dynamic"
 
-function DashboardContent() {
-    const { data: session, status } = useSession()
-
-    if (status === "loading") {
-        return <DashboardSkeleton />
-    }
-
-    if (status === "unauthenticated") {
-        return (
-            <ErrorState
-                message="You need to be signed in to access this page. Please log in to continue."
-            />
-        )
-    }
-
-    if (status === "authenticated" && !session?.user) {
-        return (
-            <ErrorState
-                message="There was an issue loading your profile data. Please try refreshing the page or contact support."
-            />
-        )
-    }
-
-    if (status === "authenticated" && session?.user) {
-        const firstName =
-            session.user.firstName ||
-            session.user.name?.split(" ")[0] ||
-            "User"
-
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/10">
-                <div className="max-w-7xl mx-auto p-4 md:p-8">
-                    <motion.div
-                        variants={containerVariants}
-                        initial="hidden"
-                        animate="visible"
-                        className="space-y-12"
-                    >
-                        <WelcomeHeader firstName={firstName} />
-
-                        <motion.section
-                            variants={itemVariants}
-                            aria-labelledby="summary-heading"
-                            className="space-y-6"
-                        >
-                            <div className="flex items-center justify-between">
-                                <h2
-                                    id="summary-heading"
-                                    className="text-2xl font-semibold text-foreground"
-                                >
-                                    Request Summary
-                                </h2>
-                            </div>
-                            <Suspense fallback={<DashboardSkeleton />}>
-                                <RequestSummaryCards />
-                            </Suspense>
-                        </motion.section>
-
-                        {/* <motion.section
-                            variants={itemVariants}
-                            aria-labelledby="tenders-heading"
-                            className="space-y-6"
-                        >
-                            <div className="flex items-center justify-between">
-                                <h2
-                                    id="tenders-heading"
-                                    className="text-2xl font-semibold text-foreground"
-                                >
-                                    Recent Tenders
-                                </h2>
-                            </div>
-                            <Suspense fallback={<DashboardSkeleton />}>
-                                <TendersPage />
-                            </Suspense>
-                        </motion.section> */}
-                    </motion.div>
-                </div>
-            </div>
-        )
-    }
-
-    return (
-        <ErrorState message="An unexpected error occurred. Please try refreshing the page." />
-    )
+function resolveFirstName(user: any): string {
+  const first =
+    user?.first_name ??
+    user?.firstName ??
+    String(user?.full_name ?? user?.fullName ?? user?.name ?? "User")
+      .trim()
+      .split(" ")[0]
+  return String(first || "User")
 }
 
-export default function DashboardPage() {
-    usePageTitle('Dashboard')
+function getAuthorizedProfiles(user: any): ProfileType[] {
+  return resolveSessionBusinessProfiles(user)
+}
 
-    return (
-        <Suspense fallback={<DashboardSkeleton />}>
-            <DashboardContent />
-        </Suspense>
-    )
+function pickInitialProfile(
+  cookieValue: string | undefined,
+  authorized: ProfileType[]
+): ProfileType {
+  const cookieProfile = parseActiveProfileCookie(cookieValue)
+  if (
+    cookieProfile &&
+    cookieProfile !== "base" &&
+    authorized.includes(cookieProfile)
+  ) {
+    return cookieProfile
+  }
+  return authorized[0] ?? "base"
+}
+
+async function getProfileFromRequest(): Promise<string | undefined> {
+  const h = await headers()
+  const url = h.get("x-url") ?? h.get("referer")
+  if (!url) return undefined
+  try {
+    const parsed = new URL(url, "http://localhost")
+    return parsed.searchParams.get("profile") ?? undefined
+  } catch {
+    return undefined
+  }
+}
+
+export default async function Dashboard() {
+  const { getServerSession } = await import("next-auth")
+  const { authOptions } = await import("@/lib/auth-options")
+
+  const session = await getServerSession(authOptions)
+  const user = (session as any)?.user
+
+  const authorizedProfiles = getAuthorizedProfiles(user)
+
+  const cookieStore = await cookies()
+  const cookieValue = cookieStore.get(ACTIVE_PROFILE_COOKIE_NAME)?.value
+
+  const requestedParam = await getProfileFromRequest()
+  const requestedProfile = parseActiveProfileCookie(requestedParam)
+
+  const initialProfile =
+    requestedProfile &&
+      requestedProfile !== "base" &&
+      authorizedProfiles.includes(requestedProfile)
+      ? requestedProfile
+      : pickInitialProfile(cookieValue, authorizedProfiles)
+
+  const dashboardData = await getDashboardData()
+
+  return (
+    <MasterDashboardClient
+      firstName={resolveFirstName(user)}
+      initialProfile={initialProfile}
+      dashboardData={dashboardData}
+    />
+  )
 }

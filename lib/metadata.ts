@@ -12,14 +12,14 @@ export function createPageMetadata(
         description: pageDescription ?? CLIENT_APP_NAME.meta.description,
         applicationName: CLIENT_APP_NAME.name,
         keywords: [
-            "third parties portal",
+            "third party portal",
             "self service",
             "vendor management",
             "BR Portal",
             "partners",
         ],
         authors: [{ name: "Craft Silicon" }],
-        generator: "Next.js",
+        generator: "Craft Silicon",
         openGraph: {
             title: pageTitle ? `${pageTitle} | ${appTitleWithVersion}` : appTitleWithVersion,
             description: pageDescription ?? CLIENT_APP_NAME.meta.description,

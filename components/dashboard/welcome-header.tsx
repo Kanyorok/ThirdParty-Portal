@@ -1,65 +1,112 @@
-'use client'
+"use client"
 
-import React from 'react'
-import { motion } from 'framer-motion'
-import { User, ChevronRight } from 'lucide-react'
-import { itemVariants, fadeSlideVariants } from '@/lib/dashboard-animations'
+import Link from "next/link"
+import { useEffect, useState } from "react"
+import { motion, type Variants } from "framer-motion"
+import { ArrowUpRight } from "lucide-react"
+import { Button } from "@/components/common/button"
 
-interface WelcomeHeaderProps {
-    firstName: string
+type Action = { label: string; href: string }
+
+const headerEase: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94]
+
+const headerShellVariants: Variants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: headerEase,
+      staggerChildren: 0.08,
+      delayChildren: 0.05,
+    },
+  },
 }
 
-export function WelcomeHeader({ firstName }: WelcomeHeaderProps) {
-    const currentHour = new Date().getHours()
-    const greeting = currentHour < 12 ? 'Good morning' : currentHour < 18 ? 'Good afternoon' : 'Good evening'
+const headerItemVariants: Variants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.32,
+      ease: headerEase,
+    },
+  },
+}
 
-    return (
-        <div>
-            <div className="mb-8 text-sm text-gray-500 dark:text-gray-400">
-                Dashboard <ChevronRight className="inline-block h-3 w-3 mx-1" /> <span className="font-semibold text-gray-700 dark:text-gray-200">Home</span>
-            </div>
-            <motion.header
-                variants={itemVariants}
-                className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/5 via-primary/3 to-transparent p-8 border border-border/50 backdrop-blur-sm"
+export function WelcomeHeader({
+  firstName,
+  contextLabel,
+  primaryAction,
+  secondaryAction,
+}: {
+  firstName: string
+  contextLabel: string
+  primaryAction: Action
+  secondaryAction: Action
+}) {
+  const [greeting, setGreeting] = useState<string>("")
+
+  useEffect(() => {
+    const hour = new Date().getHours()
+    if (hour < 12) setGreeting("Good morning")
+    else if (hour < 17) setGreeting("Good afternoon")
+    else setGreeting("Good evening")
+  }, [])
+
+  return (
+    <motion.header
+      variants={headerShellVariants}
+      initial="hidden"
+      animate="visible"
+      className="dashboard-shell dashboard-shell--hero w-full rounded-2xl px-5 py-4 md:px-6 md:py-5"
+    >
+      <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="space-y-3">
+          <motion.div variants={headerItemVariants} className="flex flex-wrap items-center gap-2">
+            <span className="dashboard-chip dashboard-chip--neutral px-3 py-1 text-[11px] normal-case tracking-normal text-slate-700">
+              {contextLabel}
+            </span>
+            <span className="dashboard-chip border-blue-200 bg-blue-50 px-3 py-1 text-[11px] normal-case tracking-normal text-blue-700">
+              Dashboard
+            </span>
+          </motion.div>
+
+          <motion.div variants={headerItemVariants} className="space-y-1">
+            <motion.h1
+              className="text-2xl font-semibold tracking-tight text-foreground sm:text-[2rem]"
             >
-                <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-
-                <div className="relative flex items-center justify-between">
-                    <div className="flex items-center gap-6">
-                        <motion.div
-                            className="relative flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 backdrop-blur-sm"
-                            whileHover={{ scale: 1.05, rotate: 5 }}
-                            whileTap={{ scale: 0.95 }}
-                            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                        >
-                            <User className="h-8 w-8 text-primary" />
-                            <motion.div
-                                className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center"
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{ delay: 0.5, type: 'spring', stiffness: 500 }}
-                            >
-                                <div className="w-2 h-2 rounded-full bg-white" />
-                            </motion.div>
-                        </motion.div>
-
-                        <div className="space-y-2">
-                            <motion.p
-                                variants={fadeSlideVariants}
-                                className="text-sm font-medium text-muted-foreground"
-                            >
-                                {greeting}
-                            </motion.p>
-                            <motion.h1
-                                variants={fadeSlideVariants}
-                                className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent"
-                            >
-                                Welcome back, {firstName}!
-                            </motion.h1>
-                        </div>
-                    </div>
-                </div>
-            </motion.header>
+              {greeting && `${greeting}, ${firstName || "there"}.`}
+            </motion.h1>
+            <p className="max-w-2xl text-sm text-muted-foreground">
+              Review pipeline movement, keep active work visible, and act on the next best step.
+            </p>
+          </motion.div>
         </div>
-    )
+
+        <motion.div variants={headerItemVariants} className="flex flex-wrap items-center gap-2.5 lg:justify-end">
+          <Button
+            asChild
+            className="dashboard-cta dashboard-cta--primary h-10 px-4"
+          >
+            <Link href={primaryAction.href}>
+              {primaryAction.label}
+              <ArrowUpRight className="ml-1.5 h-4 w-4" />
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            className="dashboard-cta dashboard-cta--slate h-10 px-4"
+          >
+            <Link href={secondaryAction.href}>
+              {secondaryAction.label}
+            </Link>
+          </Button>
+        </motion.div>
+      </div>
+    </motion.header>
+  )
 }

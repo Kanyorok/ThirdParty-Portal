@@ -3,7 +3,7 @@
 import type React from "react"
 import { Eye, EyeOff, Check, X } from "lucide-react"
 import { Input } from "@/components/common/input"
-import { FormField } from "./login-fields"
+import { FormField } from "../form-field"
 
 interface PasswordFieldProps {
     id: string
@@ -11,14 +11,14 @@ interface PasswordFieldProps {
     placeholder: string
     value: string
     error?: string
-    status: string
+    status: "default" | "error" | "success"
     showPassword: boolean
     onTogglePassword: () => void
     register: any
-    helpText?: string
     showMatchIndicator?: boolean
     passwordsMatch?: boolean
     onPaste?: (e: React.ClipboardEvent) => void
+    inputClassName?: string
 }
 
 export const PasswordField: React.FC<PasswordFieldProps> = ({
@@ -31,19 +31,19 @@ export const PasswordField: React.FC<PasswordFieldProps> = ({
     showPassword,
     onTogglePassword,
     register,
-    helpText,
     showMatchIndicator = false,
     passwordsMatch = false,
     onPaste,
+    inputClassName,
 }) => {
     return (
-        <FormField status={status} label={label} required helpText={helpText} error={error} id={id}>
+        <FormField status={status} label={label} required error={error} id={id}>
             <div className="relative w-full">
                 <Input
                     id={id}
                     type={showPassword ? "text" : "password"}
                     placeholder={placeholder}
-                    className={`w-full py-4 pl-4 pr-12 text-lg border border-l-0 rounded-r-lg transition-all duration-200 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 ${error
+                    className={inputClassName || `w-full py-4 pl-4 pr-12 text-lg border border-l-0 rounded-r-lg transition-all duration-200 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 ${error
                         ? "border-red-300 bg-red-50"
                         : status === "success"
                             ? "border-green-300 bg-green-50"

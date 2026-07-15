@@ -1,62 +1,74 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server"
+import { z } from "zod"
+import { Currency } from '@/types/currencies';
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth-options"
+import { fetchUpstreamJson, toServerErrorResponse, toUpstreamErrorResponse } from "@/app/api/_shared/upstream-json"
 
-const API_BASE = process.env.NEXT_PUBLIC_EXTERNAL_API_URL
+const RawCurrencySchema = z.object({
+    id: z.union([z.string(), z.number()]).optional(),
+    Id: z.union([z.string(), z.number()]).optional(),
+    name: z.string().optional(),
+    Name: z.string().optional(),
+    code: z.string().optional(),
+    Code: z.string().optional(),
+    symbol: z.string().optional(),
+    Symbol: z.string().optional(),
+    isDefault: z.union([z.boolean(), z.number(), z.string()]).optional(),
+})
 
-type CurrencyRow = { id?: unknown; Id?: unknown; name?: unknown; Name?: unknown; code?: unknown; Code?: unknown; symbol?: unknown; Symbol?: unknown; isDefault?: unknown }
+const RawResponseSchema = z.union([
+    z.object({ data: z.array(RawCurrencySchema) }),
+    z.array(RawCurrencySchema),
+])
 
-function toStringSafe(value: unknown): string {
-    if (value == null) return "";
-    if (typeof value === "string") return value;
-    if (typeof value === "number") return String(value);
-    return "";
-}
+function normalizeCurrencies(input: unknown): Currency[] {
+    const parsed = RawResponseSchema.safeParse(input)
+    if (!parsed.success) return []
 
-function normalizeCurrencies(input: unknown): Array<{ id: string; name: string; code: string; symbol: string; isDefault: boolean }> {
-    const rows: CurrencyRow[] = Array.isArray((input as any)?.data) ? (input as any).data : Array.isArray(input) ? (input as any) : []
-    const list = rows.map((row: CurrencyRow) => {
-        const id = toStringSafe(row.id ?? (row as any)?.Id)
-        const name = toStringSafe(row.name ?? (row as any)?.Name)
-        const code = toStringSafe(row.code ?? (row as any)?.Code)
-        const symbol = toStringSafe(row.symbol ?? (row as any)?.Symbol)
-        const isDefault = Boolean(row.isDefault) || symbol.toLowerCase() === 'ksh'
+    const rows = "data" in parsed.data ? parsed.data.data : parsed.data
+
+    return rows.map((row) => {
+        const id = String(row.id ?? row.Id ?? "")
+        const name = String(row.name ?? row.Name ?? "")
+        const code = String(row.code ?? row.Code ?? "").trim()
+        const symbol = String(row.symbol ?? row.Symbol ?? "").trim()
+
+        const isDefault =
+            Boolean(row.isDefault) ||
+            row.isDefault === 1 ||
+            row.isDefault === "1" ||
+            ["kes", "ksh"].includes(code.toLowerCase()) ||
+            ["kes", "ksh"].includes(symbol.toLowerCase())
+
         return { id, name, code, symbol, isDefault }
+    }).sort((a, b) => {
+        if (a.isDefault !== b.isDefault) return a.isDefault ? -1 : 1
+        return a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
     })
-    // Order with Ksh first, then by name
-    return list.sort((a, b) => (Number(b.isDefault) - Number(a.isDefault)) || a.symbol.localeCompare(b.symbol))
 }
 
 export async function GET() {
     try {
-        const response = await fetch(`${API_BASE}/api/v1/currencies`, {
-            headers: {
-                'Content-Type': 'application/json',
-                Accept: 'application/json',
-            },
-            next: { revalidate: 60 }
-        });
+        const session = await getServerSession(authOptions)
+        const hasToken = Boolean(session?.accessToken)
 
-        const contentType = response.headers.get('content-type') || ''
-        const body = contentType.includes('application/json') ? await response.json() : await response.text()
+        const response = await fetchUpstreamJson("/api/v1/currencies", {
+            headers: {
+                Accept: "application/json",
+                ...(hasToken ? { Authorization: `Bearer ${session!.accessToken}` } : {}),
+            },
+            ...(hasToken ? { cache: "no-store" as const } : { next: { revalidate: 3600 } }),
+        })
+
+        if (response.missingBase) return NextResponse.json({ data: [] })
 
         if (!response.ok) {
-            return new NextResponse(typeof body === 'string' ? body : JSON.stringify(body), {
-                status: response.status,
-                headers: {
-                    'Content-Type': 'application/json',
-                    Accept: 'application/json',
-                },
-            });
+            return toUpstreamErrorResponse(response.body, response.status, { message: "Upstream Error" })
         }
 
-        const normalized = normalizeCurrencies(body)
-        return NextResponse.json({ data: normalized })
-    } catch (error) {
-        console.error('Error fetching currencies from Laravel:', error);
-        return new NextResponse(JSON.stringify({ message: 'Internal server error while fetching currencies.' }), {
-            status: 500,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
+        return NextResponse.json({ data: normalizeCurrencies(response.body) })
+    } catch {
+        return toServerErrorResponse({ message: "Internal server error" })
     }
 }

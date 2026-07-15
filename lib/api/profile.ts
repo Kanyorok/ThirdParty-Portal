@@ -1,92 +1,203 @@
-import { getBaseUrl } from "../api-base";
+type UserProfileLike = Record<string, unknown>
 
-const request = async (
-    url: string,
-    accessToken: string,
-    options: RequestInit = {}
-) => {
-    const API_BASE_URL = getBaseUrl();
-    if (!API_BASE_URL) throw new Error("API base URL is not defined");
+type DeactivateAccountResponse = {
+  message?: string
+  status?: string
+}
 
-    const isFormData = options.body instanceof FormData;
+type UpdateProfileResponse = {
+  success?: boolean
+  message?: string
+  error?: string
+  data?: unknown
+  user_profile?: unknown
+  userProfile?: unknown
+}
 
-    const res = await fetch(`${API_BASE_URL}${url}`, {
-        ...options,
-        headers: {
-            Authorization: `Bearer ${accessToken}`,
-            ...(isFormData
-                ? {}
-                : {
-                    Accept: "application/json",
-                    "Content-Type": "application/json",
-                }),
-            ...options.headers,
-        },
-    });
+type PasswordPayload = {
+  currentPassword: string
+  newPassword: string
+}
 
-    if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.message || `Request failed: ${res.status}`);
-    }
+type UploadProfilePictureResponse = {
+  imageUrl?: string
+  message?: string
+}
 
-    return res.json();
-};
+import { getBaseUrl, apiFetch } from "../api-base"
+
+function getApiBaseUrl() {
+  // prefer runtime or build-time configured base; if absent return empty so
+  // apiFetch will use relative paths
+  return getBaseUrl()
+}
+
+async function parseJson<T>(res: Response): Promise<T | Record<string, unknown>> {
+  const text = await res.text().catch(() => "")
+  if (!text) return {}
+  try {
+    return JSON.parse(text) as T
+  } catch {
+    return { message: text }
+  }
+}
+
+function defaultHeaders(): HeadersInit {
+  return { Accept: "application/json" }
+}
 
 export const apiService = {
-    fetcher: (url: string, token: string) =>
-        request(url, token).then((data) =>
-            url.includes("/api/third-party-profile") ? data.userProfile : data
-        ),
+  async getProfile(): Promise<UserProfileLike> {
+    const body = await apiFetch<UpdateProfileResponse>(`/api/third-party-profile`, { allowError: true })
+    if (!body) throw new Error("Failed to fetch profile")
+    return (body?.user_profile || body?.userProfile || body?.data || body) as UserProfileLike
+  },
 
-    getProfile: (token: string) =>
-        request("/api/third-party-profile", token).then((d) => d.userProfile),
+  async changePassword(payload: PasswordPayload) {
+    const result = await apiFetch(`/api/third-party-profile/password`, {
+      method: "PUT",
+      headers: {
+        ...defaultHeaders(),
+        "Content-Type": "application/json",
+      },
+      credentials: "same-origin",
+      body: JSON.stringify({
+        current_password: payload.currentPassword,
+        new_password: payload.newPassword,
+        new_password_confirmation: payload.newPassword,
+      }),
+      cache: "no-store",
+      allowError: true,
+    })
 
-    updateNotifications: (data: object, token: string) =>
-        request("/api/profile/notifications", token, {
-            method: "PUT",
-            body: JSON.stringify(data),
-        }),
+    if (!result) throw new Error("Failed to change password")
+    return result
+  },
 
-    updateProfile: (data: object, token: string) =>
-        request("/api/third-party-profile", token, {
-            method: "PUT",
-            body: JSON.stringify(data),
-        }).then((d) => d.userProfile),
+  async uploadProfilePicture(file: File): Promise<UploadProfilePictureResponse> {
+    const formData = new FormData()
+    formData.append("image", file)
 
-    changePassword: (data: object, token: string) =>
-        request("/api/third-party-profile/password", token, {
-            method: "POST",
-            body: JSON.stringify(data),
-        }),
+    const res = await fetch("/api/v1/profile/user-image", {
+      method: "POST",
+      credentials: "same-origin",
+      body: formData,
+      cache: "no-store",
+    })
 
-    uploadProfilePicture: (file: File, token: string) => {
-        const formData = new FormData();
-        formData.append("profilePicture", file);
-        return request("/api/user/profile-picture", token, {
-            method: "POST",
-            body: formData,
-        });
-    },
+    const body = (await parseJson<any>(res)) as any
+    if (!res.ok) {
+      throw new Error(body?.message || "Failed to upload profile picture")
+    }
 
-    deleteAccount: (password: string, token: string) =>
-        request("/api/account", token, {
-            method: "DELETE",
-            body: JSON.stringify({ password }),
-        }),
+    const imageUrl =
+      body?.data?.image?.src ??
+      body?.data?.imageUrl ??
+      body?.data?.image_url ??
+      body?.data?.image ??
+      body?.image?.src ??
+      body?.imageUrl ??
+      body?.image_url ??
+      body?.image ??
+      body?.data?.url
 
-    submitApplication: (payload: any, token: string) =>
-        request("/api/procurement/prequalification/applications", token, {
-            method: "POST",
-            body: JSON.stringify(payload),
-            headers: { "Idempotency-Key": crypto.randomUUID() },
-        }),
+    return {
+      imageUrl,
+      message: body?.message,
+    }
+  },
 
-    getPreferredCategories: (token: string) =>
-        request("/api/supplier/categories/preferred", token),
+  async suspendAccount(): Promise<DeactivateAccountResponse> {
+    const res = await fetch("/api/third-party-profile", {
+      method: "DELETE",
+      headers: defaultHeaders(),
+      credentials: "same-origin",
+      cache: "no-store",
+    })
 
-    updatePreferredCategories: (category_ids: number[], token: string) =>
-        request("/api/supplier/categories/preferred", token, {
-            method: "POST",
-            body: JSON.stringify({ category_ids }),
-        }),
-};
+    const body = (await parseJson<DeactivateAccountResponse>(res)) as DeactivateAccountResponse
+
+    if (!res.ok) {
+      throw new Error(body.message || "Failed to deactivate account")
+    }
+
+    return body
+  },
+
+  async deactivateAccount(password: string): Promise<DeactivateAccountResponse> {
+    const trimmedPassword = String(password ?? "").trim()
+    if (!trimmedPassword) {
+      throw new Error("Password is required to deactivate account")
+    }
+
+    const res = await fetch("/api/third-party-profile", {
+      method: "DELETE",
+      headers: {
+        ...defaultHeaders(),
+        "Content-Type": "application/json",
+      },
+      credentials: "same-origin",
+      body: JSON.stringify({
+        password: trimmedPassword,
+        current_password: trimmedPassword,
+        confirm_password: trimmedPassword,
+      }),
+      cache: "no-store",
+    })
+
+    const body = (await parseJson<DeactivateAccountResponse>(res)) as DeactivateAccountResponse
+    if (!res.ok) {
+      throw new Error(body.message || "Failed to deactivate account")
+    }
+
+    return body
+  },
+
+  async deleteAccount(password: string): Promise<DeactivateAccountResponse> {
+    return apiService.deactivateAccount(password)
+  },
+}
+
+export const profileService = {
+  async updateProfile(target: "me" | number | string, payload: Record<string, unknown>) {
+    const baseUrl = getApiBaseUrl()
+
+    const portalFields = [
+      "ThirdPartyName",
+      "TradingName",
+      "BusinessType",
+      "RegistrationNumber",
+      "TaxPIN",
+      "CountryId",
+      "LocationId",
+      "PhysicalAddress",
+      "Website",
+      "Email",
+      "Phone",
+    ]
+    const hasPortalPayload = portalFields.some((key) => Object.prototype.hasOwnProperty.call(payload, key))
+    const endpoint = hasPortalPayload ? "/api/v1/profile" : "/api/third-party-profile"
+
+    const body =
+      target === "me" || target === "" || target == null || hasPortalPayload
+        ? payload
+        : { ...payload, third_party_id: target }
+
+    const res = await fetch(`${baseUrl}${endpoint}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      credentials: "same-origin",
+      body: JSON.stringify(body),
+      cache: "no-store",
+    })
+
+    const json = (await parseJson<UpdateProfileResponse>(res)) as UpdateProfileResponse
+    if (!res.ok || json.success === false) {
+      throw new Error(json.message || "Failed to update profile")
+    }
+    return json
+  },
+}

@@ -1,56 +1,115 @@
-import axios from 'axios';
-import { getSession, signOut } from 'next-auth/react';
+import { signOut } from 'next-auth/react'
 
-const API_URL = process.env.NEXT_PUBLIC_EXTERNAL_API_URL;
+async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    const headers = new Headers(options.headers)
+    headers.set('Content-Type', 'application/json')
+    headers.set('Accept', 'application/json')
 
-const api = axios.create({
-    baseURL: API_URL,
-    headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-    },
-    withCredentials: true,
-});
-
-
-// This serves to get the csrf token (from sanctum)
-api.interceptors.request.use(
-    async (config) => {
-        try {
-            const csrfCookieResponse = await fetch(new URL('/sanctum/csrf-cookie', API_URL).toString(), {
-                method: 'GET',
-                credentials: 'include',
-            });
-
-            if (!csrfCookieResponse.ok) {
-                console.error('Failed to fetch CSRF cookie:', csrfCookieResponse.statusText);
-                return Promise.reject(new Error('Failed to obtain CSRF token.'));
-            }
-
-            const session = await getSession();
-            if (session?.accessToken) {
-                config.headers.Authorization = `Bearer ${session.accessToken}`;
-            }
-        } catch (error) {
-            console.error('Error in request interceptor:', error);
-            return Promise.reject(error);
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
+    const config: RequestInit = {
+        ...options,
+        headers,
+        credentials: 'same-origin',
     }
-);
 
-api.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        if (error.response?.status === 401) {
-            // Unauthorized, sign out the user
-            signOut({ callbackUrl: '/auth/signin' });
-        }
-        return Promise.reject(error);
+    const response = await fetch(endpoint, config)
+
+    if (response.status === 401) {
+        await signOut({ callbackUrl: typeof window !== 'undefined' ? `${window.location.origin}/signin` : '/signin' })
+        throw new Error('Unauthorized')
     }
-);
 
-export default api;
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
+    }
+
+    return response.json()
+}
+
+export const apiClient = {
+    get: <T>(endpoint: string, options?: RequestInit) =>
+        request<T>(endpoint, { ...options, method: 'GET' }),
+    post: <T>(endpoint: string, body: any, options?: RequestInit) =>
+        request<T>(endpoint, { ...options, method: 'POST', body: JSON.stringify(body) }),
+    put: <T>(endpoint: string, body: any, options?: RequestInit) =>
+        request<T>(endpoint, { ...options, method: 'PUT', body: JSON.stringify(body) }),
+    delete: <T>(endpoint: string, options?: RequestInit) =>
+        request<T>(endpoint, { ...options, method: 'DELETE' }),
+}
+
+export interface ThirdPartyUserProfile {
+    id: number
+    userId: string
+    firstName: string
+    lastName: string
+    fullName: string
+    email: string
+    phone: string | null
+    imageId: number | null
+    gender: string | null
+    thirdPartyId: string
+    isActive: boolean
+    isPrequalified: boolean
+    approvalStatus: string
+    isSupplier: boolean
+    isTenant: boolean
+    isCustomer: boolean
+    hasProfile: boolean
+    emailVerified: boolean
+    emailVerifiedOn: string | null
+    createdOn: string
+    modifiedOn: string
+    thirdParty?: {
+        id: number
+        profileCompletion: number
+        thirdPartyDetails: {
+            thirdPartyName: string
+            tradingName: string | null
+            businessType: string | null
+            registrationNumber: string
+            taxPIN: string
+            physicalAddress: string | null
+            website: string | null
+            countryId: string
+        }
+        isPrequalified: boolean
+        supplierId: string | null
+        approvalStatus: string
+        types?: Array<{ id: number; code: string; label: string }>
+        createdOn: string
+    }
+}
+
+export interface ProfileResponse {
+    success: boolean
+    message: string
+    data: ThirdPartyUserProfile
+}
+
+export interface UpdateThirdPartyPayload {
+    ThirdPartyName?: string
+    TradingName?: string
+    BusinessType?: number
+    RegistrationNumber?: string
+    TaxPIN?: string
+    CountryId?: number
+    LocationId?: number
+    PhysicalAddress?: string
+    Website?: string
+}
+
+export async function getProfile(): Promise<ProfileResponse> {
+    return apiClient.get<ProfileResponse>('/api/v1/profile')
+}
+
+export async function updateProfile(profileData: UpdateThirdPartyPayload): Promise<ProfileResponse> {
+    return apiClient.put<ProfileResponse>('/api/v1/profile', profileData)
+}
+
+export async function getCurrentUser(): Promise<ProfileResponse> {
+    return apiClient.get<ProfileResponse>('/api/thirdpartyuser')
+}
+
+// export async function getOpenRounds(): Promise<ApiResponse<PrequalificationRound[]>> {
+//     return apiClient.get<ApiResponse<PrequalificationRound[]>>('/api/v1/portal/auth/prequalification/rounds/open')
+// }

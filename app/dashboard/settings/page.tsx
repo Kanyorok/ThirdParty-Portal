@@ -1,9 +1,5 @@
-import { redirect } from 'next/navigation';
+import { redirect } from "next/navigation"
 
-export default function SettingsRootPage() {
-    // redirect('/dashboard/settings/notifications');
-    return;
+export default function SettingsPage() {
+  redirect("/dashboard/settings/profile")
 }
-
-// TODO: Implement this better for production env
-// Meanwhile, this is just some stupid fallback :)

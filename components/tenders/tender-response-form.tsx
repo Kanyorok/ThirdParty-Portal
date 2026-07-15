@@ -4,56 +4,44 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/common/card";
 import { Button } from "@/components/common/button";
 import { Textarea } from "@/components/common/textarea";
-import { Alert, AlertDescription } from "@/components/common/alert";
 import { toast } from "sonner";
-import { 
-  CheckCircle, 
-  XCircle, 
-  AlertTriangle, 
-  Clock, 
-  Send 
+import {
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Clock,
+  Send
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface Tender {
-  id: number;              // Database Id (t_Tenders.Id)
-  title: string;
-  tenderNo: string;
-  tenderType: string; // 'op' = Open, 'rs' = Restricted
-  submissionDeadline: string;
-}
-
-interface TenderInvitation {
-  InvitationID?: number;
-  invitationID?: number;   // Laravel lowercase
-  TenderId?: number;       // Database Id (t_Tenders.Id) - uppercase  
-  tenderId?: number;       // Laravel lowercase
-  ResponseStatus?: 'pending' | 'accepted' | 'declined' | 'submitted';
-  responseStatus?: 'pending' | 'accepted' | 'declined' | 'submitted'; // Laravel lowercase
-  ResponseDate?: string;
-  responseDate?: string;   // Laravel lowercase
-  DeclineReason?: string;
-  declineReason?: string;  // Laravel lowercase
-  InvitationDate?: string;
-  invitationDate?: string; // Laravel lowercase
-}
+import type { PortalTender, TenderInvitation } from "@/types/tender";
 
 interface TenderResponseFormProps {
-  tender: Tender;
+  tender: PortalTender;
   invitation?: TenderInvitation | null;
   onUpdate?: () => void;
+  onStartBid?: () => void;
+  bidAlreadySubmitted?: boolean;
 }
 
 export default function TenderResponseForm({
   tender,
   invitation,
   onUpdate,
+  onStartBid,
+  bidAlreadySubmitted = false,
 }: TenderResponseFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [responseStatus, setResponseStatus] = useState<'accepted' | 'declined' | null>(null);
   const [declineReason, setDeclineReason] = useState("");
-  
+
+  // Add optimistic status state
+  const [optimisticStatus, setOptimisticStatus] = useState<'accepted' | 'declined' | null>(null);
+
   // Component ready for production use
+
+  const tenderId = (tender as any)?.id ?? (tender as any)?.Id;
+  const tenderTypeValue = String((tender as any)?.tenderType ?? (tender as any)?.TenderType ?? "").toLowerCase();
+  const invitationAny = invitation as any;
 
   const handleResponse = async (status: 'accepted' | 'declined') => {
     if (!invitation) {
@@ -70,20 +58,13 @@ export default function TenderResponseForm({
 
     try {
       const requestPayload = {
-        invitation_id: invitation?.InvitationID || invitation?.invitationID,
+        tender_id: invitation?.TenderId || invitationAny?.tenderId || tenderId,
         response_status: status,
         decline_reason: status === 'declined' ? declineReason : null,
-        // Alternative field names for Laravel compatibility
-        invitationId: invitation?.InvitationID || invitation?.invitationID,
-        responseStatus: status,
-        declineReason: status === 'declined' ? declineReason : null,
       };
-      
-      const invitationId = invitation?.InvitationID || invitation?.invitationID;
-      const apiUrl = `http://localhost:8000/api/tender-invitations/${invitationId}`;
-      
-      const response = await fetch(apiUrl, {
-        method: 'PUT',
+
+      const response = await fetch("/api/tender-invitations", {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -91,34 +72,36 @@ export default function TenderResponseForm({
       });
 
       let data: any = {};
-      
+
       // Parse response
       try {
         const responseText = await response.text();
         if (responseText.trim()) {
           data = JSON.parse(responseText);
         }
-      } catch (parseError) {
+      } catch {
         data = { parseError: 'Invalid JSON response' };
       }
 
       if (!response.ok) {
         // Provide user-friendly error messages
-        let errorMessage = 'Failed to update invitation response';
+        let errorMessage = 'Unable to update invitation response.';
         if (data.message) errorMessage = data.message;
         else if (data.error) errorMessage = data.error;
-        else if (response.status === 404) errorMessage = 'API endpoint not found';
-        else if (response.status === 422) errorMessage = 'Invalid request data';
-        else if (response.status === 500) errorMessage = 'Server error - please try again';
-        
+        else if (response.status === 404) errorMessage = 'Invitation response endpoint was not found.';
+        else if (response.status === 422) errorMessage = 'The invitation response request is invalid.';
+        else if (response.status === 500) errorMessage = 'The server could not process the invitation response.';
+
         throw new Error(errorMessage);
       }
 
       toast.success(
-        status === 'accepted' 
-          ? "Tender invitation accepted successfully!" 
-          : "Tender invitation declined successfully!"
+        status === 'accepted'
+          ? "Tender invitation accepted."
+          : "Tender invitation declined."
       );
+
+      setOptimisticStatus(status);
 
       if (onUpdate) {
         onUpdate();
@@ -127,9 +110,9 @@ export default function TenderResponseForm({
     } catch (error) {
       console.error('Error updating invitation response:', error);
       toast.error(
-        error instanceof Error 
-          ? error.message 
-          : "Failed to update invitation response"
+        error instanceof Error
+          ? error.message
+          : "Unable to update invitation response."
       );
     } finally {
       setIsLoading(false);
@@ -141,15 +124,15 @@ export default function TenderResponseForm({
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'accepted':
-        return <CheckCircle className="h-5 w-5 text-green-600" />;
+        return <CheckCircle className="h-5 w-5 text-emerald-600" />;
       case 'declined':
-        return <XCircle className="h-5 w-5 text-red-600" />;
+        return <XCircle className="h-5 w-5 text-rose-600" />;
       case 'submitted':
-        return <Send className="h-5 w-5 text-blue-600" />;
+        return <Send className="h-5 w-5 text-indigo-600" />;
       case 'pending':
-        return <Clock className="h-5 w-5 text-yellow-600" />;
+        return <Clock className="h-5 w-5 text-amber-600" />;
       default:
-        return <AlertTriangle className="h-5 w-5 text-gray-600" />;
+        return <AlertTriangle className="h-5 w-5 text-slate-600" />;
     }
   };
 
@@ -171,236 +154,195 @@ export default function TenderResponseForm({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'accepted':
-        return 'border-green-200 bg-green-50';
+        return 'border-emerald-200 bg-emerald-50/60';
       case 'declined':
-        return 'border-red-200 bg-red-50';
+        return 'border-rose-200 bg-rose-50/60';
       case 'submitted':
-        return 'border-blue-200 bg-blue-50';
+        return 'border-indigo-200 bg-indigo-50/60';
       case 'pending':
-        return 'border-yellow-200 bg-yellow-50';
+        return 'border-amber-200 bg-amber-50/60';
       default:
-        return 'border-gray-200 bg-gray-50';
+        return 'border-slate-200 bg-slate-50';
     }
   };
 
   // Check if this is an open tender
-  const isOpenTender = tender.tenderType === 'op';
-  const isRestrictedTender = tender.tenderType === 'rs';
+  const isOpenTender = tenderTypeValue === 'op' || tenderTypeValue === 'open';
+  const isRestrictedTender = tenderTypeValue === 'rs' || tenderTypeValue === 'restricted';
 
-  if (!invitation && isOpenTender) {
-    return (
-      <Card className="border-blue-200 bg-blue-50">
-        <CardContent className="py-8">
-          <div className="text-center text-blue-800">
-            <CheckCircle className="h-12 w-12 mx-auto mb-4 text-blue-600" />
-            <p className="font-medium text-lg">Open Tender</p>
-            <p className="text-sm mt-2">This tender is open to all suppliers. No invitation response required.</p>
-            <p className="text-sm mt-1 font-medium">You can proceed directly to the Bidding section to submit your proposal.</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
+  if (isOpenTender) {
+    return null;
   }
 
   if (!invitation && isRestrictedTender) {
     return (
-      <Card className="border-gray-200 bg-gray-50">
-        <CardContent className="py-8">
-          <div className="text-center text-muted-foreground">
-            <AlertTriangle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p className="font-medium">Restricted Tender</p>
-            <p className="text-sm mt-2">This is a restricted tender. You have not been invited to participate.</p>
-            <p className="text-sm mt-1">Only invited suppliers can respond to this tender.</p>
+      <Card className="border-slate-200 bg-slate-50 shadow-none">
+        <CardContent className="py-5">
+          <div className="flex items-center gap-3 text-slate-600">
+            <AlertTriangle className="h-5 w-5" />
+            <div>
+              <p className="text-sm font-semibold text-slate-800">Restricted tender</p>
+              <p className="text-xs text-slate-500">
+                Only invited suppliers can respond to this tender.
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
     );
   }
 
-  const currentStatus = invitation?.ResponseStatus || invitation?.responseStatus || 'pending';
-  const isResponseSubmitted = currentStatus !== 'pending';
+  const currentStatus = String(optimisticStatus || invitation?.ResponseStatus || invitationAny?.responseStatus || 'pending').toLowerCase();
   const canRespond = currentStatus === 'pending' && isRestrictedTender;
+  const isResponseLocked = !canRespond && currentStatus !== 'pending';
+  const isDeclined = currentStatus === 'declined' || currentStatus === 'rejected';
 
   return (
-    <div className="space-y-6">
-      {/* Current Status */}
-      <Card className={cn("border-2", getStatusColor(currentStatus))}>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            {getStatusIcon(currentStatus)}
-            Invitation Response Status
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Current Status:</span>
-              <span className="font-medium capitalize">
-                {getStatusText(currentStatus)}
+    <div className="space-y-4">
+      <Card className={cn("border-2 shadow-none", getStatusColor(currentStatus))}>
+        <CardContent className="py-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white">
+                {getStatusIcon(currentStatus)}
               </span>
-            </div>
-            
-            {(invitation?.ResponseDate || invitation?.responseDate) && (
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Response Date:</span>
-                <span className="text-sm">
-                  {new Date(invitation?.ResponseDate || invitation?.responseDate!).toLocaleDateString()}
-                </span>
+              <div>
+                <p className="text-sm font-semibold text-slate-900">Invitation status</p>
+                <p className="text-xs text-slate-600 capitalize">{getStatusText(currentStatus)}</p>
               </div>
+            </div>
+            {isResponseLocked && (
+              <span className="inline-flex items-center rounded-full border border-slate-300 bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-700">
+                Response locked
+              </span>
             )}
-
-            {(invitation?.DeclineReason || invitation?.declineReason) && (
-              <div className="mt-4 p-3 bg-red-100 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-800">
-                  <strong>Decline Reason:</strong> {invitation?.DeclineReason || invitation?.declineReason}
-                </p>
+            {invitation && (invitation.ResponseDate || invitationAny?.responseDate) && (
+              <div className="text-xs text-slate-500">
+                Responded on {new Date(invitation.ResponseDate || invitationAny?.responseDate).toLocaleDateString()}
               </div>
             )}
           </div>
+
+          {isDeclined && (
+            <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+              <strong>Access locked:</strong> Clarifications and bidding locked after decline.
+            </div>
+          )}
+
+          {(invitation?.DeclineReason || invitationAny?.declineReason) && (
+            <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+              <strong>Decline Reason:</strong> {invitation?.DeclineReason || invitationAny?.declineReason}
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Response Actions */}
-      {!isRestrictedTender && invitation && (
-        <Card className="border-blue-200 bg-blue-50">
-          <CardContent className="py-4">
-            <div className="flex items-center gap-2 text-blue-800">
-              <CheckCircle className="h-5 w-5" />
-              <div>
-                <p className="font-medium">Open Tender</p>
-                <p className="text-sm">
-                  This is an open tender. No invitation response required. You can proceed directly to bidding.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {canRespond && (
-        <Card>
+        <Card className="border-slate-200/70 bg-white shadow-none">
           <CardHeader>
-            <CardTitle>Respond to Restricted Tender Invitation</CardTitle>
+            <CardTitle className="text-base">Respond to invitation</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <Alert>
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                This is a restricted tender invitation. Please carefully review the tender documents before responding.
-                Once you accept, you'll be able to proceed with the bidding process.
-              </AlertDescription>
-            </Alert>
-            
-            {/* Issue Identified: SQL Parameter Binding in Laravel Backend */}
-            <div className="bg-green-100 border border-green-500 p-3 rounded text-sm mb-4">
-              <strong className="text-green-800">✅ ISSUE IDENTIFIED:</strong> Laravel SQL parameter binding problem.
-              <p className="text-green-700 text-xs mt-1">
-                Laravel backend needs to fix SQL query generation. See URGENT_LARAVEL_SQL_FIX.md for details.
-              </p>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Button
+                onClick={() => setResponseStatus('accepted')}
+                variant={responseStatus === 'accepted' ? 'default' : 'outline'}
+                className="flex-1"
+                disabled={isLoading}
+              >
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Accept
+              </Button>
+              <Button
+                onClick={() => setResponseStatus('declined')}
+                variant={responseStatus === 'declined' ? 'destructive' : 'outline'}
+                className="flex-1"
+                disabled={isLoading}
+              >
+                <XCircle className="h-4 w-4 mr-2" />
+                Decline
+              </Button>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex gap-4">
+            {responseStatus === 'declined' && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  Reason for declining
+                </label>
+                <Textarea
+                  placeholder="Provide a brief reason for declining..."
+                  value={declineReason}
+                  onChange={(e) => setDeclineReason(e.target.value)}
+                  className="min-h-[90px]"
+                />
+              </div>
+            )}
+
+            {responseStatus && (
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Button
-                  onClick={() => setResponseStatus('accepted')}
-                  variant={responseStatus === 'accepted' ? 'default' : 'outline'}
+                  onClick={() => handleResponse(responseStatus)}
+                  disabled={
+                    isLoading ||
+                    (responseStatus === 'declined' && !declineReason.trim())
+                  }
                   className="flex-1"
-                  disabled={isLoading}
+                  variant={responseStatus === 'accepted' ? 'default' : 'destructive'}
                 >
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Accept Invitation
+                  {isLoading ? (
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                      Processing...
+                    </div>
+                  ) : (
+                    `Confirm ${responseStatus === 'accepted' ? 'Accept' : 'Decline'}`
+                  )}
                 </Button>
                 <Button
-                  onClick={() => setResponseStatus('declined')}
-                  variant={responseStatus === 'declined' ? 'destructive' : 'outline'}
-                  className="flex-1"
+                  onClick={() => {
+                    setResponseStatus(null);
+                    setDeclineReason("");
+                  }}
+                  variant="outline"
                   disabled={isLoading}
+                  className="flex-1"
                 >
-                  <XCircle className="h-4 w-4 mr-2" />
-                  Decline Invitation
+                  Cancel
                 </Button>
               </div>
-
-              {responseStatus === 'declined' && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">
-                    Reason for declining (required)
-                  </label>
-                  <Textarea
-                    placeholder="Please provide a brief explanation for declining this tender invitation..."
-                    value={declineReason}
-                    onChange={(e) => setDeclineReason(e.target.value)}
-                    className="min-h-[100px]"
-                  />
-                </div>
-              )}
-
-              {responseStatus && (
-                <div className="flex gap-4">
-                  <Button
-                    onClick={() => handleResponse(responseStatus)}
-                    disabled={
-                      isLoading || 
-                      (responseStatus === 'declined' && !declineReason.trim())
-                    }
-                    className="flex-1"
-                    variant={responseStatus === 'accepted' ? 'default' : 'destructive'}
-                  >
-                    {isLoading ? (
-                      <div className="flex items-center">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                        Processing...
-                      </div>
-                    ) : (
-                      `Confirm ${responseStatus === 'accepted' ? 'Accept' : 'Decline'}`
-                    )}
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setResponseStatus(null);
-                      setDeclineReason("");
-                    }}
-                    variant="outline"
-                    disabled={isLoading}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              )}
-            </div>
+            )}
           </CardContent>
         </Card>
       )}
 
-      {/* Response Not Available for Restricted Tenders */}
-      {isRestrictedTender && invitation && invitation.ResponseStatus === 'pending' && !canRespond && (
-        <Card className="border-yellow-200 bg-yellow-50">
-          <CardContent className="py-4">
-            <div className="flex items-center gap-2 text-yellow-800">
-              <AlertTriangle className="h-5 w-5" />
-              <div>
-                <p className="font-medium">Response Required</p>
-                <p className="text-sm">
-                  This restricted tender requires a response, but there may be an issue with your invitation status.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Next Steps */}
       {currentStatus === 'accepted' && (
-        <Card className="border-green-200 bg-green-50">
+        <Card className="border-emerald-200 bg-emerald-50 shadow-none">
           <CardContent className="py-4">
-            <div className="flex items-center gap-2 text-green-800">
-              <CheckCircle className="h-5 w-5" />
-              <div>
-                <p className="font-medium">{isRestrictedTender ? 'Restricted Tender Invitation Accepted!' : 'Ready to Proceed!'}</p>
-                <p className="text-sm">
-                  You can now proceed to the "Clarifications" tab to ask questions or the "Bidding" tab to submit your proposal.
-                </p>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-emerald-800">
+                <CheckCircle className="h-5 w-5" />
+                <div>
+                  <p className="text-sm font-semibold">Invitation accepted</p>
+                  <p className="text-xs text-emerald-700">
+                    {bidAlreadySubmitted
+                      ? "You already submitted a bid for this tender."
+                      : "Proceed to bidding when ready."
+                    }
+                  </p>
+                </div>
               </div>
+              <Button
+                onClick={onStartBid}
+                size="sm"
+                disabled={bidAlreadySubmitted}
+                className={cn(
+                  bidAlreadySubmitted
+                    ? "bg-slate-200 text-slate-600 hover:bg-slate-200"
+                    : "bg-emerald-600 hover:bg-emerald-700"
+                )}
+              >
+                {bidAlreadySubmitted ? "Applied" : "Go to bidding"}
+              </Button>
             </div>
           </CardContent>
         </Card>

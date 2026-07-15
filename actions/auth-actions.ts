@@ -1,247 +1,299 @@
 "use server"
-import crypto from "crypto"
 
-interface AuthResult {
+import { headers } from "next/headers"
+
+import { getBaseUrl } from "@/lib/api-base"
+
+export interface AuthResult {
     success: boolean
     message?: string
     error?: string
-    data?: any
+    redirect?: string
+    route?: string
+    data?: unknown
+    errors?: Record<string, string[]>
 }
 
-interface ResetTokenData {
-    email: string
-    token: string
-    expiresAt: Date
-    createdAt: Date
-    used: boolean
+export interface ValidationResult {
+    valid: boolean
+    error?: string
+    message?: string
 }
 
-const resetTokens = new Map<string, ResetTokenData>()
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
-
-const RATE_LIMIT = {
-    maxAttempts: 3,
-    windowMs: 15 * 60 * 1000,
-    blockDurationMs: 60 * 60 * 1000,
+type ApiPayload = {
+    success?: boolean
+    status?: boolean
+    message?: string
+    route?: string
+    data?: unknown
+    redirect?: string
+    errors?: Record<string, string[]>
 }
 
-const TOKEN_CONFIG = {
-    expirationMs: 15 * 60 * 1000,
-    length: 32,
+function getApiBaseUrl() {
+    return getBaseUrl()
 }
 
-function checkRateLimit(identifier: string): { allowed: boolean; message?: string } {
-    const now = Date.now()
-    const rateLimitData = rateLimitMap.get(identifier)
+type FrontendRequestContext = {
+    origin?: string
+    host?: string
+    protocol?: string
+    port?: string
+}
 
-    if (!rateLimitData) {
-        rateLimitMap.set(identifier, { count: 1, resetTime: now + RATE_LIMIT.windowMs })
-        return { allowed: true }
+function normalizeFrontendOrigin(value?: string | null) {
+    if (!value) return undefined
+    try {
+        const parsed = new URL(value)
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return undefined
+        return parsed.origin
+    } catch {
+        return undefined
+    }
+}
+
+async function getFrontendRequestContext(): Promise<FrontendRequestContext> {
+    const headerStore = await headers()
+    const forwardedHost = headerStore.get("x-forwarded-host")?.trim()
+    const host = forwardedHost || headerStore.get("host")?.trim() || undefined
+    const protocol = headerStore.get("x-forwarded-proto")?.trim() || undefined
+    const explicitOrigin = headerStore.get("origin")?.trim()
+    const requestUrl = headerStore.get("x-url")?.trim() || headerStore.get("referer")?.trim() || undefined
+
+    const requestOrigin = normalizeFrontendOrigin(requestUrl)
+    const origin = normalizeFrontendOrigin(explicitOrigin) || requestOrigin || (host && protocol ? `${protocol}://${host}` : undefined)
+
+    let port: string | undefined
+    try {
+        if (origin) {
+            const parsed = new URL(origin)
+            port = parsed.port || undefined
+        }
+    } catch {
+        port = undefined
     }
 
-    if (now > rateLimitData.resetTime) {
-        rateLimitMap.set(identifier, { count: 1, resetTime: now + RATE_LIMIT.windowMs })
-        return { allowed: true }
+    return {
+        origin,
+        host,
+        protocol,
+        port,
+    }
+}
+
+function withFrontendHeaders(baseHeaders: Record<string, string>, context: FrontendRequestContext, path: string) {
+    const nextHeaders = { ...baseHeaders }
+
+    if (context.origin) {
+        nextHeaders.Origin = context.origin
+        nextHeaders.Referer = `${context.origin}${path.startsWith("/") ? path : `/${path}`}`
+        nextHeaders["X-Frontend-Origin"] = context.origin
+        nextHeaders["X-Origin"] = context.origin
     }
 
-    if (rateLimitData.count >= RATE_LIMIT.maxAttempts) {
-        const remainingTime = Math.ceil((rateLimitData.resetTime - now) / 60000)
-        return {
-            allowed: false,
-            message: `Too many password reset attempts. Please try again in ${remainingTime} minutes.`,
+    if (context.host) {
+        nextHeaders["X-Forwarded-Host"] = context.host
+        nextHeaders["X-Original-Host"] = context.host
+    }
+
+    if (context.protocol) {
+        nextHeaders["X-Forwarded-Proto"] = context.protocol
+        nextHeaders["X-Original-Proto"] = context.protocol
+    }
+
+    if (context.port) {
+        nextHeaders["X-Forwarded-Port"] = context.port
+        nextHeaders["X-Original-Port"] = context.port
+    }
+
+    if (context.host || context.protocol) {
+        const forwardedSegments = [
+            context.protocol ? `proto=${context.protocol}` : null,
+            context.host ? `host=${context.host}` : null,
+        ].filter(Boolean)
+
+        if (forwardedSegments.length > 0) {
+            nextHeaders.Forwarded = forwardedSegments.join(";")
         }
     }
 
-    rateLimitData.count++
-    return { allowed: true }
+    return nextHeaders
 }
 
-function generateSecureToken(): string {
-    return crypto.randomBytes(TOKEN_CONFIG.length).toString("hex")
+async function parsePayload(response: Response): Promise<ApiPayload> {
+    const text = await response.text().catch(() => "")
+    if (!text) return {}
+    try {
+        return JSON.parse(text) as ApiPayload
+    } catch {
+        return { message: text }
+    }
 }
 
-async function sendPasswordResetEmail(email: string, token: string): Promise<boolean> {
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-
-    console.log(`
-    📧 Password Reset Email (Demo)
-    To: ${email}
-    Reset Link: ${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${token}
-    Expires: ${new Date(Date.now() + TOKEN_CONFIG.expirationMs).toLocaleString()}
-  `)
-
-    return true
+function firstFieldError(errors?: Record<string, string[]>) {
+    if (!errors) return undefined
+    for (const value of Object.values(errors)) {
+        if (Array.isArray(value) && value.length > 0 && value[0]) return value[0]
+    }
+    return undefined
 }
 
-function validateEmail(email: string): { valid: boolean; message?: string } {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
-    if (!emailRegex.test(email)) {
-        return { valid: false, message: "Invalid email format" }
+export async function requestPasswordReset(email: string, frontendOrigin?: string | null): Promise<AuthResult> {
+    const baseUrl = getApiBaseUrl()
+    if (!baseUrl) {
+        return {
+            success: false,
+            error: "CONFIG_ERROR",
+            message: "URL not configured.",
+        }
     }
 
-    return { valid: true }
-}
-
-export async function requestPasswordReset(email: string): Promise<AuthResult> {
     try {
-        const emailValidation = validateEmail(email)
-        if (!emailValidation.valid) {
+        const frontendRequestContext = await getFrontendRequestContext()
+        const resolvedFrontendOrigin = normalizeFrontendOrigin(frontendOrigin) || frontendRequestContext.origin
+        const resetUrl = resolvedFrontendOrigin ? `${resolvedFrontendOrigin}/reset-password` : undefined
+        const response = await fetch(`${baseUrl}/api/v1/portal/auth/password/forgot`, {
+            method: 'POST',
+            headers: withFrontendHeaders({
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            }, {
+                ...frontendRequestContext,
+                origin: resolvedFrontendOrigin,
+                host: resolvedFrontendOrigin ? new URL(resolvedFrontendOrigin).host : frontendRequestContext.host,
+                protocol: resolvedFrontendOrigin ? new URL(resolvedFrontendOrigin).protocol.replace(/:$/, "") : frontendRequestContext.protocol,
+                port: resolvedFrontendOrigin ? new URL(resolvedFrontendOrigin).port || undefined : frontendRequestContext.port,
+            }, '/forgot-password'),
+            body: JSON.stringify({
+                email,
+                origin: resolvedFrontendOrigin,
+                app_url: resolvedFrontendOrigin,
+                callback_url: resetUrl,
+                redirect_url: resetUrl,
+                frontend_url: resolvedFrontendOrigin,
+                reset_url: resetUrl,
+            }),
+            cache: 'no-store'
+        });
+
+        const payload = await parsePayload(response)
+
+        if (response.ok || response.status === 202) {
+            return {
+                success: true,
+                message: payload.message || "Password reset request received.",
+                route: payload.route,
+                data: payload.data,
+            };
+        }
+
+        if (response.status === 429) {
+            return {
+                success: false,
+                error: "RATE_LIMIT",
+                message: payload.message || "Too many attempts. Onyi Tulia!",
+                errors: payload.errors,
+            };
+        }
+
+        if (response.status === 422) {
+            const validationMessage = firstFieldError(payload.errors)
             return {
                 success: false,
                 error: "VALIDATION_ERROR",
-                message: emailValidation.message,
-            }
-        }
-
-        const rateLimitCheck = checkRateLimit(email)
-        if (!rateLimitCheck.allowed) {
-            return {
-                success: false,
-                error: "RATE_LIMITED",
-                message: rateLimitCheck.message,
-            }
-        }
-
-        const token = generateSecureToken()
-        const expiresAt = new Date(Date.now() + TOKEN_CONFIG.expirationMs)
-
-        resetTokens.set(token, {
-            email,
-            token,
-            expiresAt,
-            createdAt: new Date(),
-            used: false,
-        })
-
-        try {
-            await sendPasswordResetEmail(email, token)
-        } catch (emailError) {
-            console.error("Failed to send password reset email:", emailError)
+                message: validationMessage || payload.message || "Please provide a valid email address.",
+                errors: payload.errors,
+            };
         }
 
         return {
-            success: true,
-            message: "If an account with that email exists, we've sent password reset instructions.",
-        }
-    } catch (error) {
-        console.error("Password reset request error:", error)
+            success: false,
+            error: "API_ERROR",
+            message: payload.message || "Failed to send reset link.",
+            errors: payload.errors,
+        };
+    } catch {
         return {
             success: false,
             error: "INTERNAL_ERROR",
             message: "Something went wrong. Please try again later.",
-        }
+        };
     }
 }
 
-export async function validateResetToken(token: string): Promise<{ valid: boolean; error?: string; message?: string }> {
-    try {
-        if (!token) {
-            return {
-                valid: false,
-                error: "INVALID",
-                message: "Reset token is required.",
-            }
-        }
-
-        const tokenData = resetTokens.get(token)
-
-        if (!tokenData) {
-            return {
-                valid: false,
-                error: "INVALID",
-                message: "Invalid or expired reset link.",
-            }
-        }
-
-        if (tokenData.used) {
-            return {
-                valid: false,
-                error: "USED",
-                message: "This reset link has already been used.",
-            }
-        }
-
-        if (new Date() > tokenData.expiresAt) {
-            return {
-                valid: false,
-                error: "EXPIRED",
-                message: "This reset link has expired. Please request a new one.",
-            }
-        }
-
-        return { valid: true }
-    } catch (error) {
-        console.error("Token validation error:", error)
+export async function validateResetToken(token: string): Promise<ValidationResult> {
+    if (!token || !token.trim()) {
         return {
             valid: false,
-            error: "INTERNAL_ERROR",
-            message: "Unable to validate reset token.",
-        }
+            error: "INVALID",
+            message: "Reset token is required.",
+        };
     }
+    return { valid: true };
 }
 
-export async function resetPassword(token: string, newPassword: string): Promise<AuthResult> {
+export async function resetPassword(token: string, newPassword: string, email: string): Promise<AuthResult> {
+    const baseUrl = getApiBaseUrl()
+    if (!baseUrl) {
+        return {
+            success: false,
+            error: "CONFIG_ERROR",
+            message: "URL is not configured.",
+        }
+    }
+
     try {
-        const tokenValidation = await validateResetToken(token)
-        if (!tokenValidation.valid) {
+        const frontendRequestContext = await getFrontendRequestContext()
+        const response = await fetch(`${baseUrl}/api/v1/portal/auth/password/reset`, {
+            method: 'POST',
+            headers: withFrontendHeaders({
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            }, frontendRequestContext, '/reset-password'),
+            body: JSON.stringify({
+                token: token,
+                email: email,
+                password: newPassword,
+                password_confirmation: newPassword,
+            }),
+            cache: 'no-store'
+        });
+
+        const payload = await parsePayload(response)
+
+        if (response.status === 422) {
+            const validationMessage = firstFieldError(payload.errors)
             return {
                 success: false,
-                error: tokenValidation.error === "EXPIRED" ? "EXPIRED_TOKEN" : "INVALID_TOKEN",
-                message: tokenValidation.message,
-            }
+                error: "VALIDATION_ERROR",
+                message: validationMessage || payload.message || "Validation failed.",
+                errors: payload.errors,
+            };
         }
 
-        const tokenData = resetTokens.get(token)
-        if (!tokenData) {
+        if (response.ok) {
             return {
-                success: false,
-                error: "INVALID_TOKEN",
-                message: "Invalid reset token.",
-            }
+                success: true,
+                message: payload.message || "Password successfully reset.",
+                redirect: payload.redirect
+            };
         }
-
-        if (newPassword.length < 8) {
-            return {
-                success: false,
-                error: "WEAK_PASSWORD",
-                message: "Password must be at least 8 characters long.",
-            }
-        }
-
-        tokenData.used = true
-        console.log(`
-      🔐 Password Reset Successful (Demo)
-      Email: ${tokenData.email}
-      New password set at: ${new Date().toLocaleString()}
-    `)
-
-        cleanupExpiredTokens()
 
         return {
-            success: true,
-            message: "Your password has been successfully reset.",
-        }
-    } catch (error) {
-        console.error("Password reset error:", error)
+            success: false,
+            error: "API_ERROR",
+            message: payload.message || "An unexpected error occurred.",
+            errors: payload.errors,
+        };
+
+    } catch {
         return {
             success: false,
             error: "INTERNAL_ERROR",
-            message: "Failed to reset password. Please try again.",
-        }
+            message: "Connection lost. Reload.",
+        };
     }
 }
 
-function cleanupExpiredTokens(): void {
-    const now = new Date()
-    for (const [token, data] of resetTokens.entries()) {
-        if (now > data.expiresAt || data.used) {
-            resetTokens.delete(token)
-        }
-    }
-}
-
-export async function getResetTokenInfo(token: string): Promise<ResetTokenData | null> {
-    return resetTokens.get(token) || null
-}

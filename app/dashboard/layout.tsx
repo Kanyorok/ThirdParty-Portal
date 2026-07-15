@@ -1,70 +1,80 @@
-import { ReactNode } from "react";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import { Separator } from "@/components/common/separator";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/common/sidebar";
-import { getSidebarVariant, getSidebarCollapsible, getContentLayout } from "@/lib/layout-preferences";
-import { cn } from "@/lib/utils";
-import { NextAuthProvider } from "@/app/providers";
-import { AppSidebar } from "@/app/dashboard/side-nav/app-sidebar";
-import { HeaderActions } from "@/app/dashboard/header-actions";
-import { LayoutControls } from "@/app/dashboard/layout-controls";
-import { SearchDialog } from "@/app/dashboard/search-dialog";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../api/auth/[...nextauth]/route";
+import { ReactNode, Suspense } from "react"
+import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/common/sidebar"
+import { getSidebarVariant, getSidebarCollapsible, getContentLayout } from "@/lib/layout-preferences"
+import { cn } from "@/lib/utils"
+import { AppSidebar } from "@/app/dashboard/side-nav/app-sidebar"
+import { HeaderActions } from "@/app/dashboard/header-actions"
+import { LayoutControls } from "@/app/dashboard/layout-controls"
+import { SearchDialog } from "@/app/dashboard/search-dialog"
+import { SystemFooter } from "@/components/dashboard/system-footer"
+import Loading from "@/components/common/custom-loader"
 
-export default async function Layout({ children }: Readonly<{ children: ReactNode }>) {
-    const session = await getServerSession(authOptions);
+export const dynamic = "force-dynamic"
 
-    // Critical security check - redirect unauthorized users
+export default function Layout({ children }: { children: ReactNode }) {
+    return (
+        <Suspense fallback={<Loading />}>
+            <AsyncDashboardLayout>{children}</AsyncDashboardLayout>
+        </Suspense>
+    )
+}
+
+async function AsyncDashboardLayout({ children }: { children: ReactNode }) {
+    const { getServerSession } = await import("next-auth")
+    const { authOptions } = await import("@/lib/auth-options")
+    const session = await getServerSession(authOptions)
+
     if (!session || !session.user || !session.accessToken) {
-        console.log('Unauthorized access attempt to dashboard - redirecting to signin');
-        redirect('/signin?error=SessionExpired');
+        redirect("/signin?error=SessionExpired")
     }
 
-    // Additional validation - check if user is active and approved
-    if (!session.user.isActive || !session.user.isApproved) {
-        console.log('User not active or approved - redirecting to signin');
-        redirect('/signin?error=AccountNotApproved');
-    }
+    const cookieStore = await cookies()
+    const sidebarState = cookieStore.get("sidebar_state")?.value
+    const defaultOpen = sidebarState ? sidebarState === "true" : true
 
-    const cookieStore = await cookies();
-    const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";
-
-    const sidebarVariant = await getSidebarVariant();
-    const sidebarCollapsible = await getSidebarCollapsible();
-    const contentLayout = await getContentLayout();
+    const sidebarVariant = await getSidebarVariant()
+    const sidebarCollapsible = await getSidebarCollapsible()
+    const contentLayout = await getContentLayout()
 
     return (
-        <NextAuthProvider session={session} attribute={"data-theme"} defaultTheme="dark" enableSystem={true}>
-            <SidebarProvider defaultOpen={defaultOpen}>
-                <AppSidebar variant={sidebarVariant} collapsible={sidebarCollapsible} />
-                <SidebarInset
-                    className={cn(
-                        contentLayout === "centered" && "!mx-auto max-w-7xl",
-                        "max-[113rem]:peer-data-[variant=inset]:!mr-2 min-[101rem]:peer-data-[variant=inset]:peer-data-[state=collapsed]:!mr-auto",
-                    )}
-                >
-                    <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 lg:px-6">
-                        <div className="flex w-full items-center justify-between">
-                            <div className="flex items-center gap-1 lg:gap-2">
-                                <SidebarTrigger className="-ml-1" />
-                                <Separator orientation="vertical" className="mx-2 h-6" />
-                                <SearchDialog />
-                            </div>
-                            <div className="flex items-center gap-2">
+        <SidebarProvider defaultOpen={defaultOpen}>
+            <AppSidebar variant={sidebarVariant} collapsible={sidebarCollapsible} />
+            <SidebarInset
+                className={cn(
+                    "dashboard-readable flex flex-col transition-all duration-300 ease-in-out bg-background/50",
+                    contentLayout === "centered" && "mx-auto w-full max-w-[96rem] border-x border-border/40 min-h-screen",
+                    "peer-data-[variant=inset]:m-2 peer-data-[variant=inset]:rounded-xl peer-data-[variant=inset]:border"
+                )}
+            >
+                <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 px-4 py-2 backdrop-blur-md lg:px-6">
+                    <div className="flex w-full items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card/90 px-2.5 py-2">
+                        <div className="flex min-w-0 flex-1 items-center gap-2">
+                            <SidebarTrigger className="size-9 rounded-full border border-border/70 bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground active:scale-95" />
+                            <SearchDialog />
+                        </div>
+                        <HeaderActions
+                            layoutControls={(
                                 <LayoutControls
                                     contentLayout={contentLayout}
                                     variant={sidebarVariant}
                                     collapsible={sidebarCollapsible}
                                 />
-                                <HeaderActions />
-                            </div>
-                        </div>
-                    </header>
-                    <main className="p-4 md:p-6">{children}</main>
-                </SidebarInset>
-            </SidebarProvider>
-        </NextAuthProvider>
-    );
+                            )}
+                        />
+                    </div>
+                </header>
+                <main className={cn(
+                    "flex-1 px-4 py-4 md:px-6 md:py-6 lg:px-6 lg:py-6 overflow-x-hidden",
+                    contentLayout === "centered" && "bg-card/30"
+                )}>
+                    {children}
+                </main>
+                <footer className="mt-auto border-t border-border/40 bg-muted/5 px-4 py-3 lg:px-6">
+                    <SystemFooter />
+                </footer>
+            </SidebarInset>
+        </SidebarProvider>
+    )
 }

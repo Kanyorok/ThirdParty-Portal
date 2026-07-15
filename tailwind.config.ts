@@ -1,7 +1,6 @@
-import { keyframes } from "motion/react";
+import type { Config } from "tailwindcss";
 
-/** @type {import('tailwindcss').Config} */
-module.exports = {
+const config: Config = {
     darkMode: 'class',
     content: [
         "./pages/**/*.{js,ts,jsx,tsx,mdx}",
@@ -23,10 +22,12 @@ module.exports = {
                     }
                 },
             },
-            animations: {
+            animation: {
                 shimmer: "shimmer 1.5s infinite"
             },
         },
-        plugins: [],
     },
-}
+    plugins: [],
+};
+
+export default config;

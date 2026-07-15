@@ -1,0 +1,132 @@
+"use client"
+
+import React, { useEffect, useState, useMemo } from "react"
+import useSWR from "swr"
+import { Loader2 } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { ThirdPartyInputs, CountryOption } from "@/types/third-party"
+import { useThirdPartyProfile } from "@/hooks/use-third-party-profile"
+import { ProfileModal } from "@/components/thirdParty/party-profile-modal"
+import { Building2, FileText, Globe, Mail, MapPin, Percent, Phone } from "lucide-react"
+import { FieldRow } from "@/components/thirdParty/party-dashboard-fields"
+import { DashboardHeader } from "@/components/thirdParty/party-dashboard-header"
+import { AnimatePresence, motion } from "framer-motion"
+
+const fetcher = (url: string) => fetch(url, { cache: "no-store" }).then(res => res.json())
+
+type SupplierCategoryOption = {
+    id: number | string
+    name: string
+}
+
+export default function ThirdPartyDashboard() {
+    const [isModalOpen, setIsModalOpen] = useState(false)
+    const { profile, updateProfile, createProfile, isLoading } = useThirdPartyProfile()
+    const { data: countriesData } = useSWR<{ data: CountryOption[] }>("/api/countries", fetcher)
+    const { data: supplierCategoriesData } = useSWR<{ data: SupplierCategoryOption[] }>("/api/v1/portal/metadata/supplier-categories", fetcher)
+    const countries = useMemo(() => countriesData?.data ?? [], [countriesData?.data])
+    const supplierCategories = useMemo(() => supplierCategoriesData?.data ?? [], [supplierCategoriesData?.data])
+
+    const form = useForm<ThirdPartyInputs>({
+        defaultValues: profile ?? {}
+    })
+
+    useEffect(() => { if (profile) form.reset(profile) }, [profile, form])
+    useEffect(() => {
+        if (!isLoading && !profile) setIsModalOpen(true)
+    }, [isLoading, profile])
+
+    const countryName = useMemo(() => countries.find(c => c.id === profile?.countryId)?.name ?? "N/A", [countries, profile?.countryId])
+    const businessTypeLabel = useMemo(() => profile?.businessType ?? profile?.legalForm ?? null, [profile?.businessType, profile?.legalForm])
+    const contactPerson = useMemo(() => profile?.contactPerson ?? null, [profile?.contactPerson])
+
+    const handleSubmit = async (values: ThirdPartyInputs) => {
+        const payload: ThirdPartyInputs = {
+            ...values,
+            primaryCategoryId: values.primaryCategoryId ?? null,
+            primary_category_id: values.primaryCategoryId ?? null,
+        }
+
+        try {
+            if (profile) {
+                await updateProfile(payload)
+            } else {
+                await createProfile(payload)
+            }
+            setIsModalOpen(false)
+        } catch { }
+    }
+
+    return (
+        <div className="w-full">
+            <div className="max-w-3xl mx-auto p-0">
+                {isLoading ? <Loader2 className="animate-spin h-12 w-12 text-primary m-auto" /> : (
+                    <>
+                        <DashboardHeader
+                            name={profile?.thirdPartyName}
+                            approvalStatus={profile?.approvalStatus ?? undefined}
+                            status={typeof profile?.status === "number" ? profile.status : Number(profile?.status) || undefined}
+                            onEdit={() => setIsModalOpen(true)}
+                        />
+
+                        <AnimatePresence mode="wait">
+                            {profile ? (
+                                <motion.div
+                                    key="profile-fields"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.4 }}
+                                    className="space-y-6 rounded-xl border border-border/60 bg-card p-4 sm:p-5"
+                                >
+                                    <h2 className="text-lg font-semibold mb-2">General Information</h2>
+                                    <FieldRow label="Legal Name" value={profile.thirdPartyName ?? null} icon={Building2} />
+                                    <FieldRow label="Trading Name" value={profile.tradingName ?? null} icon={Building2} />
+                                    <FieldRow label="Business Type" value={businessTypeLabel ?? null} icon={FileText} />
+
+                                    <h2 className="text-lg font-semibold mt-4 mb-2">Registration & Tax</h2>
+                                    <FieldRow label="Registration Number" value={profile.registrationNumber ?? null} icon={FileText} />
+                                    <FieldRow label="Tax PIN" value={profile.taxPIN ?? null} icon={Percent} />
+                                    <FieldRow label="VAT Number" value={profile.vatNumber ?? null} icon={Percent} />
+                                    <FieldRow label="Primary Category" value={profile.primaryCategory ?? null} icon={FileText} />
+
+                                    <h2 className="text-lg font-semibold mt-4 mb-2">Contact Person</h2>
+                                    <FieldRow label="Contact Person Name" value={contactPerson?.name ?? null} icon={Building2} />
+                                    <FieldRow label="Contact Person Email" value={contactPerson?.email ?? null} icon={Mail} />
+                                    <FieldRow label="Contact Person Phone" value={contactPerson?.phone ?? null} icon={Phone} />
+
+                                    <h2 className="text-lg font-semibold mt-4 mb-2">Contact & Location</h2>
+                                    <FieldRow label="Country" value={countryName ?? null} icon={MapPin} />
+                                    <FieldRow label="Address" value={profile.physicalAddress ?? null} icon={MapPin} />
+                                    <FieldRow label="Email" value={profile.email ?? null} icon={Mail} />
+                                    <FieldRow label="Phone" value={profile.phone ?? null} icon={Phone} />
+                                    <FieldRow label="Website" value={profile.website ?? null} icon={Globe} />
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    key="no-profile"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="text-center py-16"
+                                >
+                                    No profile found. Create one to get started.
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </>
+                )}
+            </div>
+
+            <ProfileModal
+                isOpen={isModalOpen}
+                onOpenChange={setIsModalOpen}
+                form={form}
+                countries={countries}
+                supplierCategories={supplierCategories}
+                isEditing={!!profile}
+                onSubmit={handleSubmit}
+            />
+        </div>
+    )
+}

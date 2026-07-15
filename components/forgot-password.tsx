@@ -1,140 +1,125 @@
 "use client"
 
-import { useState, useTransition } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useForm } from "react-hook-form"
+import { useState } from "react"
+import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { AlertCircle, ArrowLeft, CheckCircle, Clock, Loader2, Mail, Shield } from "lucide-react"
 
 import { Button } from "@/components/common/button"
 import { Input } from "@/components/common/input"
 import { Label } from "@/components/common/label"
 import { Alert, AlertDescription } from "@/components/common/alert"
-
-
-import { Mail, ArrowLeft, CheckCircle, AlertCircle, Clock, Shield, Loader2 } from "lucide-react"
-import { ContactSection } from "./common/contact-us"
-import { AuthHeader } from "./layout/auth-header"
-import { requestPasswordReset } from "@/actions/auth-actions"
-
+import { Spinner } from "@/components/common/spinner"
+import { ContactSection } from "@/components/signin/contact-section"
+import { requestPasswordReset, type AuthResult } from "@/actions/auth-actions"
+import { cn } from "@/lib/utils"
 
 const forgotPasswordSchema = z.object({
-    email: z
-        .string()
-        .min(1, "Email address is required")
-        .email("Please enter a valid email address")
-        .max(100, "Email address is too long")
-        .toLowerCase()
-        .trim(),
+    email: z.string().email("Please enter a valid email address"),
 })
 
-type ForgotPasswordInputs = z.infer<typeof forgotPasswordSchema>
-
-interface ForgotPasswordState {
-    type: "idle" | "loading" | "success" | "error" | "rate_limited"
-    message?: string
-    email?: string
-}
+type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>
 
 export function ForgotPasswordForm() {
+    const [isResending, setIsResending] = useState(false)
+    const [state, setState] = useState<{
+        type: "idle" | "success" | "error" | "rate_limited"
+        message: string
+        email?: string
+    }>({
+        type: "idle",
+        message: "",
+    })
+
     const router = useRouter()
-    const [isPending, startTransition] = useTransition()
-    const [state, setState] = useState<ForgotPasswordState>({ type: "idle" })
 
     const {
         register,
         handleSubmit,
-        formState: { errors, isValid },
-        watch,
-        setError,
-    } = useForm<ForgotPasswordInputs>({
+        control,
+        formState: { errors, isSubmitting, isValid },
+    } = useForm<ForgotPasswordValues>({
         resolver: zodResolver(forgotPasswordSchema),
         mode: "onChange",
-        defaultValues: {
-            email: "",
-        },
     })
 
-    const watchedEmail = watch("email")
+    const watchedEmail = useWatch({ control, name: "email" })
 
-    const onSubmit = async (data: ForgotPasswordInputs) => {
-        startTransition(async () => {
-            setState({ type: "loading" })
+    const submitResetRequest = async (email: string) => {
+        setState({ type: "idle", message: "" })
+        const frontendOrigin = typeof window !== "undefined" ? window.location.origin : undefined
+        const result: AuthResult = await requestPasswordReset(email, frontendOrigin)
 
-            try {
-                const result = await requestPasswordReset(data.email)
+        if (result.success) {
+            setState({
+                type: "success",
+                message: result.message || "Reset link sent successfully.",
+                email,
+            })
+            return
+        }
 
-                if (result.success) {
-                    setState({
-                        type: "success",
-                        message: result.message,
-                        email: data.email,
-                    })
-                } else {
-                    if (result.error === "RATE_LIMITED") {
-                        setState({
-                            type: "rate_limited",
-                            message: result.message,
-                        })
-                    } else if (result.error === "VALIDATION_ERROR") {
-                        setError("email", {
-                            type: "server",
-                            message: result.message || "Invalid email address",
-                        })
-                        setState({ type: "idle" })
-                    } else {
-                        setState({
-                            type: "error",
-                            message: result.message || "Something went wrong. Please try again.",
-                        })
-                    }
-                }
-            } catch (error) {
-                setState({
-                    type: "error",
-                    message: "Network error. Please check your connection and try again.",
-                })
-            }
+        if (result.error === "RATE_LIMIT") {
+            setState({
+                type: "rate_limited",
+                message: result.message || "Too many attempts. Please try again later.",
+            })
+            return
+        }
+
+        setState({
+            type: "error",
+            message: result.message || "An error occurred. Please try again.",
         })
     }
 
-    const handleResendEmail = () => {
-        if (state.email) {
-            onSubmit({ email: state.email })
+    const onSubmit = async (data: ForgotPasswordValues) => {
+        try {
+            await submitResetRequest(data.email)
+        } catch {
+            setState({
+                type: "error",
+                message: "Network error. Please check your connection and try again.",
+            })
         }
     }
 
-    const handleBackToSignIn = () => {
-        router.push("/signin")
+    const onResend = async () => {
+        if (!state.email) return
+        setIsResending(true)
+        try {
+            await submitResetRequest(state.email)
+        } finally {
+            setIsResending(false)
+        }
     }
 
     if (state.type === "success") {
         return (
             <div className="w-full max-w-md mx-auto">
-                <AuthHeader />
-
                 <div className="space-y-6">
                     <div className="text-center space-y-4">
-                        <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                            <CheckCircle className="w-8 h-8 text-green-600" />
+                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-emerald-500/25 bg-emerald-500/10">
+                            <CheckCircle className="h-8 w-8 text-emerald-600" />
                         </div>
-
                         <div className="space-y-2">
-                            <h2 className="text-2xl font-semibold text-gray-900">Check your email</h2>
-                            <p className="text-gray-600 text-sm leading-relaxed">
-                                We've sent password reset instructions to{" "}
-                                <span className="font-medium text-gray-900">{state.email}</span>
+                            <h2 className="text-3xl font-semibold tracking-tight text-foreground">Check your email</h2>
+                            <p className="text-sm leading-relaxed text-muted-foreground">
+                                {state.message || "We've sent password reset instructions to"}{" "}
+                                <span className="font-semibold text-foreground">{state.email}</span>
                             </p>
                         </div>
                     </div>
 
-                    <Alert className="border-blue-200 bg-blue-50">
-                        <Mail className="h-4 w-4 text-blue-600" />
-                        <AlertDescription className="text-blue-800">
+                    <Alert className="border-primary/20 bg-primary/5">
+                        <Mail className="h-4 w-4 text-primary" />
+                        <AlertDescription className="text-foreground">
                             <div className="space-y-2">
-                                <p className="font-medium">What's next?</p>
-                                <ul className="text-sm space-y-1 ml-4">
+                                <p className="text-sm font-semibold">What's next?</p>
+                                <ul className="ml-4 space-y-1 text-sm text-muted-foreground">
                                     <li>• Check your email inbox (and spam folder)</li>
                                     <li>• Click the reset link within 15 minutes</li>
                                     <li>• Create a new secure password</li>
@@ -144,11 +129,11 @@ export function ForgotPasswordForm() {
                     </Alert>
 
                     <div className="space-y-4">
-                        <Button onClick={handleResendEmail} variant="outline" className="w-full" disabled={isPending}>
-                            {isPending ? (
+                        <Button onClick={onResend} variant="outline" className="h-12 w-full rounded-xl text-sm font-semibold" disabled={isSubmitting || isResending}>
+                            {isResending ? (
                                 <>
-                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                    Sending...
+                                    <Spinner className="mr-2 h-4 w-4" />
+                                    Sending email
                                 </>
                             ) : (
                                 <>
@@ -157,14 +142,12 @@ export function ForgotPasswordForm() {
                                 </>
                             )}
                         </Button>
-
-                        <Button onClick={handleBackToSignIn} variant="ghost" className="w-full">
+                        <Button onClick={() => router.push("/signin")} variant="ghost" className="h-12 w-full rounded-xl text-sm font-semibold">
                             <ArrowLeft className="w-4 h-4 mr-2" />
                             Back to sign in
                         </Button>
                     </div>
                 </div>
-
                 <ContactSection />
             </div>
         )
@@ -172,65 +155,52 @@ export function ForgotPasswordForm() {
 
     return (
         <div className="w-full max-w-md mx-auto">
-            <AuthHeader />
-
-            <div className="space-y-6">
-                <div className="text-center space-y-2">
-                    <h2 className="text-2xl font-semibold text-gray-900">Forgot your password?</h2>
-                    <p className="text-gray-600 text-sm leading-relaxed">
+            <div className="space-y-7">
+                <div className="space-y-2 text-center">
+                    <h2 className="text-3xl font-semibold tracking-tight text-foreground">Forgot your password?</h2>
+                    <p className="text-sm leading-relaxed text-muted-foreground">
                         No worries! Enter your email address and we'll send you instructions to reset your password.
                     </p>
                 </div>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                    <div className="space-y-2">
-                        <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                            Email address
-                        </Label>
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                    <div className="space-y-1.5">
+                        <Label htmlFor="email" className="text-[11px] font-semibold tracking-wide text-slate-600">Email address</Label>
                         <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Mail className={cn("pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2", errors.email ? "text-rose-500" : "text-muted-foreground")} />
                             <Input
                                 id="email"
                                 type="email"
-                                placeholder="Enter your email address"
-                                className={`pl-10 ${errors.email
-                                    ? "border-red-300 focus:border-red-500 focus:ring-red-500/20 bg-red-50"
-                                    : "border-gray-200 focus:border-blue-400 focus:ring-blue-400/20"
-                                    }`}
+                                placeholder="name@company.com"
+                                className={cn("h-12 bg-background/95 pl-10", errors.email && "border-rose-400 focus-visible:border-rose-500 focus-visible:ring-rose-200")}
                                 {...register("email")}
-                                disabled={isPending}
+                                disabled={isSubmitting}
                             />
                         </div>
                         {errors.email && (
-                            <p className="text-red-600 text-sm flex items-center gap-1">
-                                <AlertCircle className="h-3 w-3 flex-shrink-0" />
+                            <p className="flex items-center gap-1 text-xs font-medium text-rose-600">
+                                <AlertCircle className="h-3 w-3" />
                                 {errors.email.message}
                             </p>
                         )}
                     </div>
 
-                    {/* Error States */}
                     {state.type === "error" && (
-                        <Alert className="border-red-200 bg-red-50">
-                            <AlertCircle className="h-4 w-4 text-red-600" />
-                            <AlertDescription className="text-red-800">{state.message}</AlertDescription>
+                        <Alert variant="destructive">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertDescription>{state.message}</AlertDescription>
                         </Alert>
                     )}
 
                     {state.type === "rate_limited" && (
-                        <Alert className="border-amber-200 bg-amber-50">
-                            <Clock className="h-4 w-4 text-amber-600" />
-                            <AlertDescription className="text-amber-800">
-                                <div className="space-y-2">
-                                    <p className="font-medium">Too many requests</p>
-                                    <p className="text-sm">{state.message}</p>
-                                </div>
-                            </AlertDescription>
+                        <Alert className="border-amber-500/25 bg-amber-500/10 text-amber-800 dark:text-amber-200">
+                            <Clock className="h-4 w-4 text-amber-600 dark:text-amber-200" />
+                            <AlertDescription className="text-amber-800 dark:text-amber-200">{state.message}</AlertDescription>
                         </Alert>
                     )}
 
-                    <Button type="submit" className="w-full" disabled={isPending || !isValid || !watchedEmail.trim()}>
-                        {isPending ? (
+                    <Button type="submit" className="h-12 w-full rounded-xl text-sm font-semibold" disabled={isSubmitting || !isValid || !watchedEmail?.trim()}>
+                        {isSubmitting ? (
                             <>
                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                                 Sending reset link...
@@ -244,31 +214,25 @@ export function ForgotPasswordForm() {
                     </Button>
 
                     <div className="text-center">
-                        <Link
-                            href="/signin"
-                            className="text-sm text-gray-600 hover:text-gray-900 hover:underline inline-flex items-center gap-1"
-                        >
+                        <Link href="/signin" className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground hover:underline">
                             <ArrowLeft className="w-3 h-3" />
                             Back to sign in
                         </Link>
                     </div>
                 </form>
 
-                {/* Security Notice */}
-                <Alert className="border-gray-200 bg-gray-50">
-                    <Shield className="h-4 w-4 text-gray-600" />
-                    <AlertDescription className="text-gray-700">
+                <Alert className="border-border/70 bg-secondary/55">
+                    <Shield className="h-4 w-4 text-muted-foreground" />
+                    <AlertDescription className="text-muted-foreground">
                         <div className="space-y-1">
-                            <p className="font-medium text-sm">Security Notice</p>
+                            <p className="text-sm font-semibold text-foreground">Security notice</p>
                             <p className="text-xs">
-                                For security reasons, we'll send reset instructions regardless of whether the email exists in our
-                                system. Reset links expire after 15 minutes.
+                                For security reasons, we'll send reset instructions regardless of whether the email exists. Links expire after 15 minutes.
                             </p>
                         </div>
                     </AlertDescription>
                 </Alert>
             </div>
-
             <ContactSection />
         </div>
     )

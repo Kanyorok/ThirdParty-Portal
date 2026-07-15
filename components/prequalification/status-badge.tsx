@@ -2,20 +2,63 @@
 
 import { Badge } from "@/components/common/badge"
 import { cn } from "@/lib/utils"
+import { RoundStatus } from "@/types/types"
+
+const STATUS_THEME: Record<string, { label: string; className: string }> = {
+    O: {
+        label: "Open",
+        className: "bg-emerald-50 text-emerald-700 border-emerald-200"
+    },
+    E: {
+        label: "Expired",
+        className: "bg-rose-50 text-rose-700 border-rose-200"
+    },
+    CL: {
+        label: "Closed",
+        className: "bg-amber-50 text-amber-700 border-amber-200"
+    }
+}
 
 export default function StatusBadge({
     status,
 }: {
-    status: "O" | "CL" // rounds: "O" = Open, "CL" = Closed
+    status?: RoundStatus
 }) {
-    const statusLabel = status === "O" ? "Open" : "Closed"
-    const variant = status === "O"
-        ? "bg-emerald-500 text-emerald-900 dark:bg-emerald-900/30 dark:text-emerald-400"
-        : "bg-amber-500 text-amber-900 dark:bg-amber-900/30 dark:text-amber-400"
+    if (!status) return null
+
+    const statusValue = typeof status === "object"
+        ? status.value?.toString().toUpperCase()
+        : status.toString().toUpperCase()
+
+    const fallbackLabel =
+        typeof status === "object"
+            ? status.label ?? status.value ?? statusValue ?? "Status"
+            : statusValue ?? "Status"
+
+    const theme = STATUS_THEME[statusValue ?? ""] ?? {
+        label: fallbackLabel,
+        className: "bg-slate-50 text-slate-700 border-slate-200"
+    }
+
+    const displayLabel =
+        typeof status === "object"
+            ? status.label ?? theme.label
+            : theme.label
+
+    const extraClass =
+        typeof status === "object" && status.badgeClass
+            ? status.badgeClass
+            : undefined
 
     return (
-        <Badge className={cn("border-0 font-normal", variant)}>
-            {statusLabel}
+        <Badge
+            className={cn(
+                "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold",
+                theme.className,
+                extraClass
+            )}
+        >
+            {displayLabel}
         </Badge>
     )
 }

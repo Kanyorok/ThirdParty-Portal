@@ -1,45 +1,25 @@
 export type ApplicationStatusCode = "D" | "S" | "U" | "C" | "A" | "R"
 
-export const APPLICATION_STATUS: Record<ApplicationStatusCode, string> = {
-    D: "Draft",
-    S: "Submitted",
-    U: "Under Review",
-    C: "Needs Correction",
-    A: "Approved",
-    R: "Rejected",
+export const APPLICATION_STATUS_MAP = {
+    D: { label: "Draft", color: "text-gray-600", bg: "bg-gray-100", icon: "Clock" },
+    S: { label: "Submitted", color: "text-blue-600", bg: "bg-blue-100", icon: "Send" },
+    U: { label: "Under Review", color: "text-indigo-600", bg: "bg-indigo-100", icon: "Search" },
+    C: { label: "Needs Correction", color: "text-orange-600", bg: "bg-orange-100", icon: "AlertCircle" },
+    A: { label: "Approved", color: "text-emerald-600", bg: "bg-emerald-100", icon: "CheckCircle" },
+    R: { label: "Rejected", color: "text-rose-600", bg: "bg-rose-100", icon: "XCircle" },
+} as const;
+
+export function applicationStatusLabel(status: ApplicationStatusCode = "D"): string {
+    return APPLICATION_STATUS_MAP[status]?.label ?? APPLICATION_STATUS_MAP.D.label
 }
 
-export function normalizeApplicationStatus(input?: unknown): ApplicationStatusCode {
-    if (typeof input !== "string" || !input) return "D"
-    const v = input.trim().toLowerCase()
-    if (v === "d" || v === "draft") return "D"
-    if (v === "s" || v === "submitted") return "S"
-    if (v === "u" || v === "under review") return "U"
-    if (v === "c" || v === "needs correction" || v === "correction") return "C"
-    if (v === "a" || v === "approved") return "A"
-    if (v === "r" || v === "rejected") return "R"
-    return "D"
+export function applicationStatusClasses(status: ApplicationStatusCode = "D"): string {
+    const meta = APPLICATION_STATUS_MAP[status] ?? APPLICATION_STATUS_MAP.D
+    return `${meta.bg} ${meta.color}`
 }
 
-export function applicationStatusLabel(code: ApplicationStatusCode): string {
-    return APPLICATION_STATUS[code]
-}
-
-export function applicationStatusClasses(code: ApplicationStatusCode): string {
-    switch (code) {
-        case "D":
-            return "bg-gray-100 text-gray-900 dark:bg-gray-900/30 dark:text-gray-200"
-        case "S":
-            return "bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-200"
-        case "U":
-            return "bg-indigo-100 text-indigo-900 dark:bg-indigo-900/30 dark:text-indigo-200"
-        case "C":
-            return "bg-orange-100 text-orange-900 dark:bg-orange-900/30 dark:text-orange-200"
-        case "A":
-            return "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/30 dark:text-emerald-200"
-        case "R":
-            return "bg-rose-100 text-rose-900 dark:bg-rose-900/30 dark:text-rose-200"
-        default:
-            return "bg-gray-100 text-gray-900"
-    }
+export function getProgressColor(percent: number = 0): string {
+    if (percent >= 100) return "bg-emerald-500";
+    if (percent >= 50) return "bg-sky-500";
+    return "bg-amber-500";
 }

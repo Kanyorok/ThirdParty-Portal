@@ -15,6 +15,7 @@ import {
 } from "@/components/common/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/common/avatar";
 import { getInitials } from "@/lib/utils";
+import { parseJsonResponse } from "@/lib/parse-json-response";
 import { MutatorOptions } from "swr";
 
 interface UserProfile {
@@ -103,20 +104,24 @@ export function ProfileImageUploadModal({
         }
 
         const formData = new FormData();
-        formData.append("profileImage", selectedFile);
+        formData.append("image", selectedFile);
 
         startTransition(async () => {
             try {
                 const res = await toast.promise(
-                    fetch("/api/profile/image", {
+                    fetch("/api/v1/profile/user-image", {
                         method: "POST",
                         body: formData,
                     }).then(async (response) => {
+                        const payload = await parseJsonResponse(response);
                         if (!response.ok) {
-                            const errorData = await response.json();
-                            throw new Error(errorData.message || "Failed to upload image.");
+                            throw new Error(
+                                (typeof payload?.message === "string" && payload.message) ||
+                                (typeof payload?.error === "string" && payload.error) ||
+                                "Failed to upload image."
+                            );
                         }
-                        return response.json();
+                        return payload;
                     }),
                     {
                         loading: "Uploading image...",
@@ -129,34 +134,6 @@ export function ProfileImageUploadModal({
                 onClose();
             } catch (error) {
                 console.error("Upload error:", error);
-            }
-        });
-    };
-
-    const handleRemoveImage = async () => {
-        startTransition(async () => {
-            try {
-                const res = await toast.promise(
-                    fetch("/api/profile/image", {
-                        method: "DELETE",
-                    }).then(async (response) => {
-                        if (!response.ok) {
-                            const errorData = await response.json();
-                            throw new Error(errorData.message || "Failed to remove image.");
-                        }
-                        return response.json();
-                    }),
-                    {
-                        loading: "Removing image...",
-                        success: "Profile image removed successfully!",
-                        error: (err) => err.message,
-                    }
-                );
-
-                await mutateProfile(res, { revalidate: true });
-                onClose();
-            } catch (error) {
-                console.error("Remove image error:", error);
             }
         });
     };
@@ -199,15 +176,9 @@ export function ProfileImageUploadModal({
                     )}
 
                     {!selectedFile && profile.image && (
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={handleRemoveImage}
-                            disabled={isUploading}
-                            className="text-destructive hover:bg-destructive/10"
-                        >
-                            <X className="mr-2 h-4 w-4" /> Remove Current Image
-                        </Button>
+                        <p className="text-xs text-muted-foreground">
+                            Upload a new image to replace the current one.
+                        </p>
                     )}
                 </div>
                 <DialogFooter>

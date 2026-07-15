@@ -1,35 +1,51 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 
-const EXTERNAL_API_BASE = process.env.NEXT_PUBLIC_EXTERNAL_API_URL;
+export const dynamic = "force-dynamic"
+export const revalidate = 0
 
-export async function GET(request: NextRequest, { params }: { params: { rfqId: string } }) {
+const API_BASE = process.env.NEXT_PUBLIC_API_URL
+
+export async function GET(
+    _request: NextRequest,
+    context: { params: { rfqId: string } | Promise<{ rfqId: string }> }
+) {
     const session = await getServerSession(authOptions);
     if (!session || !session.accessToken) {
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { rfqId } = params;
-    const search = request.nextUrl.searchParams.toString();
-    const targetUrl = `${EXTERNAL_API_BASE}/api/procurement/rfq-clarifications/${encodeURIComponent(rfqId)}${search ? `?${search}` : ""}`;
+    if (!API_BASE) {
+        return NextResponse.json({ message: "API not configured" }, { status: 500 });
+    }
+
+    const params = await Promise.resolve(context.params)
+    const rfqId = String(params?.rfqId ?? "").trim()
+
+    if (!rfqId) {
+        return NextResponse.json({ message: "Missing RFQ id" }, { status: 400 });
+    }
+
+    const targetUrl = `${API_BASE.replace(/\/+$/, "")}/api/v1/supplier/rfqs/${encodeURIComponent(rfqId)}/clarifications`
 
     try {
         const res = await fetch(targetUrl, {
             method: "GET",
             headers: {
-                "Accept": "application/json",
-                "Authorization": `Bearer ${session.accessToken}`,
+                Accept: "application/json",
+                Authorization: `Bearer ${session.accessToken}`,
             },
             cache: "no-store",
         });
 
-        const text = await res.text();
-        const contentType = res.headers.get("content-type") || "";
-        const data = contentType.includes("application/json") ? JSON.parse(text || "{}") : text;
+        const data = await res.json().catch(() => ({}));
 
         if (!res.ok) {
-            return NextResponse.json({ message: data?.message || "Failed to fetch clarifications", errors: data?.errors }, { status: res.status });
+            return NextResponse.json(
+                { message: (data as Record<string, unknown>)?.message ?? "Upstream error" },
+                { status: res.status }
+            );
         }
 
         return NextResponse.json(data);
@@ -38,5 +54,3 @@ export async function GET(request: NextRequest, { params }: { params: { rfqId: s
         return NextResponse.json({ message: "Internal server error", error: message }, { status: 500 });
     }
 }
-
-

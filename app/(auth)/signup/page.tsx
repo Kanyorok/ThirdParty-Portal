@@ -1,17 +1,18 @@
-import { ThemeToggle } from "@/app/dashboard/theme-toggle"
-import { RegisterForm } from "@/components/signin/register-form"
+import { Metadata } from "next"
+import { getServerSession } from "next-auth"
+import { redirect } from "next/navigation"
 
-export default function UserRegister() {
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-100 dark:bg-zinc-950 relative">
-      <div className="fixed top-4 right-4 z-50">
-        <ThemeToggle />
-      </div>
+import { authOptions } from "@/lib/auth-options"
+import RegisterForm from "@/components/signin/register-form"
 
-      <div className="w-full max-w-xl">
-        <RegisterForm />
-      </div>
-    </div>
-  )
+export const metadata: Metadata = {
+  title: "Create Account | Portal",
+  description: "Create your portal account.",
 }
 
+export default async function RegisterPage() {
+  const session = await getServerSession(authOptions)
+  if (session) redirect("/dashboard")
+
+  return <RegisterForm />
+}

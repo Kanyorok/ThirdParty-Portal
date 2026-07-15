@@ -20,6 +20,7 @@ import {
     DialogClose,
 } from "@/components/common/dialog";
 import { MutatorOptions } from "swr";
+import { parseJsonResponse } from "@/lib/parse-json-response";
 
 const profileEditSchema = z.object({
     firstName: z
@@ -34,9 +35,8 @@ const profileEditSchema = z.object({
         .regex(/^[a-zA-Z\s'-]+$/, "Last name can only contain letters, spaces, hyphens, and apostrophes"),
     phone: z
         .string()
-        .min(10, "Phone number must be at least 10 digits")
-        .max(15, "Phone number must be less than 15 digits")
-        .regex(/^\+?[\d\s-()]+$/, "Please enter a valid phone number"),
+        .min(1, "Phone number is required")
+        .regex(/^\+?[0-9]{8,15}$/, "Phone number must be 8 to 15 digits and may start with +"),
     email: z
         .string()
         .email("Please enter a valid email address")
@@ -71,9 +71,9 @@ interface ProfileEditModalProps {
 }
 
 interface ProfileUpdateResponse {
-    success: boolean;
-    data: UserProfile;
     message?: string;
+    user_profile?: UserProfile;
+    userProfile?: UserProfile;
 }
 
 interface ApiError {
@@ -127,8 +127,10 @@ export function ProfileEditModal({
                     body: JSON.stringify(data),
                 });
 
+                const payload = await parseJsonResponse<ApiError & ProfileUpdateResponse>(response);
+
                 if (!response.ok) {
-                    const errorData: ApiError = await response.json();
+                    const errorData = (payload ?? { message: "Failed to update profile" }) as ApiError;
 
                     if (errorData.errors) {
                         Object.entries(errorData.errors).forEach(([field, messages]) => {
@@ -143,8 +145,11 @@ export function ProfileEditModal({
                     throw new Error(errorData.message || "Failed to update profile");
                 }
 
-                const result: ProfileUpdateResponse = await response.json();
-                const updatedProfile = result.data;
+                const result = (payload ?? {}) as ProfileUpdateResponse;
+                const updatedProfile = result.user_profile ?? result.userProfile;
+                if (!updatedProfile) {
+                    throw new Error("Profile update response is missing user_profile.");
+                }
 
                 await mutateProfile(updatedProfile, { revalidate: false });
 
@@ -260,9 +265,12 @@ export function ProfileEditModal({
                                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
                                     id="phone"
+                                    type="tel"
+                                    inputMode="tel"
+                                    pattern="[+]?[0-9]{8,15}"
                                     {...register("phone")}
                                     className="pl-9"
-                                    placeholder="Enter your phone number"
+                                    placeholder="+254712345678"
                                     autoComplete="tel"
                                 />
                             </div>
