@@ -8,7 +8,7 @@
     "predev": "npm run dev:check",
     "dev": "next dev --turbopack",
     "prebuild": "npm run verify",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint .",
     "test": "vitest run",
