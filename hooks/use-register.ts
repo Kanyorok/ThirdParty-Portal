@@ -205,8 +205,8 @@ const appendRequestValue = (target: FormData, key: string, value: unknown) => {
 const optionalTextField = (label: string, maxLength: number) =>
     z.preprocess(
         emptyToUndefined,
-        z.string().trim().max(maxLength, `${label} must be ${maxLength} characters or fewer`),
-    ).optional()
+        z.string().trim().max(maxLength, `${label} must be ${maxLength} characters or fewer`).optional(),
+    )
 
 const optionalEmailField = (label: string) =>
     z.preprocess(
@@ -215,20 +215,21 @@ const optionalEmailField = (label: string) =>
             .string()
             .trim()
             .email(`Please enter a valid ${label.toLowerCase()}`)
-            .max(254, `${label} must be 254 characters or fewer`),
-    ).optional()
+            .max(254, `${label} must be 254 characters or fewer`)
+            .optional(),
+    )
 
 const optionalNameField = (label: string) =>
     z.preprocess(
         emptyToUndefined,
-        z.string().trim().min(2, `${label} must be at least 2 characters`).max(50, `${label} must be 50 characters or fewer`),
-    ).optional()
+        z.string().trim().min(2, `${label} must be at least 2 characters`).max(50, `${label} must be 50 characters or fewer`).optional(),
+    )
 
 const optionalPasswordField = (label: string) =>
     z.preprocess(
         emptyToUndefined,
-        z.string().min(8, `${label} must be at least 8 characters`).max(128, `${label} must be 128 characters or fewer`),
-    ).optional()
+        z.string().min(8, `${label} must be at least 8 characters`).max(128, `${label} must be 128 characters or fewer`).optional(),
+    )
 
 const optionalHttpsUrlField = (label: string, maxLength: number) =>
     z.preprocess(
@@ -238,14 +239,15 @@ const optionalHttpsUrlField = (label: string, maxLength: number) =>
             .trim()
             .max(maxLength, `${label} must be ${maxLength} characters or fewer`)
             .url(`Please enter a valid ${label.toLowerCase()}`)
-            .refine((value) => value.startsWith("https://"), `${label} must start with https://`),
-    ).optional()
+            .refine((value) => value.startsWith("https://"), `${label} must start with https://`)
+            .optional(),
+    )
 
 const optionalLookupField = (label: string, maxLength: number) =>
     z.preprocess(
         emptyToUndefined,
-        z.string().trim().max(maxLength, `${label} must be ${maxLength} characters or fewer`),
-    ).optional()
+        z.string().trim().max(maxLength, `${label} must be ${maxLength} characters or fewer`).optional(),
+    )
 
 const phoneField = (requiredMessage: string) =>
     z.preprocess(
@@ -253,7 +255,7 @@ const phoneField = (requiredMessage: string) =>
         z.string().trim().min(1, requiredMessage).regex(PHONE_REGEX, "Phone number must be 8 to 15 digits and may start with +"),
     )
 
-const optionalPhoneField = (requiredMessage: string) => z.preprocess(emptyToUndefined, phoneField(requiredMessage)).optional()
+const optionalPhoneField = (requiredMessage: string) => z.preprocess(emptyToUndefined, phoneField(requiredMessage).optional())
 
 const hasRole = (types: RoleValue[] | undefined, flag: RoleValue) => types?.includes(flag)
 
