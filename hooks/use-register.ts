@@ -26,7 +26,11 @@ type RoleValue = (typeof ROLE_VALUES)[number]
 const PHONE_REGEX = /^\+?[0-9]{8,15}$/
 const TAX_IDENTIFIER_REGEX = /^[A-Z][0-9]{9}[A-Z]$/
 const GENERIC_REGISTRATION_ERROR = "We couldn't complete registration. Please correct the highlighted fields and try again."
+export const SYSTEM_ERROR_MESSAGE = "System error. Please contact admin."
 const SENSITIVE_ERROR_PATTERN = /(exception|stack|trace|sql|syntax|internal server|undefined|vendor|route|line\s+\d+)/i
+const PHONE_FIELD_PATTERN = /phone/i
+const PHONE_FORMAT_EXAMPLE = "+254709875432"
+const PHONE_FORMAT_MESSAGE = `Wrong phone number format. Use the full international format, e.g. ${PHONE_FORMAT_EXAMPLE}.`
 const DOCUMENT_KEY_PATTERN = /^registration_documents\.(\d+)$/
 const DOCUMENT_NOTE_KEY_PATTERN = /^registration_document_notes\.(\d+)$/
 const VERIFY_EMAIL_LINK_REGEX = /https?:\/\/[^"'<>\s]+\/(?:email\/verify|verify-email)[^"'<>\s]*/i
@@ -263,11 +267,26 @@ const getSafeServerFieldMessage = (field: string, candidate: unknown): string =>
     let fallback = SERVER_FIELD_FALLBACK_MESSAGES[field] ?? "Please provide a valid value."
     if (DOCUMENT_KEY_PATTERN.test(field)) fallback = "Please attach a valid document file."
     if (DOCUMENT_NOTE_KEY_PATTERN.test(field)) fallback = "Please provide a valid document note."
-    if (typeof candidate !== "string") return fallback
+
+    const isPhoneField = PHONE_FIELD_PATTERN.test(field)
+
+    if (typeof candidate !== "string") {
+        return isPhoneField ? PHONE_FORMAT_MESSAGE : fallback
+    }
 
     const normalized = candidate.replace(/\s+/g, " ").trim()
     if (!normalized || normalized.length > 160 || SENSITIVE_ERROR_PATTERN.test(normalized)) {
-        return fallback
+        return isPhoneField ? PHONE_FORMAT_MESSAGE : fallback
+    }
+
+    if (isPhoneField) {
+        if (/already|unique|taken|registered/i.test(normalized)) {
+            return "This phone number is already registered."
+        }
+        if (/required/i.test(normalized)) {
+            return fallback
+        }
+        return PHONE_FORMAT_MESSAGE
     }
 
     return normalized
@@ -865,27 +884,35 @@ export const useRegisterForm = () => {
                 ...stepPayload,
             })
 
-        const response = await fetch("/api/portal/auth/register/validate-step", {
-            method: "POST",
-            headers,
-            body,
-        })
+        try {
+            const response = await fetch("/api/portal/auth/register/validate-step", {
+                method: "POST",
+                headers,
+                body,
+            })
 
-        const result = await response.json().catch(() => null)
-        if (response.ok) {
-            return { valid: true }
-        }
+            const result = await response.json().catch(() => null)
+            if (response.ok) {
+                return { valid: true }
+            }
 
-        const hasFieldErrors = applyServerValidationErrors(result?.errors)
-        const message = typeof result?.message === "string" && result.message.trim()
-            ? result.message.trim()
-            : hasFieldErrors
-                ? GENERIC_REGISTRATION_ERROR
-                : "We couldn't validate this step right now. Please try again."
+            if (response.status >= 500) {
+                return { valid: false, message: SYSTEM_ERROR_MESSAGE }
+            }
 
-        return {
-            valid: false,
-            message,
+            const hasFieldErrors = applyServerValidationErrors(result?.errors)
+            const serverMessage = typeof result?.message === "string" ? result.message.trim() : ""
+            const safeServerMessage = serverMessage && serverMessage.length <= 160 && !SENSITIVE_ERROR_PATTERN.test(serverMessage)
+                ? serverMessage
+                : null
+            const message = safeServerMessage ?? (hasFieldErrors ? GENERIC_REGISTRATION_ERROR : SYSTEM_ERROR_MESSAGE)
+
+            return {
+                valid: false,
+                message,
+            }
+        } catch {
+            return { valid: false, message: SYSTEM_ERROR_MESSAGE }
         }
     }, [applyServerValidationErrors, buildPayload, clearUploadErrors, documentFiles, documentNotes, form])
 
@@ -927,17 +954,34 @@ export const useRegisterForm = () => {
             })
         }
 
-        const response = await fetch("/api/register", {
-            method: "POST",
-            headers: requestBody instanceof FormData ? { Accept: "application/json" } : { "Content-Type": "application/json", Accept: "application/json" },
-            body: requestBody instanceof FormData ? requestBody : JSON.stringify(requestBody),
-        })
+        let response: Response
+        try {
+            response = await fetch("/api/register", {
+                method: "POST",
+                headers: requestBody instanceof FormData ? { Accept: "application/json" } : { "Content-Type": "application/json", Accept: "application/json" },
+                body: requestBody instanceof FormData ? requestBody : JSON.stringify(requestBody),
+            })
+        } catch {
+            throw new Error(SYSTEM_ERROR_MESSAGE)
+        }
 
         const result = await response.json().catch(() => null)
         if (!response.ok) {
-            const hasFieldErrors = applyServerValidationErrors(result?.errors)
+            if (response.status >= 500) {
+                throw new Error(SYSTEM_ERROR_MESSAGE)
+            }
 
-            throw new Error(hasFieldErrors ? GENERIC_REGISTRATION_ERROR : "We couldn't submit your registration right now. Please try again.")
+            const hasFieldErrors = applyServerValidationErrors(result?.errors)
+            if (hasFieldErrors) {
+                throw new Error(GENERIC_REGISTRATION_ERROR)
+            }
+
+            const serverMessage = typeof result?.message === "string" ? result.message.trim() : ""
+            const safeServerMessage = serverMessage && serverMessage.length <= 160 && !SENSITIVE_ERROR_PATTERN.test(serverMessage)
+                ? serverMessage
+                : SYSTEM_ERROR_MESSAGE
+
+            throw new Error(safeServerMessage)
         }
 
         const verifyLink = extractVerifyEmailUrl(result)
