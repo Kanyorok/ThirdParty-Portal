@@ -403,7 +403,7 @@ export default function TenderDetailModal({
     } finally {
       setIsCheckingBid(false)
     }
-  }, [tenderId, tenderNo])
+  }, [tenderId, tenderNo, tender])
 
   useEffect(() => {
     if (activeTab === "documents") {

@@ -8,12 +8,13 @@
     "predev": "npm run dev:check",
     "dev": "next dev --turbopack",
     "prebuild": "npm run verify",
-    "build": "next build",
-    "start": "next start",
+    "build": "next build --webpack",
+    "start": "next start -H 127.0.0.1 -p 3000",
     "lint": "eslint .",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "verify": "npm run lint && npm run typecheck"
+    "verify": "npm run lint && npm run typecheck",
+    "deploy:production": "bash scripts/deploy-production.sh"
   },
   "lint-staged": {
     "*.{js,ts,jsx,tsx}": [
@@ -54,7 +55,6 @@
     "@types/react-router-dom": "^5.3.3",
     "axios": "^1.14.0",
     "bcryptjs": "^3.0.3",
-    "brerp-third-party-portal": ".",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",

@@ -142,6 +142,14 @@ function FormField({
 }
 
 export default function LoginPage() {
+    return (
+        <React.Suspense fallback={null}>
+            <LoginPageContent />
+        </React.Suspense>
+    )
+}
+
+function LoginPageContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const authInfoId = React.useId()

@@ -222,6 +222,81 @@ export async function requestPasswordReset(email: string, frontendOrigin?: strin
     }
 }
 
+export async function resendVerificationEmail(email: string, frontendOrigin?: string | null): Promise<AuthResult> {
+    const baseUrl = getApiBaseUrl()
+    if (!baseUrl) {
+        return {
+            success: false,
+            error: "CONFIG_ERROR",
+            message: "URL not configured.",
+        }
+    }
+
+    try {
+        const frontendRequestContext = await getFrontendRequestContext()
+        const resolvedFrontendOrigin = normalizeFrontendOrigin(frontendOrigin) || frontendRequestContext.origin
+        const response = await fetch(`${baseUrl}/api/v1/portal/auth/email/resend`, {
+            method: 'POST',
+            headers: withFrontendHeaders({
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            }, {
+                ...frontendRequestContext,
+                origin: resolvedFrontendOrigin,
+                host: resolvedFrontendOrigin ? new URL(resolvedFrontendOrigin).host : frontendRequestContext.host,
+                protocol: resolvedFrontendOrigin ? new URL(resolvedFrontendOrigin).protocol.replace(/:$/, "") : frontendRequestContext.protocol,
+                port: resolvedFrontendOrigin ? new URL(resolvedFrontendOrigin).port || undefined : frontendRequestContext.port,
+            }, '/verify-email/expired'),
+            body: JSON.stringify({ email }),
+            cache: 'no-store'
+        });
+
+        const payload = await parsePayload(response)
+
+        if (response.ok || response.status === 202) {
+            return {
+                success: true,
+                message: payload.message || "Verification email sent.",
+                route: payload.route,
+                data: payload.data,
+            };
+        }
+
+        if (response.status === 429) {
+            return {
+                success: false,
+                error: "RATE_LIMIT",
+                message: payload.message || "Too many attempts. Please wait before trying again.",
+                errors: payload.errors,
+            };
+        }
+
+        if (response.status === 422) {
+            const validationMessage = firstFieldError(payload.errors)
+            return {
+                success: false,
+                error: "VALIDATION_ERROR",
+                message: validationMessage || payload.message || "Please provide a valid email address.",
+                errors: payload.errors,
+            };
+        }
+
+        return {
+            success: false,
+            error: "API_ERROR",
+            message: payload.message || "Failed to resend verification email.",
+            errors: payload.errors,
+        };
+    } catch {
+        return {
+            success: false,
+            error: "INTERNAL_ERROR",
+            message: "Something went wrong. Please try again later.",
+        };
+    }
+}
+
 export async function validateResetToken(token: string): Promise<ValidationResult> {
     if (!token || !token.trim()) {
         return {

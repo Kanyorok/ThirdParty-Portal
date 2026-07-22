@@ -6,22 +6,17 @@ import { useRouter } from "next/navigation"
 import {
     AlertCircle,
     ArrowRight,
-    BriefcaseBusiness,
-    Building2,
     Check,
     CheckCircle2,
     ChevronLeft,
-    ChevronRight,
     ChevronsUpDown,
     CircleCheck,
     Eye,
     EyeClosed,
-    UserCog,
     X,
 } from "lucide-react"
 
 import { Button } from "../common/button"
-import { Checkbox } from "../common/checkbox"
 import { Field as SharedField, FieldLabel as SharedFieldLabel, FieldLegend, FieldSet } from "../common/field"
 import {
     Dialog,
@@ -52,12 +47,7 @@ import {
 } from "../common/select"
 import { toast } from "sonner"
 import { cn } from "../../lib/utils"
-import { type RegisterFormInputs, type RegisterRole, type RegisterThirdPartyResult, useRegisterForm } from "../../hooks/use-register"
-import {
-    buildInternationalPhoneNumber,
-    extractNationalPhoneNumber,
-    normalizeCountryDialCode,
-} from "../../lib/register-shared"
+import { SYSTEM_ERROR_MESSAGE, type RegisterFormInputs, type RegisterRole, type RegisterThirdPartyResult, useRegisterForm } from "../../hooks/use-register"
 
 const ROLE_OPTIONS: Array<{ id: RegisterRole; label: string }> = [
     { id: "SU", label: "Supplier" },
@@ -73,12 +63,9 @@ const textAreaStyle = "min-h-28 rounded-lg border border-slate-200 bg-white px-3
 const fileInputStyle = "h-11 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-[border-color,background-color,box-shadow] file:mr-2.5 file:rounded-md file:border-0 file:bg-slate-100 file:px-2.5 file:py-1.5 file:text-xs file:font-medium file:text-slate-700 hover:border-slate-300 focus-visible:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-100"
 const selectStyle = "h-11 w-full rounded-lg border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-950 transition-[border-color,background-color,box-shadow] hover:border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-100 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.1)]"
 const endButtonClass = "absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
-const submitButtonClass = "h-11 w-full rounded-full border border-slate-950 bg-slate-950 px-5 text-sm font-semibold tracking-[0.01em] text-white transition-[background-color,border-color,color,transform] duration-150 hover:-translate-y-0.5 hover:border-slate-800 hover:bg-slate-800 active:translate-y-0 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300 disabled:text-white/90"
-const secondaryButtonClass = "h-11 w-full rounded-full border border-slate-300 bg-white px-5 text-sm font-semibold tracking-[0.01em] text-slate-900 transition-[border-color,background-color,color,transform] duration-150 hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50 active:translate-y-0"
 const navigationPrimaryButtonClass = "h-11 w-full rounded-lg border border-slate-950 bg-slate-950 px-5 text-sm font-semibold text-white transition-[background-color,border-color,color] duration-150 hover:border-slate-800 hover:bg-slate-800 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300 disabled:text-white/90"
 const navigationSecondaryButtonClass = "h-11 w-full rounded-lg border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-900 transition-[border-color,background-color,color] duration-150 hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
 const linkClass = "text-blue-600 transition-colors duration-150 hover:text-blue-700 hover:underline"
-const signInLinkClass = "inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 transition-[border-color,background-color,color,transform] duration-150 hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50 sm:w-auto"
 const sectionCardClass = "pt-4 sm:pt-5 lg:pt-6"
 const formSectionGridClass = "mt-4 grid grid-cols-1 gap-4 sm:mt-5 sm:gap-5 md:grid-cols-2 md:items-start"
 const fieldBlockClass = "grid content-start gap-2"
@@ -157,16 +144,6 @@ const normalizeErrorMessage = (message?: string | null, label?: string, showGene
     }
 
     return normalized
-}
-
-const isRequiredOnlyMessage = (message?: string | null, label?: string) => {
-    const normalized = normalizeErrorMessage(message, label, true)
-    if (!normalized) return false
-
-    if (normalized === "This field is required.") return true
-    if (!label) return false
-
-    return normalized.toLowerCase() === `${label.toLowerCase()} is required.`
 }
 
 function FeedbackAlert({
@@ -258,7 +235,14 @@ function FieldLabel({ children, required }: { children: React.ReactNode; require
 }
 
 function FieldError({ message, label, touched = true }: { message?: string | null; label?: string; touched?: boolean }) {
-    return null
+    const normalized = normalizeErrorMessage(message, label)
+    if (!normalized || !touched) return null
+
+    return (
+        <p role="alert" className="text-xs font-medium text-red-600">
+            {normalized}
+        </p>
+    )
 }
 
 function FieldShell({
@@ -699,7 +683,8 @@ export default function RegisterForm() {
 
     const createUser = form.watch("createUser")
     const businessTypeValue = form.watch("BusinessType")
-    const supplierCategoryValues = form.watch("category_ids") ?? []
+    const watchedCategoryIds = form.watch("category_ids")
+    const supplierCategoryValues = React.useMemo(() => watchedCategoryIds ?? [], [watchedCategoryIds])
     const countryValue = form.watch("Country")
     const companyPhoneValue = form.watch("Phone")
     const locationValue = form.watch("Location")
@@ -947,6 +932,9 @@ export default function RegisterForm() {
                 setCurrentStepId(nextStep.id)
                 window.scrollTo({ top: 0, behavior: "smooth" })
             }
+        } catch {
+            setAuthError(SYSTEM_ERROR_MESSAGE)
+            toast.error(SYSTEM_ERROR_MESSAGE)
         } finally {
             setPendingAction("idle")
         }
@@ -975,11 +963,30 @@ export default function RegisterForm() {
             const values = form.getValues()
             const registerResponse = await registerThirdParty(values)
             if (registerResponse?.success) handleRegistrationSuccess(values, registerResponse)
-        } catch {
+        } catch (error) {
             setSubmitState("error")
-            const errorMessage = "Registration could not be completed. Check the highlighted fields and try again."
-            setAuthError(errorMessage)
-            toast.error(errorMessage)
+
+            const allFields = steps.flatMap((step) => step.fields)
+            const fieldErrors = getStepFieldErrors(allFields)
+
+            if (fieldErrors.messages.length > 0) {
+                const combinedMessage = fieldErrors.messages.join("\n")
+                setAuthError(combinedMessage)
+                toast.error(fieldErrors.messages.length === 1 ? fieldErrors.messages[0] : `Please review ${fieldErrors.messages.length} fields.`)
+
+                if (fieldErrors.firstField) {
+                    const stepWithField = steps.find((step) => step.fields.includes(fieldErrors.firstField as string))
+                    if (stepWithField && stepWithField.id !== currentStepId) {
+                        setCurrentStepId(stepWithField.id)
+                        window.scrollTo({ top: 0, behavior: "smooth" })
+                    }
+                    form.setFocus(fieldErrors.firstField as never)
+                }
+            } else {
+                const errorMessage = error instanceof Error && error.message ? error.message : SYSTEM_ERROR_MESSAGE
+                setAuthError(errorMessage)
+                toast.error(errorMessage)
+            }
         } finally {
             setPendingAction("idle")
         }

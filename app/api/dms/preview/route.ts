@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
         Authorization: session.accessToken ? `Bearer ${session.accessToken}` : "",
       },
       cache: "no-store",
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(60000),
     })
 
     const headers = new Headers(res.headers)
