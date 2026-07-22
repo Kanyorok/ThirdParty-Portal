@@ -218,7 +218,7 @@ export const UserNavUI = memo(
             if (profile === resolvedActiveProfile) return
             setActiveProfile(profile)
             onOpenChange(false)
-            router.push("/dashboard")
+            router.replace(`/dashboard?profile=${encodeURIComponent(profile)}`)
         }
 
         const fetchUserImage = useCallback(async () => {

@@ -17,8 +17,8 @@ export default function CheckEmailPage() {
                 <h2 className="text-2xl font-bold mb-2">Check your email</h2>
 
                 <p className="text-slate-600 mb-8">
-                    We've sent a verification link to your email address.
-                    Please click the link to verify your account and continue to your profile setup.
+                    We&apos;ve sent an account setup link to your email address.
+                    Use it to set your password, verify your email, and continue to your profile setup.
                 </p>
 
                 <div className="space-y-3">

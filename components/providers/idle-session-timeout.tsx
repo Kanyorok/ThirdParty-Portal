@@ -43,6 +43,19 @@ function removeStorage(key: string) {
     }
 }
 
+/**
+ * Discard the previous idle-signout state before a user starts a new login.
+ * Writing a fresh activity timestamp also prevents another open portal tab
+ * from immediately signing out the newly-created session with its old timer.
+ */
+export function prepareForFreshSession() {
+    if (typeof window === "undefined") return
+
+    removeStorage(SESSION_STORAGE_KEY)
+    removeStorage(SIGN_OUT_STORAGE_KEY)
+    writeStorage(ACTIVITY_STORAGE_KEY, String(Date.now()))
+}
+
 export function IdleSessionTimeout() {
     const { data: session, status } = useSession()
     const timeoutMs = useMemo(() => configuredTimeoutMinutes() * 60 * 1_000, [])

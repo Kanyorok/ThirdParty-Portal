@@ -13,6 +13,8 @@ const CountrySchema = z.object({
     Iso2: z.string().optional(),
     flag: z.string().optional(),
     Flag: z.string().optional(),
+    phoneCode: z.union([z.string(), z.number().transform(String)]).optional(),
+    PhoneCode: z.union([z.string(), z.number().transform(String)]).optional(),
 })
 
 const ResponseSchema = createArrayResponseSchema(CountrySchema)
@@ -27,6 +29,7 @@ function normalizeCountries(payload: unknown) {
             code: String(row.code ?? row.Code ?? row.iso2 ?? row.Iso2 ?? "").trim(),
             iso2: String(row.iso2 ?? row.Iso2 ?? "").trim() || null,
             flag: String(row.flag ?? row.Flag ?? "").trim() || null,
+            phoneCode: String(row.phoneCode ?? row.PhoneCode ?? "").trim() || null,
         }))
         .filter((row) => row.id > 0 && row.name.length > 0 && row.code.length > 0)
         .sort((left, right) => left.name.localeCompare(right.name, undefined, { sensitivity: "base" }))

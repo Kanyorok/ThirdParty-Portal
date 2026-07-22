@@ -457,7 +457,7 @@ function formatDate(v?: string | null): string {
 }
 
 function senderLabel(origin: "user" | "system"): string {
-  return origin === "user" ? "You" : "System"
+  return origin === "user" ? "You" : "Support"
 }
 
 function toTicket(x: any): Ticket {
@@ -534,6 +534,8 @@ export default function TicketDetailPage() {
   const [detailTab, setDetailTab] = useState<"comments" | "history">("comments")
   const [reply, setReply] = useState("")
   const [replying, setReplying] = useState(false)
+  const [reopenReason, setReopenReason] = useState("")
+  const [reopening, setReopening] = useState(false)
   const [selectedMentions, setSelectedMentions] = useState<MentionCandidate[]>([])
   const [mentionTrigger, setMentionTrigger] = useState<MentionTrigger | null>(null)
   const [mentionActiveIndex, setMentionActiveIndex] = useState(0)
@@ -541,6 +543,10 @@ export default function TicketDetailPage() {
   const [apiMentionCandidates, setApiMentionCandidates] = useState<MentionCandidate[]>([])
   const mentionLookupAbortRef = useRef<AbortController | null>(null)
   const replyInputRef = useRef<HTMLTextAreaElement | null>(null)
+  const isClosed = useMemo(() => {
+    const status = normalizeTicketTokenKey(detail?.status ?? "")
+    return ["resolved", "cancelled", "closed"].includes(status)
+  }, [detail?.status])
 
   const mentionDirectory = useMemo(() => {
     const user = (session as any)?.user as Record<string, unknown> | undefined
@@ -715,6 +721,7 @@ export default function TicketDetailPage() {
   useEffect(() => {
     setDetailTab("comments")
     setReply("")
+    setReopenReason("")
     setSelectedMentions([])
     setMentionTrigger(null)
   }, [ticketId])
@@ -838,6 +845,30 @@ export default function TicketDetailPage() {
     }
   }
 
+  async function onReopen(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const reason = reopenReason.trim()
+    if (!ticketId || !reason) return
+
+    setReopening(true)
+    setDetailError(null)
+    try {
+      const res = await fetch(`/api/v1/portal/help/tickets/${encodeURIComponent(ticketId)}/reopen`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason }),
+      })
+      const body = await res.json().catch(() => ({}))
+      if (isApiFailure(res, body)) throw new Error(apiErrorMessage(body, "Failed to request ticket reopening"))
+      setReopenReason("")
+      await loadDetail()
+    } catch (err: any) {
+      setDetailError(err?.message || "Failed to request ticket reopening")
+    } finally {
+      setReopening(false)
+    }
+  }
+
   const systemMessageCount = detail?.messages.filter((m) => m.origin === "system").length ?? 0
   const myMessageCount = detail?.messages.filter((m) => m.origin === "user").length ?? 0
 
@@ -883,7 +914,7 @@ export default function TicketDetailPage() {
               Messages <span className="ml-1 font-semibold text-slate-900">{detail.messages.length}</span>
             </span>
             <span className="inline-flex h-8 items-center rounded-full border border-slate-200 bg-white px-3 font-medium text-slate-600">
-              System <span className="ml-1 font-semibold text-slate-900">{systemMessageCount}</span>
+              Support <span className="ml-1 font-semibold text-slate-900">{systemMessageCount}</span>
             </span>
             <span className="inline-flex h-8 items-center rounded-full border border-slate-200 bg-white px-3 font-medium text-slate-600">
               You <span className="ml-1 font-semibold text-slate-900">{myMessageCount}</span>
@@ -953,6 +984,26 @@ export default function TicketDetailPage() {
                   <RefreshCw className="mr-1.5 h-4 w-4" />
                   Refresh details
                 </Button>
+                {isClosed ? (
+                  <form onSubmit={onReopen} className="space-y-2.5 border-t border-slate-200 pt-4">
+                    <Label htmlFor="reopen-reason" className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                      Reopen reason
+                    </Label>
+                    <Textarea
+                      id="reopen-reason"
+                      value={reopenReason}
+                      onChange={(event) => setReopenReason(event.target.value)}
+                      rows={3}
+                      maxLength={2000}
+                      required
+                      placeholder="Explain why this ticket needs more attention..."
+                      className="resize-none rounded-xl border-slate-200 bg-white text-sm"
+                    />
+                    <Button type="submit" className={`${PRIMARY_BUTTON} w-full justify-center`} disabled={reopening || !reopenReason.trim()}>
+                      {reopening ? <><Spinner className="mr-1.5 h-4 w-4" />Submitting</> : <><RefreshCw className="mr-1.5 h-4 w-4" />Request reopening</>}
+                    </Button>
+                  </form>
+                ) : null}
               </div>
             </section>
           </aside>
@@ -1004,7 +1055,7 @@ export default function TicketDetailPage() {
                   </span>
                   <span className="inline-flex h-7 items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2.5 font-semibold text-slate-700">
                     <Bot className="h-3.5 w-3.5" />
-                    System
+                    Support
                   </span>
                 </div>
               </div>
@@ -1061,14 +1112,14 @@ export default function TicketDetailPage() {
                         <p className="text-xs font-medium text-slate-500">{formatDate(m.createdAt)}</p>
                         <p className="mt-1 text-sm text-slate-700">
                           <span className="font-semibold text-slate-900">{senderLabel(m.origin)}</span>{" "}
-                          {m.origin === "user" ? "sent a reply." : "posted a system update."}
+                          {m.origin === "user" ? "sent a reply." : "posted a support update."}
                         </p>
                       </div>
                     ))}
                   </div>
                 )}
 
-                {detailTab === "comments" ? (
+                {detailTab === "comments" && !isClosed ? (
                   <form onSubmit={onReply} className="space-y-2.5 border-t border-slate-200 pt-4">
                     <Label htmlFor="reply-message" className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                       Reply
@@ -1146,6 +1197,10 @@ export default function TicketDetailPage() {
                       </Button>
                     </div>
                   </form>
+                ) : detailTab === "comments" ? (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    This ticket is closed. Request reopening from the Actions panel before sending another reply.
+                  </div>
                 ) : null}
               </div>
             </section>

@@ -308,19 +308,22 @@ type LegacyCountryItem = {
     id?: number | string | null
     name?: string | null
     code?: string | null
+    phoneCode?: string | number | null
+    PhoneCode?: string | number | null
 }
 
 function normalizeLegacyCountries(rows: unknown): CountryItem[] {
     if (!Array.isArray(rows)) return []
 
     return rows
-        .map((row) => {
+        .map<CountryItem | null>((row) => {
             if (!row || typeof row !== "object") return null
 
             const item = row as Record<string, unknown>
             const id = Number(item.id ?? item.Id ?? 0)
             const name = String(item.name ?? item.Name ?? "").trim()
             const code = String(item.code ?? item.Code ?? "").trim()
+            const phoneCode = String(item.phoneCode ?? item.PhoneCode ?? "").trim() || null
 
             if (!Number.isFinite(id) || id <= 0 || !name) return null
 
@@ -328,6 +331,7 @@ function normalizeLegacyCountries(rows: unknown): CountryItem[] {
                 id,
                 name,
                 code: code || name.slice(0, 3).toUpperCase(),
+                phoneCode,
             }
         })
         .filter((item): item is CountryItem => item !== null)
@@ -461,6 +465,7 @@ export type RegisterThirdPartyResult = {
 type RegisterStepValidationResult = {
     valid: boolean
     message?: string
+    existingAccount?: boolean
 }
 
 export const useRegisterForm = () => {
@@ -825,6 +830,28 @@ export const useRegisterForm = () => {
         const stepPayload = Object.fromEntries(
             Object.entries(payload).filter(([key]) => fields.includes(key))
         )
+
+        if (step === "business") {
+            const existingResponse = await fetch("/api/portal/auth/existing-profile/check", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Accept: "application/json" },
+                body: JSON.stringify({
+                    email: payload.Email ?? payload.user_Email,
+                    phone: payload.Phone ?? payload.user_Phone,
+                    tax_pin: payload.TaxPIN,
+                }),
+                cache: "no-store",
+            })
+            const existingResult = await existingResponse.json().catch(() => null)
+
+            if (existingResponse.ok && existingResult?.data?.exists === true) {
+                return {
+                    valid: false,
+                    existingAccount: true,
+                    message: existingResult.message || "An existing account matches these details. Sign in to add another profile.",
+                }
+            }
+        }
 
         if (fields.includes("category_ids")) {
             if (payload.supplier_category_id != null) {

@@ -14,6 +14,7 @@ import LogoDialog from "@/components/account/profile/logo-dialog"
 import UserImageDialog from "@/components/account/profile/user-image-dialog"
 import ChangePasswordCard from "@/components/account/profile/change-password-card"
 import CompanySidebarCard from "@/components/account/profile/company-sidebar-card"
+import ProfileActivationCard from "@/components/account/profile/profile-activation-card"
 import ProfileTabsNav, { type ProfileTabKey } from "@/components/account/profile/profile-tabs-nav"
 import SupplierProfilePanel from "@/components/account/profile/supplier-profile-panel"
 import TenantProfilePanel from "@/components/account/profile/tenant-profile-panel"
@@ -272,10 +273,21 @@ export default function ProfileSettings() {
               logoUrl={logoUrl}
               onEditLogo={() => setIsLogoDialogOpen(true)}
               badges={[
-                hasSupplier ? { label: "Supplier", tone: "primary" } : { label: "Supplier", tone: "muted" },
+                hasSupplier ? { label: isApproved ? "Supplier" : "Supplier pending", tone: isApproved ? "primary" : "muted" } : { label: "Supplier", tone: "muted" },
                 hasTenant ? { label: "Tenant", tone: "primary" } : { label: "Tenant", tone: "muted" },
                 hasCustomer ? { label: "Customer", tone: "primary" } : { label: "Customer", tone: "muted" },
               ]}
+            />
+            <ProfileActivationCard
+              hasSupplier={hasSupplier}
+              hasTenant={hasTenant}
+              hasCustomer={hasCustomer}
+              onActivated={async (type) => {
+                await refetch?.()
+                await queryClient.invalidateQueries({ queryKey: ["currentUser"] })
+                await queryClient.invalidateQueries({ queryKey: ["availableProfiles"] })
+                setActiveTab(type)
+              }}
             />
           </aside>
 

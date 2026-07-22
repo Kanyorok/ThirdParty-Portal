@@ -3,8 +3,16 @@ import { redirect } from "next/navigation"
 
 export const dynamic = "force-dynamic"
 
-export default async function ResetPasswordPage({ searchParams }: { searchParams: Promise<{ token?: string; email?: string }> }) {
-    const { token, email } = await searchParams
+type ResetPasswordSearchParams = {
+    token?: string
+    email?: string
+    "amp;email"?: string
+}
+
+export default async function ResetPasswordPage({ searchParams }: { searchParams: Promise<ResetPasswordSearchParams> }) {
+    const params = await searchParams
+    const token = params.token
+    const email = params.email ?? params["amp;email"]
 
     if (!token || !email) {
         redirect("/forgot-password")
