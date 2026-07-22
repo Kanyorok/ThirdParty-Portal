@@ -47,7 +47,7 @@ import {
 } from "../common/select"
 import { toast } from "sonner"
 import { cn } from "../../lib/utils"
-import { type RegisterFormInputs, type RegisterRole, type RegisterThirdPartyResult, useRegisterForm } from "../../hooks/use-register"
+import { SYSTEM_ERROR_MESSAGE, type RegisterFormInputs, type RegisterRole, type RegisterThirdPartyResult, useRegisterForm } from "../../hooks/use-register"
 
 const ROLE_OPTIONS: Array<{ id: RegisterRole; label: string }> = [
     { id: "SU", label: "Supplier" },
@@ -234,8 +234,15 @@ function FieldLabel({ children, required }: { children: React.ReactNode; require
     )
 }
 
-function FieldError({ message: _message, label: _label, touched: _touched = true }: { message?: string | null; label?: string; touched?: boolean }) {
-    return null
+function FieldError({ message, label, touched = true }: { message?: string | null; label?: string; touched?: boolean }) {
+    const normalized = normalizeErrorMessage(message, label)
+    if (!normalized || !touched) return null
+
+    return (
+        <p role="alert" className="text-xs font-medium text-red-600">
+            {normalized}
+        </p>
+    )
 }
 
 function FieldShell({
@@ -889,6 +896,9 @@ export default function RegisterForm() {
                 setCurrentStepId(nextStep.id)
                 window.scrollTo({ top: 0, behavior: "smooth" })
             }
+        } catch {
+            setAuthError(SYSTEM_ERROR_MESSAGE)
+            toast.error(SYSTEM_ERROR_MESSAGE)
         } finally {
             setPendingAction("idle")
         }
@@ -917,11 +927,30 @@ export default function RegisterForm() {
             const values = form.getValues()
             const registerResponse = await registerThirdParty(values)
             if (registerResponse?.success) handleRegistrationSuccess(values, registerResponse)
-        } catch {
+        } catch (error) {
             setSubmitState("error")
-            const errorMessage = "Registration could not be completed. Check the highlighted fields and try again."
-            setAuthError(errorMessage)
-            toast.error(errorMessage)
+
+            const allFields = steps.flatMap((step) => step.fields)
+            const fieldErrors = getStepFieldErrors(allFields)
+
+            if (fieldErrors.messages.length > 0) {
+                const combinedMessage = fieldErrors.messages.join("\n")
+                setAuthError(combinedMessage)
+                toast.error(fieldErrors.messages.length === 1 ? fieldErrors.messages[0] : `Please review ${fieldErrors.messages.length} fields.`)
+
+                if (fieldErrors.firstField) {
+                    const stepWithField = steps.find((step) => step.fields.includes(fieldErrors.firstField as string))
+                    if (stepWithField && stepWithField.id !== currentStepId) {
+                        setCurrentStepId(stepWithField.id)
+                        window.scrollTo({ top: 0, behavior: "smooth" })
+                    }
+                    form.setFocus(fieldErrors.firstField as never)
+                }
+            } else {
+                const errorMessage = error instanceof Error && error.message ? error.message : SYSTEM_ERROR_MESSAGE
+                setAuthError(errorMessage)
+                toast.error(errorMessage)
+            }
         } finally {
             setPendingAction("idle")
         }

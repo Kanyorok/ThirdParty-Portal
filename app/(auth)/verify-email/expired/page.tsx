@@ -6,6 +6,7 @@ import { Button } from '@/components/common/button'
 import { useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import Link from 'next/link'
+import { resendVerificationEmail } from '@/actions/auth-actions'
 
 export default function VerifyEmailExpired() {
     const params = useSearchParams()
@@ -13,18 +14,20 @@ export default function VerifyEmailExpired() {
 
     const [loading, setLoading] = useState(false)
     const [sent, setSent] = useState(false)
+    const [error, setError] = useState<string | null>(null)
 
     const resend = async () => {
         if (!email) return
         setLoading(true)
+        setError(null)
 
         try {
-            await fetch('/api/v1/portal/auth/email/resend', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email }),
-            })
-            setSent(true)
+            const result = await resendVerificationEmail(email, window.location.origin)
+            if (result.success) {
+                setSent(true)
+            } else {
+                setError(result.message || 'Failed to resend verification email.')
+            }
         } finally {
             setLoading(false)
         }
@@ -53,13 +56,20 @@ export default function VerifyEmailExpired() {
                         Verification email sent. Please check your inbox.
                     </p>
                 ) : (
-                    <Button
-                        onClick={resend}
-                        disabled={loading}
-                        className="w-full mb-4"
-                    >
-                        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Resend Verification Email'}
-                    </Button>
+                    <>
+                        <Button
+                            onClick={resend}
+                            disabled={loading}
+                            className="w-full mb-4"
+                        >
+                            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Resend Verification Email'}
+                        </Button>
+                        {error && (
+                            <p className="text-sm font-semibold text-red-600 mb-4">
+                                {error}
+                            </p>
+                        )}
+                    </>
                 )}
 
                 <Button asChild variant="outline" className="w-full">

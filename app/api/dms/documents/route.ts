@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
         },
         body: formData,
         cache: "no-store",
-        signal: AbortSignal.timeout(30000),
+        signal: AbortSignal.timeout(60000),
       });
 
       const text = await res.text();
