@@ -24,7 +24,7 @@ import {
 import { motion } from "framer-motion"
 import { parseJsonResponse } from "@/lib/parse-json-response"
 import { cn } from "@/lib/utils"
-import { useProfileStore } from "@/store/use-profile-store"
+import type { ProfileType } from "@/store/use-profile-store"
 
 type DashboardSummaryResponse = {
     summary?: Record<string, any>
@@ -191,10 +191,10 @@ const toneClasses: Record<
     },
 }
 
-export function RequestSummaryCards({ data, isLoading }: { data?: DashboardSummaryResponse | null; isLoading?: boolean }) {
+export function RequestSummaryCards({ data, isLoading, profile }: { data?: DashboardSummaryResponse | null; isLoading?: boolean; profile?: ProfileType }) {
     const [fetched, setFetched] = useState<DashboardSummaryResponse | null>(null)
     const [loading, setLoading] = useState(false)
-    const activeProfile = useProfileStore(state => state.activeProfile)
+    const activeProfile = profile
 
     useEffect(() => {
         if (typeof isLoading !== "undefined") return

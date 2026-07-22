@@ -229,7 +229,7 @@ export function MasterDashboardClient({
 
       {widgetPreferences.overview && (
         <motion.section custom={2} variants={shellSectionVariants}>
-          <RequestSummaryCards />
+          <RequestSummaryCards data={dashboardData} profile={renderProfile} />
         </motion.section>
       )}
 
