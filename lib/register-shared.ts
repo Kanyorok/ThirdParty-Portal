@@ -10,6 +10,7 @@ export type CountryItem = {
     id: number
     name: string
     code: string
+    phoneCode?: string | null
 }
 
 export type SupplierCategoryItem = {
@@ -86,6 +87,34 @@ export const normalizePhoneNumber = (value: unknown) => {
     if (!digits) return undefined
 
     return hasLeadingPlus ? `+${digits}` : digits
+}
+
+export const normalizeCountryDialCode = (value: unknown) => {
+    const digits = String(value ?? "").replace(/\D+/g, "")
+    return digits ? `+${digits}` : ""
+}
+
+export const extractNationalPhoneNumber = (value: unknown, dialCode: unknown) => {
+    const normalized = normalizePhoneNumber(value)
+    if (!normalized) return ""
+
+    const digits = normalized.replace(/\D+/g, "")
+    const dialDigits = normalizeCountryDialCode(dialCode).replace(/\D+/g, "")
+
+    if (normalized.startsWith("+")) {
+        return dialDigits && digits.startsWith(dialDigits) ? digits.slice(dialDigits.length) : ""
+    }
+
+    return digits
+}
+
+export const buildInternationalPhoneNumber = (dialCode: unknown, nationalNumber: unknown) => {
+    const prefix = normalizeCountryDialCode(dialCode)
+    const nationalDigits = String(nationalNumber ?? "")
+        .replace(/\D+/g, "")
+        .replace(/^0+/, "")
+
+    return prefix && nationalDigits ? `${prefix}${nationalDigits}` : ""
 }
 
 export const COMPANY_LIKE_BUSINESS_TYPES = new Set([

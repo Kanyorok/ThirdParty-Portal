@@ -6,15 +6,20 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useForm, useWatch, type UseFormRegisterReturn } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Mail, Lock, Eye, X, EyeClosed, CircleCheck, type LucideIcon } from "lucide-react"
+import { Mail, Lock, Eye, X, EyeClosed, CircleCheck, Building2, ChevronDown, type LucideIcon } from "lucide-react"
 import { signIn } from "next-auth/react"
 
 import { AlertBanner } from "@/components/auth/alert-banner"
 import { Button } from "@/components/common/button"
 import { Input } from "@/components/common/input"
+import { prepareForFreshSession } from "@/components/providers/idle-session-timeout"
 import { cn } from "@/lib/utils"
+import { useProfileStore } from "@/store/use-profile-store"
+
+const PROFILE_TYPES = ["Supplier", "Tenant", "Customer"] as const
 
 const schema = z.object({
+    profile_type: z.enum(PROFILE_TYPES, { required_error: "Select the profile you want to use" }),
     email: z.string().min(1, "Email is required").email("Enter a valid Email address"),
     password: z.string().min(1, "Password is required"),
 })
@@ -151,6 +156,7 @@ function LoginPageContent() {
     const authErrorId = React.useId()
     const [authError, setAuthError] = React.useState<string | null>(null)
     const [showPassword, setShowPassword] = React.useState(false)
+    const setActiveProfile = useProfileStore((state) => state.setActiveProfile)
 
     const {
         register,
@@ -169,6 +175,13 @@ function LoginPageContent() {
     React.useEffect(() => {
         if (queryError) {
             setAuthError(getFriendlyAuthMessage(queryError))
+
+            // This query value describes the previous redirect. Remove it
+            // after showing it once so a new login cannot inherit the stale
+            // IdleTimeout error on a later render or navigation.
+            const url = new URL(window.location.href)
+            url.searchParams.delete("error")
+            window.history.replaceState(window.history.state, "", url.toString())
         }
     }, [queryError])
 
@@ -177,11 +190,13 @@ function LoginPageContent() {
 
     const onSubmit = async (data: FormValues) => {
         setAuthError(null)
+        prepareForFreshSession()
 
         try {
             const result = await signIn("credentials", {
                 email: data.email,
                 password: data.password,
+                profile_type: data.profile_type,
                 redirect: false,
             })
 
@@ -197,9 +212,11 @@ function LoginPageContent() {
                 return
             }
 
-            // A full navigation ensures the server layout and SessionProvider both
-            // observe the newly-issued session immediately after an idle sign-out.
-            window.location.replace("/dashboard")
+            setActiveProfile(data.profile_type)
+
+            // A full navigation ensures the server layout, active-profile cookie,
+            // and SessionProvider agree on the selected workspace.
+            window.location.replace(`/dashboard?profile=${encodeURIComponent(data.profile_type)}`)
         } catch {
             setAuthError(AUTH_ERROR_MESSAGES.SERVER_ERROR)
         }
@@ -229,6 +246,33 @@ function LoginPageContent() {
                                 ) : null}
 
                                 <div className="grid gap-5">
+                                    <div className="grid gap-2.5">
+                                        <label htmlFor="profile_type" className="flex items-center gap-2 text-[15px] font-semibold tracking-[0.01em] text-slate-950">
+                                            <Building2 className={cn(fieldIconClass, hasFieldError("profile_type") && "text-rose-500")} />
+                                            <span>Sign in as</span>
+                                        </label>
+                                        <div className="relative">
+                                            <select
+                                                id="profile_type"
+                                                defaultValue=""
+                                                disabled={isSubmitting}
+                                                aria-invalid={hasFieldError("profile_type") || undefined}
+                                                className={cn(inputBaseClass, "w-full appearance-none pr-10", hasFieldError("profile_type") && inputErrorClass)}
+                                                {...register("profile_type")}
+                                            >
+                                                <option value="" disabled>Select a portal profile</option>
+                                                {PROFILE_TYPES.map((profile) => (
+                                                    <option key={profile} value={profile}>{profile}</option>
+                                                ))}
+                                            </select>
+                                            <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                                        </div>
+                                        <p className="text-xs text-slate-500">Choose the workspace you want to open. Only profiles enabled for your account are accepted.</p>
+                                        {hasFieldError("profile_type") ? (
+                                            <p className="text-xs font-medium text-rose-600">{errors.profile_type?.message}</p>
+                                        ) : null}
+                                    </div>
+
                                     <FormField
                                         id="email"
                                         label="Email"

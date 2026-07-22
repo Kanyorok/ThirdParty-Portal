@@ -644,6 +644,7 @@ export default function RegisterForm() {
     const router = useRouter()
     const authErrorId = React.useId()
     const [authError, setAuthError] = React.useState<string | null>(null)
+    const [existingAccountSuggestion, setExistingAccountSuggestion] = React.useState<string | null>(null)
     const [successDialogOpen, setSuccessDialogOpen] = React.useState(false)
     const [successTitle, setSuccessTitle] = React.useState("Registration successful")
     const [successDescription, setSuccessDescription] = React.useState("Your account has been created successfully.")
@@ -685,10 +686,40 @@ export default function RegisterForm() {
     const watchedCategoryIds = form.watch("category_ids")
     const supplierCategoryValues = React.useMemo(() => watchedCategoryIds ?? [], [watchedCategoryIds])
     const countryValue = form.watch("Country")
+    const companyPhoneValue = form.watch("Phone")
     const locationValue = form.watch("Location")
     const genderValue = form.watch("user_Gender")
     const maritalStatusValue = form.watch("user_MaritalStatus")
     const occupationValue = form.watch("user_Occupation")
+    const selectedCountry = React.useMemo(
+        () => metadata.countries.find((country) => country.code === countryValue),
+        [countryValue, metadata.countries],
+    )
+    const selectedDialCode = normalizeCountryDialCode(selectedCountry?.phoneCode)
+    const nationalCompanyPhone = extractNationalPhoneNumber(companyPhoneValue, selectedDialCode)
+
+    const handleCountryChange = React.useCallback((nextCountryCode: string) => {
+        const currentCountry = metadata.countries.find((country) => country.code === countryValue)
+        const currentDialCode = normalizeCountryDialCode(currentCountry?.phoneCode)
+        const nationalNumber = extractNationalPhoneNumber(form.getValues("Phone"), currentDialCode)
+        const nextCountry = metadata.countries.find((country) => country.code === nextCountryCode)
+        const nextDialCode = normalizeCountryDialCode(nextCountry?.phoneCode)
+
+        form.setValue("Country", nextCountryCode, { shouldDirty: true, shouldValidate: true })
+        form.setValue("Phone", buildInternationalPhoneNumber(nextDialCode, nationalNumber), {
+            shouldDirty: true,
+            shouldValidate: nationalNumber.length > 0,
+        })
+    }, [countryValue, form, metadata.countries])
+
+    const handleCompanyPhoneChange = React.useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+        const nextNationalNumber = event.target.value.replace(/\D+/g, "").replace(/^0+/, "")
+        form.setValue("Phone", buildInternationalPhoneNumber(selectedDialCode, nextNationalNumber), {
+            shouldDirty: true,
+            shouldTouch: true,
+            shouldValidate: true,
+        })
+    }, [form, selectedDialCode])
 
     const isPosting = submitState === "posting"
     const isBusy = isSubmitting || isPosting || pendingAction !== "idle"
@@ -812,21 +843,21 @@ export default function RegisterForm() {
             /verify|verification|confirm.+email/i.test(backendMessage)
         const verificationEmail = pickVerificationEmail(values)
         const approvalMessage = values.types.includes("SU")
-            ? "Supplier approval may still continue after verification."
+            ? "Supplier approval may still continue after email verification."
             : ""
 
         setSubmitState("success")
 
         if (verificationRequired) {
-            setSuccessTitle("Verify your email")
+            setSuccessTitle("Set your password and verify your email")
             setSuccessDescription(
                 verificationEmail
                     ? approvalMessage
-                        ? `A verification link was sent to ${verificationEmail}.\n${approvalMessage}`
-                        : `A verification link was sent to ${verificationEmail}.`
+                        ? `An account setup link was sent to ${verificationEmail}.\n${approvalMessage}`
+                        : `An account setup link was sent to ${verificationEmail}.`
                     : approvalMessage
-                        ? `A verification link was sent to your email address.\n${approvalMessage}`
-                        : "A verification link was sent to your email address.",
+                        ? `An account setup link was sent to your email address.\n${approvalMessage}`
+                        : "An account setup link was sent to your email address.",
             )
         } else {
             setSuccessTitle("Registration successful")
@@ -842,6 +873,7 @@ export default function RegisterForm() {
 
     const validateCurrentStep = React.useCallback(async () => {
         setAuthError(null)
+        setExistingAccountSuggestion(null)
 
         const fields = currentStep?.fields ?? []
         const formValid = fields.length > 0 ? await form.trigger(fields as never) : true
@@ -864,6 +896,10 @@ export default function RegisterForm() {
         if (serverStep && currentStep) {
             const serverValidation = await validateRegistrationStep(serverStep, form.getValues(), fields)
             if (!serverValidation.valid) {
+                if (serverValidation.existingAccount) {
+                    setExistingAccountSuggestion(serverValidation.message || "An account already exists for these details.")
+                    return false
+                }
                 const stepErrors = getStepFieldErrors(fields)
                 const fallbackMessage = stepErrors.messages.length > 0
                     ? "Complete the highlighted fields before continuing."
@@ -1043,6 +1079,21 @@ export default function RegisterForm() {
                                 </div>
                             </header>
 
+                            {existingAccountSuggestion ? (
+                                <Alert className="border-blue-200 bg-blue-50 text-blue-950">
+                                    <UserCog className="h-4 w-4 text-blue-700" />
+                                    <AlertTitle>It looks like you already have an account</AlertTitle>
+                                    <AlertDescription className="space-y-3">
+                                        <p>{existingAccountSuggestion}</p>
+                                        <Button asChild type="button" size="sm" className="bg-blue-700 text-white hover:bg-blue-800">
+                                            <Link href="/signin">Sign in to add a profile</Link>
+                                        </Button>
+                                    </AlertDescription>
+                                </Alert>
+                            ) : null}
+
+                            {authError ? <FeedbackAlert id={authErrorId} message={authError} onDismiss={() => setAuthError(null)} /> : null}
+
                             <div className="grid gap-5 sm:gap-6">
                                 <form onSubmit={handleSubmitForm} className={cn("grid gap-6 sm:gap-7", isPosting && "pointer-events-none")} noValidate aria-busy={isPosting} aria-describedby={formDescriptionIds || undefined}>
                                     {currentStep?.id === "business" ? (
@@ -1123,23 +1174,44 @@ export default function RegisterForm() {
                                                     </div>
                                                 ) : null}
 
-                                                <div className={fieldBlockClass}>
-                                                    <FieldLabel required>Company Phone</FieldLabel>
-                                                    <Input type="tel" inputMode="tel" pattern="[+]?[0-9]{8,15}" required autoComplete="tel" {...form.register("Phone")} placeholder="+254712345678" className={cn(inputStyle, errors.Phone && inputErrorClass)} />
-                                                    <FieldError message={errors.Phone?.message as string | undefined} label="Company phone" />
-                                                </div>
-
                                                 <CompactComboboxField
                                                     label="Country"
                                                     required
                                                     value={countryValue || undefined}
-                                                    onChange={(value) => form.setValue("Country", value, { shouldDirty: true, shouldValidate: true })}
+                                                    onChange={handleCountryChange}
                                                     options={metadata.countries.map((item) => ({ value: item.code, label: item.name }))}
                                                     placeholder="Select country"
                                                     error={errors.Country?.message as string | undefined}
                                                     searchPlaceholder="Search country"
                                                     emptyMessage="No countries found."
                                                 />
+
+                                                <div className={fieldBlockClass}>
+                                                    <FieldLabel required>Company Phone</FieldLabel>
+                                                    <input type="hidden" {...form.register("Phone")} />
+                                                    <div className={cn(
+                                                        "flex h-11 overflow-hidden rounded-lg border border-slate-200 bg-white transition-[border-color,box-shadow] focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-100 focus-within:shadow-[0_0_0_3px_rgba(59,130,246,0.1)]",
+                                                        errors.Phone && "border-red-300 bg-red-50 focus-within:border-red-500 focus-within:ring-red-100 focus-within:shadow-none",
+                                                    )}>
+                                                        <span className="inline-flex min-w-20 items-center justify-center border-r border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-700">
+                                                            {selectedDialCode || "Prefix"}
+                                                        </span>
+                                                        <input
+                                                            type="tel"
+                                                            inputMode="numeric"
+                                                            autoComplete="tel-national"
+                                                            value={nationalCompanyPhone}
+                                                            onChange={handleCompanyPhoneChange}
+                                                            onBlur={() => void form.trigger("Phone")}
+                                                            disabled={!selectedDialCode}
+                                                            placeholder={selectedDialCode ? "712345678" : "Select country first"}
+                                                            aria-invalid={Boolean(errors.Phone) || undefined}
+                                                            className="min-w-0 flex-1 bg-transparent px-3.5 text-sm font-medium text-slate-950 outline-none placeholder:font-normal placeholder:text-slate-400 disabled:cursor-not-allowed disabled:bg-slate-100"
+                                                        />
+                                                    </div>
+                                                    <p className="text-xs text-slate-500">Enter the number without the country prefix or leading zero.</p>
+                                                    <FieldError message={errors.Phone?.message as string | undefined} label="Company phone" />
+                                                </div>
 
                                                 <CompactComboboxField
                                                     label="Location"
@@ -1499,4 +1571,3 @@ export default function RegisterForm() {
         </>
     )
 }
-

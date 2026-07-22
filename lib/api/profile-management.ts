@@ -277,6 +277,28 @@ export interface CustomerProfileResponse {
   message?: string
 }
 
+export type ProfileActivationPayload = {
+  type: "supplier" | "tenant" | "customer"
+  category_ids?: number[]
+  primary_category_id?: number
+  tenant_type?: number
+  remarks?: string
+  date_of_birth?: string
+  gender?: string
+  marital_status?: string
+  occupation?: string
+}
+
+export interface ProfileActivationResponse {
+  success: boolean
+  message: string
+  data?: {
+    type: ProfileActivationPayload["type"]
+    status: "active" | "pending_approval"
+    profileId: number
+  }
+}
+
 export async function getProfile(): Promise<ProfileResponse> {
   try {
     return await apiClient.get<ProfileResponse>("/api/v1/profile")
@@ -317,6 +339,22 @@ export async function getCurrentUser(): Promise<ProfileResponse> {
 
 export async function getAvailableProfiles(): Promise<AvailableProfilesResponse> {
   return apiClient.get<AvailableProfilesResponse>("/api/v1/profile/available")
+}
+
+export async function activateProfile(data: ProfileActivationPayload | FormData): Promise<ProfileActivationResponse> {
+  if (!(data instanceof FormData)) {
+    return apiClient.post<ProfileActivationResponse>("/api/v1/profile/activate", data)
+  }
+
+  const response = await fetch("/api/v1/profile/activate", { method: "POST", body: data })
+  const payload = await response.json().catch(() => null)
+  if (!response.ok) {
+    const fieldErrors = payload?.errors && typeof payload.errors === "object"
+      ? Object.values(payload.errors as Record<string, string[]>).flat().join(" ")
+      : ""
+    throw new Error(fieldErrors || payload?.message || "Profile activation failed.")
+  }
+  return payload as ProfileActivationResponse
 }
 
 export async function getSupplierProfile(): Promise<SupplierProfileResponse> {

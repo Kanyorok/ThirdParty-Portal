@@ -506,13 +506,11 @@ export default function TicketsPage() {
       )]
 
       const payload: Record<string, unknown> = {
-        ticket_title: check.cleanSubject,
-        ticket_description: check.cleanMessage,
-        ticket_priority: createSeverity,
-        ticket_source: "portal",
-        ticket_category: "general",
+        subject: check.cleanSubject,
+        message: check.cleanMessage,
+        priority: createSeverity,
       }
-      if (mentionIds.length > 0) payload.ticket_watchers = mentionIds
+      if (mentionIds.length > 0) payload.mentions = mentionIds
 
       const res = await fetch("/api/v1/portal/help/tickets", {
         method: "POST",
@@ -657,7 +655,6 @@ export default function TicketsPage() {
           >
             <NativeSelectOption value="all">All priorities</NativeSelectOption>
             <NativeSelectOption value="urgent">Urgent</NativeSelectOption>
-            <NativeSelectOption value="high">High</NativeSelectOption>
             <NativeSelectOption value="normal">Normal</NativeSelectOption>
             <NativeSelectOption value="low">Low</NativeSelectOption>
           </NativeSelect>
@@ -749,7 +746,6 @@ export default function TicketsPage() {
                   className="h-11 rounded-xl border-slate-200 bg-white px-3 text-sm lg:h-11"
                 >
                   <NativeSelectOption value="normal">Normal</NativeSelectOption>
-                  <NativeSelectOption value="high">High</NativeSelectOption>
                   <NativeSelectOption value="urgent">Urgent</NativeSelectOption>
                   <NativeSelectOption value="low">Low</NativeSelectOption>
                 </NativeSelect>
