@@ -3,9 +3,33 @@
 import { motion } from 'framer-motion'
 import { AlertCircle } from 'lucide-react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/common/button'
 
+const COPY: Record<string, { title: string; body: string }> = {
+    user_not_found: {
+        title: 'Account Not Found',
+        body: 'We could not find an account for this verification link. Please sign up again or contact support.',
+    },
+    unavailable: {
+        title: 'Verification Unavailable',
+        body: 'Email verification is temporarily unavailable. Please try again in a few minutes.',
+    },
+    missing_link: {
+        title: 'Invalid Link',
+        body: 'This verification link is incomplete. Please use the link from your email, or request a new one.',
+    },
+    invalid_link: {
+        title: 'Invalid Link',
+        body: 'This verification link is invalid or has been modified. Please request a new one.',
+    },
+}
+
 export default function VerifyEmailInvalid() {
+    const params = useSearchParams()
+    const reason = params?.get('reason') || 'invalid_link'
+    const copy = COPY[reason] || COPY.invalid_link
+
     return (
         <div className="min-h-screen flex items-center justify-center p-4">
             <motion.div
@@ -19,10 +43,8 @@ export default function VerifyEmailInvalid() {
                     </div>
                 </div>
 
-                <h2 className="text-2xl font-bold mb-2">Invalid Link</h2>
-                <p className="text-slate-600 mb-8">
-                    This verification link is invalid or has already been used.
-                </p>
+                <h2 className="text-2xl font-bold mb-2">{copy.title}</h2>
+                <p className="text-slate-600 mb-8">{copy.body}</p>
 
                 <Button asChild variant="outline" className="w-full">
                     <Link href="/signin">Back to Login</Link>
