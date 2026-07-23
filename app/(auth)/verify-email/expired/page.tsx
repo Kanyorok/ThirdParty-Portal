@@ -11,6 +11,7 @@ import { resendVerificationEmail } from '@/actions/auth-actions'
 export default function VerifyEmailExpired() {
     const params = useSearchParams()
     const email = params?.get('email')
+    const superseded = params?.get('reason') === 'superseded'
 
     const [loading, setLoading] = useState(false)
     const [sent, setSent] = useState(false)
@@ -46,9 +47,13 @@ export default function VerifyEmailExpired() {
                     </div>
                 </div>
 
-                <h2 className="text-2xl font-bold mb-2">Email Not Verified</h2>
+                <h2 className="text-2xl font-bold mb-2">
+                    {superseded ? 'Link Replaced' : 'Link Expired'}
+                </h2>
                 <p className="text-slate-600 mb-8">
-                    Your email address has not been verified yet.
+                    {superseded
+                        ? 'This verification link has been replaced by a more recent one. Please use the latest email we sent you, or request a new link below.'
+                        : 'This verification link has expired. Request a new one below.'}
                 </p>
 
                 {sent ? (
