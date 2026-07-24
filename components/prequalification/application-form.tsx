@@ -1043,11 +1043,23 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                                                                     <div className="space-y-2 text-xs">
                                                                                         {uploads.filter(u => u.categoryId === cid).map((u) => (
                                                                                             <div key={u.id} className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50/40 p-3">
-                                                                                                <div className="flex items-center justify-between">
+                                                                                                <div className="flex items-center justify-between gap-2">
                                                                                                     <span className="truncate font-medium">{u.file ? u.file.name : 'staged'}</span>
-                                                                                                    <span className={u.status === 'done' ? 'text-emerald-700' : u.status === 'error' ? 'text-rose-700' : u.status === 'uploading' ? 'text-blue-700' : 'text-slate-500'}>
-                                                                                                        {u.status}
-                                                                                                    </span>
+                                                                                                    <div className="flex shrink-0 items-center gap-2">
+                                                                                                        <span className={u.status === 'done' ? 'text-emerald-700' : u.status === 'error' ? 'text-rose-700' : u.status === 'uploading' ? 'text-blue-700' : 'text-slate-500'}>
+                                                                                                            {u.status}
+                                                                                                        </span>
+                                                                                                        {u.status !== 'uploading' && u.status !== 'done' ? (
+                                                                                                            <button
+                                                                                                                type="button"
+                                                                                                                onClick={() => setUploads((list) => list.filter((x) => x.id !== u.id))}
+                                                                                                                aria-label={`Remove ${u.file ? u.file.name : 'staged document'}`}
+                                                                                                                className="inline-flex items-center justify-center rounded-full p-0.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-700"
+                                                                                                            >
+                                                                                                                <X className="h-3.5 w-3.5" />
+                                                                                                            </button>
+                                                                                                        ) : null}
+                                                                                                    </div>
                                                                                                 </div>
                                                                                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
                                                                                                     <label className="text-[11px] text-slate-600">Document type</label>

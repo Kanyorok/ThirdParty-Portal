@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
-import { Building2, Home, Loader2, Plus, ShoppingCart } from "lucide-react"
+import { Building2, Home, Loader2, Plus, ShoppingCart, X } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/common/button"
@@ -231,6 +231,27 @@ export default function ProfileActivationCard({ hasSupplier, hasTenant, hasCusto
                             })
                           }}
                         />
+                        {documentFiles[requirement.id] ? (
+                          <p className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                            {documentFiles[requirement.id].name}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const inputEl = document.getElementById(`supplier-document-${requirement.id}`) as HTMLInputElement | null
+                                if (inputEl) inputEl.value = ""
+                                setDocumentFiles((current) => {
+                                  const next = { ...current }
+                                  delete next[requirement.id]
+                                  return next
+                                })
+                              }}
+                              aria-label={`Remove ${documentFiles[requirement.id].name}`}
+                              className="inline-flex items-center justify-center rounded-full p-0.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </p>
+                        ) : null}
                         <Input
                           value={documentNotes[requirement.id] ?? ""}
                           onChange={(event) => setDocumentNotes((current) => ({ ...current, [requirement.id]: event.target.value }))}

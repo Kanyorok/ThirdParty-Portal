@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useId, useMemo, useState, useTransition } from "react"
+import { useEffect, useId, useMemo, useRef, useState, useTransition } from "react"
 import { Button } from "@/components/common/button"
 import {
     Sheet,
@@ -21,7 +21,7 @@ import { Input } from "@/components/common/input"
 import { Label } from "@/components/common/label"
 import { Textarea } from "@/components/common/textarea"
 import { toast } from "sonner"
-import { Loader2, Plus, UploadCloud, Wrench } from "lucide-react"
+import { Loader2, Plus, UploadCloud, Wrench, X } from "lucide-react"
 import { MAINTENANCE_CATEGORIES, PRIORITY_LEVELS, CreateMaintenanceRequestPayload } from "@/types/maintenance"
 import { maintenanceService } from "@/lib/api/maintenance"
 import { useQuery } from "@tanstack/react-query"
@@ -36,6 +36,7 @@ export function MaintenanceRequestSheet({
     const [open, setOpen] = useState(false)
     const [isPending, startTransition] = useTransition()
     const attachmentInputId = useId()
+    const attachmentInputRef = useRef<HTMLInputElement>(null)
     const formId = useId()
 
     const { data: options, isLoading: isLoadingOptions, isError: optionsFailed } = useQuery({
@@ -220,15 +221,20 @@ export function MaintenanceRequestSheet({
                         <div className="space-y-2">
                             <Label className="text-[11px] font-medium text-slate-600">Attachments</Label>
                             <input
+                                ref={attachmentInputRef}
                                 id={attachmentInputId}
                                 type="file"
                                 accept="image/jpeg,image/png,image/webp"
                                 multiple
                                 className="sr-only"
-                                onChange={(event) => setFormData((previous) => ({
-                                    ...previous,
-                                    images: Array.from(event.target.files ?? []).slice(0, 5),
-                                }))}
+                                onChange={(event) => {
+                                    const selected = Array.from(event.target.files ?? [])
+                                    setFormData((previous) => ({
+                                        ...previous,
+                                        images: [...(previous.images ?? []), ...selected].slice(0, 5),
+                                    }))
+                                    if (attachmentInputRef.current) attachmentInputRef.current.value = ""
+                                }}
                             />
                             <label htmlFor={attachmentInputId} className="border border-dashed border-slate-200 rounded-lg p-6 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-all cursor-pointer group">
                                 <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center mb-2 group-hover:bg-slate-900 transition-colors">
@@ -240,6 +246,26 @@ export function MaintenanceRequestSheet({
                                         : "Click to upload up to 5 images"}
                                 </p>
                             </label>
+                            {formData.images?.length ? (
+                                <ul className="space-y-1.5">
+                                    {formData.images.map((file, index) => (
+                                        <li key={`${file.name}-${index}`} className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs">
+                                            <span className="truncate text-slate-700">{file.name}</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormData((previous) => ({
+                                                    ...previous,
+                                                    images: (previous.images ?? []).filter((_, i) => i !== index),
+                                                }))}
+                                                aria-label={`Remove ${file.name}`}
+                                                className="inline-flex shrink-0 items-center justify-center rounded-full p-0.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-700"
+                                            >
+                                                <X className="h-3.5 w-3.5" />
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : null}
                         </div>
                     </div>
                 </form>

@@ -1,7 +1,7 @@
 "use client"
 
 import { type ChangeEvent, useEffect, useRef, useState, useTransition } from "react"
-import { ImageUp, Save } from "lucide-react"
+import { ImageUp, Save, X } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/common/button"
@@ -70,6 +70,12 @@ export default function LogoDialog({ open, onOpenChange, logoUrl, onLogoUrlChang
 
     setSelectedLogo(file)
     setLogoPreviewUrl(URL.createObjectURL(file))
+  }
+
+  const clearSelectedLogo = () => {
+    if (logoInputRef.current) logoInputRef.current.value = ""
+    setSelectedLogo(null)
+    setLogoPreviewUrl(logoUrl)
   }
 
   const uploadLogo = async () => {
@@ -141,6 +147,18 @@ export default function LogoDialog({ open, onOpenChange, logoUrl, onLogoUrlChang
                 {selectedLogo ? "Change selected" : "Choose file"}
               </label>
             </Button>
+            {selectedLogo ? (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isPending}
+                onClick={clearSelectedLogo}
+                className="h-11 text-xs font-medium text-muted-foreground hover:text-destructive"
+              >
+                <X className="mr-2 h-4 w-4" />
+                Remove
+              </Button>
+            ) : null}
           </div>
         </div>
 

@@ -97,6 +97,12 @@ export function ProfileImageUploadModal({
         }
     };
 
+    const handleRemoveSelectedFile = () => {
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        setSelectedFile(null);
+        setPreviewUrl(profile.image || null);
+    };
+
     const handleUpload = async () => {
         if (!selectedFile) {
             toast.error("Please select an image to upload.");
@@ -172,7 +178,17 @@ export function ProfileImageUploadModal({
                     </label>
 
                     {selectedFile && (
-                        <p className="text-sm text-muted-foreground">{selectedFile.name}</p>
+                        <p className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+                            {selectedFile.name}
+                            <button
+                                type="button"
+                                onClick={handleRemoveSelectedFile}
+                                aria-label={`Remove ${selectedFile.name}`}
+                                className="inline-flex items-center justify-center rounded-full p-0.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                            >
+                                <X className="h-3.5 w-3.5" />
+                            </button>
+                        </p>
                     )}
 
                     {!selectedFile && profile.image && (

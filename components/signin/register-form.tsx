@@ -418,6 +418,7 @@ function FileFieldBlock({
     error,
     accept,
     onChange,
+    onRemove,
     selectedFileName,
     touched,
     className,
@@ -427,17 +428,33 @@ function FileFieldBlock({
     error?: string | null
     accept?: string
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
+    onRemove?: () => void
     selectedFileName?: string | null
     touched?: boolean
     className?: string
 }) {
+    const inputRef = React.useRef<HTMLInputElement>(null)
+
     return (
         <FieldShell label={label} errorLabel={typeof label === "string" ? label : undefined} touched={touched} required={required} error={error} className={className}>
-            <Input type="file" accept={accept} onChange={onChange} className={cn(fileInputStyle, error && inputErrorClass)} />
+            <Input ref={inputRef} type="file" accept={accept} onChange={onChange} className={cn(fileInputStyle, error && inputErrorClass)} />
             {selectedFileName ? (
                 <p className="inline-flex items-center gap-1.5 text-sm font-medium leading-6 text-slate-500">
                     <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                     {selectedFileName}
+                    {onRemove ? (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                if (inputRef.current) inputRef.current.value = ""
+                                onRemove()
+                            }}
+                            aria-label={`Remove ${selectedFileName}`}
+                            className="ml-1 inline-flex items-center justify-center rounded-full p-0.5 text-slate-400 transition-colors hover:bg-destructive/10 hover:text-destructive"
+                        >
+                            <X className="h-3.5 w-3.5" />
+                        </button>
+                    ) : null}
                 </p>
             ) : null}
         </FieldShell>
@@ -1244,6 +1261,7 @@ export default function RegisterForm() {
                                                     label="Company Logo"
                                                     accept="image/*"
                                                     onChange={(event) => setLogoFile(event.target.files?.[0] ?? null)}
+                                                    onRemove={() => setLogoFile(null)}
                                                     selectedFileName={logoFile?.name}
                                                     error={logoError}
                                                     className="md:col-span-2"
@@ -1404,15 +1422,27 @@ export default function RegisterForm() {
                                                                                         </div>
                                                                                     </div>
 
-                                                                                    <label className="inline-flex h-10 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 transition-colors hover:border-slate-400 hover:bg-slate-100">
-                                                                                        <input
-                                                                                            type="file"
-                                                                                            accept={accept}
-                                                                                            onChange={(event) => setRegistrationDocumentFile(requirement.id, event.target.files?.[0] ?? null)}
-                                                                                            className="sr-only"
-                                                                                        />
-                                                                                        {selectedFile ? "Replace file" : "Choose file"}
-                                                                                    </label>
+                                                                                    <div className="flex shrink-0 items-center gap-2">
+                                                                                        <label className="inline-flex h-10 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 transition-colors hover:border-slate-400 hover:bg-slate-100">
+                                                                                            <input
+                                                                                                type="file"
+                                                                                                accept={accept}
+                                                                                                onChange={(event) => setRegistrationDocumentFile(requirement.id, event.target.files?.[0] ?? null)}
+                                                                                                className="sr-only"
+                                                                                            />
+                                                                                            {selectedFile ? "Replace file" : "Choose file"}
+                                                                                        </label>
+                                                                                        {selectedFile ? (
+                                                                                            <button
+                                                                                                type="button"
+                                                                                                onClick={() => setRegistrationDocumentFile(requirement.id, null)}
+                                                                                                aria-label={`Remove ${selectedFile.name}`}
+                                                                                                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-500 transition-colors hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+                                                                                            >
+                                                                                                <X className="h-4 w-4" />
+                                                                                            </button>
+                                                                                        ) : null}
+                                                                                    </div>
                                                                                 </div>
 
                                                                                 <div className="grid gap-2">

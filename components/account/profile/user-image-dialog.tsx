@@ -2,7 +2,7 @@
 
 import { type ChangeEvent, useEffect, useRef, useState, useTransition } from "react"
 import { useSession } from "next-auth/react"
-import { ImageUp, Save } from "lucide-react"
+import { ImageUp, Save, X } from "lucide-react"
 import { toast } from "sonner"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/common/avatar"
@@ -92,6 +92,12 @@ export default function UserImageDialog({
 
     setSelectedImage(file)
     setImagePreviewUrl(URL.createObjectURL(file))
+  }
+
+  const clearSelectedImage = () => {
+    if (imageInputRef.current) imageInputRef.current.value = ""
+    setSelectedImage(null)
+    setImagePreviewUrl(imageUrl)
   }
 
   const uploadImage = async () => {
@@ -185,6 +191,18 @@ export default function UserImageDialog({
                 {selectedImage ? "Change selected" : "Choose file"}
               </label>
             </Button>
+            {selectedImage ? (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isPending}
+                onClick={clearSelectedImage}
+                className="h-11 text-xs font-medium text-muted-foreground hover:text-destructive"
+              >
+                <X className="mr-2 h-4 w-4" />
+                Remove
+              </Button>
+            ) : null}
           </div>
         </div>
 
