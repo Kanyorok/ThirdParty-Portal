@@ -2,6 +2,7 @@
 
 import { ReactNode } from "react"
 import { AlertTriangle, CheckCircle2, Clock, Eye, FileCheck, Plus, XCircle } from "lucide-react"
+import { normalizeCategoryStatus } from "@/lib/rounds"
 
 export type CategoryStatusConfig = {
     label: string
@@ -11,7 +12,7 @@ export type CategoryStatusConfig = {
 }
 
 export function getCategoryStatusConfig(status?: string): CategoryStatusConfig {
-    const normalized = status?.toUpperCase() ?? ""
+    const normalized = normalizeCategoryStatus(status)
 
     switch (normalized) {
         case "NOT_APPLIED":
@@ -44,14 +45,14 @@ export function getCategoryStatusConfig(status?: string): CategoryStatusConfig {
             }
         case "APPROVED":
             return {
-                label: "Approved",
+                label: "Prequalified",
                 icon: <CheckCircle2 className="w-3 h-3" />,
                 variant: "default",
                 color: "bg-emerald-50 text-emerald-700 border-emerald-200"
             }
         case "REJECTED":
             return {
-                label: "Rejected",
+                label: "Not prequalified",
                 icon: <XCircle className="w-3 h-3" />,
                 variant: "destructive",
                 color: "bg-rose-50 text-rose-700 border-rose-200"

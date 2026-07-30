@@ -98,6 +98,13 @@ export type RoundCategory = {
     decision_date?: string;
     rejection_reason?: string;
 
+    can_apply?: boolean;
+    eligibility_status?: "ELIGIBLE" | "ALREADY_APPLIED" | "PENDING_APPLICATION" | "ACTIVE_PREQUALIFICATION" | string;
+    eligibility_message?: string | null;
+    blocking_round_id?: number | string | null;
+    blocking_round_title?: string | null;
+    valid_until?: string | null;
+
     document_types?: CategoryDocumentRequirement[];
     required_document_types?: CategoryDocumentRequirement[];
 }

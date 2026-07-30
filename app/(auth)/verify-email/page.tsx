@@ -65,9 +65,14 @@ export default function VerifyEmail() {
                     return
                 }
 
-                router.replace('/verify-email/invalid')
+                if ([400, 401, 403, 404, 422].includes(res.status)) {
+                    router.replace('/verify-email/invalid')
+                    return
+                }
+
+                router.replace('/verify-email/invalid?reason=service')
             } catch {
-                router.replace('/verify-email/invalid')
+                router.replace('/verify-email/invalid?reason=service')
             }
         }
 

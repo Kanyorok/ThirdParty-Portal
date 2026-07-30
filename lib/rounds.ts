@@ -10,7 +10,7 @@ const extractInstructionSegment = (text?: string | null) => {
     return undefined
 }
 
-const normalizeCategoryStatus = (status?: string | null) => {
+export const normalizeCategoryStatus = (status?: string | null) => {
     if (!status) return "NOT_APPLIED"
     const value = String(status).trim().toUpperCase()
     switch (value) {
@@ -24,14 +24,21 @@ const normalizeCategoryStatus = (status?: string | null) => {
         case "S":
         case "SUBMITTED":
             return "SUBMITTED"
+        case "U":
         case "UR":
+        case "V":
+        case "REVIEWED":
         case "UNDER_REVIEW":
             return "UNDER_REVIEW"
-        case "V":
+        case "P":
+        case "PREQUALIFIED":
         case "APPROVED":
         case "A":
         case "VERIFIED":
             return "APPROVED"
+        case "F":
+        case "FAILED":
+        case "NOT_PREQUALIFIED":
         case "REJECTED":
         case "R":
             return "REJECTED"
@@ -88,6 +95,12 @@ const normalizeCategory = (category: any): RoundCategory => {
         updated_on: category.updated_on ?? category.updatedOn,
         rejection_reason: category.rejection_reason ?? category.rejectionReason,
         decision_date: category.decision_date ?? category.decisionDate,
+        can_apply: category.can_apply ?? category.canApply ?? !(category.has_applied ?? category.hasApplied),
+        eligibility_status: category.eligibility_status ?? category.eligibilityStatus ?? "ELIGIBLE",
+        eligibility_message: category.eligibility_message ?? category.eligibilityMessage ?? null,
+        blocking_round_id: category.blocking_round_id ?? category.blockingRoundId ?? null,
+        blocking_round_title: category.blocking_round_title ?? category.blockingRoundTitle ?? null,
+        valid_until: category.valid_until ?? category.validUntil ?? null,
         document_types: documentTypes,
         required_document_types: documentTypes.filter((documentType) => documentType.required),
     }
@@ -115,7 +128,7 @@ const buildCategories = (round: any): RoundCategory[] => {
 export const mapApiRound = (round: any): Round => {
     const categories = buildCategories(round)
     const appliedCategories = categories.filter((c) => c.has_applied)
-    const availableCategories = categories.filter((c) => !c.has_applied)
+    const availableCategories = categories.filter((c) => !c.has_applied && c.can_apply !== false)
     const applied = appliedCategories.length
     const approved = categories.filter((c) => c.status === "APPROVED").length
     const pending = categories.filter((c) => ["SUBMITTED", "UNDER_REVIEW"].includes(c.status)).length

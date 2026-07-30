@@ -36,7 +36,7 @@ import { format } from "date-fns"
 import { CategoryDocumentRequirement, Round, CategoryProgress } from "@/types/types"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
-import { mapApiRound } from "@/lib/rounds"
+import { mapApiRound, normalizeCategoryStatus } from "@/lib/rounds"
 
 
 const STATUS_THEME: Record<
@@ -64,28 +64,20 @@ const STATUS_THEME: Record<
         icon: <Info className="h-3 w-3" />
     },
     APPROVED: {
-        label: "Approved",
+        label: "Prequalified",
         color: "bg-emerald-50 text-emerald-700 border-emerald-200",
         icon: <CheckCircle2 className="h-3 w-3" />
     },
     REJECTED: {
-        label: "Rejected",
+        label: "Not prequalified",
         color: "bg-rose-50 text-rose-700 border-rose-200",
         icon: <AlertTriangle className="h-3 w-3" />
     }
 }
 
 const buildCategoryStatus = (status: string | undefined) => {
-    const normalized = (status ?? "NOT_APPLIED").toUpperCase()
-    const expanded =
-        normalized === "S"
-            ? "SUBMITTED"
-            : normalized === "V"
-                ? "APPROVED"
-                : normalized === "P"
-                    ? "UNDER_REVIEW"
-                    : normalized
-    return STATUS_THEME[expanded] ?? STATUS_THEME.NOT_APPLIED
+    const normalized = normalizeCategoryStatus(status)
+    return STATUS_THEME[normalized] ?? STATUS_THEME.NOT_APPLIED
 }
 
 const safeFormatDate = (value?: string, fmt = "dd MMM yyyy") => {
@@ -107,9 +99,9 @@ function computeSummary(categories: CategoryProgress[]): AppSummary {
     const base = categories.reduce<AppSummary>(
         (acc, c) => {
             acc.total += 1
-            const st = buildCategoryStatus(c.status).label
-            if (st === "Approved") acc.approved += 1
-            else if (st === "Rejected") acc.rejected += 1
+            const st = normalizeCategoryStatus(c.status)
+            if (st === "APPROVED") acc.approved += 1
+            else if (st === "REJECTED") acc.rejected += 1
             else acc.pending += 1
             acc.progress += Number.isFinite(c.progress_percent) ? c.progress_percent : 0
             return acc
@@ -254,11 +246,11 @@ export default function CategoryApplications({ round: roundProp, className, vari
         [round.appliedCategories, categories]
     )
     const unappliedCategories = useMemo(
-        () => categories.filter((c) => !c.has_applied),
+        () => categories.filter((c) => !c.has_applied && c.can_apply !== false),
         [categories]
     )
     const totalCategories = round.categoryCount ?? categories.length
-    const availableCategories = Math.max(totalCategories - appliedCategories.length, 0)
+    const availableCategories = unappliedCategories.length
     const hasApplied = appliedCategories.length > 0
     const summary = useMemo(() => computeSummary(categories), [categories])
 
@@ -351,7 +343,12 @@ export default function CategoryApplications({ round: roundProp, className, vari
                 }),
             })
             if (res.status === 409) {
-                toast.info("Already applied to one or more selected categories")
+                const body = await res.json().catch(() => null)
+                const msg = Array.isArray(body?.details) && body.details.length > 0
+                    ? body.details.join(" ")
+                    : body?.message ?? "One or more selected categories are not currently available."
+                setApplyError(msg)
+                toast.info(msg)
             } else if (res.status === 403) {
                 setApplyError("You are not eligible to apply to this round.")
                 toast.error("Not eligible for this round")
@@ -762,7 +759,8 @@ export default function CategoryApplications({ round: roundProp, className, vari
                                     {categories.map((category) => {
                                         const catId = String(category.category_id)
                                         const status = buildCategoryStatus(category.status)
-                                        const isUnapplied = !category.has_applied
+                                        const isUnapplied = !category.has_applied && category.can_apply !== false
+                                        const isBlocked = !category.has_applied && category.can_apply === false
                                         const isSelected = selectedIds.has(catId)
                                         const categoryDocuments = categoryDocumentsFor(category)
                                         const mandatoryDocuments = mandatoryDocumentsFor(category)
@@ -818,8 +816,19 @@ export default function CategoryApplications({ round: roundProp, className, vari
                                                                 Applied
                                                             </Badge>
                                                         )}
+                                                        {isBlocked && (
+                                                            <Badge className="border border-amber-200 bg-amber-50 text-[10px] font-semibold uppercase text-amber-700">
+                                                                {category.eligibility_status === "PENDING_APPLICATION" ? "Application pending" : "Already prequalified"}
+                                                            </Badge>
+                                                        )}
                                                     </div>
                                                 </div>
+                                                {isBlocked && category.eligibility_message && (
+                                                    <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                                                        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                                                        <span>{category.eligibility_message}</span>
+                                                    </div>
+                                                )}
                                                 <div className="mt-3 flex flex-wrap gap-4 text-[11px] text-slate-500">
                                                     {category.application_date && (
                                                         <div className="flex items-center gap-1">
