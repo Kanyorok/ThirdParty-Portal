@@ -3,9 +3,13 @@
 import { motion } from 'framer-motion'
 import { CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/common/button'
 
 export default function VerifyEmailSuccess() {
+    const params = useSearchParams()
+    const already = params?.get('already') === '1'
+
     return (
         <div className="min-h-screen flex items-center justify-center p-4">
             <motion.div
@@ -19,9 +23,13 @@ export default function VerifyEmailSuccess() {
                     </div>
                 </div>
 
-                <h2 className="text-2xl font-bold mb-2">Email Verified</h2>
+                <h2 className="text-2xl font-bold mb-2">
+                    {already ? 'Already Verified' : 'Email Verified'}
+                </h2>
                 <p className="text-slate-600 mb-8">
-                    Your account has been verified successfully. You can now sign in.
+                    {already
+                        ? 'Your email has already been verified. You can sign in.'
+                        : 'Your account has been verified successfully. You can now sign in.'}
                 </p>
 
                 <Button asChild className="w-full">

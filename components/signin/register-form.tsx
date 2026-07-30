@@ -48,11 +48,7 @@ import {
 } from "../common/select"
 import { toast } from "sonner"
 import { cn } from "../../lib/utils"
-import {
-    buildInternationalPhoneNumber,
-    extractNationalPhoneNumber,
-    normalizeCountryDialCode,
-} from "../../lib/register-shared"
+import { buildInternationalPhoneNumber, extractNationalPhoneNumber, normalizeCountryDialCode } from "../../lib/register-shared"
 import { SYSTEM_ERROR_MESSAGE, type RegisterFormInputs, type RegisterRole, type RegisterThirdPartyResult, useRegisterForm } from "../../hooks/use-register"
 
 const ROLE_OPTIONS: Array<{ id: RegisterRole; label: string }> = [
