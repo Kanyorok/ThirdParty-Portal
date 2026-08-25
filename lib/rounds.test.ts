@@ -21,6 +21,25 @@ describe("normalizeCategoryStatus", () => {
 })
 
 describe("mapApiRound eligibility", () => {
+    it("normalizes failed categories and keeps the evaluator reason", () => {
+        const round = mapApiRound({
+            id: 21,
+            title: "Evaluation round",
+            categories: [{
+                id: 8,
+                name: "Audit services",
+                hasApplied: true,
+                status: "F",
+                resultRemarks: "The mandatory licence had expired.",
+            }],
+        })
+
+        expect(round.appliedCategories?.[0]).toMatchObject({
+            status: "REJECTED",
+            rejection_reason: "The mandatory licence had expired.",
+        })
+    })
+
     it("preserves a pending cross-round application as a non-applicable category", () => {
         const round = mapApiRound({
             id: 20,

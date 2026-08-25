@@ -29,6 +29,27 @@ import { cn } from "@/lib/utils";
 import { resolveBidStatus } from "@/lib/bids/status";
 import { parseJsonResponse } from "@/lib/parse-json-response";
 import { Spinner } from "@/components/common/spinner";
+import {
+  TenderBidLineState,
+  TenderTaxTreatment,
+  TENDER_DEFAULT_VAT_RATE,
+  RawTenderLineItem,
+  RawBidLineItem,
+  appendTenderBidItemsToFormData,
+  calculateTenderLineTax,
+  isTenderLineQuoted,
+  parseBidLineItem,
+  parseTenderLineItem,
+  sumTenderLineTotals,
+} from "@/lib/tender-bid";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/common/table";
 
 // Simple module scoped counter for fallback IDs (avoids window any casts)
 let docCounter = 0;
@@ -42,6 +63,23 @@ interface Tender {
     code: string;
     symbol: string;
   };
+  items?: RawTenderLineItem[];
+}
+
+function buildLineItemsFromTender(tender: Tender): TenderBidLineState[] {
+  return (tender.items ?? []).map((raw) => {
+    const item = parseTenderLineItem(raw);
+    return {
+      tenderItemId: item.id,
+      itemName: item.manualItemDescription || item.itemName || `Item #${item.id}`,
+      uom: item.uom,
+      quantity: item.qtyToTender,
+      unitPrice: "",
+      taxTreatment: "vat_exclusive" as TenderTaxTreatment,
+      discountPercentage: "0",
+      withholdingTaxRate: "",
+    };
+  });
 }
 
 interface DocumentUpload {
@@ -58,6 +96,10 @@ interface TenderBidFormProps {
   onResolveSubmissionBlock?: () => void;
 }
 
+// Raw shape is untyped: the ERP camelCases every response key, so this array's actual
+// field names are read defensively via parseBidLineItem() rather than assumed here.
+type BidSubmissionLineItem = RawBidLineItem;
+
 interface BidSubmission {
   id?: number;
   bid_id?: number;
@@ -73,6 +115,7 @@ interface BidSubmission {
   received_at?: string;
   documents_count?: number;
   submission_reference?: string;
+  items?: BidSubmissionLineItem[];
 }
 
 
@@ -91,12 +134,12 @@ export default function TenderBidForm({
   onResolveSubmissionBlock,
 }: TenderBidFormProps) {
   const [bidData, setBidData] = useState({
-    bidAmount: "",
     currency: tender.currency?.code || "KES",
     validityPeriod: "90",
     deliveryPeriod: "30",
     paymentTerms: "",
   });
+  const [lineItems, setLineItems] = useState<TenderBidLineState[]>(() => buildLineItemsFromTender(tender));
 
   const [documents, setDocuments] = useState<DocumentUpload[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -135,15 +178,39 @@ export default function TenderBidForm({
 
   const hydrateBidData = (bid: BidSubmission) => {
     setBidData({
-      bidAmount: bid.bid_amount?.toString() || "",
       currency: bid.currency || tender.currency?.code || "KES",
       validityPeriod: bid.validity_period?.toString() || "90",
       deliveryPeriod: bid.delivery_period?.toString() || "30",
       paymentTerms: bid.payment_terms || "",
     });
+
+    const existingByTenderItemId = new Map(
+      (bid.items ?? []).map((raw) => {
+        const parsed = parseBidLineItem(raw);
+        return [parsed.tenderItemId, parsed];
+      })
+    );
+    setLineItems(
+      buildLineItemsFromTender(tender).map((line) => {
+        const existing = existingByTenderItemId.get(line.tenderItemId);
+        if (!existing) return line;
+
+        return {
+          ...line,
+          unitPrice: existing.quotedPrice != null ? String(existing.quotedPrice) : "",
+          taxTreatment: existing.taxType === "Exempt"
+            ? "no_vat"
+            : existing.isTaxInclusive
+              ? "vat_inclusive"
+              : "vat_exclusive",
+          discountPercentage: existing.discountPercentage != null ? String(existing.discountPercentage) : "0",
+          withholdingTaxRate: existing.withholdingTaxRate != null ? String(existing.withholdingTaxRate) : "",
+        };
+      })
+    );
   };
 
-  const fetchBidContext = async (showToast = true) => {
+  const fetchBidContext = async () => {
     if (!tender.id) return;
     setIsLoadingExisting(true);
     setIsLoadingHistory(true);
@@ -173,7 +240,6 @@ export default function TenderBidForm({
       }
 
       const existingStatus = normalizeBidStatus(existing);
-      const existingDate = getBidTimestamp(existing) || null;
 
       hydrateBidData(existing);
       setExistingBidId(existing.id || existing.bid_id || null);
@@ -187,21 +253,6 @@ export default function TenderBidForm({
           }
           : null
       );
-
-      if (!showToast) return;
-      if (existingStatus === "draft") {
-        const formattedDate = existingDate ? new Date(existingDate).toLocaleDateString() : null;
-        toast.info(`Draft bid loaded${formattedDate ? ` from ${formattedDate}` : ""}. You can edit and resubmit.`);
-      } else {
-        toast.success(
-          buildExistingBidMessage({
-            id: existing.id || existing.bid_id || null,
-            submittedAt: existingDate,
-            status: String(existing.status || existing.bid_status || "").trim() || null,
-            fallback: "Final bid already submitted",
-          })
-        );
-      }
     } catch {
       // Silent fail for existing bid check
       setBidHistory([]);
@@ -376,8 +427,14 @@ export default function TenderBidForm({
       return false;
     }
 
-    if (!bidData.bidAmount || bidData.bidAmount.trim() === '' || parseFloat(bidData.bidAmount) <= 0) {
-      toast.error("Please enter a valid bid amount");
+    if (lineItems.length === 0) {
+      toast.error("This tender has no line items to bid on.");
+      return false;
+    }
+
+    const unquotedItems = lineItems.filter((line) => !isTenderLineQuoted(line));
+    if (unquotedItems.length > 0) {
+      toast.error(`Please enter a unit price for every tendered item (${unquotedItems.length} remaining).`);
       return false;
     }
 
@@ -424,11 +481,6 @@ export default function TenderBidForm({
       return;
     }
 
-    if (!bidData.bidAmount || bidData.bidAmount.trim() === '' || parseFloat(bidData.bidAmount) <= 0) {
-      toast.error("Please enter a valid bid amount");
-      return;
-    }
-
     // For draft: allow submission with basic data, but warn about missing documents
     if (type === 'draft') {
       if (documents.length === 0) {
@@ -454,12 +506,12 @@ export default function TenderBidForm({
 
       formData.append('tenderId', String(tender.id));
       formData.append('tenderNo', String(tender.tenderNo || ""));
-      formData.append('bidAmount', String(bidData.bidAmount));
       formData.append('currency', String(bidData.currency));
       formData.append('validityPeriod', String(bidData.validityPeriod));
       formData.append('deliveryPeriod', String(bidData.deliveryPeriod));
       formData.append('paymentTerms', String(bidData.paymentTerms));
       formData.append('status', type === 'draft' ? 'draft' : 'submitted');
+      appendTenderBidItemsToFormData(formData, lineItems);
 
       // Add documents
       documents.forEach((doc) => {
@@ -493,7 +545,7 @@ export default function TenderBidForm({
             submittedAt: existingSubmittedAt,
             status: existingStatus,
           });
-          await fetchBidContext(false);
+          await fetchBidContext();
           throw new Error(
             buildExistingBidMessage({
               id: existingBidId,
@@ -515,6 +567,7 @@ export default function TenderBidForm({
             validity_period: "Validity Period",
             delivery_period: "Delivery Period",
             status: "Status",
+            items: "Tendered Items",
           };
 
           Object.entries(payload.errors as Record<string, string[] | string>).forEach(([field, value]) => {
@@ -586,12 +639,12 @@ export default function TenderBidForm({
       // Reset form if final submission
       if (type === 'final' && !fallbackToDraft) {
         setBidData({
-          bidAmount: "",
           currency: tender.currency?.code || "KES",
           validityPeriod: "90",
           deliveryPeriod: "30",
           paymentTerms: "",
         });
+        setLineItems(buildLineItemsFromTender(tender));
         setDocuments([]);
         setExistingBidId(payload.data?.bid_id || payload.data?.Id || null);
         setIsEditingDraft(false); // Final submission, no longer editing draft
@@ -609,7 +662,7 @@ export default function TenderBidForm({
         setIsEditingDraft(true); // Still in draft mode
       }
 
-      await fetchBidContext(false);
+      await fetchBidContext();
 
     } catch (err) {
       toast.dismiss(submitToastId);
@@ -627,22 +680,33 @@ export default function TenderBidForm({
 
   const cardTone = "gap-0 rounded-xl border border-slate-200/80 bg-white py-0 shadow-none";
   const finalBidLocked = !isLoadingExisting && existingBidId !== null && !isEditingDraft;
-  const bidAmountNumber = Number(bidData.bidAmount);
   const validityNumber = Number(bidData.validityPeriod);
   const deliveryNumber = Number(bidData.deliveryPeriod);
-  const hasBidAmount = Number.isFinite(bidAmountNumber) && bidAmountNumber > 0;
+  const quotedLineCount = lineItems.filter(isTenderLineQuoted).length;
+  const hasAllItemsQuoted = lineItems.length > 0 && quotedLineCount === lineItems.length;
   const hasCurrency = Boolean(bidData.currency?.trim());
   const hasValidity = Number.isFinite(validityNumber) && validityNumber > 0;
   const hasDelivery = Number.isFinite(deliveryNumber) && deliveryNumber > 0;
   const hasDocuments = documents.length > 0;
-  const readinessScore = [hasBidAmount, hasCurrency, hasValidity, hasDelivery].filter(Boolean).length;
+  const readinessScore = [hasAllItemsQuoted, hasCurrency, hasValidity, hasDelivery].filter(Boolean).length;
   const readinessPercent = Math.round((readinessScore / 4) * 100);
+  const lineTotals = sumTenderLineTotals(
+    lineItems.map((line) =>
+      calculateTenderLineTax(
+        Number(line.unitPrice) || 0,
+        line.quantity,
+        line.taxTreatment,
+        Number(line.withholdingTaxRate) || 0,
+        Number(line.discountPercentage) || 0
+      )
+    )
+  );
   const finalDisabledReason = finalBidLocked
     ? "Final bid already submitted. This tender is locked for further submission."
     : !canSubmitBid
       ? (submissionBlockedReason || "You cannot submit a bid right now.")
-      : !hasBidAmount
-        ? "Enter a valid bid amount to continue."
+      : !hasAllItemsQuoted
+        ? `Quote a unit price for every tendered item (${quotedLineCount}/${lineItems.length} done).`
         : !hasCurrency
           ? "Select a currency to continue."
           : !hasValidity
@@ -692,7 +756,7 @@ export default function TenderBidForm({
         </Alert>
       )}
 
-      {!canSubmitBid && (
+      {!canSubmitBid && !finalBidLocked && (
         <Alert className="border-amber-200 bg-amber-50 py-2 text-amber-800">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription className="flex flex-wrap items-center justify-between gap-2 text-xs">
@@ -727,7 +791,7 @@ export default function TenderBidForm({
         <CardContent className="space-y-2 px-4 py-3">
           <div className="grid gap-2 sm:grid-cols-2">
             {[
-              { done: hasBidAmount, label: "Bid amount entered" },
+              { done: hasAllItemsQuoted, label: `All items quoted (${quotedLineCount}/${lineItems.length})` },
               { done: hasCurrency, label: "Currency selected" },
               { done: hasValidity, label: "Validity period set" },
               { done: hasDelivery, label: "Delivery period set" },
@@ -770,7 +834,7 @@ export default function TenderBidForm({
               type="button"
               variant="ghost"
               size="sm"
-              onClick={() => fetchBidContext(false)}
+              onClick={() => fetchBidContext()}
               disabled={isSubmitting || isLoadingHistory}
               className="h-7 px-2 text-slate-500 hover:bg-slate-100"
             >
@@ -821,6 +885,128 @@ export default function TenderBidForm({
 
       <Card className={cardTone}>
         <CardHeader className="border-b border-slate-100 px-4 py-3">
+          <CardTitle className="flex items-center justify-between gap-2 text-sm font-semibold text-slate-800">
+            <span className="flex items-center gap-2">
+              <DollarSign className="h-4 w-4 text-indigo-600" />
+              Tendered items
+            </span>
+            <Badge className="rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-700">
+              {quotedLineCount}/{lineItems.length} quoted
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 px-4 py-3">
+          {lineItems.length === 0 ? (
+            <p className="text-xs text-slate-500">This tender has no line items to bid on.</p>
+          ) : (
+            <div className="overflow-x-auto rounded-lg border border-slate-200">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-50">
+                    <TableHead className="text-xs">Item</TableHead>
+                    <TableHead className="text-xs">Qty</TableHead>
+                    <TableHead className="text-xs">Unit price</TableHead>
+                    <TableHead className="text-xs">Tax</TableHead>
+                    <TableHead className="text-xs">Discount %</TableHead>
+                    <TableHead className="text-xs">Net</TableHead>
+                    <TableHead className="text-xs">Gross</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {lineItems.map((line, index) => {
+                    const totals = calculateTenderLineTax(
+                      Number(line.unitPrice) || 0,
+                      line.quantity,
+                      line.taxTreatment,
+                      Number(line.withholdingTaxRate) || 0,
+                      Number(line.discountPercentage) || 0
+                    );
+                    const updateLine = (patch: Partial<TenderBidLineState>) => {
+                      setLineItems((prev) => prev.map((l, i) => (i === index ? { ...l, ...patch } : l)));
+                    };
+
+                    return (
+                      <TableRow key={line.tenderItemId}>
+                        <TableCell className="text-xs font-medium text-slate-800">{line.itemName}</TableCell>
+                        <TableCell className="text-xs text-slate-600">
+                          {line.quantity}{line.uom ? ` ${line.uom}` : ""}
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="0.00"
+                            value={line.unitPrice}
+                            onChange={(e) => updateLine({ unitPrice: e.target.value })}
+                            className="h-8 w-28 bg-white text-xs"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={line.taxTreatment}
+                            onValueChange={(value) => updateLine({ taxTreatment: value as TenderTaxTreatment })}
+                          >
+                            <SelectTrigger className="h-8 w-32 bg-white text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="vat_exclusive">VAT excl. ({TENDER_DEFAULT_VAT_RATE}%)</SelectItem>
+                              <SelectItem value="vat_inclusive">VAT incl. ({TENDER_DEFAULT_VAT_RATE}%)</SelectItem>
+                              <SelectItem value="no_vat">Exempt</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            max="100"
+                            value={line.discountPercentage}
+                            onChange={(e) => updateLine({ discountPercentage: e.target.value })}
+                            className="h-8 w-20 bg-white text-xs"
+                          />
+                        </TableCell>
+                        <TableCell className="text-xs font-semibold text-slate-800">
+                          {totals.netAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </TableCell>
+                        <TableCell className="text-xs font-semibold text-slate-800">
+                          {totals.grossAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+
+          {lineItems.length > 0 && (
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <div className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2">
+                <div className="text-[10px] uppercase text-slate-500">Net total</div>
+                <div className="text-sm font-semibold text-slate-800">{lineTotals.netAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+              </div>
+              <div className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2">
+                <div className="text-[10px] uppercase text-slate-500">Tax</div>
+                <div className="text-sm font-semibold text-slate-800">{lineTotals.taxAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+              </div>
+              <div className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2">
+                <div className="text-[10px] uppercase text-slate-500">Gross total</div>
+                <div className="text-sm font-semibold text-slate-800">{lineTotals.grossAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+              </div>
+              <div className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2">
+                <div className="text-[10px] uppercase text-slate-500">Withholding tax</div>
+                <div className="text-sm font-semibold text-slate-800">{lineTotals.withholdingTaxAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className={cardTone}>
+        <CardHeader className="border-b border-slate-100 px-4 py-3">
           <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-800">
             <DollarSign className="h-4 w-4 text-indigo-600" />
             Bid details
@@ -829,34 +1015,22 @@ export default function TenderBidForm({
         <CardContent className="space-y-3 px-4 py-3">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Bid amount</label>
-              <div className="flex gap-2">
-                <Select
-                  value={bidData.currency}
-                  onValueChange={(value) => setBidData(prev => ({ ...prev, currency: value }))}
-                >
-                  <SelectTrigger className="h-9 w-[96px] bg-white text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {currencies.map(currency => (
-                      <SelectItem key={currency.code} value={currency.code}>
-                        {currency.code}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Input
-                  type="number"
-                  placeholder="Enter amount"
-                  value={bidData.bidAmount}
-                  onChange={(e) => setBidData(prev => ({ ...prev, bidAmount: e.target.value }))}
-                  className="h-9 flex-1 bg-white text-sm"
-                  step="0.01"
-                  min="0"
-                />
-              </div>
-              <p className="text-[11px] text-slate-500">Use the total amount you want evaluated.</p>
+              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Currency</label>
+              <Select
+                value={bidData.currency}
+                onValueChange={(value) => setBidData(prev => ({ ...prev, currency: value }))}
+              >
+                <SelectTrigger className="h-9 bg-white text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {currencies.map(currency => (
+                    <SelectItem key={currency.code} value={currency.code}>
+                      {currency.code}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-1.5">
@@ -1016,7 +1190,7 @@ export default function TenderBidForm({
 
             <Button
               onClick={() => handleSubmit('final')}
-              disabled={isSubmitting || isLoadingExisting || finalBidLocked || !canSubmitBid || !hasBidAmount || !hasCurrency || !hasValidity || !hasDelivery}
+              disabled={isSubmitting || isLoadingExisting || finalBidLocked || !canSubmitBid || !hasAllItemsQuoted || !hasCurrency || !hasValidity || !hasDelivery}
               className="h-9 flex-1 bg-indigo-600 hover:bg-indigo-700"
             >
               {isSubmitting && submitType === 'final' ? (

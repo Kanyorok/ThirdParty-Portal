@@ -89,6 +89,7 @@ export interface RfqMyResponse {
     rfqResponseNumber: string | null
     currency: string | null
     durationDays: number | null
+    validityDays: number | null
     status: "DRAFT" | "FINAL" | string
     totalPayable: number | null
     submittedOn: string | null
@@ -171,6 +172,7 @@ export interface SubmitRfqResponsePayload {
     supplierId: number
     currency: string
     durationDays: number
+    validityDays: number
     isDraft?: boolean
     items: SubmitResponseLineItem[]
 }

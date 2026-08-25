@@ -61,7 +61,15 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-        const formData = await request.formData()
+        const contentType = request.headers.get("content-type")
+        if (!contentType?.toLowerCase().startsWith("multipart/form-data")) {
+            return NextResponse.json({ message: "A multipart document upload is required" }, { status: 415 })
+        }
+
+        // Forward the multipart payload unchanged. Rebuilding FormData in the proxy can
+        // lose the browser-generated boundary or file metadata and makes Laravel see an
+        // empty/invalid upload.
+        const requestBody = new Uint8Array(await request.arrayBuffer())
 
         const res = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL}/api/v1/supplier/prequalification/applications/${encodeURIComponent(roundId)}/categories/${encodeURIComponent(categoryId)}/documents`,
@@ -70,8 +78,9 @@ export async function POST(request: NextRequest) {
                 headers: {
                     Accept: "application/json",
                     Authorization: `Bearer ${session.accessToken}`,
+                    "Content-Type": contentType,
                 },
-                body: formData,
+                body: requestBody,
                 // @ts-expect-error duplex needed for streaming body
                 duplex: "half",
             }

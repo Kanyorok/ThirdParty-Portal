@@ -277,7 +277,15 @@ export default function RoundsTable() {
                                     </div>
 
                                     {/* ── Right: CTA ── */}
-                                    <div className="flex shrink-0 items-center gap-2 sm:self-center">
+                                    <div className="flex shrink-0 flex-wrap items-center gap-2 sm:self-center">
+                                        {getAppliedCategoryCount(round) > 0 ? (
+                                            <CategoryApplications
+                                                round={round}
+                                                variant="outline"
+                                                triggerLabel={`Applied categories (${getAppliedCategoryCount(round)})`}
+                                                viewMode="applied"
+                                            />
+                                        ) : null}
                                         <CategoryApplications
                                             round={round}
                                             variant={action.readiness === "ready" ? "primary" : "outline"}

@@ -109,7 +109,7 @@ const STATUS: Record<string, { label: string; text: string; dot: string; ring: s
     UNDER_REVIEW: { label: "Under review", text: "text-violet-600", dot: "bg-violet-500", ring: "ring-violet-500/20" },
     AWARDED: { label: "Awarded", text: "text-violet-600", dot: "bg-violet-500", ring: "ring-violet-500/20" },
     APPROVED: { label: "Prequalified", text: "text-emerald-600", dot: "bg-emerald-500", ring: "ring-emerald-500/20" },
-    REJECTED: { label: "Not prequalified", text: "text-rose-600", dot: "bg-rose-500", ring: "ring-rose-500/20" },
+    REJECTED: { label: "Failed", text: "text-rose-600", dot: "bg-rose-500", ring: "ring-rose-500/20" },
 }
 
 function getS(raw?: string) {

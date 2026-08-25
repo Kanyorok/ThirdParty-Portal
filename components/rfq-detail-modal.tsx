@@ -421,7 +421,8 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
     const [currencyOpen, setCurrencyOpen] = useState(false)
     const [currencies, setCurrencies] = useState<Currency[]>([])
     const [currenciesLoading, setCurrenciesLoading] = useState(false)
-    const [durationDays, setDurationDays] = useState("30")
+    const [durationDays, setDurationDays] = useState("")
+    const [validityDays, setValidityDays] = useState("30")
     const [taxTreatment, setTaxTreatment] = useState<RfqTaxTreatment | "">("")
     const [submitting, setSubmitting] = useState<"draft" | "submitted" | null>(null)
     const [missingLineIds, setMissingLineIds] = useState<string[]>([])
@@ -497,6 +498,12 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
     }, [myResponse, currencyTouched])
 
     useEffect(() => {
+        if (!isOpen || !myResponse) return
+        if (myResponse.durationDays != null) setDurationDays(String(myResponse.durationDays))
+        if (myResponse.validityDays != null) setValidityDays(String(myResponse.validityDays))
+    }, [isOpen, myResponse])
+
+    useEffect(() => {
         if (!isOpen) return
         const responseItem = Array.isArray(myResponse?.items) ? myResponse.items[0] : null
         if (responseItem) setTaxTreatment(getRfqTaxTreatment(responseItem as AnyRecord))
@@ -514,7 +521,12 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
             if (typeof parsed.remarks === "string")
                 if (Array.isArray(parsed.lines)) setQuoteLines(parsed.lines)
             if (typeof parsed.currency === "string") { setQuoteCurrency(parsed.currency); setCurrencyTouched(true) }
-            if (parsed.durationDays != null) setDurationDays(String(parsed.durationDays))
+            if (Number(parsed.version ?? 0) >= 4) {
+                if (parsed.durationDays != null) setDurationDays(String(parsed.durationDays))
+                if (parsed.validityDays != null) setValidityDays(String(parsed.validityDays))
+            } else if (parsed.durationDays != null) {
+                setValidityDays(String(parsed.durationDays))
+            }
             if (["vat_exclusive", "vat_inclusive", "no_vat"].includes(parsed.taxTreatment)) {
                 setTaxTreatment(parsed.taxTreatment as RfqTaxTreatment)
             }
@@ -526,11 +538,11 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
         if (saveTimer.current) window.clearTimeout(saveTimer.current)
         saveTimer.current = window.setTimeout(() => {
             try {
-                window.localStorage.setItem(draftKey, JSON.stringify({ version: 3, savedAt: Date.now(), lines: quoteLines, currency: quoteCurrency, durationDays, taxTreatment }))
+                window.localStorage.setItem(draftKey, JSON.stringify({ version: 4, savedAt: Date.now(), lines: quoteLines, currency: quoteCurrency, durationDays, validityDays, taxTreatment }))
             } catch { }
         }, 400)
         return () => { if (saveTimer.current) window.clearTimeout(saveTimer.current) }
-    }, [draftKey, rfqId, quoteLines, quoteCurrency, durationDays, taxTreatment])
+    }, [draftKey, rfqId, quoteLines, quoteCurrency, durationDays, validityDays, taxTreatment])
 
 
     const quoteById = useMemo(() => {
@@ -584,7 +596,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
     const effectiveLocked = isLocked || clientLocked
 
     const canSubmit = !effectiveLocked && !docsUploading && submitting === null
-        && enrichedLines.length > 0 && currencyOk && Number(durationDays) > 0
+        && enrichedLines.length > 0 && currencyOk && Number(durationDays) > 0 && Number(validityDays) > 0
         && Boolean(taxTreatment)
         && totals.filledCount === totals.totalLines
 
@@ -603,7 +615,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
         if (supplierIdValue == null) { toast.error("Supplier context is missing for this RFQ"); return }
 
         const hasLineInput = enrichedLines.some((l) => parsePositiveNumber(l.unitPrice) != null)
-        const hasContent = hasLineInput || Boolean(quoteCurrency.trim()) || Boolean(String(durationDays || "").trim())
+        const hasContent = hasLineInput || Boolean(quoteCurrency.trim()) || Boolean(String(durationDays || "").trim()) || Boolean(String(validityDays || "").trim())
         if (!hasContent) {
             toast.error("Nothing to save yet")
             return
@@ -618,7 +630,9 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
         if (!quoteCurrency.trim()) errors.currency = ["Currency is required"]
         if (!taxTreatment) errors.taxTreatment = ["Select how VAT applies to the quoted prices"]
         const dur = Number(durationDays)
-        if (!Number.isFinite(dur) || dur <= 0) errors.durationDays = ["Duration must be positive"]
+        if (!Number.isFinite(dur) || dur <= 0) errors.durationDays = ["Delivery lead time must be positive"]
+        const validity = Number(validityDays)
+        if (!Number.isFinite(validity) || validity <= 0) errors.validityDays = ["Quote validity must be positive"]
         if (Object.keys(errors).length > 0) {
             setSubmitFieldErrors(errors)
             toast.error("Missing required fields", { description: Object.values(errors).flat().join("; ") })
@@ -637,6 +651,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                     supplierId: supplierIdValue,
                     currency: quoteCurrency.trim().toUpperCase(),
                     durationDays: dur,
+                    validityDays: validity,
                     isDraft: true,
                     items,
                 }),
@@ -661,6 +676,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                 supplierId: String(supplierIdValue),
                 currency: quoteCurrency.trim().toUpperCase(),
                 durationDays: dur,
+                validityDays: validity,
                 status: "DRAFT",
                 canUploadDocuments: true,
                 canDeleteDocuments: true,
@@ -674,7 +690,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
             }))
 
             if (typeof window !== "undefined") {
-                window.localStorage.setItem(draftKey, JSON.stringify({ version: 3, savedAt: Date.now(), lines: quoteLines, currency: quoteCurrency, durationDays, taxTreatment }))
+                window.localStorage.setItem(draftKey, JSON.stringify({ version: 4, savedAt: Date.now(), lines: quoteLines, currency: quoteCurrency, durationDays, validityDays, taxTreatment }))
             }
             setMissingLineIds([])
             toast.success("Draft saved.", { description: "The RFQ response draft is now stored in the portal." })
@@ -694,7 +710,9 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
         if (!quoteCurrency.trim()) errors.currency = ["Currency is required"]
         if (!taxTreatment) errors.taxTreatment = ["Select how VAT applies to the quoted prices"]
         const dur = Number(durationDays)
-        if (!Number.isFinite(dur) || dur <= 0) errors.durationDays = ["Duration must be positive"]
+        if (!Number.isFinite(dur) || dur <= 0) errors.durationDays = ["Delivery lead time must be positive"]
+        const validity = Number(validityDays)
+        if (!Number.isFinite(validity) || validity <= 0) errors.validityDays = ["Quote validity must be positive"]
         if (Object.keys(errors).length > 0) {
             setSubmitFieldErrors(errors)
             toast.error("Missing required fields", { description: Object.values(errors).flat().join("; ") })
@@ -721,6 +739,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                 supplierId: supplierIdValue,
                 currency: quoteCurrency.trim().toUpperCase(),
                 durationDays: dur,
+                validityDays: validity,
                 isDraft: false,
                 items,
             }
@@ -861,7 +880,7 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                 : <span onClick={() => setIsOpen(true)} className="cursor-pointer">{trigger}</span>
             }
             <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-                <DialogContent className="left-auto right-0 top-0 flex h-[100dvh] w-screen max-w-[1400px] translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 bg-white p-0 shadow-none sm:w-[96vw] sm:border-l sm:border-slate-200/80 md:w-[90vw] lg:w-[86vw] xl:w-[82vw] 2xl:w-[80vw]">
+                <DialogContent className="left-auto right-0 top-0 flex h-[100dvh] w-screen max-w-[1400px] translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 bg-white p-0 shadow-none sm:w-[96vw] sm:max-w-[1400px] sm:border-l sm:border-slate-200/80 md:w-[90vw] lg:w-[86vw] xl:w-[82vw] 2xl:w-[80vw]">
                     <DialogHeader className="flex-shrink-0 border-b border-slate-200/70 bg-white px-6 py-4 lg:px-8">
                         <DialogTitle className="flex flex-col gap-3">
                             <div className="flex items-start justify-between gap-3">
@@ -1102,8 +1121,8 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                                                         <p className="text-sm text-slate-900">{quoteCurrency || myResponse?.currency || "Not selected"}</p>
                                                     </div>
                                                     <div>
-                                                        <p className="text-xs font-medium text-slate-500">Validity</p>
-                                                        <p className="text-sm text-slate-900">{durationDays || myResponse?.durationDays || "—"} days</p>
+                                                        <p className="text-xs font-medium text-slate-500">Lead time / validity</p>
+                                                        <p className="text-sm text-slate-900">{durationDays || myResponse?.durationDays || "—"} / {validityDays || myResponse?.validityDays || "—"} days</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1226,10 +1245,16 @@ export default function RfqDetailModal({ rfq, trigger }: RfqDetailModalProps) {
                                         </div>
                                         <div className="mt-4 grid gap-3 sm:grid-cols-2">
                                             <div className="space-y-1">
-                                                <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Validity (days)</div>
+                                                <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Delivery lead time (days)</div>
                                                 <Input value={durationDays} disabled={effectiveLocked} inputMode="numeric"
                                                     onChange={(e) => { setDurationDays(e.target.value.replace(/[^\d]/g, "").slice(0, 4)); setSubmitFieldErrors((p) => { const { durationDays: _d, ...r } = p; return r }) }}
-                                                    placeholder="30" className={cn("h-11 rounded-xl border-slate-200 text-sm", submitFieldErrors.durationDays && "border-destructive")} />
+                                                    placeholder="e.g. 7" className={cn("h-11 rounded-xl border-slate-200 text-sm", submitFieldErrors.durationDays && "border-destructive")} />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Quote validity (days)</div>
+                                                <Input value={validityDays} disabled={effectiveLocked} inputMode="numeric"
+                                                    onChange={(e) => { setValidityDays(e.target.value.replace(/[^\d]/g, "").slice(0, 4)); setSubmitFieldErrors((p) => { const { validityDays: _v, ...r } = p; return r }) }}
+                                                    placeholder="30" className={cn("h-11 rounded-xl border-slate-200 text-sm", submitFieldErrors.validityDays && "border-destructive")} />
                                             </div>
                                             <div className="space-y-1">
                                                 <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Currency</div>

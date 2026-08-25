@@ -69,7 +69,7 @@ const STATUS_THEME: Record<
         icon: <CheckCircle2 className="h-3 w-3" />
     },
     REJECTED: {
-        label: "Not prequalified",
+        label: "Failed",
         color: "bg-rose-50 text-rose-700 border-rose-200",
         icon: <AlertTriangle className="h-3 w-3" />
     }
@@ -169,6 +169,25 @@ const categoryDocumentsFor = (category: CategoryProgress): CategoryDocumentRequi
 const mandatoryDocumentsFor = (category: CategoryProgress): CategoryDocumentRequirement[] =>
     categoryDocumentsFor(category).filter((document) => document.required)
 
+const uploadErrorMessage = (body: unknown): string => {
+    if (!body || typeof body !== "object") return "Upload failed"
+
+    const response = body as {
+        message?: unknown
+        error?: unknown
+        errors?: Record<string, unknown>
+    }
+    const fileErrors = response.errors?.file
+    if (Array.isArray(fileErrors)) {
+        const firstFileError = fileErrors.find((error): error is string => typeof error === "string" && error.trim().length > 0)
+        if (firstFileError) return firstFileError
+    }
+
+    if (typeof response.message === "string" && response.message.trim()) return response.message
+    if (typeof response.error === "string" && response.error.trim()) return response.error
+    return "Upload failed"
+}
+
 
 const tabTriggerClass =
     "rounded-lg px-3 py-2 text-[11px] font-semibold text-slate-600 transition-all duration-150 hover:text-slate-900 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:border data-[state=active]:border-slate-200/80"
@@ -178,11 +197,12 @@ interface CategoryApplicationsProps {
     className?: string
     variant?: "primary" | "outline"
     triggerLabel?: string
+    viewMode?: "all" | "applied"
 }
 
-export default function CategoryApplications({ round: roundProp, className, variant = "outline", triggerLabel }: CategoryApplicationsProps) {
+export default function CategoryApplications({ round: roundProp, className, variant = "outline", triggerLabel, viewMode = "all" }: CategoryApplicationsProps) {
     const [isOpen, setIsOpen] = useState(false)
-    const [activeTab, setActiveTab] = useState("overview")
+    const [activeTab, setActiveTab] = useState(viewMode === "applied" ? "categories" : "overview")
     const contentRef = useRef<HTMLDivElement | null>(null)
     const [showBackToTop, setShowBackToTop] = useState(false)
     const [detailRound, setDetailRound] = useState<Round | null>(null)
@@ -245,6 +265,10 @@ export default function CategoryApplications({ round: roundProp, className, vari
         () => round.appliedCategories ?? categories.filter((c) => c.has_applied),
         [round.appliedCategories, categories]
     )
+    const displayedCategories = useMemo(
+        () => viewMode === "applied" ? categories.filter((category) => category.has_applied) : categories,
+        [categories, viewMode]
+    )
     const unappliedCategories = useMemo(
         () => categories.filter((c) => !c.has_applied && c.can_apply !== false),
         [categories]
@@ -295,13 +319,6 @@ export default function CategoryApplications({ round: roundProp, className, vari
         setCategoryDocs((previous) => ({ ...previous, [categoryId]: documents }))
         return documents as CategoryDocument[]
     }, [round.id])
-
-    useEffect(() => {
-        const missing = Array.from(selectedIds).filter((categoryId) => categoryDocs[categoryId] === undefined)
-        if (missing.length === 0) return
-
-        void Promise.allSettled(missing.map((categoryId) => fetchCategoryDocuments(categoryId)))
-    }, [categoryDocs, fetchCategoryDocuments, selectedIds])
 
     const missingRequiredDocuments = useMemo(() => {
         return Array.from(selectedIds).flatMap((categoryId) => {
@@ -416,7 +433,7 @@ export default function CategoryApplications({ round: roundProp, className, vari
                 { method: "POST", credentials: "include", body: formData }
             )
             const body = await res.json().catch(() => null)
-            if (!res.ok) throw new Error(body?.message ?? body?.errors?.file?.[0] ?? "Upload failed")
+            if (!res.ok) throw new Error(uploadErrorMessage(body))
 
             if (body?.data && typeof body.data === "object") {
                 const uploadedDocument = normalizeCategoryDocument(body.data as Record<string, unknown>)
@@ -432,7 +449,6 @@ export default function CategoryApplications({ round: roundProp, className, vari
                 })
             }
 
-            await fetchCategoryDocuments(categoryId)
             toast.success(`${requirement.name} uploaded`)
         } catch (error) {
             const message = error instanceof Error ? error.message : "Upload failed"
@@ -444,7 +460,7 @@ export default function CategoryApplications({ round: roundProp, className, vari
                 contentRef.current?.scrollTo({ top: preservedScrollTop })
             })
         }
-    }, [fetchCategoryDocuments, round.id, round.sections])
+    }, [round.id, round.sections])
 
     // Fetch documents when Documents tab is activated (once per modal open)
     useEffect(() => {
@@ -511,7 +527,7 @@ export default function CategoryApplications({ round: roundProp, className, vari
     const handleOpenChange = useCallback((v: boolean) => {
         setIsOpen(v)
         if (v) {
-            setActiveTab("overview")
+            setActiveTab(viewMode === "applied" ? "categories" : "overview")
             setDetailRound(null)
             setSelectedIds(new Set())
             setApplyError(null)
@@ -519,7 +535,7 @@ export default function CategoryApplications({ round: roundProp, className, vari
             setCategoryDocs({})
             setShowBackToTop(false)
         }
-    }, [])
+    }, [viewMode])
 
     return (
         <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -541,7 +557,7 @@ export default function CategoryApplications({ round: roundProp, className, vari
             </DialogTrigger>
 
             <DialogContent
-                className="inset-y-0 left-auto right-0 top-0 grid min-h-0 w-screen max-w-[1400px] translate-x-0 translate-y-0 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-none border-0 bg-white p-0 shadow-[-18px_0_48px_rgba(15,23,42,0.14)] sm:w-[96vw] sm:border-l sm:border-slate-200/80 md:w-[90vw] lg:w-[86vw] xl:w-[82vw] 2xl:w-[80vw]"
+                className="inset-y-0 left-auto right-0 top-0 grid min-h-0 w-screen max-w-[1400px] translate-x-0 translate-y-0 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-none border-0 bg-white p-0 shadow-[-18px_0_48px_rgba(15,23,42,0.14)] sm:w-[96vw] sm:max-w-[1400px] sm:border-l sm:border-slate-200/80 md:w-[90vw] lg:w-[86vw] xl:w-[82vw] 2xl:w-[80vw]"
                 style={{ height: "100dvh", minHeight: "100dvh", maxHeight: "100dvh" }}
             >
 
@@ -594,7 +610,7 @@ export default function CategoryApplications({ round: roundProp, className, vari
                                 Overview
                             </TabsTrigger>
                             <TabsTrigger className={tabTriggerClass} value="categories">
-                                Categories
+                                {viewMode === "applied" ? "Applied categories" : "Categories"}
                                 {selectedIds.size > 0 && (
                                     <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-indigo-600 px-1 text-[10px] font-bold text-white">
                                         {selectedIds.size}
@@ -716,12 +732,18 @@ export default function CategoryApplications({ round: roundProp, className, vari
                         {/* ── Categories tab (with inline selection) ── */}
                         <TabsContent value="categories" className="mt-0 space-y-3">
                             <div className="flex items-center justify-between">
-                                <span className="text-xs uppercase tracking-widest text-slate-500">Categories</span>
-                                <span className="text-xs text-slate-500">{appliedCategories.length}/{totalCategories || 0} applied</span>
+                                <span className="text-xs uppercase tracking-widest text-slate-500">
+                                    {viewMode === "applied" ? "Applied categories" : "Categories"}
+                                </span>
+                                <span className="text-xs text-slate-500">
+                                    {viewMode === "applied"
+                                        ? `${appliedCategories.length} applied`
+                                        : `${appliedCategories.length}/${totalCategories || 0} applied`}
+                                </span>
                             </div>
 
                             {/* Select all / clear bar */}
-                            {unappliedCategories.length > 0 && (
+                            {viewMode === "all" && unappliedCategories.length > 0 && (
                                 <div className="flex items-center justify-between rounded-xl border border-indigo-100 bg-indigo-50/40 px-3 py-2">
                                     <p className="text-xs text-indigo-700">
                                         {selectedIds.size === 0
@@ -750,13 +772,15 @@ export default function CategoryApplications({ round: roundProp, className, vari
                                 </div>
                             )}
 
-                            {categories.length === 0 ? (
+                            {displayedCategories.length === 0 ? (
                                 <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
-                                    Categories will appear here once the round is fully published.
+                                    {viewMode === "applied"
+                                        ? "You have not applied to any categories in this round."
+                                        : "Categories will appear here once the round is fully published."}
                                 </div>
                             ) : (
                                 <div className="space-y-3">
-                                    {categories.map((category) => {
+                                    {displayedCategories.map((category) => {
                                         const catId = String(category.category_id)
                                         const status = buildCategoryStatus(category.status)
                                         const isUnapplied = !category.has_applied && category.can_apply !== false
@@ -848,10 +872,10 @@ export default function CategoryApplications({ round: roundProp, className, vari
                                                             <span>{category.progress_percent}%</span>
                                                         </div>
                                                     )}
-                                                    {category.rejection_reason && (
+                                                    {normalizeCategoryStatus(category.status) === "REJECTED" && (
                                                         <div className="flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-3 py-1.5 text-rose-700">
                                                             <AlertTriangle className="h-3 w-3" />
-                                                            <span>Rejection: {category.rejection_reason}</span>
+                                                            <span>Failure reason: {category.rejection_reason ?? "No reason was recorded. Please contact the procurement team."}</span>
                                                         </div>
                                                     )}
                                                 </div>
@@ -1091,7 +1115,7 @@ export default function CategoryApplications({ round: roundProp, className, vari
                                         </div>
                                         <div className="rounded-xl border border-rose-200 bg-rose-50 p-3">
                                             <div className="text-lg font-semibold text-rose-700">{summary.rejected}</div>
-                                            <div className="text-xs text-rose-600">Rejected</div>
+                                            <div className="text-xs text-rose-600">Failed</div>
                                         </div>
                                         <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
                                             <div className="text-lg font-semibold text-amber-700">{summary.pending}</div>
@@ -1138,9 +1162,9 @@ export default function CategoryApplications({ round: roundProp, className, vari
                                                         <span>Updated {safeFormatDate(category.updated_on)}</span>
                                                     </div>
                                                 )}
-                                                {category.rejection_reason && (
+                                                {normalizeCategoryStatus(category.status) === "REJECTED" && (
                                                     <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 p-2 text-xs text-rose-800">
-                                                        <strong>Reason:</strong> {category.rejection_reason}
+                                                        <strong>Failure reason:</strong> {category.rejection_reason ?? "No reason was recorded. Please contact the procurement team."}
                                                     </div>
                                                 )}
                                             </article>

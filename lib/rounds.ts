@@ -93,7 +93,11 @@ const normalizeCategory = (category: any): RoundCategory => {
         progress_percent: Number(category.progress_percent ?? category.progressPercent ?? 0),
         stage_label: category.stage_label ?? category.stageLabel ?? category.stage,
         updated_on: category.updated_on ?? category.updatedOn,
-        rejection_reason: category.rejection_reason ?? category.rejectionReason,
+        rejection_reason: category.rejection_reason
+            ?? category.rejectionReason
+            ?? category.resultRemarks
+            ?? category.evaluatorNotes
+            ?? category.EvaluatorNotes,
         decision_date: category.decision_date ?? category.decisionDate,
         can_apply: category.can_apply ?? category.canApply ?? !(category.has_applied ?? category.hasApplied),
         eligibility_status: category.eligibility_status ?? category.eligibilityStatus ?? "ELIGIBLE",

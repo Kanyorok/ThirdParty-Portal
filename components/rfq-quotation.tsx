@@ -618,7 +618,8 @@ export function RfqQuotation() {
   const [currencyOpen, setCurrencyOpen] = useState(false)
   const [currencies, setCurrencies] = useState<Currency[]>([])
   const [currenciesLoading, setCurrenciesLoading] = useState(false)
-  const [durationDays, setDurationDays] = useState("30")
+  const [durationDays, setDurationDays] = useState("")
+  const [validityDays, setValidityDays] = useState("30")
   const [taxTreatment, setTaxTreatment] = useState<RfqTaxTreatment | "">("")
   const [_draftSavedAt, setDraftSavedAt] = useState<Date | null>(null)
   const [missingLineIds, setMissingLineIds] = useState<string[]>([])
@@ -940,6 +941,7 @@ export function RfqQuotation() {
         lines?: QuoteLine[]
         currency?: string
         durationDays?: string | number
+        validityDays?: string | number
         taxTreatment?: RfqTaxTreatment
       }
       if (typeof parsed.remarks === "string") setRemarks(parsed.remarks)
@@ -948,10 +950,11 @@ export function RfqQuotation() {
         setQuoteCurrency(parsed.currency)
         setCurrencyTouched(true)
       }
-      if (typeof parsed.durationDays === "number" && Number.isFinite(parsed.durationDays)) {
-        setDurationDays(String(parsed.durationDays))
-      } else if (typeof parsed.durationDays === "string") {
-        setDurationDays(parsed.durationDays)
+      if (Number(parsed.version ?? 0) >= 4) {
+        if (parsed.durationDays != null) setDurationDays(String(parsed.durationDays))
+        if (parsed.validityDays != null) setValidityDays(String(parsed.validityDays))
+      } else if (parsed.durationDays != null) {
+        setValidityDays(String(parsed.durationDays))
       }
       if (typeof parsed.savedAt === "number" && Number.isFinite(parsed.savedAt)) {
         setDraftSavedAt(new Date(parsed.savedAt))
@@ -979,12 +982,13 @@ export function RfqQuotation() {
         window.localStorage.setItem(
           draftKey,
           JSON.stringify({
-            version: 3,
+            version: 4,
             savedAt,
             remarks,
             lines: quoteLines,
             currency: quoteCurrency,
             durationDays,
+            validityDays,
             taxTreatment,
           })
         )
@@ -997,7 +1001,7 @@ export function RfqQuotation() {
     return () => {
       if (saveTimer.current) window.clearTimeout(saveTimer.current)
     }
-  }, [draftKey, normalizedRfqId, quoteLines, remarks, quoteCurrency, durationDays, taxTreatment])
+  }, [draftKey, normalizedRfqId, quoteLines, remarks, quoteCurrency, durationDays, validityDays, taxTreatment])
 
   const quoteById = useMemo(() => {
     const map = new Map<string, QuoteLine>()
@@ -1069,6 +1073,12 @@ export function RfqQuotation() {
       setQuoteCurrency(cur)
     }
   }, [supplierResponse?.currency, currencyTouched])
+
+  useEffect(() => {
+    if (!supplierResponse) return
+    if (supplierResponse.durationDays != null) setDurationDays(String(supplierResponse.durationDays))
+    if (supplierResponse.validityDays != null) setValidityDays(String(supplierResponse.validityDays))
+  }, [supplierResponse])
 
   useEffect(() => {
     const responseItem = Array.isArray(supplierResponse?.items) ? supplierResponse.items[0] : null
@@ -1147,10 +1157,15 @@ export function RfqQuotation() {
 
     const dur = Number(durationDays)
     if (!Number.isFinite(dur) || !Number.isInteger(dur) || dur <= 0) {
-      errors.durationDays = ["Duration days must be a positive integer"]
+      errors.durationDays = ["Delivery lead time must be a positive integer"]
     }
 
-    return { ok: Object.keys(errors).length === 0, errors, currency: cur, duration: dur }
+    const validity = Number(validityDays)
+    if (!Number.isFinite(validity) || !Number.isInteger(validity) || validity <= 0) {
+      errors.validityDays = ["Quote validity must be a positive integer"]
+    }
+
+    return { ok: Object.keys(errors).length === 0, errors, currency: cur, duration: dur, validity }
   }
 
   const submitMeta = validateSubmitMeta()
@@ -1196,6 +1211,7 @@ export function RfqQuotation() {
     // snake_case -> camelCase for our UI fields
     if (out.supplier_id && !out.supplierId) out.supplierId = out.supplier_id
     if (out.duration_days && !out.durationDays) out.durationDays = out.duration_days
+    if (out.validity_days && !out.validityDays) out.validityDays = out.validity_days
 
     if (itemMsgs.length > 0) {
       out.items = [
@@ -1219,6 +1235,7 @@ export function RfqQuotation() {
       supplierId: supplierIdValue,
       currency: String(meta.currency).trim().toUpperCase(),
       durationDays: meta.duration,
+      validityDays: meta.validity,
       isDraft: asDraft,
       items,
     }
@@ -1253,7 +1270,8 @@ export function RfqQuotation() {
         hasLineInput ||
         Boolean(remarks.trim()) ||
         Boolean(String(quoteCurrency || "").trim()) ||
-        Boolean(String(durationDays || "").trim())
+        Boolean(String(durationDays || "").trim()) ||
+        Boolean(String(validityDays || "").trim())
 
       if (!hasContent) {
         toast.error("Nothing to save yet")
@@ -1339,12 +1357,13 @@ export function RfqQuotation() {
           window.localStorage.setItem(
             draftKey,
             JSON.stringify({
-              version: 3,
+              version: 4,
               savedAt,
               remarks,
               lines: quoteLines,
               currency: quoteCurrency,
               durationDays,
+              validityDays,
               taxTreatment,
             })
           )
@@ -2252,7 +2271,7 @@ export function RfqQuotation() {
                   <div className="grid gap-3 md:grid-cols-2">
                     <div className="space-y-1">
                       <div className={`text-xs font-medium ${META_TEXT}`}>
-                        Validity (days)
+                        Delivery lead time (days)
                       </div>
                       <Input
                         value={durationDays}
@@ -2267,7 +2286,7 @@ export function RfqQuotation() {
                             return rest
                           })
                         }}
-                        placeholder="30"
+                        placeholder="e.g. 7"
                         className={cn(
                           "h-10 text-sm transition-all duration-200 focus-visible:ring-2 focus-visible:ring-indigo-500/30",
                           submitFieldErrors.durationDays &&
@@ -2277,6 +2296,37 @@ export function RfqQuotation() {
                       {submitFieldErrors.durationDays?.[0] ? (
                         <div className="text-xs text-destructive">
                           {submitFieldErrors.durationDays[0]}
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className={`text-xs font-medium ${META_TEXT}`}>
+                        Quote validity (days)
+                      </div>
+                      <Input
+                        value={validityDays}
+                        disabled={isLocked}
+                        inputMode="numeric"
+                        onChange={(e) => {
+                          const next = e.target.value.replace(/[^\d]/g, "").slice(0, 4)
+                          setValidityDays(next)
+                          setSubmitFieldErrors((prev) => {
+                            if (!prev.validityDays) return prev
+                            const { validityDays: _v, ...rest } = prev
+                            return rest
+                          })
+                        }}
+                        placeholder="30"
+                        className={cn(
+                          "h-10 text-sm transition-all duration-200 focus-visible:ring-2 focus-visible:ring-indigo-500/30",
+                          submitFieldErrors.validityDays &&
+                          "border-destructive focus-visible:ring-destructive"
+                        )}
+                      />
+                      {submitFieldErrors.validityDays?.[0] ? (
+                        <div className="text-xs text-destructive">
+                          {submitFieldErrors.validityDays[0]}
                         </div>
                       ) : null}
                     </div>
@@ -2463,7 +2513,7 @@ export function RfqQuotation() {
                       </div>
                       <div className={`text-xs ${META_TEXT}`}>
                         {!submitMeta.ok
-                          ? "Add currency, validity and VAT treatment to enable submission."
+                          ? "Add currency, lead time, validity and VAT treatment to enable submission."
                           : docsUploading
                             ? "Uploading documents… please wait."
                             : !canSubmit
@@ -2951,7 +3001,7 @@ export function RfqQuotation() {
             </div>
             <p className={`text-center text-[11px] ${META_TEXT}`}>
               {!submitMeta.ok
-                ? "Add currency and validity to enable submission."
+                ? "Add currency, lead time and validity to enable submission."
                 : !canSubmit
                   ? "Complete all line items to enable submission."
                   : "Ready to submit your final quote."}

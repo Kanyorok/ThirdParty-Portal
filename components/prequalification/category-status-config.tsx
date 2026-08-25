@@ -52,7 +52,7 @@ export function getCategoryStatusConfig(status?: string): CategoryStatusConfig {
             }
         case "REJECTED":
             return {
-                label: "Not prequalified",
+                label: "Failed",
                 icon: <XCircle className="w-3 h-3" />,
                 variant: "destructive",
                 color: "bg-rose-50 text-rose-700 border-rose-200"

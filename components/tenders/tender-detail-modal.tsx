@@ -166,6 +166,60 @@ interface Invitation {
   declineReason?: string
 }
 
+interface TenderLineItem {
+  Id: number
+  id?: number
+  TenderID?: number
+  ItemID?: number | null
+  ManualItemDescription?: string | null
+  QtyToTender?: number | string
+  item?: {
+    ItemName?: string
+    itemName?: string
+    UOM?: string
+  } | null
+  specificationDocuments?: unknown[]
+  SpecificationDocuments?: unknown[]
+}
+
+interface ItemSpecification extends TenderDocument {
+  itemId: string
+  itemName: string
+}
+
+function normalizeItemSpecifications(
+  items: TenderLineItem[] | undefined,
+  tenderId: string | number | undefined
+): ItemSpecification[] {
+  if (!Array.isArray(items)) return []
+
+  return items.flatMap((item) => {
+    const itemId = String(item.id ?? item.Id ?? "").trim()
+    const itemName = item.item?.itemName || item.item?.ItemName || item.ManualItemDescription || `Item #${itemId}`
+    const documents = item.specificationDocuments ?? item.SpecificationDocuments ?? []
+    if (!itemId || !Array.isArray(documents)) return []
+
+    return documents.flatMap((entry) => {
+      if (!entry || typeof entry !== "object") return []
+      const document = entry as Record<string, unknown>
+      const documentId = String(document.documentId ?? document.DocumentId ?? "").trim()
+      if (!documentId) return []
+
+      return [{
+        id: String(document.id ?? document.Id ?? documentId),
+        documentId,
+        name: String(document.name ?? document.Name ?? "Item specification"),
+        mimeType: String(document.mimeType ?? document.MimeType ?? "") || null,
+        itemId,
+        itemName,
+        downloadUrl: tenderId
+          ? `/api/tenders/${encodeURIComponent(String(tenderId))}/items/${encodeURIComponent(itemId)}/documents/${encodeURIComponent(documentId)}/download`
+          : undefined,
+      }]
+    })
+  })
+}
+
 interface Tender {
   Id?: string | number
   id?: string | number
@@ -184,6 +238,7 @@ interface Tender {
   procurementMode?: unknown
   itemCategoryRelation?: unknown
   documents?: TenderDocument[]
+  items?: TenderLineItem[]
 }
 
 interface TenderDetailModalProps {
@@ -220,6 +275,9 @@ export default function TenderDetailModal({
   const tenderId = (tender as any)?.id ?? (tender as any)?.Id
   const [documents, setDocuments] = useState<TenderDocument[]>(() =>
     normalizeTenderDocuments(tender?.documents, tenderId)
+  )
+  const [itemSpecifications, setItemSpecifications] = useState<ItemSpecification[]>(() =>
+    normalizeItemSpecifications(tender?.items, tenderId)
   )
   const [docsLoading, setDocsLoading] = useState(false)
   const [docsError, setDocsError] = useState<string | null>(null)
@@ -317,6 +375,7 @@ export default function TenderDetailModal({
       const message = Array.isArray(json) ? null : json?.message ?? json?.error ?? null
       if (!res.ok) throw new Error(message ?? "Failed to refresh documents")
       setDocuments(normalizeTenderDocuments(json?.data?.documents, tenderId))
+      setItemSpecifications(normalizeItemSpecifications(json?.data?.items, tenderId))
     } catch (e: any) {
       setDocsError(e?.message ?? "Unable to refresh documents")
     } finally {
@@ -440,7 +499,7 @@ export default function TenderDetailModal({
       ) : null}
 
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="w-screen max-w-[1400px] sm:w-[96vw] md:w-[90vw] lg:w-[86vw] xl:w-[82vw] 2xl:w-[80vw] h-[100dvh] flex flex-col p-0 overflow-hidden rounded-none border-0 sm:border-l sm:border-slate-200/80 bg-white shadow-[-18px_0_48px_rgba(15,23,42,0.14)] left-auto right-0 top-0 translate-x-0 translate-y-0">
+        <DialogContent className="w-screen max-w-[1800px] sm:w-[98vw] md:w-[96vw] lg:w-[94vw] xl:w-[92vw] 2xl:w-[88vw] h-[100dvh] flex flex-col p-0 overflow-hidden rounded-none border-0 sm:border-l sm:border-slate-200/80 bg-white shadow-[-18px_0_48px_rgba(15,23,42,0.14)] left-auto right-0 top-0 translate-x-0 translate-y-0">
           <DialogHeader className="relative flex-shrink-0 border-b border-slate-200/70 bg-white px-6 lg:px-8 py-3 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-indigo-500/80 before:content-['']">
             <DialogTitle className="flex flex-col gap-3">
               <div className="flex items-start justify-between gap-3">
@@ -610,7 +669,7 @@ export default function TenderDetailModal({
                         <strong>Access locked:</strong> Clarifications and bidding locked after decline.
                       </div>
                     )}
-                    {(invitation.DeclineReason || invitation.declineReason) && (
+                    {isDeclinedInvitation && (invitation.DeclineReason || invitation.declineReason) && (
                       <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
                         <strong>Decline Reason:</strong>{" "}
                         {invitation.DeclineReason || invitation.declineReason}
@@ -715,12 +774,24 @@ export default function TenderDetailModal({
 
                     {isOpenStatus && canSubmitBid && (
                       <div className="rounded-2xl border border-indigo-200 bg-indigo-50/60 p-3 shadow-none">
-                        <div className="text-sm font-semibold text-slate-900">
-                          Recommended next step
+                        <div className="flex items-center justify-between gap-2">
+                          <div>
+                            <div className="text-sm font-semibold text-slate-900">
+                              Recommended next step
+                            </div>
+                            <p className="mt-1 text-xs text-slate-600">
+                              Submit your bid from the <strong>Bidding</strong> tab.
+                            </p>
+                          </div>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => setActiveTab("bidding")}
+                            className="h-8 shrink-0 bg-indigo-600 px-3 text-xs font-semibold hover:bg-indigo-700"
+                          >
+                            Go to Bidding
+                          </Button>
                         </div>
-                        <p className="mt-1 text-xs text-slate-600">
-                          Move this opportunity forward from the <strong>Bidding</strong> tab.
-                        </p>
                       </div>
                     )}
 
@@ -765,6 +836,7 @@ export default function TenderDetailModal({
               )}
 
               <TabsContent value="documents" className="mt-0">
+                <div className="space-y-3">
                 <div className="rounded-2xl border border-slate-200/80 bg-white shadow-none overflow-hidden">
                   <div className="flex items-center justify-between px-3 py-2.5 border-b border-slate-200/70">
                     <p className="text-sm font-semibold text-slate-900">Tender documents</p>
@@ -844,6 +916,37 @@ export default function TenderDetailModal({
                     )}
                   </div>
                 </div>
+                <div className="rounded-2xl border border-slate-200/80 bg-white shadow-none overflow-hidden">
+                  <div className="px-3 py-2.5 border-b border-slate-200/70">
+                    <p className="text-sm font-semibold text-slate-900">Item specification documents</p>
+                    <p className="mt-0.5 text-xs text-slate-500">Specifications supplied for individual tender lines.</p>
+                  </div>
+                  <div className="divide-y divide-slate-200/70">
+                    {itemSpecifications.length > 0 ? (
+                      itemSpecifications.map((doc) => (
+                        <div key={`${doc.itemId}-${doc.documentId}`} className="flex flex-col gap-3 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                              <FileText className="h-4 w-4" />
+                            </span>
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-slate-900 truncate">{doc.name}</p>
+                              <p className="mt-0.5 text-xs text-slate-500 truncate">For: {doc.itemName}</p>
+                            </div>
+                          </div>
+                          <Button variant="outline" size="sm" className="border-emerald-200 text-emerald-700 hover:bg-emerald-50" asChild>
+                            <a href={doc.downloadUrl} target="_blank" rel="noreferrer">
+                              <Download className="h-4 w-4 mr-2" /> Download
+                            </a>
+                          </Button>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="px-3 py-6 text-center text-xs text-slate-500">No item specifications were provided.</div>
+                    )}
+                  </div>
+                </div>
+                </div>
               </TabsContent>
               {showClarificationsTab && (
                 <TabsContent value="clarifications" className="mt-0">
@@ -864,6 +967,7 @@ export default function TenderDetailModal({
                     tenderNo,
                     submissionDeadline: (tender as any).submissionDeadline ?? (tender as any).SubmissionDeadline ?? "",
                     currency: (tender as any).currency_code ? { code: (tender as any).currency_code, symbol: "" } : undefined,
+                    items: tender?.items ?? [],
                   }}
                   canSubmitBid={canSubmitBid}
                   submissionBlockedReason={bidBlockedReason}

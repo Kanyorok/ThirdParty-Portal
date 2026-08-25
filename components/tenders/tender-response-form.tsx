@@ -229,7 +229,7 @@ export default function TenderResponseForm({
             </div>
           )}
 
-          {(invitation?.DeclineReason || invitationAny?.declineReason) && (
+          {isDeclined && (invitation?.DeclineReason || invitationAny?.declineReason) && (
             <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
               <strong>Decline Reason:</strong> {invitation?.DeclineReason || invitationAny?.declineReason}
             </div>

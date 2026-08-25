@@ -71,7 +71,13 @@ function pickFirstNumber(source: any, keys: string[]) {
 }
 
 function normalizeBidStatusValue(source: any) {
-  const raw = pickFirstText(source, ["bid_status", "status", "bidStatus", "BidStatus", "state", "envelope_status"])
+  // bidStatus/BidStatus (BidSubmission.BidStatus: draft/submitted/evaluated/awarded/...) is the
+  // real bid-lifecycle status and is always present. Prefer it over the plain `status` key —
+  // on the supplier bid-list endpoint, ERP's `status` key actually carries a *different* concept
+  // (document-access status: sealed/opened/accessible) which resolveBidStatus doesn't recognize
+  // and would otherwise render as "Unknown". `bid_status` (snake_case) never survives the ERP's
+  // camelCase response transform, so it's listed only as a defensive fallback.
+  const raw = pickFirstText(source, ["bidStatus", "BidStatus", "bid_status", "status", "state", "envelope_status"])
   const submittedAt = pickFirstText(source, ["submitted_at", "submittedAt", "received_at", "receivedAt"])
   return resolveBidStatus(raw, { hasSubmittedTimestamp: Boolean(submittedAt) })
 }
@@ -128,7 +134,9 @@ function normalizeBidRecord(raw: any) {
     currency: pickFirstText(raw, ["currency", "currency_code", "currencyCode"]) || raw?.currency || "",
     validity_period: pickFirstNumber(raw, ["validity_period", "validityPeriod"]) ?? raw?.validity_period,
     delivery_period: pickFirstNumber(raw, ["delivery_period", "deliveryPeriod"]) ?? raw?.delivery_period,
-    payment_terms: pickFirstText(raw, ["payment_terms", "paymentTerms", "terms"]) || raw?.payment_terms || "",
+    // Prefer the resolved label (e.g. "Payment due 30 days from invoice date") over the raw
+    // t_CodeDetails numeric code that `payment_terms`/`paymentTerms` actually holds.
+    payment_terms: pickFirstText(raw, ["payment_terms_label", "paymentTermsLabel", "payment_terms", "paymentTerms", "terms"]) || raw?.payment_terms || "",
     submitted_at: pickFirstText(raw, ["submitted_at", "submittedAt", "received_at", "receivedAt"]) || raw?.submitted_at || null,
     received_at: pickFirstText(raw, ["received_at", "receivedAt", "submitted_at", "submittedAt"]) || raw?.received_at || null,
     documents_count: documentsCount ?? raw?.documents_count ?? 0,
@@ -582,29 +590,33 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData()
     const tenderId = formData.get('tenderId') as string
     const tenderNo = (formData.get('tenderNo') as string) || ""
-    const bidAmount = parseFloat(formData.get('bidAmount') as string)
     const currency = String(formData.get('currency') || "").trim().toUpperCase().slice(0, 3)
     const validityPeriod = parseInt(formData.get('validityPeriod') as string)
     const deliveryPeriod = parseInt(formData.get('deliveryPeriod') as string)
     const status = (formData.get('status') as string) || 'draft'
     const requestedStatus = status === "submitted" ? "submitted" : "draft"
 
-    if (!tenderId || isNaN(bidAmount) || !currency || isNaN(validityPeriod) || isNaN(deliveryPeriod)) {
+    if (!tenderId || !currency || isNaN(validityPeriod) || isNaN(deliveryPeriod)) {
       return NextResponse.json({ error: "Required fields missing or invalid" }, { status: 400 })
     }
 
     const files = formData.getAll('documents') as File[]
     const paymentTerms = (formData.get('paymentTerms') as string) || ''
+    // Per-line bid items arrive as bracket-notation fields, e.g. items[0][tender_item_id] —
+    // forward them through unchanged, the ERP endpoint expects the same keys.
+    const itemEntries = Array.from(formData.entries()).filter(([key]) => key.startsWith('items['))
 
     const buildPayload = (resolvedTenderId: string, currentStatus: "draft" | "submitted") => {
       const payload = new FormData()
       payload.append('tender_id', resolvedTenderId)
-      payload.append('bid_amount', bidAmount.toString())
       payload.append('currency', currency)
       payload.append('validity_period', validityPeriod.toString())
       payload.append('delivery_period', deliveryPeriod.toString())
       payload.append('payment_terms', paymentTerms)
       payload.append('status', currentStatus)
+      itemEntries.forEach(([key, value]) => {
+        payload.append(key, value as string)
+      })
       files.forEach((file) => {
         payload.append('bid_documents[]', file)
       })
