@@ -20,6 +20,9 @@ import {
     type SupplierDocumentRequirement,
 } from "@/lib/register-shared"
 
+import { normalizeRegistrationCountries } from "@/lib/registration-countries"
+import { identityIssues } from "@/lib/party-identity"
+
 const ROLE_VALUES = ["SU", "TN", "CU"] as const
 type RoleValue = (typeof ROLE_VALUES)[number]
 
@@ -36,8 +39,11 @@ const DOCUMENT_NOTE_KEY_PATTERN = /^registration_document_notes\.(\d+)$/
 const VERIFY_EMAIL_LINK_REGEX = /https?:\/\/[^"'<>\s]+\/(?:email\/verify|verify-email)[^"'<>\s]*/i
 
 const SERVER_FIELD_FALLBACK_MESSAGES: Record<string, string> = {
-    Name: "Please enter a valid legal company name.",
+    Name: "Please enter a valid legal name.",
     TradingName: "Please enter a valid trading name.",
+    IdentityKind: "Choose Individual or Organisation.",
+    IdentityDocumentType: "Choose National ID or Passport.",
+    IdentityIssuingCountry: "Choose the document or registration issuing country.",
     BusinessType: "Please select a valid business type.",
     RegistrationNumber: "Please enter a valid registration number.",
     TaxPIN: "Please enter a valid tax PIN.",
@@ -325,39 +331,6 @@ type LegacyEnumOption = {
     name?: string | null
 }
 
-type LegacyCountryItem = {
-    id?: number | string | null
-    name?: string | null
-    code?: string | null
-    phoneCode?: string | number | null
-    PhoneCode?: string | number | null
-}
-
-function normalizeLegacyCountries(rows: unknown): CountryItem[] {
-    if (!Array.isArray(rows)) return []
-
-    return rows
-        .map<CountryItem | null>((row) => {
-            if (!row || typeof row !== "object") return null
-
-            const item = row as Record<string, unknown>
-            const id = Number(item.id ?? item.Id ?? 0)
-            const name = String(item.name ?? item.Name ?? "").trim()
-            const code = String(item.code ?? item.Code ?? "").trim()
-            const phoneCode = String(item.phoneCode ?? item.PhoneCode ?? "").trim() || null
-
-            if (!Number.isFinite(id) || id <= 0 || !name) return null
-
-            return {
-                id,
-                name,
-                code: code || name.slice(0, 3).toUpperCase(),
-                phoneCode,
-            }
-        })
-        .filter((item): item is CountryItem => item !== null)
-}
-
 function normalizeLegacyEnumOptions(rows: unknown) {
     if (!Array.isArray(rows)) return []
 
@@ -375,7 +348,10 @@ function normalizeLegacyEnumOptions(rows: unknown) {
 
 const registerSchema = z
     .object({
-        Name: z.string().trim().min(2, "Company name is required").max(100, "Company name must be 100 characters or fewer"),
+        IdentityKind: z.string(),
+        IdentityDocumentType: optionalTextField("Identity document type", 20),
+        IdentityIssuingCountry: optionalTextField("Issuing country", 3),
+        Name: z.string().trim().min(2, "Legal name is required").max(100, "Legal name must be 100 characters or fewer"),
         TradingName: optionalTextField("Trading name", 100),
         BusinessType: z.string().trim().min(1, "Business type is required"),
         RegistrationNumber: z.string().trim().min(1, "Registration number is required").max(50, "Registration number must be 50 characters or fewer"),
@@ -412,6 +388,7 @@ const registerSchema = z
         user_Password_confirmation: optionalPasswordField("Confirm password"),
     })
     .superRefine((data, ctx) => {
+        identityIssues(data).forEach(issue => ctx.addIssue({ code: z.ZodIssueCode.custom, path: [issue.field], message: issue.message }))
         const supplierFlow = hasRole(data.types, "SU")
         const tenantFlow = hasRole(data.types, "TN")
         const customerFlow = hasRole(data.types, "CU")
@@ -507,6 +484,9 @@ export const useRegisterForm = () => {
         resolver: zodResolver(registerSchema) as any,
         mode: "onBlur",
         defaultValues: {
+            IdentityKind: "",
+            IdentityDocumentType: "",
+            IdentityIssuingCountry: "",
             Name: "",
             TradingName: "",
             BusinessType: "",
@@ -553,8 +533,8 @@ export const useRegisterForm = () => {
     }, [])
 
     const loadFallbackCountries = useCallback(async () => {
-        const result = await fetchLocalJson<{ data?: LegacyCountryItem[] }>("/api/countries")
-        return normalizeLegacyCountries(result.data ?? [])
+        const result = await fetchLocalJson<unknown>("/api/countries")
+        return normalizeRegistrationCountries(result)
     }, [])
 
     const loadFallbackEnumOptions = useCallback(async (endpoint: string) => {
@@ -576,7 +556,7 @@ export const useRegisterForm = () => {
                     fetchLocalJson<Record<string, any>>("/api/portal/auth/lookups/bulk?codes=Gender,MaritalStatus,Occupation"),
                 ])
 
-            let countries = countriesResult.status === "fulfilled" ? countriesResult.value.data ?? [] : []
+            let countries = countriesResult.status === "fulfilled" ? normalizeRegistrationCountries(countriesResult.value) : []
             let businessTypes = businessTypesResult.status === "fulfilled" ? normalizeLookupItems(businessTypesResult.value.data) : []
             const supplierCategories = supplierCategoriesResult.status === "fulfilled" ? supplierCategoriesResult.value.data ?? [] : []
             const supplierDocumentRequirements = documentRequirementsResult.status === "fulfilled" ? documentRequirementsResult.value.data ?? [] : []
@@ -736,6 +716,9 @@ export const useRegisterForm = () => {
         const taxPin = normalizeTaxIdentifier(values.TaxPIN)
         const vatNumber = normalizeTaxIdentifier(values.VATNumber)
         const payload: Record<string, unknown> = {
+            IdentityKind: values.IdentityKind,
+            IdentityDocumentType: values.IdentityKind === "organisation" ? "registration" : values.IdentityDocumentType,
+            IdentityIssuingCountry: values.IdentityIssuingCountry,
             Name: normalizeText(values.Name),
             TradingName: normalizeText(values.TradingName),
             BusinessType: businessType,

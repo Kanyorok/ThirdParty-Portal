@@ -23,6 +23,9 @@ export const businessTypeOptions = [
 export type CountryOption = { id: number; name: string; code?: string; flag?: string }
 
 export type ThirdPartyInputs = {
+    identityKind?: "individual" | "organisation" | null
+    identityDocumentType?: "national_id" | "passport" | "registration" | null
+    identityIssuingCountry?: string | null
     firstName?: string
     lastName?: string
     phone?: string | null

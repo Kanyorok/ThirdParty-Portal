@@ -51,6 +51,8 @@ import { cn } from "../../lib/utils"
 import { buildInternationalPhoneNumber, extractNationalPhoneNumber, normalizeCountryDialCode } from "../../lib/register-shared"
 import { SYSTEM_ERROR_MESSAGE, type RegisterFormInputs, type RegisterRole, type RegisterThirdPartyResult, useRegisterForm } from "../../hooks/use-register"
 
+import { isPersonalBusinessType } from "../../lib/party-identity"
+
 const ROLE_OPTIONS: Array<{ id: RegisterRole; label: string }> = [
     { id: "SU", label: "Supplier" },
     { id: "TN", label: "Tenant" },
@@ -91,6 +93,9 @@ const SERVER_STEP_BY_FORM_STEP: Record<StepId, "business" | "account" | "supplie
 }
 
 const FIELD_LABELS: Partial<Record<string, string>> = {
+    IdentityKind: "individual or organisation",
+    IdentityDocumentType: "identity document type",
+    IdentityIssuingCountry: "issuing country",
     types: "business role",
     Name: "legal name",
     TradingName: "trading name",
@@ -684,6 +689,8 @@ export default function RegisterForm() {
     } = useRegisterForm()
 
     const createUser = form.watch("createUser")
+    const identityKind = form.watch("IdentityKind")
+    const isIndividual = identityKind === "individual"
     const businessTypeValue = form.watch("BusinessType")
     const watchedCategoryIds = form.watch("category_ids")
     const supplierCategoryValues = React.useMemo(() => watchedCategoryIds ?? [], [watchedCategoryIds])
@@ -743,7 +750,7 @@ export default function RegisterForm() {
                 "Name",
                 "TradingName",
                 "BusinessType",
-                "RegistrationNumber",
+                "RegistrationNumber", "IdentityKind", "IdentityDocumentType", "IdentityIssuingCountry",
                 "TaxPIN",
                 "VATNumber",
                 "Phone",
@@ -1114,9 +1121,38 @@ export default function RegisterForm() {
                                                     />
                                                 </div>
 
+                                                <div className={fieldBlockClass}>
+                                                    <FieldLabel required>Register as</FieldLabel>
+                                                    <select aria-label="Register as" className={selectStyle} {...form.register("IdentityKind", { onChange: () => {
+                                                        form.setValue("BusinessType", "")
+                                                        form.setValue("IdentityDocumentType", "")
+                                                    } })}>
+                                                        <option value="">Choose Individual or Organisation</option>
+                                                        <option value="individual">Individual (including sole proprietor)</option>
+                                                        <option value="organisation">Organisation</option>
+                                                    </select>
+                                                    <FieldError message={errors.IdentityKind?.message as string | undefined} label="Register as" />
+                                                </div>
+                                                {isIndividual ? <div className={fieldBlockClass}>
+                                                    <FieldLabel required>Identity document type</FieldLabel>
+                                                    <select aria-label="Identity document type" className={selectStyle} {...form.register("IdentityDocumentType")}>
+                                                        <option value="">Choose document</option>
+                                                        <option value="national_id">National ID</option>
+                                                        <option value="passport">Passport</option>
+                                                    </select>
+                                                    <FieldError message={errors.IdentityDocumentType?.message as string | undefined} label="Identity document type" />
+                                                </div> : null}
+                                                <div className={fieldBlockClass}>
+                                                    <FieldLabel required>Document / registration issuing country</FieldLabel>
+                                                    <select aria-label="Issuing country" className={selectStyle} {...form.register("IdentityIssuingCountry")}>
+                                                        <option value="">Choose issuing country</option>
+                                                        {metadata.countries.map(country => <option key={country.code} value={country.code}>{country.name}</option>)}
+                                                    </select>
+                                                    <FieldError message={errors.IdentityIssuingCountry?.message as string | undefined} label="Issuing country" />
+                                                </div>
                                                 <div className="md:col-span-2">
-                                                    <FieldLabel required>Legal Name</FieldLabel>
-                                                    <Input required autoComplete="organization" {...form.register("Name")} placeholder="Daniel Logistics Limited" className={cn(inputStyle, errors.Name && inputErrorClass)} />
+                                                    <FieldLabel required>{isIndividual ? "Full legal name" : "Registered legal name"}</FieldLabel>
+                                                    <Input required autoComplete={isIndividual ? "name" : "organization"} {...form.register("Name")} placeholder={isIndividual ? "Name on your identity document" : "Registered organisation name"} className={cn(inputStyle, errors.Name && inputErrorClass)} />
                                                     <FieldError message={errors.Name?.message as string | undefined} label="Legal name" />
                                                 </div>
 
@@ -1131,7 +1167,7 @@ export default function RegisterForm() {
                                                     required
                                                     value={businessTypeValue || undefined}
                                                     onChange={(value) => form.setValue("BusinessType", value, { shouldDirty: true, shouldValidate: true })}
-                                                    options={metadata.businessTypes.map((item) => ({ value: item.value, label: item.label }))}
+                                                    options={metadata.businessTypes.filter(item => !identityKind || isPersonalBusinessType(item.value) === isIndividual).map((item) => ({ value: item.value, label: item.value === "I" ? "Individual" : item.label }))}
                                                     placeholder="Select business type"
                                                     error={errors.BusinessType?.message as string | undefined}
                                                     className={fieldBlockClass}
@@ -1151,8 +1187,8 @@ export default function RegisterForm() {
                                                 ) : null}
 
                                                 <div className={fieldBlockClass}>
-                                                    <FieldLabel required>Registration Number</FieldLabel>
-                                                    <Input required {...form.register("RegistrationNumber")} placeholder="REG-12345" className={cn(inputStyle, errors.RegistrationNumber && inputErrorClass)} />
+                                                    <FieldLabel required>{isIndividual ? "Identity document number" : "Registration number"}</FieldLabel>
+                                                    <Input required {...form.register("RegistrationNumber")} placeholder={isIndividual ? "Number on your selected identity document" : "REG-12345"} className={cn(inputStyle, errors.RegistrationNumber && inputErrorClass)} />
                                                     <FieldError message={errors.RegistrationNumber?.message as string | undefined} label="Registration number" />
                                                 </div>
 
@@ -1170,7 +1206,7 @@ export default function RegisterForm() {
 
                                                 {!createUser ? (
                                                     <div className={fieldBlockClass}>
-                                                        <FieldLabel>Business Email</FieldLabel>
+                                                        <FieldLabel>{isIndividual ? "Email" : "Organisation email"}</FieldLabel>
                                                         <Input type="email" autoComplete="email" {...form.register("Email")} placeholder="procurement@company.com" className={cn(inputStyle, errors.Email && inputErrorClass)} />
                                                         <FieldError message={errors.Email?.message as string | undefined} label="Business email" />
                                                     </div>
